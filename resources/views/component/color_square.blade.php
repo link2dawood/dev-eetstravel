@@ -1,0 +1,1 @@
+<span style="background-color: {{ $color }}; width: 25px; height: 25px; display: block;"></span>

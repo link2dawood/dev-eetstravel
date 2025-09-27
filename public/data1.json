@@ -1,0 +1,164 @@
+[
+  {
+    "category": "Lázár",
+    "segments": [
+      {
+        "start": "2017-11-01",
+        "end": "2017-11-02",
+        "color": "#46615e",
+        "task": "Bus 1",
+        "id": "Prag",
+        "comments": 4,
+        "bullet": "#cccc00"
+      },
+      {
+        "start": "2017-11-02",
+        "end": "2017-11-03",
+        "color": "#46615e",
+        "task": "yuyuyuy",
+        "id": "Strobl",
+        "comments": 4,
+        "bullet": "#cc00cc"
+      },
+      {
+        "start": "2017-11-03",
+        "end": "2017-11-04",
+        "color": "#46615e",
+        "task": "Salzburg",
+        "id": "Salzburg",
+        "comments": 4,
+        "bullet": "#cc00ff"
+      },
+      {
+        "start": "2017-11-04",
+        "end": "2017-11-05",
+        "color": "#46615e",
+        "task": "Bus 1",
+        "id": "Vie",
+        "comments": 4,
+        "bullet": "#cc00aa"
+      }
+    ]
+  },
+  {
+    "category": "Kamarás",
+    "segments": [
+      {
+        "start": "2017-11-03",
+        "end": "2017-11-04",
+        "color": "#46615e",
+        "task": "Bus 2",
+        "comments": 4,
+        "id": "8:40 Bud"
+      },
+      {
+        "start": "2017-11-04",
+        "end": "2017-11-05",
+        "color": "#46615e",
+        "task": "Bud",
+        "comments": 4,
+        "id": "Bud"
+      },
+      {
+        "start": "2017-11-05",
+        "end": "2017-11-06",
+        "color": "#46615e",
+        "task": "Vie",
+        "id": "Vie",
+        "comments": 4,
+        "bullet": "#cc0aa0"
+      },
+      {
+        "start": "2017-11-06",
+        "end": "2017-11-07",
+        "color": "#46615e",
+        "task": "Bus 2",
+        "id": "Vie",
+        "comments": 4,
+        "bullet": "#cc00gg"
+      }
+    ]
+  },
+  {
+    "category": "Kocsis",
+    "segments": [
+      {
+        "start": "2017-11-01",
+        "end": "2017-11-02",
+        "color": "#46615e",
+        "task": "Bus 3",
+        "id": "15:30 Vie",
+        "comments":4,
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-02",
+        "end": "2017-11-03",
+        "color": "#46615e",
+        "task": "Bus 3",
+        "id": "Vie",
+        "comments": 4,
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-03",
+        "end": "2017-11-04",
+        "color": "#46615e",
+        "task": "Bus 3",
+        "comments": 4,
+        "id": "St Wolfgang",
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-04",
+        "end": "2017-11-05",
+        "color": "#46615e",
+        "task": "Bus 3",
+        "comments": 4,
+        "id": "St Wolfgang",
+        "bullet": "#cc0000"
+      }
+    ]
+  },
+  {
+    "category": "Tűzp. / NCC-088",
+    "segments": [
+      {
+        "start": "2017-11-05",
+        "end": "2017-11-06",
+        "color": "#46615e",
+        "task": "Bus 3",
+        "id": "34343",
+        "comments": 4,
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-06",
+        "end": "2017-11-07",
+        "color": "#46615e",
+        "task": "Bus 4",
+        "id": "34343",
+        "comments": 4,
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-07",
+        "end": "2017-11-08",
+        "color": "#46615e",
+        "task": "Bus 4",
+        "id": "",
+        "comments": 4,
+        "bullet": "#cc0000"
+      },
+      {
+        "start": "2017-11-08",
+        "end": "2017-11-09",
+        "color": "#46615e",
+        "task": "Bus 4",
+        "id": 4,
+        "comments": 4,
+        "bullet": "#cc0000"
+      }
+    ]
+  }
+]

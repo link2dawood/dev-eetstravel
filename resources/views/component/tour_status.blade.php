@@ -1,0 +1,1 @@
+<span class="badge" style="background:{{ $color }}">{{ $status }}</span>

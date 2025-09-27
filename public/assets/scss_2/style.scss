@@ -1,0 +1,159 @@
+$black: #000;
+$white: #fff;
+
+$orange: #fd7a29;
+$blue: #30c4e5;
+$greeen: #d1e77b;
+$gray: #b8b8b8;
+
+body {
+    background-color: $white;
+    font-family: "Poppins", sans-serif;
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 14px;
+        border: none;
+        box-shadow: none;
+        transition: .3s;
+    }
+    .btn-primary {
+        background-color: $orange;
+        &:hover {
+            background-color: $black;
+        }
+    }
+
+    .main-title {
+        font-size: 34px;
+        font-weight: 600;
+        margin-bottom: 32px;
+    }
+    .secondary-title {
+        font-size: 22px;
+        font-weight: 500;
+    }
+    .text {
+        font-size: 14px;
+    }
+    .input-wrapper {
+        margin-bottom: 12px;
+    }
+    .form-control {
+        padding: 10px 20px;
+        border-radius: 14px;
+        &:focus {
+            box-shadow: none;
+            border: 1px solid $orange;
+        }
+    }
+    .card {
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 10px 20px rgba($gray, 0.2);
+    }
+    .main {
+        .main-content {
+            .default-sec {
+                min-height: 100vh;
+                padding: 50px 0;
+            }
+            .offer {
+                .card {
+                    .card-body {
+                        padding: 30px;
+                    }
+                    .card-title {
+                        font-size: 22px;
+                        margin-bottom: 4px;
+                    }
+                    .secondary-title {
+                        font-size: 18px;
+                    }
+                    .date {
+                        font-size: 12px;
+                        color: $gray;
+                    }
+                    .custom-grid {
+                        display: grid;
+                        grid-template-columns: auto auto auto auto;
+                    }
+                    .service-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        .icon {
+                            width: 40px;
+                            height: 40px;
+                            object-fit: contain;
+                            margin-bottom: 10px;
+                        }
+                        .rooms-title {
+                            font-size: 12px;
+                        }
+                        .title {
+                            font-size: 16px;
+                        }
+                    }
+                    .services-price-wrapper {
+                        .price-item {
+                            display: flex;
+                            justify-content: space-between;
+                            border-bottom: 1px dashed $gray;
+                            margin-bottom: 10px;
+                            &:last-child {
+                                border-bottom: none;
+                                margin-bottom: 0;
+                            }
+                            .title {
+                                font-size: 14px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @media (max-width: 991px) {
+        .main-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .main {
+            .main-content {
+                .default-sec {
+                    padding: 60px 0;
+                }
+            }
+        }
+    }
+    @media (max-width: 767px) {
+        .main-title {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .main {
+            .main-content {
+                .default-sec {
+                    padding: 40px 0;
+                }
+                .offer {
+                    .card {
+                        .card-body {
+                            padding: 20px;
+                        }
+                        .card-title {
+                            font-size: 18px;
+                        }
+                        .date {
+                            font-size: 10px;
+                        }
+                        .custom-grid {
+                            grid-template-columns: auto auto;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

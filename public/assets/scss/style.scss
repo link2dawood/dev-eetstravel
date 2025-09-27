@@ -1,0 +1,424 @@
+$black: #000;
+$white: #ffffff;
+$primary: #159a9c;
+$primayLight: #f5fffa;
+$blueDark: #002333;
+$gray: #b4bec9;
+
+// Montserrat start
+@font-face {
+    font-family: "Montserrat";
+    src: url("../fonts/montserrat/Montserrat-SemiBold.eot");
+    src: url("../fonts/montserrat/Montserrat-SemiBold.eot?#iefix") format("embedded-opentype"),
+        url("../fonts/montserrat/Montserrat-SemiBold.woff2") format("woff2"),
+        url("../fonts/montserrat/Montserrat-SemiBold.woff") format("woff"),
+        url("../fonts/montserrat/Montserrat-SemiBold.ttf") format("truetype"),
+        url("../fonts/montserrat/Montserrat-SemiBold.svg#Montserrat-SemiBold") format("svg");
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Montserrat";
+    src: url("../fonts/montserrat/Montserrat-Bold.eot");
+    src: url("../fonts/montserrat/Montserrat-Bold.eot?#iefix") format("embedded-opentype"),
+        url("../fonts/montserrat/Montserrat-Bold.woff2") format("woff2"),
+        url("../fonts/montserrat/Montserrat-Bold.woff") format("woff"),
+        url("../fonts/montserrat/Montserrat-Bold.ttf") format("truetype"),
+        url("../fonts/montserrat/Montserrat-Bold.svg#Montserrat-Bold") format("svg");
+    font-weight: 700;
+    font-style: normal;
+}
+// Montserrat end
+
+// oleo start
+@font-face {
+    font-family: "Oleo";
+    src: url("../fonts/oleo/OleoScriptSwashCaps-Bold.eot");
+    src: url("../fonts/oleo/OleoScriptSwashCaps-Bold?#iefix") format("embedded-opentype"),
+        url("../fonts/oleo/OleoScriptSwashCaps-Bold.woff2") format("woff2"),
+        url("../fonts/oleo/OleoScriptSwashCaps-Bold.woff") format("woff"),
+        url("../fonts/oleo/OleoScriptSwashCaps-Bold.ttf") format("truetype"),
+        url("../fonts/oleo/OleoScriptSwashCaps-Bold.svg#OleoScriptSwashCaps-Bold") format("svg");
+    font-weight: 700;
+    font-style: normal;
+}
+// oleo end
+
+body {
+    font-size: 18px;
+    font-family: "Montserrat", sans-serif;
+    color: $blueDark;
+    background-color: #ecf0f5;
+    .btn {
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        color: $white;
+        line-height: 26px;
+        box-shadow: none;
+        &:focus,
+        &:hover {
+            border: none;
+            box-shadow: none;
+            outline: none;
+            &:focus {
+                box-shadow: none;
+            }
+        }
+    }
+    .btn-primary {
+        background-color: $primary;
+        &:focus,
+        &:hover {
+            background-color: $blueDark;
+            box-shadow: none;
+            outline: none;
+        }
+    }
+    .btn-gray {
+        background-color: $gray;
+        &:hover {
+            background-color: $blueDark;
+            color: $white;
+        }
+    }
+    .bg-primary {
+        background-color: $primary;
+    }
+    .bg-primaryLight {
+        background-color: $primayLight;
+    }
+    .bg-gray {
+        background-color: $gray;
+    }
+    .input-wrapper {
+        margin-bottom: 12px;
+    }
+    .form-control {
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        border: 1px solid $gray;
+        border-radius: 10px;
+        color: $blueDark;
+        line-height: 24px;
+        width: 100%;
+        &:focus {
+            border: 1px solid $primary;
+            box-shadow: none;
+        }
+    }
+
+    .card {
+        border-radius: 16px;
+        border: none;
+        .card-body {
+            padding: 20px;
+        }
+        .card-title {
+            font-size: 16px;
+            color: $blueDark;
+            margin-bottom: 8px;
+        }
+        .card-text {
+            font-size: 12px;
+            color: $gray;
+            margin-bottom: 0;
+        }
+    }
+    .nav-tabs-vertical {
+        flex-direction: column;
+        border: none;
+        .nav-item {
+            .nav-link {
+                padding: 10px 16px;
+                border: none;
+                width: 100%;
+                text-align: start;
+                color: $blueDark;
+                border-radius: 8px;
+                &:hover {
+                    color: $primary;
+                    background-color: $primayLight;
+                }
+            }
+            .nav-link.active {
+                color: $primary;
+                background-color: $primayLight;
+            }
+        }
+    }
+
+    .mail {
+        padding: 60px 0;
+        .custom-card-header {
+            border-bottom: 1px solid rgba($gray, 0.2);
+            padding-bottom: 24px;
+        }
+        .title {
+            font-size: 28px;
+            margin-bottom: 0;
+        }
+        .user-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            object-position: center center;
+            border-radius: 50%;
+        }
+        .email-user-list {
+            padding: 0;
+            margin-bottom: 0;
+            list-style-type: none;
+            .user-item.active {
+                .card {
+                    background-color: $white;
+                    box-shadow: 4px 0 10px rgba($gray, 0.3);
+                }
+            }
+            .card {
+                background-color: transparent;
+                border-radius: 10px;
+                .card-body {
+                    padding: 16px;
+                    .user-img {
+                        width: 40px;
+                        height: 40px;
+                    }
+                    .mail-text {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 200px;
+                    }
+                    .mail-status {
+                        padding: 4px;
+                        border-radius: 4px;
+                        background-color: $primary;
+                        font-size: 8px;
+                        color: $white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+        .emails-list {
+            height: 100%;
+            min-height: 300px;
+            max-height: 400px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            .accordion-item {
+                border: none;
+                border-bottom: 1px solid rgba($gray, 0.2);
+                border-radius: 0;
+                &:last-child {
+                    border-bottom: none;
+                }
+                .accordion-button {
+                    color: $blueDark;
+                    background-color: $white;
+                    box-shadow: none;
+                    padding: 12px;
+                    &:hover {
+                        background-color: $primayLight;
+                    }
+                    &::after {
+                        display: none;
+                    }
+                    .truncate {
+                        display: none;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 200px;
+                    }
+                }
+                .accordion-button.collapsed {
+                    .truncate {
+                        display: block;
+                    }
+                }
+                .accordion-body {
+                    padding: 12px;
+                }
+            }
+        }
+        .richtexteditor {
+            margin-bottom: 12px;
+        }
+    }
+    .dashboard {
+        .calendar {
+            .ui-datepicker {
+                width: 100%;
+                border: none;
+                background-color: transparent;
+                padding: 0;
+                
+                .ui-datepicker-header {
+                    color: $white;
+                    background-color: $primary;
+                    padding: 10px;
+                    border-radius: 16px 16px 0 0;
+                    .ui-icon {
+                        display: none;
+                    }
+                    .ui-corner-all {
+                        background-color: transparent;
+                        border: none;
+                        width: 12px;
+                        height: 20px;
+                        object-fit: contain;
+                        background-repeat: no-repeat;
+                        top: 50%;
+                        transform: translate(0, -50%);
+                        cursor: pointer;
+                    }
+                    .ui-datepicker-next {
+                        background-image: url('../img/svg/chevron-right.svg');
+                        right: 6px;
+                    }
+                    .ui-datepicker-prev {
+                        background-image: url('../img/svg/chevron-left.svg');
+                        left: 6px;
+                    }
+                }
+                .ui-datepicker-calendar {
+                    th {
+                        color: $black;
+                        padding: 10px;
+                    }
+                    .ui-state-default {
+                        background-color: transparent;
+                        border: none;
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: $blueDark;
+                        padding: 16px 20px;
+                        border-radius: 10px;
+                    }
+                    .ui-datepicker-current-day {
+                        .ui-state-default {
+                            color: $white;
+                            background-color: $primary;
+                        }
+                    }
+                    .ui-datepicker-today {
+                        .ui-state-default {
+                            background-color: $gray;
+                        }
+                    }
+                }
+            }
+        }
+        .nav-tabs-vertical {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: none;
+            .nav-item {
+                .nav-link {
+                    font-size: 14px;
+                    padding: 10px 14px;
+                    white-space: nowrap;
+                }
+            }
+        }
+        .emails-list {
+            height: 100%;
+            min-height: 200px;
+            max-height: 300px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+        }
+    }
+
+
+    .modal {
+        .modal-content {
+            border-radius: 16px;
+        }
+    }
+
+    @media (max-width: 1400px) {
+    }
+    @media (max-width: 1280px) {
+    }
+    @media (max-width: 991px) {
+        .btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            line-height: 18px;
+        }
+        .form-control {
+            padding: 10px 16px;
+            font-size: 14px;
+            line-height: 18px;
+        }
+        .nav-tabs-vertical {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: none;
+            .nav-item {
+                .nav-link {
+                    font-size: 14px;
+                    padding: 10px 14px;
+                    white-space: nowrap;
+                }
+            }
+        }
+
+        .card {
+            border-radius: 16px;
+            border: none;
+            margin-bottom: 12px;
+            .card-body {
+                padding: 12px;
+            }
+            .card-title {
+                font-size: 14px;
+            }
+            .card-text {
+                font-size: 10px;
+            }
+        }
+    }
+    @media (max-width: 767px) {
+        .mail {
+            .title {
+                font-size: 22px;
+            }
+            .user-img {
+                width: 30px;
+                height: 30px;
+            }
+            .email-user-list {
+                .card {
+                    .card-body {
+                        padding: 12px;
+                        .mail-text {
+                            max-width: 130px;
+                        }
+                    }
+                }
+            }
+            .emails-list {
+                .accordion-item {
+                    .accordion-button {
+                        .truncate {
+                            max-width: 160px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

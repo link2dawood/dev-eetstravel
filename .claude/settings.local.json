@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(chown:*)",
+      "Bash(cat:*)",
+      "Bash(apache2ctl:*)",
+      "Read(//etc/apache2/sites-available/**)",
+      "Bash(a2enmod:*)",
+      "Bash(php artisan config:clear:*)",
+      "Bash(php artisan:*)",
+      "Bash(curl:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

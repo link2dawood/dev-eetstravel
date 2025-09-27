@@ -1,0 +1,355 @@
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/montserrat/Montserrat-SemiBold.eot");
+  src: url("../fonts/montserrat/Montserrat-SemiBold.eot?#iefix") format("embedded-opentype"), url("../fonts/montserrat/Montserrat-SemiBold.woff2") format("woff2"), url("../fonts/montserrat/Montserrat-SemiBold.woff") format("woff"), url("../fonts/montserrat/Montserrat-SemiBold.ttf") format("truetype"), url("../fonts/montserrat/Montserrat-SemiBold.svg#Montserrat-SemiBold") format("svg");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/montserrat/Montserrat-Bold.eot");
+  src: url("../fonts/montserrat/Montserrat-Bold.eot?#iefix") format("embedded-opentype"), url("../fonts/montserrat/Montserrat-Bold.woff2") format("woff2"), url("../fonts/montserrat/Montserrat-Bold.woff") format("woff"), url("../fonts/montserrat/Montserrat-Bold.ttf") format("truetype"), url("../fonts/montserrat/Montserrat-Bold.svg#Montserrat-Bold") format("svg");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Oleo";
+  src: url("../fonts/oleo/OleoScriptSwashCaps-Bold.eot");
+  src: url("../fonts/oleo/OleoScriptSwashCaps-Bold?#iefix") format("embedded-opentype"), url("../fonts/oleo/OleoScriptSwashCaps-Bold.woff2") format("woff2"), url("../fonts/oleo/OleoScriptSwashCaps-Bold.woff") format("woff"), url("../fonts/oleo/OleoScriptSwashCaps-Bold.ttf") format("truetype"), url("../fonts/oleo/OleoScriptSwashCaps-Bold.svg#OleoScriptSwashCaps-Bold") format("svg");
+  font-weight: 700;
+  font-style: normal;
+}
+body {
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+  color: #002333;
+  background-color: #ecf0f5;
+}
+body .btn {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  line-height: 26px;
+  box-shadow: none;
+}
+body .btn:focus, body .btn:hover {
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+body .btn:focus:focus, body .btn:hover:focus {
+  box-shadow: none;
+}
+body .btn-primary {
+  background-color: #159a9c;
+}
+body .btn-primary:focus, body .btn-primary:hover {
+  background-color: #002333;
+  box-shadow: none;
+  outline: none;
+}
+body .btn-gray {
+  background-color: #b4bec9;
+}
+body .btn-gray:hover {
+  background-color: #002333;
+  color: #ffffff;
+}
+body .bg-primary {
+  background-color: #159a9c;
+}
+body .bg-primaryLight {
+  background-color: #f5fffa;
+}
+body .bg-gray {
+  background-color: #b4bec9;
+}
+body .input-wrapper {
+  margin-bottom: 12px;
+}
+body .form-control {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid #b4bec9;
+  border-radius: 10px;
+  color: #002333;
+  line-height: 24px;
+  width: 100%;
+}
+body .form-control:focus {
+  border: 1px solid #159a9c;
+  box-shadow: none;
+}
+body .card {
+  border-radius: 16px;
+  border: none;
+}
+body .card .card-body {
+  padding: 20px;
+}
+body .card .card-title {
+  font-size: 16px;
+  color: #002333;
+  margin-bottom: 8px;
+}
+body .card .card-text {
+  font-size: 12px;
+  color: #b4bec9;
+  margin-bottom: 0;
+}
+body .nav-tabs-vertical {
+  flex-direction: column;
+  border: none;
+}
+body .nav-tabs-vertical .nav-item .nav-link {
+  padding: 10px 16px;
+  border: none;
+  width: 100%;
+  text-align: start;
+  color: #002333;
+  border-radius: 8px;
+}
+body .nav-tabs-vertical .nav-item .nav-link:hover {
+  color: #159a9c;
+  background-color: #f5fffa;
+}
+body .nav-tabs-vertical .nav-item .nav-link.active {
+  color: #159a9c;
+  background-color: #f5fffa;
+}
+body .mail {
+  padding: 60px 0;
+}
+body .mail .custom-card-header {
+  border-bottom: 1px solid rgba(180, 190, 201, 0.2);
+  padding-bottom: 24px;
+}
+body .mail .title {
+  font-size: 28px;
+  margin-bottom: 0;
+}
+body .mail .user-img {
+  width: 50px;
+  height: 50px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  -o-object-position: center center;
+     object-position: center center;
+  border-radius: 50%;
+}
+body .mail .email-user-list {
+  padding: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+}
+body .mail .email-user-list .user-item.active .card {
+  background-color: #ffffff;
+  box-shadow: 4px 0 10px rgba(180, 190, 201, 0.3);
+}
+body .mail .email-user-list .card {
+  background-color: transparent;
+  border-radius: 10px;
+}
+body .mail .email-user-list .card .card-body {
+  padding: 16px;
+}
+body .mail .email-user-list .card .card-body .user-img {
+  width: 40px;
+  height: 40px;
+}
+body .mail .email-user-list .card .card-body .mail-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+body .mail .email-user-list .card .card-body .mail-status {
+  padding: 4px;
+  border-radius: 4px;
+  background-color: #159a9c;
+  font-size: 8px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body .mail .emails-list {
+  height: 100%;
+  min-height: 300px;
+  max-height: 400px;
+  margin-bottom: 20px;
+  overflow-y: auto;
+}
+body .mail .emails-list .accordion-item {
+  border: none;
+  border-bottom: 1px solid rgba(180, 190, 201, 0.2);
+  border-radius: 0;
+}
+body .mail .emails-list .accordion-item:last-child {
+  border-bottom: none;
+}
+body .mail .emails-list .accordion-item .accordion-button {
+  color: #002333;
+  background-color: #ffffff;
+  box-shadow: none;
+  padding: 12px;
+}
+body .mail .emails-list .accordion-item .accordion-button:hover {
+  background-color: #f5fffa;
+}
+body .mail .emails-list .accordion-item .accordion-button::after {
+  display: none;
+}
+body .mail .emails-list .accordion-item .accordion-button .truncate {
+  display: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+body .mail .emails-list .accordion-item .accordion-button.collapsed .truncate {
+  display: block;
+}
+body .mail .emails-list .accordion-item .accordion-body {
+  padding: 12px;
+}
+body .mail .richtexteditor {
+  margin-bottom: 12px;
+}
+body .dashboard .calendar .ui-datepicker {
+  width: 100%;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-header {
+  color: #ffffff;
+  background-color: #159a9c;
+  padding: 10px;
+  border-radius: 16px 16px 0 0;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-header .ui-icon {
+  display: none;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-header .ui-corner-all {
+  background-color: transparent;
+  border: none;
+  width: 12px;
+  height: 20px;
+  -o-object-fit: contain;
+     object-fit: contain;
+  background-repeat: no-repeat;
+  top: 50%;
+  transform: translate(0, -50%);
+  cursor: pointer;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-header .ui-datepicker-next {
+  background-image: url("../img/svg/chevron-right.svg");
+  right: 6px;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-header .ui-datepicker-prev {
+  background-image: url("../img/svg/chevron-left.svg");
+  left: 6px;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-calendar th {
+  color: #000;
+  padding: 10px;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-calendar .ui-state-default {
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #002333;
+  padding: 16px 20px;
+  border-radius: 10px;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-calendar .ui-datepicker-current-day .ui-state-default {
+  color: #ffffff;
+  background-color: #159a9c;
+}
+body .dashboard .calendar .ui-datepicker .ui-datepicker-calendar .ui-datepicker-today .ui-state-default {
+  background-color: #b4bec9;
+}
+body .dashboard .nav-tabs-vertical {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: none;
+}
+body .dashboard .nav-tabs-vertical .nav-item .nav-link {
+  font-size: 14px;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+body .dashboard .emails-list {
+  height: 100%;
+  min-height: 200px;
+  max-height: 300px;
+  margin-bottom: 20px;
+  overflow-y: auto;
+}
+body .modal .modal-content {
+  border-radius: 16px;
+}
+@media (max-width: 991px) {
+  body .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+  body .form-control {
+    padding: 10px 16px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+  body .nav-tabs-vertical {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: none;
+  }
+  body .nav-tabs-vertical .nav-item .nav-link {
+    font-size: 14px;
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+  body .card {
+    border-radius: 16px;
+    border: none;
+    margin-bottom: 12px;
+  }
+  body .card .card-body {
+    padding: 12px;
+  }
+  body .card .card-title {
+    font-size: 14px;
+  }
+  body .card .card-text {
+    font-size: 10px;
+  }
+}
+@media (max-width: 767px) {
+  body .mail .title {
+    font-size: 22px;
+  }
+  body .mail .user-img {
+    width: 30px;
+    height: 30px;
+  }
+  body .mail .email-user-list .card .card-body {
+    padding: 12px;
+  }
+  body .mail .email-user-list .card .card-body .mail-text {
+    max-width: 130px;
+  }
+  body .mail .emails-list .accordion-item .accordion-button .truncate {
+    max-width: 160px;
+  }
+}/*# sourceMappingURL=style.css.map */

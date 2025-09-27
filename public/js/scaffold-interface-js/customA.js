@@ -1,0 +1,1 @@
+function GETT(n){$.ajax({async:!0,method:"get",url:baseURL+n,success:function(n){window.location=n}})}$(document).on("click",".viewEdit",function(){GETT($(this).data("link"))}),$(document).on("click",".viewShow",function(){GETT($(this).data("link"))});

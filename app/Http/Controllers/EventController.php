@@ -57,14 +57,23 @@ class EventController extends Controller
     public function index()
     {
         $title = 'Index - event';
-        $events = Event::leftJoin('countries', 'countries.alias', '=', 'events.country')
-            ->leftJoin('cities', 'cities.id', '=', 'events.city')
-            ->select(
-                'events.*',
-                'cities.name as city_name',
-                'countries.name as country_name'
-            )
-            ->paginate(15);
+
+        $cacheKey = 'events_index_data_' . md5(request()->getQueryString());
+        $events = \Cache::remember($cacheKey, 300, function () {
+            return Event::leftJoin('countries', 'countries.alias', '=', 'events.country')
+                ->leftJoin('cities', 'cities.id', '=', 'events.city')
+                ->select([
+                    'events.id',
+                    'events.name',
+                    'events.address',
+                    'events.work_phone',
+                    'events.contact_email',
+                    'cities.name as city_name',
+                    'countries.name as country_name'
+                ])
+                ->orderBy('events.name', 'asc')
+                ->paginate(15);
+        });
 
         return view('event.index', compact('events', 'title'));
     }

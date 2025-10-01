@@ -48,7 +48,6 @@ Route::group(['middleware' => 'perm'], function () {
         Route::post('hotel/{id}/update', '\App\Http\Controllers\HotelController@update');
         Route::get('hotel/{id}/delete', '\App\Http\Controllers\HotelController@destroy')->name('hotel.destroy');
         Route::get('hotel/{id}/deleteMsg', '\App\Http\Controllers\HotelController@DeleteMsg');
-        Route::get('hotels/api/data', '\App\Http\Controllers\HotelController@data')->name('hotels_data');
         Route::get('api/getItemContactView', '\App\Http\Controllers\HotelController@getItemContactView');
         Route::get('api/getItemsContacts', '\App\Http\Controllers\HotelController@getItemsContacts');
     });
@@ -59,7 +58,6 @@ Route::group(['middleware' => 'perm'], function () {
         Route::post('event/{id}/update', '\App\Http\Controllers\EventController@update');
         Route::get('event/{id}/delete', '\App\Http\Controllers\EventController@destroy')->name('event.destroy');
         Route::get('event/{id}/deleteMsg', '\App\Http\Controllers\EventController@DeleteMsg');
-        Route::get('events/api/data', '\App\Http\Controllers\EventController@data')->name('events_data');
     });
 
 //gCalendar Routes
@@ -73,7 +71,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('guide/{id}/update', '\App\Http\Controllers\GuideController@update');
         Route::get('guide/{id}/delete', '\App\Http\Controllers\GuideController@destroy')->name('guide.destroy');
         Route::get('guide/{id}/deleteMsg', '\App\Http\Controllers\GuideController@DeleteMsg');
-        Route::get('guide/api/data', '\App\Http\Controllers\GuideController@data')->name('guide_data');
     });
 
 //restaurant Routes
@@ -91,7 +88,6 @@ Route::group(['middleware' => 'web'], function () {
     Route::post('clients/{id}/update', '\App\Http\Controllers\ClientController@update');
     Route::get('clients/{id}/delete', '\App\Http\Controllers\ClientController@destroy')->name('client.destroy');
     Route::get('clients/{id}/deleteMsg', '\App\Http\Controllers\ClientController@DeleteMsg');
-    Route::get('clients/api/data', 'ClientController@data')->name('clients_data');
 	Route::get('api/getClientContacts', '\App\Http\Controllers\ClientController@getClientContacts');
 	
 	Route::get('/countries','\App\Http\Controllers\ClientController@getCountries');
@@ -106,7 +102,6 @@ Route::group(['middleware' => 'web'], function () {
     Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg');
     Route::get('invoices/api/data', 'InvoicesController@data')->name('invoices_data');
 	 Route::get('invoicesClientTransaction/api/data/{invoiceId}', 'InvoicesController@clientTransactionData')->name('client_invoices_data');
-	 Route::get('TourInvoiceData/api/data/{tourId}', 'InvoicesController@TourInvoiceData')->name('tour_invoices_data');
 	Route::get('supplierdropdown/{id}', 'InvoicesController@supplierDropdown');
 	Route::get('add_payment/{id}', '\App\Http\Controllers\InvoicesController@add_payment')->name('add_payment');
 	Route::post('payment_store/{id}', '\App\Http\Controllers\InvoicesController@payment_store')->name('payment.store');
@@ -123,7 +118,6 @@ Route::group(['middleware' => 'web'], function () {
     Route::get('accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
     Route::get('accounting/{id}/deleteMsg', '\App\Http\Controllers\ClientInvoiceController@DeleteMsg');
     Route::get('accounting/api/data', 'ClientInvoiceController@data')->name('accounts_data');
-	Route::get('TourAccountingData/api/data/{tourId}', 'ClientInvoiceController@TourAccountingData')->name('tour_accounting_data');
 	Route::get('ClientAccountingData/api/data/{clientId}', 'ClientInvoiceController@ClientAccountingData')->name('client_accounting_data');
 	Route::get('accountingServiceTransaction/create/{tour_id}', 'ClientInvoiceController@serviceTransactionCreate')->name('service_transaction_create');
  Route::get('accountingServiceTransaction/api/data/{pay_to}/{invoice_id}', 'ClientInvoiceController@serviceTransactionData')->name('service_transaction_data');
@@ -158,7 +152,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('office/{id}/update', '\App\Http\Controllers\OfficeController@update')->name('office.update');
     Route::get('office/{id}/delete', '\App\Http\Controllers\OfficeController@destroy')->name('office.destroy');
     Route::get('office/{id}/deleteMsg', '\App\Http\Controllers\OfficeController@DeleteMsg');
-    Route::get('office/api/data', 'OfficeController@data')->name('office_data');
 });
 	
 //OfficeInvoices of TMS
@@ -310,12 +303,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('tour/{id}/delete/{tab}', '\App\Http\Controllers\TourController@destroy')->name('tour_tab.destroy');
         Route::get('tour/{id}/deleteMsg/{tab}', '\App\Http\Controllers\TourController@DeleteMsg');
         Route::post('tour/{id}/generatePackages', '\App\Http\Controllers\TourController@generatePackages')->name('generate_packages');
-        Route::get('tour/api/data', '\App\Http\Controllers\TourController@data')->name('tour_data');
-		Route::get('clients_tour/api/data', '\App\Http\Controllers\TourController@client_data')->name('clients_tour_data');
-		 Route::get('tourquotation/api/data', '\App\Http\Controllers\TourController@quotation_data')->name('tour_quotations_data');
-        Route::get('tour/api/data_quotation', '\App\Http\Controllers\TourController@dataQuotation')->name('tour_data_quotation');
-		Route::get('tour/api/goahead_quotation', '\App\Http\Controllers\TourController@goaheadQuotation')->name('goahead_data_quotation');
-		Route::get('tour/api/cancelled_quotation', '\App\Http\Controllers\TourController@cancelledQuotation')->name('cancelled_data_quotation');
         Route::get('/tour/{id}/api/{export}/{type?}', '\App\Http\Controllers\TourController@export')->name('tour_export');
         Route::get('/tour/{id}/pdf_data', '\App\Http\Controllers\TourController@pdfData')->name('pdf_data');
         Route::get('tour/api/tasks_data', '\App\Http\Controllers\TourController@tasksData')->name('tasks_data_tour');
@@ -348,7 +335,6 @@ Route::group(['middleware'=> 'web'],function(){
     Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
     Route::get('task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
     Route::get('task/{id}/deleteMsg/{tab}','\App\Http\Controllers\TaskController@DeleteMsg');
-	Route::get('task/api/data', '\App\Http\Controllers\TaskController@data')->name('task_data');
 	Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
 	Route::get('/task/statuses/list', 'TaskController@statusesList');
 	Route::get('/getallhollydaycalendars', '\App\Http\Controllers\ScaffoldInterface\AppController@getAllHollydayCalendars');
@@ -510,7 +496,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::resource('comment', 'CommentController');
         Route::get('/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
         Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
-        Route::get('/comment/api/data', 'CommentController@data')->name('comment_data');
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
@@ -609,6 +594,12 @@ Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Contro
                                               'permissions' => 'dashboard.index',
                                               'as'          => 'dashboard.getToursTasksForCalendar'
 ]);
+
+Route::post('/calendar/quick-create', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@quickCreateCalendarEvent',
+                                       'middleware'  => ['auth', 'permissions.required'],
+                                       'permissions' => 'dashboard.index',
+                                       'as'          => 'calendar.quick-create'
+]);
 /*
 Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursByCountries',
     'middleware'  => ['auth', 'permissions.required'],
@@ -643,7 +634,6 @@ Route::group(['middleware' => 'web'], function () {
 	Route::get('/chat/{id}/deleteMsg', 'ChatController@delete')->name('chat.deleteMsg');
 	Route::get('/chat/{id}/destroy_chat', 'ChatController@destroy')->name('chat.destroy_chat');
     Route::get('/chat/renderUsersForChat', 'ChatController@renderUsersForChat')->name('chat.renderUsersForChat');
-    Route::get('/chat/api/data', 'ChatController@data')->name('chat.data');
     Route::get('/chat/{id}/getMessage', 'ChatController@getMessage')->name('chat.getMessage');
     Route::get('/chat/{id}/getNewChat', 'ChatController@getNewChat')->name('chat.getNewChat');
     Route::get('/chat/getOrCreateChat', 'ChatController@getOrCreateChat')->name('chat.getOrCreateChat');
@@ -735,7 +725,6 @@ Route::group(['middleware' => 'web'], function () {
 	Route::get('quotation/add_column_message', 'QuotationController@addColumnMessage')->name('quotation.add_column_message');
 	Route::get('quotation/{id}/pdf', 'QuotationController@pdf')->name('quotation.pdf');
 	Route::get('quotation/{id}/excel', 'QuotationController@excel')->name('quotation.excel');
-    Route::get('quotation/api/data', 'QuotationController@data')->name('quotation.data');
 	Route::post('quotation/{id}/save', 'QuotationController@save')->name('quotation.save');
 	Route::post('quotation/{id}/updateQuotation', 'QuotationController@update')->name('quotation.updateQuotation');
 	Route::post('quotation/{id}/confirm', 'QuotationController@confirm')->name('quotation.confirm');
@@ -771,7 +760,6 @@ Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landin
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');
 Route::get('tp/getaddEmails', '\App\Http\Controllers\BookingRequestController@getaddEmails')->name('tour_package.getAdditionEmails');
 Route::get('booking/{generatedlink}/{id}', '\App\Http\Controllers\BookingRequestController@generated_link');
-Route::get('offers_data/api/{id}/{supplier}', 'BookingRequestController@data')->name('offers_data');
 Route::get('offer/{id}/show', 'OfferController@show')->name('show');
 Route::get('offer/{id}/supplier_delete', 'OfferController@supplier_delete')->name('supplier_delete');
 Route::get('/offer/api/status_list', 'OfferController@statusList');
@@ -790,7 +778,6 @@ Route::get('TMS-Client/quotation_requests', '\App\Http\Controllers\TMSClient\Log
  Route::resource('client_tour_package', '\App\Http\Controllers\TMSClient\TourPackageController');
 Route::resource('TMS-Client-tours', '\App\Http\Controllers\TMSClient\TourController');
 	Route::get('TMS-Client-simpletours/create', '\App\Http\Controllers\TMSClient\TourController@simple_create');
-Route::get('quotation_requests_data/api/data', '\App\Http\Controllers\TMSClient\TourController@data')->name('quotation_requests_data');
 Route::get('client_tour_data/api/data', '\App\Http\Controllers\TMSClient\TourController@tour_data')->name('client_tour_data');
 //Route::post('/customLogin', '\App\Http\Controllers\TMSClient\LoginController@customLogin')->name('custom.login');
 Route::any('/sevice_modal/show/{id}', '\App\Http\Controllers\TMSClient\ModalController@show')->name('service_modal.show');

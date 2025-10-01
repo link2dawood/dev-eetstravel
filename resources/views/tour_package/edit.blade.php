@@ -281,7 +281,7 @@
                             <div class="form-group">
                                 <label >{!!trans('main.RoomTypes')!!}
                                     (
-                                <a href="/hotel/{{ $tourPackage->reference }}?tab=season_tab" >{!!trans('main.HotelSeasons')!!}</a>
+                                <a href="{{ route('hotel.show', ['hotel' => $tourPackage->reference, 'tab' => 'season_tab']) }}" >{!!trans('main.HotelSeasons')!!}</a>
                                     )</label>
 
                                 <div id="list_selected_room_types">

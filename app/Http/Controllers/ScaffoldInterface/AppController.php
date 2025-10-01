@@ -282,6 +282,119 @@ class AppController extends Controller
     }
 
     /**
+     * Quick create calendar event (task/tour/meeting)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function quickCreateCalendarEvent(Request $request)
+    {
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'type' => 'required|in:task,tour,meeting',
+                'date' => 'required|date',
+                'description' => 'nullable|string|max:500'
+            ]);
+
+            $user = Auth::user();
+            $type = $request->get('type');
+            $title = $request->get('title');
+            $date = $request->get('date');
+            $description = $request->get('description', '');
+
+            switch ($type) {
+                case 'task':
+                    $task = new Task();
+                    $task->content = $title;
+                    $task->description = $description;
+                    $task->dead_line = Carbon::parse($date)->format('Y-m-d H:i:s');
+                    $task->status = 2; // Pending status
+                    $task->save();
+
+                    // Attach task to current user
+                    $task->users()->attach($user->id);
+
+                    $eventData = [
+                        'id' => $task->id,
+                        'title' => $task->content,
+                        'start' => $task->dead_line,
+                        'backgroundColor' => $this->getTaskBackgroundColor($task),
+                        'type' => 'task'
+                    ];
+                    break;
+
+                case 'tour':
+                    // Create a basic tour entry (you might want to redirect to full tour creation)
+                    $tour = new Tour();
+                    $tour->name = $title;
+                    $tour->remark = $description;
+                    $tour->departure_date = $date;
+                    $tour->retirement_date = $date;
+                    $tour->pax = 1;
+                    $tour->status = 46; // Requested status
+                    $tour->is_quotation = 1;
+                    $tour->responsible = $user->id;
+                    $tour->save();
+
+                    $eventData = [
+                        'id' => $tour->id,
+                        'title' => $tour->name,
+                        'start' => $tour->departure_date,
+                        'backgroundColor' => $this->getTourBackgroundColor($tour),
+                        'type' => 'tour'
+                    ];
+                    break;
+
+                case 'meeting':
+                    // Create as a task with meeting type
+                    $task = new Task();
+                    $task->content = $title . ' (Meeting)';
+                    $task->description = $description;
+                    $task->dead_line = Carbon::parse($date)->format('Y-m-d H:i:s');
+                    $task->status = 2; // Pending status
+                    $task->save();
+
+                    // Attach task to current user
+                    $task->users()->attach($user->id);
+
+                    $eventData = [
+                        'id' => $task->id,
+                        'title' => $task->content,
+                        'start' => $task->dead_line,
+                        'backgroundColor' => '#6f42c1', // Purple for meetings
+                        'type' => 'meeting'
+                    ];
+                    break;
+
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid event type'
+                    ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => ucfirst($type) . ' created successfully!',
+                'event' => $eventData
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating ' . $request->get('type', 'event') . ': ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * @param Task $task
      *
      * @return string

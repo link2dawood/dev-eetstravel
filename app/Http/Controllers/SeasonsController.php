@@ -72,7 +72,7 @@ class SeasonsController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Season Price $agreement->name edited", 'success');
 
-        return redirect()->route('hotel.show', ['id' => $request->input('hotel_id'), 'tab' => 'season_tab']);
+        return redirect()->route('hotel.show', ['hotel' => $request->input('hotel_id'), 'tab' => 'season_tab']);
     }
 
     public function create($id)
@@ -170,7 +170,7 @@ class SeasonsController extends Controller
         }
 
         LaravelFlashSessionHelper::setFlashMessage("Season Price $agreement->name created", 'success');
-        return redirect()->route('hotel.show', ['id' => $request->input('hotel_id'), 'tab' => 'season_tab']);
+        return redirect()->route('hotel.show', ['hotel' => $request->input('hotel_id'), 'tab' => 'season_tab']);
     }
 
 
@@ -191,7 +191,7 @@ class SeasonsController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Season Price $agreement->name deleted", 'success');
         SeasonsPricesRoomTypeHotels::where('season_id', $id)->delete();
 
-        return redirect()->route('hotel.show', ['id' => $hotel_id, 'tab' => 'season_tab' ]);
+        return redirect()->route('hotel.show', ['hotel' => $hotel_id, 'tab' => 'season_tab' ]);
     }
 
     private function getValidate($request){

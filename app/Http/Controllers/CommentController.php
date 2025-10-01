@@ -10,7 +10,6 @@ use App\Helper\PermissionHelper;
 use Illuminate\Http\Request;
 use URL;
 use View;
-use Yajra\Datatables\Datatables;
 
 class CommentController extends Controller
 {
@@ -52,25 +51,6 @@ class CommentController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $comment);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(
-            Comment::distinct()
-                ->leftJoin('users', 'users.id', '=', 'comments.author_id')
-                ->select('comments.id', 'comments.content', 'comments.created_at',
-                    'users.name as sender'
-                )
-                ->where('parent', null)
-        )
-            ->addColumn('action', function ($comment) {
-                return $this->getActionButtons($comment->id, $comment);
-            })
-            //            ->addColumn('files', function ($announcement) {
-            //                return $this->renderAttachmentsList($announcement);
-            //            })
-            ->rawColumns(['action'/*, 'files'*/])
-            ->make(true);
-    }
 
     public function deleteMsg($id, Request $request)
     {

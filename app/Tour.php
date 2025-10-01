@@ -479,4 +479,9 @@ class Tour extends Model
     {
         return $this->hasMany('App\Childrens');
     }
+
+    public function client()
+    {
+        return $this->belongsTo('App\Client', 'client_id');
+    }
 }

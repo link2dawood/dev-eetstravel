@@ -65,7 +65,7 @@ class MenuController extends Controller
 	    $newMenu->description = $request->description;
 	    if ($request->serviceType == 'hotel') {
 		    $newMenu->hotel_id = $request->serviceId;
-		    $route = ['route' => route('hotel.show', ['id' => $request->serviceId])];
+		    $route = ['route' => route('hotel.show', ['hotel' => $request->serviceId])];
 	    }
 	    if ($request->serviceType == 'restaurant') {
 		    $newMenu->restaurant_id = $request->serviceId;

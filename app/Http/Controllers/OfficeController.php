@@ -25,7 +25,6 @@ use App\Office_Employes_Salary;
 use App\Office_Balance;
 use App\Invoices;
 use App\ClientInvoices;
-use Yajra\Datatables\Datatables;
 use App\Helper\ExportTrait;
 use Carbon\Carbon;
 use App\Helper\HelperTrait;
@@ -89,25 +88,6 @@ class OfficeController extends Controller {
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
 
-    public function data(Request $request)
-    {
-         $offices = Offices::distinct()->get();
-         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Offices'];
-         $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Offices'];
-         $permission_show = PermissionHelper::$relationsPermissionShow['App\Offices'];
-         
-         $perm = [];        
-         $perm['show'] = Auth::user()->can($permission_show);        
-         $perm['edit'] = Auth::user()->can($permission_edit);
-         $perm['destroy'] = Auth::user()->can($permission_destroy);
-         $perm['clone'] = Auth::user()->can('office.create');
-         
-        return Datatables::of($offices)->addColumn('action', function ($offices) use($perm) {
-                return $this->getButton($offices->id, false, $offices, $perm);
-            })
-            ->rawColumns(['select', 'action', 'link'])
-            ->make(true);
-    }
 
     public function create(Request $request)
     {

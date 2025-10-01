@@ -113,7 +113,7 @@ class AgreementsController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Agreement $agreement->name edited", 'success');
 
-        return redirect()->route('hotel.show', ['id' => $request->input('hotel_id'), 'tab' => 'agreement_tab']);
+        return redirect()->route('hotel.show', ['hotel' => $request->input('hotel_id'), 'tab' => 'agreement_tab']);
     }
 
     public function create($id)
@@ -216,7 +216,7 @@ class AgreementsController extends Controller
             }
         }
 
-        return redirect()->route('hotel.show', ['id' => $request->input('hotel_id'), 'tab' => 'agreement_tab']);
+        return redirect()->route('hotel.show', ['hotel' => $request->input('hotel_id'), 'tab' => 'agreement_tab']);
     }
 
     public function kontingent_delete(Request $request)
@@ -304,7 +304,7 @@ class AgreementsController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Agreement $agreement->name deleted", 'success');
         HotelAgreementsRoomTypeHotels::query()->where('agreement_id', $id)->delete();
 
-        return redirect()->route('hotel.show', ['id' => $hotel_id, 'tab' => 'agreement_tab']);
+        return redirect()->route('hotel.show', ['hotel' => $hotel_id, 'tab' => 'agreement_tab']);
     }
 
     private function getValidate($request)

@@ -637,17 +637,20 @@ class TourPackageController extends Controller
 
         $currencies = Currencies::all();
         $service = TourService::getService($serviceType);
-        $services = $service->getItems(['serviceType' => $serviceType, 'search' => $search]);
+        $services = $service ? $service->getItems(['serviceType' => $serviceType, 'search' => $search]) : collect();
         $filterType = $this->serviceTypes[$serviceType];
         $selectedServiceName = $this->serviceTypes[$tourPackage->type];
         $selectedService = TourService::getService(TourService::$serviceTypes[$tourPackage->type]);
 
-        $service = $selectedService->getItems(
-            [
-                'serviceType'   => $tourPackage->type,
-                'id'            => $tourPackage->reference
-            ]
-        )->first();
+        $service = null;
+        if ($selectedService) {
+            $service = $selectedService->getItems(
+                [
+                    'serviceType'   => $tourPackage->type,
+                    'id'            => $tourPackage->reference
+                ]
+            )->first();
+        }
 
 		$serviceName = '';
         if ($service) {

@@ -29,7 +29,7 @@ class Menu extends Model
 			return route('restaurant.show', ['id' => $this->restaurant_id]);
 		}
 		if ($this->hotel_id) {
-			return route('hotel.show', ['id' => $this->hotel_id]);
+			return route('hotel.show', ['hotel' => $this->hotel_id]);
 		}
 
 		return '#';

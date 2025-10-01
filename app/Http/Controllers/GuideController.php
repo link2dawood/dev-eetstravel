@@ -46,19 +46,6 @@ class GuideController extends Controller
         $this->middleware('auth');
     }
 
-    public function getButton($id)
-    {
-        $url = array('show'       => route('guide.show', ['id' => $id]),
-                     'edit'       => route('guide.edit', ['id' => $id]),
-                     'delete_msg' => "/guide/{$id}/deleteMsg");
-        return DatatablesHelperController::getActionButton($url);
-    }
-
-    // Removed data() method - using direct data in index() method instead of DataTables
-    // public function data(Request $request)
-    // {
-    //     return Datatables::of(...)
-    // }
 
     /**
      * Display a listing of the resource.
@@ -68,14 +55,24 @@ class GuideController extends Controller
     public function index()
     {
         $title = 'Index - guide';
-        $guides = Guide::leftJoin('countries', 'countries.alias', '=', 'guides.country')
-            ->leftJoin('cities', 'cities.id', '=', 'guides.city')
-            ->select(
-                'guides.*',
-                'cities.name as city_name',
-                'countries.name as country_name'
-            )
-            ->paginate(15);
+
+        $cacheKey = 'guides_index_data_' . md5(request()->getQueryString());
+        $guides = \Cache::remember($cacheKey, 300, function () {
+            return Guide::leftJoin('countries', 'countries.alias', '=', 'guides.country')
+                ->leftJoin('cities', 'cities.id', '=', 'guides.city')
+                ->select([
+                    'guides.id',
+                    'guides.name',
+                    'guides.address',
+                    'guides.work_phone',
+                    'guides.work_contact',
+                    'cities.name as city_name',
+                    'countries.name as country_name'
+                ])
+                ->orderBy('guides.name', 'asc')
+                ->paginate(15);
+        });
+
         return view('guide.index', compact('guides', 'title'));
     }
 

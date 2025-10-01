@@ -10,7 +10,12 @@
       "Bash(php artisan config:clear:*)",
       "Bash(php artisan:*)",
       "Bash(curl:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(php:*)",
+      "WebFetch(domain:bootsnipp.com)",
+      "WebSearch",
+      "Bash(node:*)",
+      "Bash(killall:*)"
     ],
     "deny": [],
     "ask": []

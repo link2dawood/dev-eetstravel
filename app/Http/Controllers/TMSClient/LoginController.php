@@ -108,18 +108,49 @@ public function Clientauth(Request $request)
         return redirect("TMS-Client/login")->withSuccess('You are not allowed to access');
     }
 
-    public function quotation_requests()
+    public function quotation_requests(Request $request)
     {
+        $client_id = $request->session()->get("CLIENT_ID");
 
-   
-		 $tours = Tour::where("status",46)->get();
-            return view("TMSClient.home.tour.quotation_requests",compact("tours"));
-        if(Auth::check()){
-            $tours = Tour::where("status",46)->get();
-            return view("TMSClient.home.tour.quotation_requests",compact("tours"));
+        if(!$client_id) {
+            return redirect("TMS-Client/login")->withSuccess('You are not allowed to access');
         }
-  
-        return redirect("TMS-Client/login")->withSuccess('You are not allowed to access');
+
+        // Get tours for the specific client with status 46 (requested) and 6
+        $tours = Tour::whereIn('status', [6, 46])
+                     ->where("client_id", $client_id)
+                     ->get();
+
+        // Process tours data to include action buttons and formatted data
+        $toursData = $tours->map(function ($tour) {
+            // Add action buttons
+            $tour->action_buttons = '<div class="d-flex align-items-center gap-2">
+                                        <a href="'.route('TMS-Client-tours.show', ['id' => $tour->id]).'" class="action-link btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>';
+
+            // Format departure date
+            $tour->formatted_departure_date = $tour->departure_date ?
+                \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '';
+
+            // Get status information
+            $tour->status_name = $tour->getStatusName();
+            $tour->status_color = $tour->getStatusColor();
+
+            // Add status CSS class based on status
+            if ($tour->status_name == 'Requested') {
+                $tour->status_class = 'status pending';
+            } elseif ($tour->status_name == 'Cancelled') {
+                $tour->status_class = 'status rejected';
+            } else {
+                $tour->status_class = 'status active';
+            }
+
+            return $tour;
+        });
+
+        return view("TMSClient.home.tour.quotation_requests", compact("toursData"));
     }
 	
 	public function signOut() {

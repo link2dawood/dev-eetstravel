@@ -391,7 +391,18 @@ class TourPackage extends Model
 		    $serviceType  = 'flights';
 	    }
     	$routeName = '';
-    	return route($serviceType.'.show', ['id' => $this->service()->id]);
+
+    	// Use correct parameter names for different service types
+    	$parameterMappings = [
+    	    'hotel' => 'hotel',
+    	    'event' => 'event',
+    	    'guide' => 'guide',
+    	    'restaurant' => 'restaurant',
+    	    'flights' => 'flight'
+    	];
+
+    	$parameterName = $parameterMappings[$serviceType] ?? 'id';
+    	return route($serviceType.'.show', [$parameterName => $this->service()->id]);
     }
     return route('tour.index');
     }

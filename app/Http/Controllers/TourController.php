@@ -123,77 +123,12 @@ class TourController extends Controller
     public function getButtonForTasks($id, $tour, $task)
     {
         $url = array('show'       => route('task.show', ['task' => $id]),
-            'edit'       => route('task.edit', ['id' => $id]),
+            'edit'       => route('task.edit', ['task' => $id]),
             'delete_msg' => "/task/{$id}/deleteMsg/{$tour}");
 
         return DatatablesHelperController::getActionButton($url, false, $task);
     }
 
-    /**
-     * data for datatables
-     * @param  Request $request
-     * @return datatables view
-     */
-    public function data(Request $request)
-    {
-        //if (Auth::user()->hasRole('admin')) {
-		
-		//	->where('retirement_date', '>=', $oneWeekAgo)
-         $currentDate = Carbon::now(); // Get the current date and time
-		$oneWeekAgo = $currentDate->copy()->subWeek(); // Subtract one week from the current date
-		$tours = Tour::with(['users', 'status'])
-            ->whereNotIn('status',[46,6,39])
-			->select('tours.*');
-        //} else {
-            //$tours = $this->repository->allForAssigned();
-        //}
-
-        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Tour'];
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\Tour'];
-        
-        $perm = [];        
-        $perm['show'] = Auth::user()->can($permission_show);        
-        $perm['edit'] = Auth::user()->can($permission_edit);
-        $perm['destroy'] = Auth::user()->can($permission_destroy);
-        $perm['clone'] = Auth::user()->can('tour.create');
-        
-        // Use DataTableService for improved performance
-        $columns = [
-            'action' => function ($tour) use($perm) {
-                return DataTableService::getActionButtons($tour->id, 'tour', $perm, [
-                    $this->getTourExtraButtons($tour)
-                ]);
-            },
-            'status_name' => function ($tour) {
-                if(Auth::user()->can('tour.edit')){
-                    return View::make('component.tour_status_for_datatable', [
-                        'status' => $tour->getStatusName(),
-                        'color' => $tour->getStatusColor()
-                    ]);
-                }
-                return DataTableService::formatStatus($tour->getStatusName(), $tour->getStatusColor());
-            },
-            'select' => function ($tour) {
-                return DatatablesHelperController::getSelectButton($tour->id, $tour->name);
-            },
-            'res_user' => function ($tour) {
-                $responsibleUser = $tour->getResponsibleUser();
-                return $responsibleUser ? $responsibleUser->name : '';
-            },
-            'assigned_users' => function ($tour) {
-                $names = $tour->users->pluck('name')->toArray();
-                return implode(' | ', $names);
-            },
-            'departure_date' => function ($tour) {
-                return DataTableService::formatDate($tour->departure_date);
-            }
-        ];
-
-        return DataTableService::process($tours, $columns)
-            ->rawColumns(['select', 'action', 'status_name'])
-            ->make(true);
-    }
 
     /**
      * Get tour-specific extra buttons
@@ -465,33 +400,6 @@ class TourController extends Controller
 	 * @param  Request $request
 	 * @return datatables view
 	 */
-	public function dataQuotation(Request $request)
-	{
-		if (Auth::user()->hasRole('admin')) {
-			$tours = $this->repository->allQuotationTours();
-		} else {
-			$tours = $this->repository->allQuotationToursForAssigned();
-		}
-		return Datatables::of($tours)->addColumn('action', function ($tour) {
-			return $this->getQuotationButton($tour->id, true, $tour);
-		})
-		                 ->addColumn('status_name', function ($tour){
-			                 return View::make('component.tour_status_for_datatable', ['status' => $tour->getStatusName(), 'color' => $tour->getStatusColor()]);
-		                 })
-		                 ->addColumn('select', function ($tour) {
-			                 return DatatablesHelperController::getSelectButton($tour->id, $tour->name);
-		                 })
-		                 ->addColumn('link', function($tour){
-			                 $tourDay = TourDay::where('tour', $tour->id)->first();
-			                 $link = route('tour_package.store');
-			                 if($tourDay){
-				                 return "<button data-link='$link' class='btn btn-success tour_package_add' data-tourDayId='{$tourDay->id}' data-tour_id='{$tour->id}'" .
-				                        " data-departure_date='{$tour->departure_date}' data-retirement_date='{$tour->retirement_date}'>+</button>";
-			                 }
-		                 })
-		                 ->rawColumns(['select', 'action', 'link'])
-		                 ->make(true);
-	}
 
     public function tasksData(Request $request){
         $idTasks = explode(",", $request->get('idTasks'));
@@ -628,83 +536,75 @@ class TourController extends Controller
      */
     public function index()
     {
-        // Get all tour collections needed for the view
-        $currentDate = Carbon::now();
-        $oneWeekAgo = $currentDate->copy()->subWeek();
+        // Cache key for tour data
+        $cacheKey = 'tours_index_data_' . md5(request()->getQueryString());
 
-        // Main tours (not archived, not certain statuses)
-        $tours = Tour::with(['users', 'status', 'city_begin', 'city_end'])
-            ->whereNotIn('status', [46, 6, 39])
-            ->get()
-            ->map(function($tour) {
-                $tour->responsible_user_names = $tour->getResponsibleUser() ? $tour->getResponsibleUser()->name : '';
+        // Use cache to improve performance (cache for 5 minutes)
+        $data = \Cache::remember($cacheKey, 300, function () {
+
+            // Single optimized query to get all tours with proper eager loading
+            $allTours = Tour::with([
+                'users:id,name',
+                'status:id,name,color',
+                'city_begin:id,name',
+                'city_end:id,name',
+                'client:id,name' // Include client relationship
+            ])
+            ->select('id', 'name', 'departure_date', 'external_name', 'status', 'responsible', 'client_id', 'city_begin', 'city_end')
+            ->orderBy('departure_date', 'desc')
+            ->get();
+
+            // Pre-load all responsible users to avoid N+1 queries
+            $responsibleUserIds = $allTours->pluck('responsible')->filter()->unique();
+            $responsibleUsers = \App\User::whereIn('id', $responsibleUserIds)
+                ->select('id', 'name')
+                ->get()
+                ->keyBy('id');
+
+            // Process tours once and partition into different collections
+            $processedTours = $allTours->map(function($tour) use ($responsibleUsers) {
+                // Cache responsible user name
+                $tour->responsible_user_names = isset($responsibleUsers[$tour->responsible])
+                    ? $responsibleUsers[$tour->responsible]->name
+                    : '';
+
+                // Cache assigned user names
                 $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
+
+                // Cache client name if exists
+                $tour->client_name = $tour->client ? $tour->client->name : '';
+
                 return $tour;
             });
 
-        // Client tours (tours with client_id)
-        $clientTours = Tour::with(['users', 'status', 'city_begin', 'city_end'])
-            ->whereNotNull('client_id')
-            ->where('client_id', '!=', 0)
-            ->get()
-            ->map(function($tour) {
-                $tour->responsible_user_names = $tour->getResponsibleUser() ? $tour->getResponsibleUser()->name : '';
-                $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
-                $client = Client::find($tour->client_id);
-                $tour->client_name = $client ? $client->name : '';
-                return $tour;
-            });
+            // Partition tours efficiently using collections
+            $tours = $processedTours->whereNotIn('status', [46, 6, 39]);
+            $clientTours = $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0);
+            $monthlyChartTours = $processedTours->where('status', 4);
+            $cancelledChartTours = $processedTours->where('status', 46);
+            $archivedTours = $processedTours->whereIn('status', [6, 39]);
 
-        // Monthly chart tours (ongoing projects - status 4)
-        $monthlyChartTours = Tour::with(['users', 'status', 'city_begin', 'city_end'])
-            ->where('status', 4)
-            ->get()
-            ->map(function($tour) {
-                $tour->responsible_user_names = $tour->getResponsibleUser() ? $tour->getResponsibleUser()->name : '';
-                return $tour;
-            });
+            // Get years efficiently
+            $years = Tour::selectRaw('YEAR(departure_date) as year')
+                ->whereNotNull('departure_date')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->toArray();
 
-        // Cancelled chart tours
-        $cancelledChartTours = Tour::with(['users', 'status', 'city_begin', 'city_end'])
-            ->where('status', 46) // assuming 46 is cancelled status
-            ->get()
-            ->map(function($tour) {
-                $tour->responsible_user_names = $tour->getResponsibleUser() ? $tour->getResponsibleUser()->name : '';
-                return $tour;
-            });
+            return compact('tours', 'clientTours', 'monthlyChartTours', 'cancelledChartTours', 'archivedTours', 'years');
+        });
 
-        // Archived tours
-        $archivedTours = Tour::with(['users', 'status', 'city_begin', 'city_end'])
-            ->whereIn('status', [6, 39])
-            ->get()
-            ->map(function($tour) {
-                $tour->responsible_user_names = $tour->getResponsibleUser() ? $tour->getResponsibleUser()->name : '';
-                return $tour;
-            });
-
-        $title = 'Tour';
-        $years = Tour::selectRaw('YEAR(departure_date) as year')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year')
-            ->toArray();
-
+        // Generate months array (this is fast, no need to cache)
         $months = [];
         for ($month = 1; $month <= 12; $month++) {
             $date = Carbon::create(null, $month, 1);
             $months[$month] = $date->formatLocalized('%B');
         }
 
-        return view('tour.index', compact(
-            'tours',
-            'clientTours',
-            'monthlyChartTours',
-            'cancelledChartTours',
-            'archivedTours',
-            'title',
-            'years',
-            'months'
-        ));
+        $title = 'Tour';
+
+        return view('tour.index', array_merge($data, compact('title', 'months')));
     }
 /**
  * Show the form for creating a new resource.
@@ -1139,7 +1039,8 @@ public function store(StoreTourRequest $request)
                 'id' => $transaction->id,
                 'office_name' => $office->office_name ?? '',
                 'tour_name' => $tour_obj->name ?? '',
-                'total_amount' => $total
+                'total_amount' => $total,
+                'date' => $transaction->created_at ?? $transaction->date ?? now()
             ];
         }
 
@@ -2159,61 +2060,7 @@ public function store(StoreTourRequest $request)
 	    }
 	    return redirect(route('tour.show', ['id' => $id]));
     }
-	 public function goaheadQuotation(Request $request)
-	{
-		if (Auth::user()->hasRole('admin')) {
-			$tours = $this->repository->getQuotationWithStatus(4);
-		} else {
-			$tours = $this->repository->allQuotationToursForAssigned();
-		}
-		return Datatables::of($tours)->addColumn('action', function ($tour) {
-			return $this->getQuotationButton($tour->id, true, $tour);
-		})
-		                 ->addColumn('status_name', function ($tour){
-			                 return View::make('component.tour_status_for_datatable', ['status' => $tour->getStatusName(), 'color' => $tour->getStatusColor()]);
-		                 })
-		                 ->addColumn('select', function ($tour) {
-			                 return DatatablesHelperController::getSelectButton($tour->id, $tour->name);
-		                 })
-		                 ->addColumn('link', function($tour){
-			                 $tourDay = TourDay::where('tour', $tour->id)->first();
-			                 $link = route('tour_package.store');
-			                 if($tourDay){
-				                 return "<button data-link='$link' class='btn btn-success tour_package_add' data-tourDayId='{$tourDay->id}' data-tour_id='{$tour->id}'" .
-				                        " data-departure_date='{$tour->departure_date}' data-retirement_date='{$tour->retirement_date}'>+</button>";
-			                 }
-		                 })
-		                 ->rawColumns(['select', 'action', 'link'])
-		                 ->make(true);
-	}
 	
- public function cancelledQuotation(Request $request)
-	{
-		if (Auth::user()->hasRole('admin')) {
-			$tours = $this->repository->getQuotationWithStatus(6);
-		} else {
-			$tours = $this->repository->allQuotationToursForAssigned();
-		}
-		return Datatables::of($tours)->addColumn('action', function ($tour) {
-			return $this->getQuotationButton($tour->id, true, $tour);
-		})
-		                 ->addColumn('status_name', function ($tour){
-			                 return View::make('component.tour_status_for_datatable', ['status' => $tour->getStatusName(), 'color' => $tour->getStatusColor()]);
-		                 })
-		                 ->addColumn('select', function ($tour) {
-			                 return DatatablesHelperController::getSelectButton($tour->id, $tour->name);
-		                 })
-		                 ->addColumn('link', function($tour){
-			                 $tourDay = TourDay::where('tour', $tour->id)->first();
-			                 $link = route('tour_package.store');
-			                 if($tourDay){
-				                 return "<button data-link='$link' class='btn btn-success tour_package_add' data-tourDayId='{$tourDay->id}' data-tour_id='{$tour->id}'" .
-				                        " data-departure_date='{$tour->departure_date}' data-retirement_date='{$tour->retirement_date}'>+</button>";
-			                 }
-		                 })
-		                 ->rawColumns(['select', 'action', 'link'])
-		                 ->make(true);
-	}
 	
 public function quotation_data(Request $request)
     {

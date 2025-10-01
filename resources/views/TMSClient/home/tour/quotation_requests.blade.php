@@ -23,87 +23,30 @@
                  <th class="actions-button" style="width:140px; text-align: center;">{!!trans('main.Actions')!!}</th>
                 </tr>
               </thead>
-			<tfoot>
-                    <tr>
-                        <th class="not"></th>
-                        <th>{!!trans('main.Name')!!}</th>
-                        <th>{!!trans('main.Depdate')!!}</th>
-                   
-                        <th class="select_search">{!!trans('main.Status')!!}</th>
-                        <th>{!!trans('main.ExternalName')!!}</th>
-                        <th class="not"></th>
-                    </tr>
-                </tfoot>
               <tbody>
+                @forelse($toursData as $tour)
                 <tr>
+                  <td>{{ $tour->id }}</td>
                   <td>
-                    1.
+                    <h6 class="fw-bold mb-0">{{ $tour->name }}</h6>
+                    <p class="text mb-0">{{ $tour->formatted_departure_date }} - {{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '' }}</p>
                   </td>
+                  <td>{{ $tour->pax }}</td>
                   <td>
-                    <h6 class="fw-bold mb-0">Tour Name</h6>
-                    <p class="text mb-0">30 Oct 2023 - 05 Nov 2023</p>
-                  </td>
-                  <td>24</td>
-                  <td>
-                    <div class="status active">
-                      <!-- Note: These are some of the classes to change the color of status dot "active", "pending", "rejected". -->
-                      Active
+                    <div class="{{ $tour->status_class }}">
+                      {{ $tour->status_name }}
                     </div>
                   </td>
+                  <td>{{ $tour->external_name }}</td>
                   <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="" class="action-link btn-primary">
-                        <i class="fas fa-eye"></i>
-                      </a>
-                    </div>
+                    {!! $tour->action_buttons !!}
                   </td>
                 </tr>
+                @empty
                 <tr>
-                  <td>
-                    1.
-                  </td>
-                  <td>
-                    <h6 class="fw-bold mb-0">Tour Name</h6>
-                    <p class="text mb-0">30 Oct 2023 - 05 Nov 2023</p>
-                  </td>
-                  <td>24</td>
-                  <td>
-                    <div class="status pending">
-                      <!-- Note: These are some of the classes to change the color of status dot "active", "pending", "rejected". -->
-                      Pending
-                    </div>
-                  </td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="" class="action-link btn-primary">
-                        <i class="fas fa-eye"></i>
-                      </a>
-                    </div>
-                  </td>
+                  <td colspan="6" class="text-center">No quotation requests found</td>
                 </tr>
-                <tr>
-                  <td>
-                    1.
-                  </td>
-                  <td>
-                    <h6 class="fw-bold mb-0">Tour Name</h6>
-                    <p class="text mb-0">30 Oct 2023 - 05 Nov 2023</p>
-                  </td>
-                  <td>24</td>
-                  <td>
-                    <div class="status rejected">
-                      <!-- Note: These are some of the classes to change the color of status dot "active", "pending", "rejected". -->
-                      Rejected
-                    </div>
-                  </td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <a href="" class="action-link btn-primary">
-                        <i class="fas fa-eye"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
+                @endforelse
               </tbody>
             </table>
           </div>
@@ -119,139 +62,9 @@
 	
 <script>
     $(document).ready(function() {
-        let permission = $('#permission').attr('data-permission');
-        let classNameStatus = permission ? 'touredit-status' : '';
-        let table = $('#tour-table').DataTable({
-            dom: "<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths = 
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('quotation_requests_data')}}",
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-                {
-                    data: 'name',
-                    name: 'name',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'departure_date',
-                    name: 'departure_date',
-                    className: 'touredit-departure_date'
-                },
-                //        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-               
-                {
-                    data: 'status_name',
-                    className: classNameStatus 
-                },
-                {
-                    data: 'external_name',
-                    name: 'external_name',
-                    className: 'touredit-external_name'
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    searchable: false,
-                    sorting: false,
-                    orderable: false
-                }
-            ],
-            'columnDefs': [{
-                'targets': 5,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                    var url = "{{ route('tour.update', ['tour' => '__ID__']) }}".replace('__ID__', rowData.id);
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-			'columnDefs': [ {
-			  'targets': 3,
-			  'createdCell': function (td, cellData, rowData, row, col) {
-			
-				if ( cellData == 'Requested' ) {
-				  $(td).addClass('status pending');
-				}
-				 else if ( cellData == 'Cancelled' ) {
-				  $(td).addClass('status rejected');
-				}
-				
-			  }
-			} ],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $('<select class="form-control"><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#tour-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#tour-table tfoot th').appendTo('#tour-table thead');
-
-    })
+        // Simple table functionality without DataTable
+        console.log('TMSClient Tour Quotation Requests table loaded with direct controller data');
+    });
 </script>
 </body>
 

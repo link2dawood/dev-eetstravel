@@ -805,32 +805,42 @@
 					<div id="tour_create" style="margin-bottom : 20px;">
                     {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class) !!}
                 </div>
-                    <table id="transactions-table" class="table table-striped table-bordered table-hover"
-                        style='background:#fff; width: 100%; table-layout: fixed ; display = "none"'>
-                        <thead>
-                            <tr>
-                                <th>id</th>
-                                <th>Date</th>
-                                <th>Tour Name</th>
-                                <th>Client Name</th>
-                                <th>Amount Recieveable</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tfoot>
-                            <tr>
-                                <th>id</th>
-                                <th>Date</th>
-                                <th>Tour Name</th>
-                                <th>Client Name</th>
-                                <th>Amount Recieveable</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </tfoot>
-
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover bootstrap-table" data-search="true" data-pagination="true" data-page-size="10">
+                            <thead>
+                                <tr>
+                                    <th data-sortable="true">ID</th>
+                                    <th data-sortable="true">Date</th>
+                                    <th data-sortable="true">Tour Name</th>
+                                    <th data-sortable="true">Office Name</th>
+                                    <th data-sortable="true">Total Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($billingData as $billing)
+                                <tr>
+                                    <td>{{ $billing['id'] }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d') }}</td>
+                                    <td>{{ $billing['tour_name'] }}</td>
+                                    <td>{{ $billing['office_name'] }}</td>
+                                    <td>{{ $billing['total_amount'] }}</td>
+                                    <td>
+                                        <a href="{{ route('accounting.show', ['accounting' => $billing['id']]) }}" class="btn btn-info btn-sm">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('accounting.edit', ['accounting' => $billing['id']]) }}" class="btn btn-warning btn-sm">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a class="btn btn-danger btn-sm delete" data-toggle="modal" data-target="#myModal" data-link="/accounting/{{ $billing['id'] }}/deleteMsg">
+                                            <i class="fa fa-trash-o"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
 
 
 
@@ -849,7 +859,8 @@
                                         class="fa fa-question-circle" aria-hidden="true"></i>
                                     @include('legend.frontsheet_legend')
                                 </span>
-                                <form action="{{ route('comparison.update', ['comparison' => $quotation->id ?? '']) }}"
+                                @if(!empty($quotation) && $quotation->id)
+                                <form action="{{ route('comparison.update', ['comparison' => $quotation->id]) }}"
                                     method="POST">
                                     <div style="margin-bottom: 10px;">
                                         <div class="row">
@@ -1117,6 +1128,11 @@
                                         </table>
                                     </div>
                                 </form>
+                                @else
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> No quotation data available for front sheet.
+                                </div>
+                                @endif
                             </div>
 
                             <div class="col-md-8">
@@ -1636,153 +1652,7 @@
         let classNameStatus = permission ? 'touredit-status' : '';
         const tour_id = $('#tour_date_id').attr('data-tour-id');
 
-        let table = $('#inovices-table').DataTable({
-            dom: "<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths =
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "/TourInvoiceData/api/data/" + tour_id,
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-                {
-                    data: 'invoice_no',
-                    name: 'invoice_no',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'dueDate',
-                    name: 'dueDate',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'receivedDate',
-                    name: 'receivedDate',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'tour',
-                    name: 'tour',
-                    className: 'touredit-name'
-                },
-
-                {
-                    data: 'package',
-                    name: 'package',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'officeName',
-                    name: 'officeName',
-                    className: 'touredit-name'
-                },
-                //        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-
-                {
-                    data: 'total_amount',
-                    name: 'total_amount',
-                    className: 'touredit-city_begin'
-                },
-
-
-                {
-                    data: 'status',
-                    name: 'status',
-                    className: 'touredit-city_begin'
-                },
-
-                {
-                    data: 'action',
-                    name: 'action',
-                    searchable: false,
-                    sorting: false,
-                    orderable: false
-                }
-            ],
-            'columnDefs': [{
-                'targets': 5,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                    var url = "{{ route('tour.update', ['tour' => '__ID__']) }}".replace('__ID__', rowData.id);
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $(
-                                '<select class="form-control"><option value=""></option></select>'
-                            )
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this)
-                                    .val());
-                                column.search(val ? '^' + val + '$' : '', true, false)
-                                    .draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d +
-                                '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#inovices-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title +
-                    '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#inovices-table tfoot th').appendTo('#inovices-table thead');
+        // Invoices table now uses Bootstrap table with direct controller data
 
     })
 </script>
@@ -1836,135 +1706,7 @@
     $(document).ready(function() {
         let permission = $('#permission').attr('data-permission');
         let classNameStatus = permission ? 'touredit-status' : '';
-        let table = $('#transactions-table').DataTable({
-            dom: "<'row'<'col-md-4'l><'col-md-4'B><'col-md-4'f>>" +
-                "<tr>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths =
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "/TourAccountingData/api/data/" + tour_id,
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-                {
-                    data: 'date',
-                    name: 'date',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'tourName',
-                    name: 'tourName',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'clientName',
-                    name: 'clientName',
-                    className: 'touredit-name'
-                },
-
-
-                {
-                    data: 'amount_receiveable',
-                    name: 'amount_receiveable',
-                    className: 'touredit-city_begin'
-                },
-                {
-                    data: 'Status',
-                    name: 'Status',
-                    className: 'touredit-city_begin'
-                },
-
-                {
-                    data: 'action',
-                    name: 'action',
-                    searchable: false,
-                    sorting: false,
-                    orderable: false
-                }
-            ],
-            'columnDefs': [{
-                'targets': 5,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                    var url = "{{ route('tour.update', ['tour' => '__ID__']) }}".replace('__ID__', rowData.id);
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $(
-                                '<select class="form-control"><option value=""></option></select>'
-                            )
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this)
-                                    .val());
-                                column.search(val ? '^' + val + '$' : '', true, false)
-                                    .draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d +
-                                '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#transactions-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title +
-                    '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#transactions-table tfoot th').appendTo('#transactions-table thead');
+        // Transactions table now uses Bootstrap table with direct controller data
 
     })
 	

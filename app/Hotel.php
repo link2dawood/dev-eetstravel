@@ -179,8 +179,8 @@ class Hotel extends Model
 
     public function getButton($id)
     {
-        $url = array('show'       => route('hotel.show', ['id' => $id]),
-                     'edit'       => route('hotel.edit', ['id' => $id]),
+        $url = array('show'       => route('hotel.show', ['hotel' => $id]),
+                     'edit'       => route('hotel.edit', ['hotel' => $id]),
                      'delete_msg' => "/hotel/{$id}/deleteMsg");
         return DatatablesHelperController::getActionButton($url, false, $this);
     }

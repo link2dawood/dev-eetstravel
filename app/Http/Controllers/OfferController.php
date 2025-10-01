@@ -704,7 +704,50 @@ class OfferController extends Controller
 		}
 		
 
-        return view('tour_package.offers.index', compact('title', 'tour_package','selected_room_types'));
+        // Get offers data (similar to BookingRequestController@data method)
+        $offers = HotelOffers::where('package_id', $id)->get();
+
+        // Process offers data to include room prices and other info
+        $offersData = $offers->map(function ($offer) {
+            // Add room prices for each room type
+            $roomPrices = [];
+            foreach (RoomTypes::all() as $roomType) {
+                $price = "N/A";
+                foreach ($offer->offer_room_prices as $offerRoomPrice) {
+                    if ($offerRoomPrice->room_type_id == $roomType->id) {
+                        $price = $offerRoomPrice->price;
+                        break;
+                    }
+                }
+                $roomPrices[$roomType->code] = $price;
+            }
+            $offer->room_prices = $roomPrices;
+
+            // Add status name
+            $offer->status_tms_name = $offer->getStatusName($offer->tms_status);
+
+            // Add action buttons (similar to getShowButton method)
+            $package = TourPackage::find($offer->package_id);
+            $tour_id = $package->getTour()->id ?? "";
+            $tour = $package->getTour();
+
+            $button = '';
+            if($offer->supplier_delete == 0) {
+                $button = '<button class="delete btn btn-danger btn-sm" style="margin-right: 5px" data-toggle="modal" data-target="#myModal" data-link="/offer/'.$offer->id.'/supplier_delete"><i class="fa fa-trash-o"></i></button>';
+            } else {
+                $button = '<button class="delete btn btn-danger btn-sm" style="margin-right: 5px;" data-info="' . htmlspecialchars(json_encode($package ?: ' ')) . '"
+                    onclick="loadTemplate(JSON.parse((this.getAttribute(\'data-info\')) ? JSON.parse((this.getAttribute(\'data-info\'))).type : \'\'), \'' . htmlspecialchars($package->service()->work_email) . '\', \'' . htmlspecialchars($package->name) . '\', \'' . htmlspecialchars($package->pax . ' ' . $package->pax_free) . '\', \'\', \'' . htmlspecialchars($package->service()->work_email) . '\', \'' . htmlspecialchars($package->service()->work_phone) . '\', \'' . htmlspecialchars($package->description) . '\', \'\', \'' . htmlspecialchars($package->time_from) . '\', \'' . htmlspecialchars($package->time_to) . '\', \'' . htmlspecialchars($package->supplier_url) . '\', \'' . htmlspecialchars($package->total_amount) . '\', \'\', \'' . htmlspecialchars($tour->id) . '\', \'' . htmlspecialchars($package->reference) . '\', \'' . htmlspecialchars($tour->name) . '\', \'' . htmlspecialchars($package->id) . '\', \'' . htmlspecialchars($offer->id) . '\');"
+                    class="btn btn-success btn-xs"
+                ><i class="fa fa-envelope" aria-hidden="true"></i></button>';
+
+                $button .= '<a class="btn btn-warning btn-sm show-button" href="https://dev.eetstravel.com/offer/'.$offer->id.'/show" data-link="https://dev.eetstravel.com/tour/5"><i class="fa fa-info-circle"></i></a>';
+            }
+            $offer->action_buttons = $button;
+
+            return $offer;
+        });
+
+        return view('tour_package.offers.index', compact('title', 'tour_package','selected_room_types', 'offersData'));
     }
 	public function setConnectionToServer()
 	{

@@ -19,8 +19,6 @@
     <link rel="stylesheet" href="<?php echo e(asset('css/ionicons.min.css')); ?>">
     <link rel="stylesheet" href="<?php echo e(asset('css/magnific.css')); ?>">
     <link rel="stylesheet" href="<?php echo e(asset('css/jquery.toast.css')); ?>">
-    <link rel="stylesheet" href="<?php echo e(asset('css/fullcalendar.css')); ?>"/>
-
     <!-- Theme style -->
     <link rel="stylesheet" href="<?php echo e(asset('css/adminlte-app.css')); ?>">
     <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>">
@@ -35,8 +33,6 @@
 
     <script type="text/javascript" src="<?php echo e(asset('js/lib/jquery.min.js')); ?>"></script>
     <script type="text/javascript" src="<?php echo e(asset('js/lib/moment.js')); ?>"></script>
-    <script type="text/javascript" src="<?php echo e(asset('js/lib/fullcalendar.js')); ?>"></script>
-    <script type="text/javascript" src="<?php echo e(asset('js/lib/gcal.js')); ?>"></script>
     <script src="https://jsuites.net/v4/jsuites.js"></script>
     <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
     <script type="text/javascript" src="<?php echo e(asset('js/jquery.toast.js')); ?>"></script>

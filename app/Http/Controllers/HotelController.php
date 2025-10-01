@@ -50,19 +50,6 @@ class HotelController extends Controller
         $this->middleware('auth');
     }
 
-    public function getButton($id)
-    {
-        $url = array('show'       => route('hotel.show', ['id' => $id]),
-                     'edit'       => route('hotel.edit', ['id' => $id]),
-                     'delete_msg' => "/hotel/{$id}/deleteMsg");
-        return DatatablesHelperController::getActionButton($url);
-    }
-    
-    // Removed data() method - using direct data in index() method instead of DataTables
-    // public function data(Request $request)
-    // {
-    //     return Datatables::of(...)
-    // }
 
     /**
      * Display a listing of the resource.
@@ -72,14 +59,24 @@ class HotelController extends Controller
     public function index(Request $request)
     {
         $title = 'Index - Hotel';
-        $hotels = Hotel::leftJoin('countries', 'countries.alias', '=', 'hotels.country')
-            ->leftJoin('cities', 'cities.id', '=', 'hotels.city')
-            ->select(
-                'hotels.*',
-                'cities.name as city_name',
-                'countries.name as country_name'
-            )
-            ->paginate(10);
+
+        $cacheKey = 'hotels_index_data_' . md5(request()->getQueryString());
+        $hotels = \Cache::remember($cacheKey, 300, function () {
+            return Hotel::leftJoin('countries', 'countries.alias', '=', 'hotels.country')
+                ->leftJoin('cities', 'cities.id', '=', 'hotels.city')
+                ->select([
+                    'hotels.id',
+                    'hotels.name',
+                    'hotels.address',
+                    'hotels.work_phone',
+                    'hotels.contact_email',
+                    'cities.name as city_name',
+                    'countries.name as country_name'
+                ])
+                ->orderBy('hotels.name', 'asc')
+                ->paginate(15);
+        });
+
         return view('hotel.index', compact('hotels', 'title'));
     }
 

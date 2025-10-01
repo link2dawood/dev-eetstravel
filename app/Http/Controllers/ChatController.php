@@ -15,7 +15,6 @@ use Illuminate\Mail\Message;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
-use Yajra\Datatables\Datatables;
 
 class ChatController extends Controller {
 	public $pusher;
@@ -34,7 +33,24 @@ class ChatController extends Controller {
 	}
 
 	public function index() {
-		return view( 'chats.index' );
+		// Get all chats data (same as the AJAX data method)
+		$chatsData = Chat::distinct()
+			->leftJoin( 'users', 'users.id', '=', 'chats.author' )
+			->select(
+				'chats.id as id',
+				'chats.title as title',
+				'chats.description as description',
+				'chats.type as type',
+				'users.name as author'
+			)
+			->get();
+
+		// Add action buttons to each chat
+		$chatsData->each(function ($chat) {
+			$chat->action_buttons = $this->getActionButtons($chat->id);
+		});
+
+		return view( 'chats.index', compact('chatsData') );
 	}
 
 	public function getActionButtons( $id ) {
@@ -47,24 +63,6 @@ class ChatController extends Controller {
 		return DatatablesHelperController::getActionButton( $url );
 	}
 
-	public function data( Request $request ) {
-		return Datatables::of(
-			Chat::distinct()
-			    ->leftJoin( 'users', 'users.id', '=', 'chats.author' )
-			    ->select(
-				    'chats.id as id',
-				    'chats.title as title',
-				    'chats.description as description',
-				    'chats.type as type',
-				    'users.name as author'
-			    )
-		)
-		                 ->addColumn( 'action', function ( $announcement ) {
-			                 return $this->getActionButtons( $announcement->id );
-		                 } )
-		                 ->rawColumns( [ 'action'/*, 'files'*/ ] )
-		                 ->make( true );
-	}
 
 
 	public function getIndex() {

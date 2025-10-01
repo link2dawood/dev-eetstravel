@@ -29,7 +29,6 @@ use Auth;
 use View;
 use Illuminate\Support\Facades\Mail;
 use App\Helper\PermissionHelper;
-use Yajra\Datatables\Datatables;
 class BookingRequestController extends Controller
 {
 	protected $tourPackageRepository;
@@ -79,65 +78,6 @@ class BookingRequestController extends Controller
 			}
 			return $button;
 		
-	}
-	public function data($id, $supplier)
-	{
-		
-		$sevenDaysAgo = Carbon::now()->subDays(7);
-		$roomTypes = RoomTypes::all();
-
-		$desiredStatuses = ["Offered with Option", "Offered No rooms blocked"];
-		$offers = HotelOffers::where('package_id', $id)->get();
-
-		$permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
-		$permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
-		$permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
-
-		$perm = [
-		];
-
-		$dataTable = Datatables::of($offers);
-
-		foreach ($roomTypes as $roomType) {
-			$columnName = $roomType->code;
-
-			$dataTable->addColumn($columnName, function ($offer) use ($roomType) {
-				foreach ($offer->offer_room_prices as $offerRoomPrice) {
-					if ($offerRoomPrice->room_type_id == $roomType->id) {
-						return $offerRoomPrice->price;
-					}
-				}
-				return "N/A";
-			});
-		}
-
-		$dataTable->addColumn('hotel_name', function ($offers) use ($perm) {
-			$package = TourPackage::find($offers->package_id);
-			if (empty($package)) {
-				$offers->delete();
-			}
-			return $package->name ?? "";
-		});
-
-		// ... (continue adding other columns)
-
-		$dataTable->addColumn('tour_name', function ($offers) use ($perm) {
-			$tour = Tour::find($offers->tour_id);
-			$tour_name = "";
-			if (!empty($tour)) {
-				$tour_name = $tour->name ?? "";
-			}
-			return $tour_name;
-		});
-
-		$dataTable->addColumn('action', function ($offers) use ($perm,$supplier) {
-			 return $this->getShowButton($offers,$perm,$supplier);
-			
-		});
-		$dataTable ->addColumn('status_tms', function ($offers) use ($perm) {
-			return $offers->getStatusName($offers->tms_status);
-        });	
-		return $dataTable->rawColumns(['select', 'action', 'link'])->make(true);
 	}
 	public function setConnectionToServer()
     {

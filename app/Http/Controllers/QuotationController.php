@@ -15,6 +15,9 @@ use Redirect;
 use Yajra\Datatables\Datatables;
 use Maatwebsite\Excel\Facades\Excel;
 use App\TourDay;
+use App\Status;
+use App\Country;
+use App\City;
 class QuotationController extends Controller {
 
     /**
@@ -34,9 +37,81 @@ class QuotationController extends Controller {
 	 */
 	public function index() {
         $title = 'Index - quotation';
-        $quotation = Quotation::query()->get();
 
-        return view('quotation.index', compact('quotation', 'title'));
+        // Get quotation data with related tables - same logic from data() method
+        $quotations = Quotation::query()
+            ->leftJoin('tours', 'tours.id', '=', 'quotations.tour_id')
+            ->leftJoin('users', 'users.id', '=', 'quotations.user_id')
+            ->select([
+                'quotations.id',
+                'quotations.name',
+                'quotations.tour_id',
+                'quotations.created_at',
+                'users.name as user_name',
+                'tours.name as tour_name'
+            ])
+            ->get();
+
+        // Process each quotation to add computed fields
+        $quotations = $quotations->map(function ($quotation) {
+            // Add action buttons
+            $quotation->action = $this->getButton($quotation->id, $quotation);
+
+            // Format created_at date
+            $quotation->formatted_created_at = (new Carbon($quotation->created_at))->format('Y-m-d H:s');
+
+            // Add tour link
+            if ($quotation->tour_id) {
+                $tour = Tour::find($quotation->tour_id);
+                if ($tour) {
+                    $link = route('tour.show', ['tour' => $tour->id]);
+                    $quotation->tour_link = "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>{$tour->name}</a>";
+                } else {
+                    $quotation->tour_link = '';
+                }
+            } else {
+                $quotation->tour_link = '';
+            }
+
+            // Add comparison link
+            $comparison_link = route('comparison.show', ['id' => $quotation->id]);
+            if (Auth::user()->can('comparison.show')) {
+                $quotation->comparison = "<a href='{$comparison_link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
+            } else {
+                $quotation->comparison = "<span>No permission</span>";
+            }
+
+            return $quotation;
+        });
+
+        // Get go-ahead tours (tours with confirmed quotations)
+        $goAheadTours = Tour::query()
+            ->leftJoin('quotations', 'quotations.tour_id', '=', 'tours.id')
+            ->leftJoin('status', 'status.id', '=', 'tours.status')
+            ->leftJoin('countries as country_begin', 'country_begin.alias', '=', 'tours.country_begin')
+            ->leftJoin('countries as country_end', 'country_end.alias', '=', 'tours.country_end')
+            ->leftJoin('cities as city_begin', 'city_begin.id', '=', 'tours.city_begin')
+            ->leftJoin('cities as city_end', 'city_end.id', '=', 'tours.city_end')
+            ->where('quotations.is_confirm', 1)
+            ->select([
+                'tours.id',
+                'tours.name',
+                'tours.departure_date',
+                'tours.external_name',
+                'country_begin.name as country_begin',
+                'city_begin.name as city_begin',
+                'status.name as status_name'
+            ])
+            ->distinct()
+            ->get();
+
+        // Process go-ahead tours to add action buttons
+        $goAheadTours = $goAheadTours->map(function ($tour) {
+            $tour->action = $this->getTourButton($tour->id);
+            return $tour;
+        });
+
+        return view('quotation.index', compact('quotations', 'goAheadTours', 'title'));
 	}
 
     public function getButton($id, $quotation)
@@ -49,64 +124,24 @@ class QuotationController extends Controller {
         return DatatablesHelperController::getQuotationListButtons($url, $quotation);
     }
 
-    public function data(Request $request)
+    public function getTourButton($id)
     {
-        $quotations = Quotation::query();
+        $url = [
+            'show' => route('tour.show', ['tour' => $id]),
+            'edit' => route('tour.edit', ['tour' => $id])
+        ];
 
-        return Datatables::of($quotations
-            ->leftJoin('tours', 'tours.id', '=', 'quotations.tour_id')
-            ->leftJoin('users', 'users.id', '=', 'quotations.user_id')
-            ->select([
-                'quotations.id',
-                'quotations.name',
-                'quotations.tour_id',
-                'quotations.created_at',
-                'users.name as user_name'
-            ]))
-            ->addColumn('action', function ($quotation) {
-                return $this->getButton($quotation->id, $quotation);
-            })
-            ->addColumn('user_name', function ($quotation) {
-                return $quotation->user_name;
-            })
-            ->addColumn('tour_name', function ($quotation) {
+        $buttons = '';
+        if (Auth::user()->can('tour.show')) {
+            $buttons .= "<a href='{$url['show']}' class='btn btn-primary btn-xs' title='Show'><i class='fa fa-eye'></i></a> ";
+        }
+        if (Auth::user()->can('tour.edit')) {
+            $buttons .= "<a href='{$url['edit']}' class='btn btn-info btn-xs' title='Edit'><i class='fa fa-edit'></i></a>";
+        }
 
-                $tour = Tour::query()->where('id', $quotation->tour_id)->first();
-
-
-                if(!$tour){
-                    return '';
-                }
-
-                $tour_id = $tour->id;
-                $tour_name = $tour->name;
-
-                $link = route('tour.show', ['tour' => $tour_id]);
-                return "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>$tour_name</a>";
-//                if($tour->isMyTour()){
-//                    return "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>$tour_name</a>";
-//                }
-//                    return "<a href='' class='click_event' style='color: grey; text-decoration: underline!important; cursor: pointer'>$tour_name</a>";
-            })
-            ->addColumn('created_at', function ($quotation) {
-                $created_at = (new Carbon($quotation->created_at))->format('Y-m-d H:s');
-
-                return $created_at;
-            })
-            ->addColumn('comparison', function ($quotation) {
-                $link = route('comparison.show', ['id' => $quotation->id]);
-
-                if(Auth::user()->can('comparison.show')){
-                    $link = "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
-                }else{
-                    $link = "<span>No permission</span>";
-                }
-
-                return $link;
-            })
-            ->rawColumns(['action', 'tour_name', 'comparison'])
-            ->make(true);
+        return $buttons;
     }
+
 
 	/**
 	 * Show the form for creating a new resource.

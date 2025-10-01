@@ -35,55 +35,6 @@ class ClientController extends Controller
         $this->middleware('auth');
     }
 
-    public function getButton($id, $client)
-    {
-        $url = ['show'       => route('clients.show', ['id' => $id]),
-            'edit'       => route('clients.edit', ['id' => $id]),
-            'delete_msg' => "/clients/{$id}/deleteMsg"];
-
-        return DatatablesHelperController::getActionButton($url, false, $client);
-    }
-
-    public function data(Request $request)
-    {
-        $query = Client::distinct()
-            ->leftJoin('countries', 'countries.alias', '=', 'clients.country')
-            ->leftJoin('cities', 'cities.id', '=', 'clients.city')
-            ->select([
-                'clients.id',
-                'clients.name',
-                'clients.address',
-                'clients.account_no',
-                'clients.company_address',
-                'clients.invoice_address',
-                'clients.work_phone',
-                'clients.work_email',
-                'clients.work_fax',
-                'cities.name as city',
-                'countries.name as country'
-            ]);
-
-        // Get pagination parameters
-        $perPage = $request->get('length', 15);
-        $page = $request->get('start', 0) / $perPage + 1;
-
-        // Get total count
-        $total = $query->count();
-
-        // Apply pagination
-        $clients = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        // Process each client
-        foreach($clients as $client) {
-            $client->action = $this->getButton($client->id, $client);
-        }
-
-        return response()->json([
-            'data' => $clients,
-            'recordsTotal' => $total,
-            'recordsFiltered' => $total
-        ]);
-    }
 
     /**
      * Display a listing of the resource.
@@ -93,14 +44,26 @@ class ClientController extends Controller
     public function index()
     {
         $title = 'Index - client';
-        $clients = Client::leftJoin('countries', 'countries.alias', '=', 'clients.country')
-            ->leftJoin('cities', 'cities.id', '=', 'clients.city')
-            ->select([
-                'clients.*',
-                'countries.name as country_name',
-                'cities.name as city_name'
-            ])
-            ->paginate(15);
+
+        $cacheKey = 'clients_index_data_' . md5(request()->getQueryString());
+        $clients = \Cache::remember($cacheKey, 300, function () {
+            return Client::leftJoin('countries', 'countries.alias', '=', 'clients.country')
+                ->leftJoin('cities', 'cities.id', '=', 'clients.city')
+                ->select([
+                    'clients.id',
+                    'clients.name',
+                    'clients.address',
+                    'clients.account_no',
+                    'clients.company_address',
+                    'clients.invoice_address',
+                    'clients.work_phone',
+                    'clients.work_email',
+                    'countries.name as country_name',
+                    'cities.name as city_name'
+                ])
+                ->orderBy('clients.name', 'asc')
+                ->paginate(15);
+        });
 
         return view('clients.index', compact('clients', 'title'));
     }

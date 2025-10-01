@@ -18,7 +18,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use URL;
 use View;
-use Yajra\Datatables\Datatables;
 use App\Repository\Contracts\TaskRepository;
 
 class TaskController extends Controller
@@ -45,69 +44,12 @@ class TaskController extends Controller
     public function getButton($id, $task)
     {
         $url = array('show'       => route('task.show', ['task' => $id]),
-                     'edit'       => route('task.edit', ['id' => $id]),
+                     'edit'       => route('task.edit', ['task' => $id]),
                      'delete_msg' => "/task/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $task);
     }
 
-    public function data(Request $request)
-    {
-        if (Auth::user()->hasRole('admin')){
-            $tasks = $this->repository->all();
-        } else {
-            $tasks = $this->repository->allForAssigned(Auth::user()->id);
-        }
-
-        return Datatables::of($tasks)
-            ->addColumn('action', function ($task) {
-                return $this->getButton($task->id, $task);
-            })
-            ->addColumn('assign', function ($task) {
-                return $task->showAssignedUsers();
-            })
-            ->addColumn('start_time', function ($task) {
-                return $task->start_time = (new Carbon($task->start_time))->format('Y-m-d H:i');
-            })
-            ->addColumn('tour', function ($task) {
-                $tour = $task->tourModel;
-
-                if(empty($tour)){
-                    return '';
-                }
-                $tour_id = $tour->id;
-                $tour_name = $tour->name;
-
-                $link = route('tour.show', ['tour' => $tour_id]);
-
-                return "<span data-tour-link='$link' style='color: blue; text-decoration: underline; cursor: pointer'>$tour_name</span>";
-            })
-	        ->addColumn('priority', function ($task) {
-		        return $task->priority ? 'Yes' : 'No';
-	        })
-            ->addColumn('dead_line', function ($task) {
-                return $task->dead_line = (new Carbon($task->dead_line))->format('Y-m-d H:i');
-            })
-            ->addColumn('status_name', function ($task){
-                // return View::make('component.tour_status_for_datatable', ['status' => $task->status_name, 'color' => $task->status_color]);
-                $link = route('task.update', ['id' => $task->id]);
-                // $taskStatuses = Status::where('type', 'task')->get();
-                // return view('component.task_datatables_status_update', ['taskStatuses' => $taskStatuses, 'task' => $task]);
-                $taskStatus = Status::query()
-                    ->where('type', 'task')
-                    ->where('id', $task->status)
-                    ->select('name')
-                    ->first();
-                $statuts_name = $taskStatus ? $taskStatus->name : ' ';
-
-                return "<span class='task-data' data-link-update='{$link}' data-task-id='{$task->id}'>{$statuts_name}</span>";
-            })
-            ->addColumn('task_type', function ($task) {
-                return Task::$taskTypes[$task->task_type];
-            })
-            ->rawColumns(['action', 'status_name', 'tour'])
-            ->make(true);
-    }
 
     /**
      * Display a listing of the resource.
@@ -257,7 +199,7 @@ class TaskController extends Controller
     {
         $title = 'Edit - task';
         if ($request->ajax()) {
-            return URL::to('task/' . $id . '/edit');
+            return route('task.edit', ['task' => $id]);
         }
 
         $task = Task::leftJoin('tours', 'tours.id', '=', 'tasks.tour')

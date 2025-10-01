@@ -29,25 +29,29 @@
                    
                         <table id="quotation_table" class="table table-striped table-bordered table-hover" style='background:#fff;width: 100%;'>
                             <thead>
-                            <th>ID</th>
-                            <th>{{trans('main.Name')}}</th>
-                            <th>{{trans('main.Tour')}}</th>
-                            <th>{{trans('main.Assigned')}}</th>
-                            <th>{{trans('main.CreatedAt')}}</th>
-                            <th class="actions-button">{{trans('main.Frontsheet')}}</th>
-                            <th class="actions-button" style="width: 140px!important">{{trans('main.Actions')}}</th>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>{{trans('main.Name')}}</th>
+                                    <th>{{trans('main.Tour')}}</th>
+                                    <th>{{trans('main.Assigned')}}</th>
+                                    <th>{{trans('main.CreatedAt')}}</th>
+                                    <th class="actions-button">{{trans('main.Frontsheet')}}</th>
+                                    <th class="actions-button" style="width: 140px!important">{{trans('main.Actions')}}</th>
+                                </tr>
                             </thead>
-                            <tfoot>
-                            <tr>
-                                <th class="not"></th>
-                                <th>{{trans('main.Name')}}</th>
-                                <th>{{trans('main.Tour')}}</th>
-                                <th>{{trans('main.Assigned')}}</th>
-                                <th>{{trans('main.CreatedAt')}}</th>
-                                <th class="not"></th>
-                                <th class="not"></th>
-                            </tr>
-                            </tfoot>
+                            <tbody>
+                                @foreach($quotations as $quotation)
+                                <tr>
+                                    <td>{{ $quotation->id }}</td>
+                                    <td>{{ $quotation->name }}</td>
+                                    <td>{!! $quotation->tour_link !!}</td>
+                                    <td>{{ $quotation->user_name }}</td>
+                                    <td>{{ $quotation->formatted_created_at }}</td>
+                                    <td>{!! $quotation->comparison !!}</td>
+                                    <td>{!! $quotation->action !!}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
                         </table>
 						
 						
@@ -61,23 +65,23 @@
                                 <th>{{trans('main.CityBegin')}}</th>
                                 <th>{{trans('main.Status')}}</th>
                                 <th>{{trans('main.Externalname')}}</th>
-								{{--<th>Room Types</th>--}}
-								
                                 <th class="actions-button" style="width: 140px">{{trans('main.Actions')}}</th>
                             </tr>
                             </thead>
-                            <tfoot>
-                            <tr>
-                                <th class="not"></th>
-                                <th>{{trans('main.Name')}}</th>
-                                <th>{{trans('main.Depdate')}}</th>
-                                <th>{{trans('main.CountryBegin')}}</th>
-                                <th>{{trans('main.CityBegin')}}</th>
-                                <th class="select_search">{{trans('main.Status')}}</th>
-                                <th>{{trans('main.ExternalName')}}</th>
-                                <th class="not"></th>
-                            </tr>
-                            </tfoot>
+                            <tbody>
+                                @foreach($goAheadTours as $tour)
+                                <tr>
+                                    <td>{{ $tour->id }}</td>
+                                    <td>{{ $tour->name }}</td>
+                                    <td>{{ $tour->departure_date }}</td>
+                                    <td>{{ $tour->country_begin }}</td>
+                                    <td>{{ $tour->city_begin }}</td>
+                                    <td>{{ $tour->status_name }}</td>
+                                    <td>{{ $tour->external_name }}</td>
+                                    <td>{!! $tour->action !!}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                 
 
@@ -98,7 +102,7 @@
     <script>
 		
         $(document).ready(function() {
-			
+            // Initialize simple client-side DataTable
             let table = $('#quotation_table').DataTable({
                 dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
@@ -124,419 +128,65 @@
                         exportOptions: {
                             columns: ':not(.actions-button)'
                         }
-                    },
-//                    {
-//                        text: 'Import',
-//                        action: () => {
-//                            console.log('import');
-//                            getModalForImport(true);
-//                        }
-//                    },
-                ],
-                processing: true,
-                serverSide: true,
-                pageLength: 50,
-                ajax: {
-                    url: "{{route('quotation.data')}}",
-                },
-                columns: [
-                    {data: 'id', name: 'quotations.id'},
-                    {data: 'name', name: 'quotations.name'},
-                    {data: 'tour_name', name: 'tours.name'},
-                    {data: 'user_name', name: 'users.name'},
-                    {data: 'created_at', name: 'quotations.created_at'},
-                    {data: 'comparison', name: 'quotations.comparison', searchable: false, sorting: false, orderable: false},
-                    {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-                ],
-            });
-            $('#quotation_table tfoot th').each( function () {
-                let column = this;
-                if (column.className !== 'not') {
-                    let title = $(this).text();
-                    $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-                }
-            });
-            table.columns().every( function () {
-                let that = this;
-
-                $('input', this.footer()).on('keyup change', function() {
-                    if(that.search() !== this.value) {
-                        that.search(this.value).draw();
                     }
-                });
-            });
-            $('#quotation_table tfoot th').appendTo('#quotation_table thead');
-        })
-    </script>
-    <script>
-        $(document).ready(function() {
-            let table = $('#pending-table').DataTable({
-                dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'csv',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)',
-                        },
-                        // customize: function (doc) {
-                        //     doc.content[1].table.widths =
-                        //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                        // },
-                    },
                 ],
-                language : {
-                    search: "Global Search :"
-                },
-                processing: true,
-                serverSide: true,
                 pageLength: 50,
-                ajax: {
-                    url: "{{route('tour_data_quotation')}}",
-                },
-                columns: [
-                    {data: 'id', name: 'id'},
-                    {data: 'name', name: 'name', className: 'touredit-name'},
-                    {data: 'departure_date', name: 'departure_date', className: 'touredit-departure_date'},
-//        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-                    {data: 'country_begin', name: 'country_begin', className: 'touredit-country_begin'},
-                    {data: 'city_begin', name: 'city_begin', className: 'touredit-city_begin'},
-                    {data: 'status_name', className: 'touredit-status'},
-                    {data: 'external_name', name: 'external_name', className: 'touredit-external_name'},
-                    {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-                ],
-                initComplete: function () {
-                    this.api().columns().every( function () {
-                        var column = this;
-                        if(column.footer().className == 'select_search'){
-                            var select = $('<select class="form-control"><option value=""></option></select>')
-                                .appendTo( $(column.footer()).empty() )
-                                .on( 'change', function () {
-                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                    column.search( val ? '^'+val+'$' : '', true, false ).draw();
-                                });
-
-                            column.data().unique().sort().each( function ( d, j ) {
-                                select.append( '<option value="'+d+'">'+d+'</option>' )
-                            });
-                        }
-                    });
-                }
-            });
-            $('#tour-table tfoot th').each( function () {
-                let column = this;
-                if (column.className !== 'not') {
-                    let title = $(this).text();
-                    $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-                }
-            });
-            table.columns().every( function () {
-                let that = this;
-
-                $('input', this.footer()).on('keyup change', function() {
-                    if(that.search() !== this.value) {
-                        that.search(this.value).draw();
+                order: [[0, 'desc']], // Sort by ID descending by default
+                columnDefs: [
+                    {
+                        targets: [5, 6], // Frontsheet and Actions columns
+                        orderable: false,
+                        searchable: false
                     }
-                });
+                ]
             });
-            $('#tour-table tfoot th').appendTo('#tour-table thead');
-
         })
     </script>
 
 <script>
         $(document).ready(function() {
-			
-            let table = $('#go-ahead-table').DataTable({
+            // Initialize simple client-side DataTable for go-ahead tours
+            let goAheadTable = $('#go-ahead-table').DataTable({
                 dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row'<'col-sm-5'i><'col-sm-7'p>>",
                 buttons: [
                     {
                         extend: 'csv',
-                        title: 'Tours List',
+                        title: 'Go-Ahead Tours List',
                         exportOptions: {
                             columns: ':not(.actions-button)'
                         }
                     },
                     {
                         extend: 'excel',
-                        title: 'Tours List',
+                        title: 'Go-Ahead Tours List',
                         exportOptions: {
                             columns: ':not(.actions-button)'
                         }
                     },
                     {
                         extend: 'pdfHtml5',
-                        title: 'Tours List',
+                        title: 'Go-Ahead Tours List',
                         exportOptions: {
-                            columns: ':not(.actions-button)',
-                        },
-                        // customize: function (doc) {
-                        //     doc.content[1].table.widths =
-                        //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                        // },
-                    },
-                ],
-                language : {
-                    search: "Global Search :"
-                },
-                processing: true,
-                serverSide: true,
-                pageLength: 50,
-                ajax: {
-                    url: "{{route('goahead_data_quotation')}}",
-                },
-                columns: [
-                    {data: 'id', name: 'id'},
-                    {data: 'name', name: 'name', className: 'touredit-name'},
-                    {data: 'departure_date', name: 'departure_date', className: 'touredit-departure_date'},
-//        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-                    {data: 'country_begin', name: 'country_begin', className: 'touredit-country_begin'},
-                    {data: 'city_begin', name: 'city_begin', className: 'touredit-city_begin'},
-                    {data: 'status_name', className: 'touredit-status'},
-                    {data: 'external_name', name: 'external_name', className: 'touredit-external_name'},
-                    {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-                ],
-                initComplete: function () {
-                    this.api().columns().every( function () {
-                        var column = this;
-                        if(column.footer().className == 'select_search'){
-                            var select = $('<select class="form-control"><option value=""></option></select>')
-                                .appendTo( $(column.footer()).empty() )
-                                .on( 'change', function () {
-                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                    column.search( val ? '^'+val+'$' : '', true, false ).draw();
-                                });
-
-                            column.data().unique().sort().each( function ( d, j ) {
-                                select.append( '<option value="'+d+'">'+d+'</option>' )
-                            });
+                            columns: ':not(.actions-button)'
                         }
-                    });
-                }
-            });
-            $('#tour-table tfoot th').each( function () {
-                let column = this;
-                if (column.className !== 'not') {
-                    let title = $(this).text();
-                    $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-                }
-            });
-            table.columns().every( function () {
-                let that = this;
-
-                $('input', this.footer()).on('keyup change', function() {
-                    if(that.search() !== this.value) {
-                        that.search(this.value).draw();
                     }
-                });
+                ],
+                pageLength: 50,
+                order: [[0, 'desc']], // Sort by ID descending by default
+                columnDefs: [
+                    {
+                        targets: [7], // Actions column
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
             });
-            $('#tour-table tfoot th').appendTo('#tour-table thead');
-
         })
     </script>
 
 
-<script>
-        $(document).ready(function() {
-            let table = $('#cancelled-table').DataTable({
-                dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'csv',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)',
-                        },
-                        // customize: function (doc) {
-                        //     doc.content[1].table.widths =
-                        //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                        // },
-                    },
-                ],
-                language : {
-                    search: "Global Search :"
-                },
-                processing: true,
-                serverSide: true,
-                pageLength: 50,
-                ajax: {
-                    url: "{{route('cancelled_data_quotation')}}",
-                },
-                columns: [
-                    {data: 'id', name: 'id'},
-                    {data: 'name', name: 'name', className: 'touredit-name'},
-                    {data: 'departure_date', name: 'departure_date', className: 'touredit-departure_date'},
-//        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-                    {data: 'country_begin', name: 'country_begin', className: 'touredit-country_begin'},
-                    {data: 'city_begin', name: 'city_begin', className: 'touredit-city_begin'},
-                    {data: 'status_name', className: 'touredit-status'},
-                    {data: 'external_name', name: 'external_name', className: 'touredit-external_name'},
-                    {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-                ],
-                initComplete: function () {
-                    this.api().columns().every( function () {
-                        var column = this;
-                        if(column.footer().className == 'select_search'){
-                            var select = $('<select class="form-control"><option value=""></option></select>')
-                                .appendTo( $(column.footer()).empty() )
-                                .on( 'change', function () {
-                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                    column.search( val ? '^'+val+'$' : '', true, false ).draw();
-                                });
-
-                            column.data().unique().sort().each( function ( d, j ) {
-                                select.append( '<option value="'+d+'">'+d+'</option>' )
-                            });
-                        }
-                    });
-                }
-            });
-            $('#tour-table tfoot th').each( function () {
-                let column = this;
-                if (column.className !== 'not') {
-                    let title = $(this).text();
-                    $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-                }
-            });
-            table.columns().every( function () {
-                let that = this;
-
-                $('input', this.footer()).on('keyup change', function() {
-                    if(that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
-                });
-            });
-            $('#tour-table tfoot th').appendTo('#tour-table thead');
-
-        })
-    </script>
-
-
-<script>
-        $(document).ready(function() {
-            let table = $('#tour-table').DataTable({
-                dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'csv',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)',
-                        },
-                        // customize: function (doc) {
-                        //     doc.content[1].table.widths =
-                        //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                        // },
-                    },
-                ],
-                language : {
-                    search: "Global Search :"
-                },
-                processing: true,
-                serverSide: true,
-                pageLength: 50,
-                ajax: {
-                    url: "{{route('tour_data')}}",
-                },
-                columns: [
-                    {data: 'id', name: 'id'},
-                    {data: 'name', name: 'name', className: 'touredit-name'},
-                    {data: 'departure_date', name: 'departure_date', className: 'touredit-departure_date'},
-//        {data: 'retirement_date', name: 'retirement_date', className: 'touredit-retirement_date'},
-                    {data: 'country_begin', name: 'country_begin', className: 'touredit-country_begin'},
-                    {data: 'city_begin', name: 'city_begin', className: 'touredit-city_begin'},
-                    {data: 'status_name', className: 'touredit-status'},
-                    {data: 'external_name', name: 'external_name', className: 'touredit-external_name'},
-                    {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-                ],
-                initComplete: function () {
-                    this.api().columns().every( function () {
-                        var column = this;
-                        if(column.footer().className == 'select_search'){
-                            var select = $('<select class="form-control"><option value=""></option></select>')
-                                .appendTo( $(column.footer()).empty() )
-                                .on( 'change', function () {
-                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                    column.search( val ? '^'+val+'$' : '', true, false ).draw();
-                                });
-
-                            column.data().unique().sort().each( function ( d, j ) {
-                                select.append( '<option value="'+d+'">'+d+'</option>' )
-                            });
-                        }
-                    });
-                }
-            });
-            $('#tour-table tfoot th').each( function () {
-                let column = this;
-                if (column.className !== 'not') {
-                    let title = $(this).text();
-                    $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-                }
-            });
-            table.columns().every( function () {
-                let that = this;
-
-                $('input', this.footer()).on('keyup change', function() {
-                    if(that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
-                });
-            });
-            $('#tour-table tfoot th').appendTo('#tour-table thead');
-
-        })
 
 	function myfunction(){
 		

@@ -2,7 +2,7 @@
 
     <!--  TOUR TASKS CALENDAR  -->
 
-    <div class="box col-6">
+    <div class="box col-4 calendar-compact">
         @if(Auth::user()->can('dashboard.calendar'))
         <div class="box-header">
             <h4>{!! trans('Calendar') !!}</h4>
@@ -25,8 +25,8 @@
            {{-- <div class="calendar" id="calendarTasks">
 
             </div>--}}
-			   <div class="calendar " id="calendar"></div>
-			
+			   <div class="calendar calendar-widget bootsnipp-calendar-container" id="bootsnipp-calendar"></div>
+
         </div>
         @else
             <div class="box-header">

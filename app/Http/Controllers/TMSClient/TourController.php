@@ -19,7 +19,6 @@ use App\Helper\CitiesHelper;
 use DB;
 use App\Helper\FileTrait;
 use App\Helper\HelperTrait;
-use Yajra\Datatables\Datatables;
 use App\Helper\PermissionHelper;
 use View;
 use App\Http\Controllers\DatatablesHelperController;
@@ -195,54 +194,6 @@ class TourController extends Controller
 		}
     }
 	
-	public function data(Request $request)
-    {
-	
-        //if (Auth::user()->hasRole('admin')) {
-         $client_id = $request->session()->get("CLIENT_ID");
-        $tours = Tour::whereIn('status', [6, 46])->where("client_id",$client_id)->get();
-           
-        //} else {
-            //$tours = $this->repository->allForAssigned();
-        //}
-
-        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Tour'];
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\Tour'];
-    
-        $perm = [];        
-        $perm['show'] = true;        
-        $perm['edit'] = true;
-        $perm['destroy'] = true;
-        $perm['clone'] = true;
-   
-        return Datatables::of($tours)->addColumn('action', function ($tour) use($perm) {
-		
-                return $this->getShowButton($tour->id, false, $tour, $perm);
-			
-            })
-            ->addColumn('status_name', function ($tour){
-                if(true){
-                    $status = View::make('component.tour_status_for_datatable', ['status' => $tour->getStatusName(), 'color' => $tour->getStatusColor()]);
-                }else{
-                    $status = $tour->getStatusName();
-                }
-                return $status;
-            })
-            ->addColumn('select', function ($tour) {
-                return DatatablesHelperController::getSelectButton($tour->id, $tour->name);
-            })
-            ->addColumn('link', function($tour){
-                $tourDay = TourDay::where('tour', $tour->id)->first();
-                $link = route('tour_package.store');
-                if($tourDay){
-                return "<button data-link='$link' class='btn btn-success tour_package_add' data-tourDayId='{$tourDay->id}' data-tour_id='{$tour->id}'" .
-                    " data-departure_date='{$tour->departure_date}' data-retirement_date='{$tour->retirement_date}'>+</button>";
-                }
-            })
-            ->rawColumns(['select', 'action', 'link'])
-            ->make(true);
-    }
 	
 	public function tour_data(Request $request)
     {

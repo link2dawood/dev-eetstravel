@@ -71,6 +71,7 @@
 					<div class="table-responsive" style="max-height: 400px;">
                             <table id="offers-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%; table-layout: auto ;'>
                     <thead>
+                    <tr>
                     <th>ID</th>
 					<th style="width: 104px;">{!!trans('Offer Status')!!}</th>
                     <th style="width: 104px;">{!!trans('Supplier Status')!!}</th>
@@ -89,42 +90,36 @@
                     <th>{!!trans('Currency')!!}</th>
 					<th>{!!trans('City Tax')!!}</th>
                     <th>{!!trans('Halfboard Supp p.p')!!}</th>
-						
+
 					<th>{!!trans('foc')!!}</th>
                     <th>{!!trans('Max per group')!!}</th>
 					<th>{!!trans('Portrage pp')!!}</th>
 					<th>{!!trans('Hotel File')!!}</th>
 					<th>{!!trans('Hotel Note')!!}</th>
                     <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        <th class="not"></th>
-                   <th style="width: 104px;">{!!trans('Offer Status')!!}</th>
-                    <th style="width: 104px;">{!!trans('Supplier Status')!!}</th>
-						@php
-											$printedRoomNames = [];
-										@endphp
-
-										@foreach ($selected_room_types as $selected_room_type)
-											@if (!in_array($selected_room_type->name, $printedRoomNames))
-												<th class="rooms-title">{{ $selected_room_type->name }}</th>
-												@php
-													$printedRoomNames[] = $selected_room_type->name;
-												@endphp
-											@endif
-										@endforeach
-                    <th>{!!trans('Currency')!!}</th>
-					<th>{!!trans('City Tax')!!}</th>
-                    <th>{!!trans('Halfboard Supp p.p')!!}</th>
-					<th>{!!trans('foc')!!}</th>
-                    <th>{!!trans('Max per group')!!}</th>
-					<th>{!!trans('Portrage pp')!!}</th>
-					<th>{!!trans('Hotel File')!!}</th>
-					<th>{!!trans('Hotel Note')!!}</th>
-                        <th class="not"></th>
                     </tr>
-                    </tfoot>
+                    </thead>
+                    <tbody>
+                    @foreach($offersData as $offer)
+                        <tr style="background: {{ $offer->supplier_delete == 1 ? '#ffbbb2' : '' }};">
+                            <td>{{ $offer->id }}</td>
+                            <td class="offer-status" data-status-link="{{ url('offer/updatestatus') }}/{{ $offer->id }}" data-name-status="{{ $offer->status_tms_name }}">{{ $offer->status_tms_name }}</td>
+                            <td>{{ $offer->status }}</td>
+                            @foreach ($selected_room_types as $selected_room_type)
+                                <td>{{ $offer->room_prices[$selected_room_type->code] ?? 'N/A' }}</td>
+                            @endforeach
+                            <td>{{ $offer->currency }}</td>
+                            <td>{{ $offer->city_tax }}</td>
+                            <td>{{ $offer->halfboard }}</td>
+                            <td>{{ $offer->foc_after_every_pax }}</td>
+                            <td>{{ $offer->halfboardMax }}</td>
+                            <td>{{ $offer->portrage_perperson }}</td>
+                            <td>{{ $offer->hotel_file }}</td>
+                            <td>{{ $offer->hotel_note }}</td>
+                            <td>{!! $offer->action_buttons !!}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
                 </table>
 						</div>
 					@endif	
@@ -215,97 +210,8 @@
 <script src="{{ asset('js/loadtemplate.js') }}"></script>
 <script>
 		    $(document).ready(function() {
-        let table = $('#offers-table').DataTable({
-            dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [
-                {
-                    extend: 'csv',
-                    title: 'Current Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Offer List',
-					orientation: 'landscape',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                }
-            ],
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('offers_data',[$tour_package->id,0])}}",
-            },
-            columns: [
-				{data: 'id', name: 'id'},
-				{data: 'status_tms', name: 'status_tms', className: 'offer-status'},
-				{data: 'status', name: 'status'},
-				@foreach ($selected_room_types as $selected_room_type)
-                { "data": "{{ $selected_room_type->code }}" },
-            	@endforeach
-                {data: 'currency', name: 'currency'},
-				{data: 'city_tax', name: 'city_tax'},
-				{data: 'halfboard', name: 'halfboard'},
-				{data: 'foc_after_every_pax', name: 'foc_after_every_pax'},
-				{data: 'halfboardMax', name: 'halfboardMax'},
-				{data: 'portrage_perperson', name: 'portrage_perperson'},
-				{data: 'hotel_file', name: 'hotel_file'},
-                {data: 'hotel_note', name: 'hotel_note'},
-               
-                {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-               
-            ],
-			'columnDefs': [
-			{
-				'targets': 7,
-				'visible': false
-			  },
-            {
-                'targets': 1,
-                'createdCell':  function (td, cellData, rowData, row, col) {
-					console.log(td);
-                    var url = "{{ url('offer/updatestatus') }}/" + rowData.id;
-                    $(td).attr('data-status-link', url); 
-                }
-            }
-        ],
-			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-			if(aData.supplier_delete == 1){
-			$(nRow).css('background', '#ffbbb2');
-			}
-               
-            }
-		 });
-        $('#offers-table tfoot th').each( function () {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            }
-        });
-        table.columns().every( function () {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if(that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#offers-table tfoot th').appendTo('#offers-table thead');
+        // Simple table functionality without DataTable
+        console.log('Tour Package Offers table loaded with direct controller data');
     });
 	  $(document).ready(function () {
         $('.table-row').click(function () {

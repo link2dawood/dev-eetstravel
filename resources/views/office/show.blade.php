@@ -95,140 +95,175 @@
                         {!! \App\Helper\PermissionHelper::getCreateButton(url('tour_expenses/create/'.$offices->id), \App\Tour::class) !!}
                     </div>
 					<h3 style=" margin:50px 0px 50px 0px">{{ trans('TOUR EXPENSES') }}</h3>
-					
-					<table id="tour-expenses-table" class="table table-striped table-bordered table-hover " style='background:#fff; width: 98%; table-layout: fixed ; display = "none" ; margin-top:50px'>
-						<thead>
-							<tr>
-								<th>id</th>
-								<th>Tour Name</th>
-								<th>Tour Expense</th>
-								<th>Departure Date</th>
-								<th>Return Date</th>
-								<th>Actions</th>					   
-							</tr>
-						</thead>
-						<tfoot>
-							<tr>
-								<th>id</th>
-								<th>Tour Name</th>
-								<th>Tour Expense</th>
-								<th>Departure Date</th>
-								<th>Return Date</th>
-								<th>Actions</th>	
-							</tr>
-						</tfoot>
-				</table>
+
+					<div class="table-responsive">
+						<table id="tour-expenses-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%;'>
+							<thead>
+								<tr>
+									<th onclick="sortTable(0, 'tour-expenses-table')">id <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(1, 'tour-expenses-table')">Tour Name <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(2, 'tour-expenses-table')">Tour Expense <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(3, 'tour-expenses-table')">Departure Date <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(4, 'tour-expenses-table')">Return Date <i class="fa fa-sort"></i></th>
+									<th class="actions-button">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+							@forelse($tour_expenses as $expense)
+								<tr>
+									<td>{{ $expense->id }}</td>
+									<td>{{ $expense->tour_name }}</td>
+									<td>{{ $expense->tour_expenses }}</td>
+									<td>{{ $expense->date_depart }}</td>
+									<td>{{ $expense->date_return }}</td>
+									<td>{!! $expense->action_buttons !!}</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="6" class="text-center">No tour expenses found</td>
+								</tr>
+							@endforelse
+							</tbody>
+						</table>
+					</div>
                     <div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
                         {!! \App\Helper\PermissionHelper::getCreateButton(url('utility_expenses/create/'.$offices->id), \App\Tour::class) !!}
                     </div>
 					<h3  style=" margin:50px 0px 50px 0px">{{ trans('UTILITY EXPENSES') }}</h3>
-					
-					<table id="utility-expenses-table" class="table table-striped table-bordered table-hover " style='background:#fff; width: 98%; table-layout: fixed ; display = "none" ; margin-top:50px'>
-                	<thead>
-                       	<tr>
-							<th>id</th>
-							<th>Subject</th>
-							<th>Month</th>
-							<th>Monthly Expense</th>
-							<th>Actions</th>
-						</tr>
-               		</thead>
-                <tfoot>
-                       <tr>
-							<th>id</th>
-							<th>Subject</th>
-							<th>Month</th>
-							<th>Monthly Expense</th>
-							<th>Actions</th>
-						</tr>
-                </tfoot>
-              
-            </table>
+
+					<div class="table-responsive">
+						<table id="utility-expenses-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%;'>
+							<thead>
+								<tr>
+									<th onclick="sortTable(0, 'utility-expenses-table')">id <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(1, 'utility-expenses-table')">Subject <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(2, 'utility-expenses-table')">Month <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(3, 'utility-expenses-table')">Monthly Expense <i class="fa fa-sort"></i></th>
+									<th class="actions-button">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+							@forelse($utility_expenses as $utility)
+								<tr>
+									<td>{{ $utility->id }}</td>
+									<td>{{ $utility->subject }}</td>
+									<td>{{ $utility->month }}</td>
+									<td>{{ $utility->monthly_expense }}</td>
+									<td>{!! $utility->action_buttons !!}</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="5" class="text-center">No utility expenses found</td>
+								</tr>
+							@endforelse
+							</tbody>
+						</table>
+					</div>
             <div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
                 {!! \App\Helper\PermissionHelper::getCreateButton(url('employes-salary/create/'.$offices->id), \App\Tour::class) !!}
             </div>
 			<h3 style=" margin:50px 0px 50px 0px">{{ trans('EMPLOYEE SALARY') }}</h3>
-					
-					<table id="employee-salary-table" class="table table-striped table-bordered table-hover " style='background:#fff; width: 98%; table-layout: fixed ; display = "none" ; margin-top:50px'>
-                <thead>
-                    <tr>
-                        
-                        <th>id</th>
-                        <th>Name</th>
-                        <th>Salary</th>
-						<th>Month</th>
-						<th>Bonuses</th>
-						<th>Actions</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                    	<th>id</th>
-                        <th>Name</th>
-                        <th>Salary</th>
-						<th>Month</th>
-						<th>Bonuses</th>
-						<th>Actions</th>
-                    </tr>
-                </tfoot>
-              
-            </table>
+
+					<div class="table-responsive">
+						<table id="employee-salary-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%;'>
+							<thead>
+								<tr>
+									<th onclick="sortTable(0, 'employee-salary-table')">id <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(1, 'employee-salary-table')">Name <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(2, 'employee-salary-table')">Salary <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(3, 'employee-salary-table')">Month <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(4, 'employee-salary-table')">Bonuses <i class="fa fa-sort"></i></th>
+									<th class="actions-button">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+							@forelse($employee_salaries as $salary)
+								<tr>
+									<td>{{ $salary->id }}</td>
+									<td>{{ $salary->employe_name }}</td>
+									<td>{{ $salary->employe_salary }}</td>
+									<td>{{ $salary->month }}</td>
+									<td>{{ $salary->bonuses }}</td>
+									<td>{!! $salary->action_buttons !!}</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="6" class="text-center">No employee salaries found</td>
+								</tr>
+							@endforelse
+							</tbody>
+						</table>
+					</div>
 			
 			<div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
                 {!! \App\Helper\PermissionHelper::getCreateButton(url('office_earning/create/'.$offices->id), \App\Tour::class) !!}
             </div>		
 			<h3 style=" margin:50px 0px 50px 0px">{{ trans('OFFICE EARNINGS') }}</h3>
-					
-					<table id="office-earnings-table" class="table table-striped table-bordered table-hover " style='background:#fff; width: 98%; table-layout: fixed ; display = "none" ; margin-top:50px'>
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>Month</th>
-                        <th>Revenue</th>
-						<th>Profit</th>
-						<th>Actions</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                     <tr>
-                        <th>id</th>
-                        <th>Month</th>
-                        <th>Revenue</th>
-						<th>Profit</th>
-						<th>Actions</th>
-                    </tr>
-                </tfoot>
-              
-            </table>
+
+					<div class="table-responsive">
+						<table id="office-earnings-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%;'>
+							<thead>
+								<tr>
+									<th onclick="sortTable(0, 'office-earnings-table')">id <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(1, 'office-earnings-table')">Month <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(2, 'office-earnings-table')">Revenue <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(3, 'office-earnings-table')">Profit <i class="fa fa-sort"></i></th>
+									<th class="actions-button">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+							@forelse($office_earnings as $earning)
+								<tr>
+									<td>{{ $earning->id }}</td>
+									<td>{{ $earning->month }}</td>
+									<td>{{ $earning->revenue }}</td>
+									<td>{{ $earning->profit }}</td>
+									<td>{!! $earning->action_buttons !!}</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="5" class="text-center">No office earnings found</td>
+								</tr>
+							@endforelse
+							</tbody>
+						</table>
+					</div>
 			
             <div id="office_balance" style="float: right; margin:50px 0px 50px 0px">
                 {!! \App\Helper\PermissionHelper::getCreateButton(url('office_balance/create/'.$offices->id), \App\Tour::class) !!}
             </div>
 			<h3 style=" margin:50px 0px 50px 0px">{{ trans('OFFICE BALANCES') }}</h3>
-					
-					<table id="office-balances-table" class="table table-striped table-bordered table-hover " style='background:#fff; width: 98%; table-layout: fixed ; display = "none" ; margin-top:50px'>
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>Subject</th>
-                        <th>Month</th>
-                        <th>Total Amount</th>
-                        <th>Due Date</th>
-						<th>Actions</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <th>id</th>
-                        <th>Subject</th>
-                        <th>Month</th>
-                        <th>Total Amount</th>
-                        <th>Due Date</th>
-						<th>Actions</th>
-                    </tr>
-                </tfoot>
-              
-            </table>
+
+					<div class="table-responsive">
+						<table id="office-balances-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%;'>
+							<thead>
+								<tr>
+									<th onclick="sortTable(0, 'office-balances-table')">id <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(1, 'office-balances-table')">Subject <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(2, 'office-balances-table')">Month <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(3, 'office-balances-table')">Total Amount <i class="fa fa-sort"></i></th>
+									<th onclick="sortTable(4, 'office-balances-table')">Due Date <i class="fa fa-sort"></i></th>
+									<th class="actions-button">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+							@forelse($balances as $balance)
+								<tr>
+									<td>{{ $balance->id }}</td>
+									<td>{{ $balance->subject_of_balance }}</td>
+									<td>{{ $balance->month }}</td>
+									<td>{{ $balance->total_amount }}</td>
+									<td>{{ $balance->due_date }}</td>
+									<td>{!! $balance->action_buttons !!}</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="6" class="text-center">No office balances found</td>
+								</tr>
+							@endforelse
+							</tbody>
+						</table>
+					</div>
                     <div style="clear: both"></div>
                    
                 </div>
@@ -240,29 +275,34 @@
 					<div id="office_invoices" style="float: right; margin:50px 0px 50px 0px">
                 {!! \App\Helper\PermissionHelper::getCreateButton(url('officeInvoices/create/'.$offices->id), \App\Tour::class) !!}
             </div>
-				<div>
-                <table id="officesinvoice-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%; table-layout: fixed ; display = "none"'>
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>Office Name</th>
-                        <th>Office date</th>
-						<th>Invoice No</th>
-						<th>Actions</th>
-                    </tr>
-                </thead>
-				<tfoot>
-                    <tr>
-                       <th>id</th>
-                        <th>Office Name</th>
-                        <th>Office date</th>
-						<th>Invoice No</th>
-						<th>Actions</th>
-                    </tr>
-                </tfoot>
-              
-            </table>
-            </div>
+				<div class="table-responsive">
+					<table id="officesinvoice-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
+						<thead>
+							<tr>
+								<th onclick="sortTable(0, 'officesinvoice-table')">id <i class="fa fa-sort"></i></th>
+								<th onclick="sortTable(1, 'officesinvoice-table')">Office Name <i class="fa fa-sort"></i></th>
+								<th onclick="sortTable(2, 'officesinvoice-table')">Office date <i class="fa fa-sort"></i></th>
+								<th onclick="sortTable(3, 'officesinvoice-table')">Invoice No <i class="fa fa-sort"></i></th>
+								<th class="actions-button">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+						@forelse($office_invoices as $invoice)
+							<tr>
+								<td>{{ $invoice->officeinvoice_dataId }}</td>
+								<td>{{ $invoice->officeName }}</td>
+								<td>{{ $invoice->date }}</td>
+								<td>{{ $invoice->invoice_no }}</td>
+								<td>{!! $invoice->action_buttons !!}</td>
+							</tr>
+						@empty
+							<tr>
+								<td colspan="5" class="text-center">No office invoices found</td>
+							</tr>
+						@endforelse
+						</tbody>
+					</table>
+				</div>
 </section>
     <span id="services_name" data-service-name='accounting' data-history-route="{{route('services_history', ['id' => $offices->id])}}"></span>
 @endsection

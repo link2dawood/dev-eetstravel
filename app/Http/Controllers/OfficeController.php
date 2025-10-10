@@ -118,7 +118,7 @@ class OfficeController extends Controller {
 	}
     public function show($id, Request $request)
     {
-  
+
         $title = 'Show - Offices';
 
         if ($request->ajax()) {
@@ -126,7 +126,7 @@ class OfficeController extends Controller {
         }
 
         $offices =Offices::find($id);
-        
+
         if($offices == null){
             return abort(404);
         }
@@ -135,33 +135,69 @@ class OfficeController extends Controller {
 		$total_employee_salary = 0 ;
 		$total_office_earning = 0 ;
 		$total_balance = 0 ;
-		
+
+		// Get permissions for action buttons
+		$permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Offices'];
+		$permission_edit = PermissionHelper::$relationsPermissionEdit['App\Offices'];
+		$permission_show = PermissionHelper::$relationsPermissionShow['App\Offices'];
+
+		$perm = [];
+		$perm['show'] = Auth::user()->can($permission_show);
+		$perm['edit'] = Auth::user()->can($permission_edit);
+		$perm['destroy'] = Auth::user()->can($permission_destroy);
+		$perm['clone'] = Auth::user()->can('office.create');
+
        $tour_expenses = Office_Tours::where("office_id", $offices->id)->get() ;
 		foreach($tour_expenses as $tour_expense){
 			$total_tour_expense = $total_tour_expense + $tour_expense->tour_expenses;
+			// Add action buttons
+			$url = ['edit' => route('tour_expenses.edit', ['id' => $tour_expense->id]), 'delete_msg' => "/tour_expenses/{$tour_expense->id}/deleteMsg"];
+			$tour_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
-		
+
 		$utility_expenses = Office_Utility_Expenses::where("office_id", $offices->id)->get() ;
 		foreach($utility_expenses as $utility_expense){
 			$total_utility_expense = $total_utility_expense + $utility_expense->monthly_expense;
+			// Add action buttons
+			$url = ['edit' => route('utility_expenses.edit', ['id' => $utility_expense->id]), 'delete_msg' => "/utility_expenses/{$utility_expense->id}/deleteMsg"];
+			$utility_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
-		
+
 		$employee_salaries = Office_Employes_Salary::where("office_id", $offices->id)->get() ;
 		foreach($employee_salaries as $employee_salary){
 			$total_employee_salary = $total_employee_salary + $employee_salary->employe_salary;
+			// Add action buttons
+			$url = ['edit' => route('employes-salary.edit', ['id' => $employee_salary->id]), 'delete_msg' => "/employes-salary/{$employee_salary->id}/deleteMsg"];
+			$employee_salary->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
-		
+
 		$office_earnings = Office_Earnings::where("office_id", $offices->id)->get() ;
 		foreach($office_earnings as $office_earning){
 			$total_office_earning = $total_office_earning + $office_earning->profit;
+			// Add action buttons
+			$url = ['edit' => route('office_earning.edit', ['id' => $office_earning->id]), 'delete_msg' => "/office_earning/{$office_earning->id}/deleteMsg"];
+			$office_earning->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
-		
+
 		$balances = Office_Balance::where("office_id", $offices->id)->get() ;
 		foreach($balances as $balance){
-			$total_balance = $total_balance + $balance->	total_amount;
+			$total_balance = $total_balance + $balance->total_amount;
+			// Add action buttons
+			$url = ['edit' => route('office_balance.edit', ['id' => $balance->id]), 'delete_msg' => "/office_balance/{$balance->id}/deleteMsg"];
+			$balance->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
-		
-        return view('office.show', compact('offices','title','total_tour_expense','total_utility_expense','total_employee_salary','total_office_earning','total_balance'));
+
+		// Get office invoices data
+		$office_invoices = DB::table('officeinvoice_data')->where('from_office', '=', $id)->get();
+		foreach($office_invoices as $office_invoice){
+			$to_office = Offices::find($office_invoice->to_office);
+			$office_invoice->officeName = $to_office->office_name ?? '';
+			// Add action buttons
+			$url = ['show' => route('office_invoices_detail.show', ['officeinvoice_dataId' => $office_invoice->officeinvoice_dataId])];
+			$office_invoice->action_buttons = DatatablesHelperController::getShowButton($url);
+		}
+
+        return view('office.show', compact('offices','title','total_tour_expense','total_utility_expense','total_employee_salary','total_office_earning','total_balance','tour_expenses','utility_expenses','employee_salaries','office_earnings','balances','office_invoices'));
     }
 	
 	public function DeleteMsg($id, Request $request)

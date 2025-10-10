@@ -79,7 +79,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('restaurant/{id}/update', '\App\Http\Controllers\RestaurantController@update');
         Route::get('restaurant/{id}/delete', '\App\Http\Controllers\RestaurantController@destroy')->name('restaurant.destroy');
         Route::get('restaurant/{id}/deleteMsg', '\App\Http\Controllers\RestaurantController@DeleteMsg');
-        Route::get('restaurant/api/data', 'RestaurantController@data')->name('restaurant_data');
     });
 
 //client of the agency
@@ -100,8 +99,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('invoices/{id}/update', '\App\Http\Controllers\InvoicesController@update')->name('invoice.update');
     Route::get('invoices/{id}/delete', '\App\Http\Controllers\InvoicesController@destroy')->name('invoices.destroy');
     Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg');
-    Route::get('invoices/api/data', 'InvoicesController@data')->name('invoices_data');
-	 Route::get('invoicesClientTransaction/api/data/{invoiceId}', 'InvoicesController@clientTransactionData')->name('client_invoices_data');
 	Route::get('supplierdropdown/{id}', 'InvoicesController@supplierDropdown');
 	Route::get('add_payment/{id}', '\App\Http\Controllers\InvoicesController@add_payment')->name('add_payment');
 	Route::post('payment_store/{id}', '\App\Http\Controllers\InvoicesController@payment_store')->name('payment.store');
@@ -110,17 +107,13 @@ Route::group(['middleware' => 'web'], function () {
 //Account of TMS
 Route::group(['middleware' => 'web'], function () {
 	Route::resource('transaction', '\App\Http\Controllers\TransactionController');
-	Route::get('transaction/api/data', 'TransactionController@data')->name('transaction_data');
 	Route::get('transaction/{id}/delete', '\App\Http\Controllers\TransactionController@destroy')->name('transaction.destroy');
 	Route::get('transaction/{id}/deleteMsg', '\App\Http\Controllers\TransactionController@DeleteMsg');
    	Route::resource('accounting', '\App\Http\Controllers\ClientInvoiceController');
    	Route::post('accounting/{id}/update', '\App\Http\Controllers\ClientInvoiceController@update')->name('accounts.update');
     Route::get('accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
     Route::get('accounting/{id}/deleteMsg', '\App\Http\Controllers\ClientInvoiceController@DeleteMsg');
-    Route::get('accounting/api/data', 'ClientInvoiceController@data')->name('accounts_data');
-	Route::get('ClientAccountingData/api/data/{clientId}', 'ClientInvoiceController@ClientAccountingData')->name('client_accounting_data');
 	Route::get('accountingServiceTransaction/create/{tour_id}', 'ClientInvoiceController@serviceTransactionCreate')->name('service_transaction_create');
- Route::get('accountingServiceTransaction/api/data/{pay_to}/{invoice_id}', 'ClientInvoiceController@serviceTransactionData')->name('service_transaction_data');
 	Route::get('/accounting/{id}/export/{pdf_type}', 'ClientInvoiceController@pdfExport')->name('accounting_pdf_export');
 	Route::get('/accounting/{id}/excel', 'ClientInvoiceController@excelExport')->name('accounting_excel_export');
 	Route::get('api/getItemInvoiceView', '\App\Http\Controllers\ClientInvoiceController@getItemInvoiceView');
@@ -138,7 +131,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('reporting/{id}/update', '\App\Http\Controllers\ReportingController@update')->name('reporting.update');
     Route::get('reporting/{id}/delete', '\App\Http\Controllers\ReportingController@destroy')->name('reporting.destroy');
     Route::get('reporting/{id}/deleteMsg', '\App\Http\Controllers\ReportingController@DeleteMsg');
-    Route::get('reporting/api/data', 'ReportingController@data')->name('reporting_data');
 	Route::get('/reporting_supplier_show', 'ReportingController@show')->name('reporting_supplier_show');
 	Route::get('reporting/hotel/{id}/show', '\App\Http\Controllers\ReportingController@hotel_show')->name('reporting.hotel.show');
  	Route::get('reporting/event/{id}/show', '\App\Http\Controllers\ReportingController@event_show')->name('reporting.event.show');
@@ -165,12 +157,9 @@ Route::group(['middleware' => 'web'], function () {
 
 //------- Office Invoice details -----//
 		Route::get('officeInvoicesdetail/{id}', '\App\Http\Controllers\OfficeInvoiceController@office_invoice_details')->name('office_invoices_detail.show');
-	Route::get('/office-invoices-details/api/data/{id}', 'OfficeInvoiceController@getOfficeInvoicesdeatailsdata')->name('officeinvoicegetdatadetail');
-
    	Route::post('officeInvoices/{id}/update', '\App\Http\Controllers\OfficeInvoiceController@update')->name('office_invoices.update');
     Route::get('officeInvoices/{id}/delete', '\App\Http\Controllers\OfficeInvoiceController@destroy')->name('office_invoices.destroy');
     Route::get('officeInvoices/{id}/deleteMsg', '\App\Http\Controllers\OfficeInvoiceController@DeleteMsg');
-    Route::get('officeInvoices/api/data/{id}', 'OfficeInvoiceController@data')->name('office_invoices_data');
 });
 //Taxes of TMS
 Route::group(['middleware' => 'web'], function () {
@@ -188,7 +177,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('tour_expenses/{id}/update', '\App\Http\Controllers\TourExpenseController@update')->name('tour_expenses.update');
     Route::get('tour_expenses/{id}/delete', '\App\Http\Controllers\TourExpenseController@destroy')->name('tour_expenses.destroy');
     Route::get('tour_expenses/{id}/deleteMsg', '\App\Http\Controllers\TourExpenseController@DeleteMsg');
-    Route::get('tour_expenses/api/data/{id}', 'TourExpenseController@data')->name('tour_expenses_data');
 });
 //Utility Expenses of offices TMS
 Route::group(['middleware' => 'web'], function () {
@@ -197,7 +185,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('utility_expenses/{id}/update', '\App\Http\Controllers\UtilityExpenseController@update')->name('utility_expenses.update');
     Route::get('utility_expenses/{id}/delete', '\App\Http\Controllers\UtilityExpenseController@destroy')->name('utility_expenses.destroy');
     Route::get('utility_expenses/{id}/deleteMsg', '\App\Http\Controllers\UtilityExpenseController@DeleteMsg');
-    Route::get('utility_expenses/api/data/{id}', 'UtilityExpenseController@data')->name('utility_expenses_data');
 });
 //Employee Salary  of offices of TMS
 Route::group(['middleware' => 'web'], function () {
@@ -206,7 +193,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('employes-salary/{id}/update', '\App\Http\Controllers\EmployesSalaryController@update')->name('employes-salary.update');
     Route::get('employes-salary/{id}/delete', '\App\Http\Controllers\EmployesSalaryController@destroy')->name('employes-salary.destroy');
     Route::get('employes-salary/{id}/deleteMsg', '\App\Http\Controllers\EmployesSalaryController@DeleteMsg');
-    Route::get('employes-salary/api/data/{id}', 'EmployesSalaryController@data')->name('employes-salary_data');
 });
 //Total Earning of offices TMS
 Route::group(['middleware' => 'web'], function () {
@@ -215,7 +201,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('office_earning/{id}/update', '\App\Http\Controllers\OfficeEarningController@update')->name('office_earning.update');
     Route::get('office_earning/{id}/delete', '\App\Http\Controllers\OfficeEarningController@destroy')->name('office_earning.destroy');
     Route::get('office_earning/{id}/deleteMsg', '\App\Http\Controllers\OfficeEarningController@DeleteMsg');
-    Route::get('office_earning/api/data/{id}', 'OfficeEarningController@data')->name('office_earning_data');
 });
 //Balance Amount of offices TMS
 Route::group(['middleware' => 'web'], function () {
@@ -224,7 +209,6 @@ Route::group(['middleware' => 'web'], function () {
    	Route::post('office_balance/{id}/update', '\App\Http\Controllers\BalanceAmountController@update')->name('office_balance.update');
     Route::get('office_balance/{id}/delete', '\App\Http\Controllers\BalanceAmountController@destroy')->name('office_balance.destroy');
     Route::get('office_balance/{id}/deleteMsg', '\App\Http\Controllers\BalanceAmountController@DeleteMsg');
-    Route::get('office_balance/api/data/{id}', 'BalanceAmountController@data')->name('office_balance_data');
 });
 // Google Calendar API
 Route::group(['middleware' => 'web'], function () {
@@ -238,7 +222,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('transfer/{id}/update', '\App\Http\Controllers\TransferController@update');
         Route::get('transfer/{id}/delete', '\App\Http\Controllers\TransferController@destroy')->name('transfer.destroy');
         Route::get('transfer/{id}/deleteMsg', '\App\Http\Controllers\TransferController@DeleteMsg');
-        Route::get('transfer/api/data', '\App\Http\Controllers\TransferController@data')->name('transfer_data');
     });
 
 //tour_package Routes
@@ -348,7 +331,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::post('status/{id}/update','\App\Http\Controllers\StatusController@update');
         Route::get('status/{id}/delete','\App\Http\Controllers\StatusController@destroy')->name('status.destroy');
         Route::get('status/{id}/deleteMsg','\App\Http\Controllers\StatusController@DeleteMsg');
-        Route::get('status/api/data', '\App\Http\Controllers\StatusController@data')->name('status_data');
     });
     
 //holiday Routes
@@ -357,7 +339,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::post('holiday/{id}/update','\App\Http\Controllers\HolidayController@update');
         Route::get('holiday/{id}/delete','\App\Http\Controllers\HolidayController@destroy')->name('holiday.destroy');
         Route::get('holiday/{id}/deleteMsg','\App\Http\Controllers\HolidayController@DeleteMsg');
-        Route::get('holiday/api/data', '\App\Http\Controllers\HolidayController@data')->name('holidaycalendar_data');
     });
 
 //Room Types Routes
@@ -366,7 +347,6 @@ Route::group(['middleware'=> 'web'],function(){
     Route::post('room_types/{id}/update','\App\Http\Controllers\RoomTypesController@update');
     Route::get('room_types/{id}/delete','\App\Http\Controllers\RoomTypesController@destroy')->name('room_types.destroy');
     Route::get('room_types/{id}/deleteMsg','\App\Http\Controllers\RoomTypesController@DeleteMsg');
-    Route::get('room_types/api/data', '\App\Http\Controllers\RoomTypesController@data')->name('room_types_data');
 });
 
     //Email Temlates
@@ -374,7 +354,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::resource('templates','\App\Http\Controllers\TemplatesController');
         Route::post('templates/{id}/update','\App\Http\Controllers\TemplatesController@update');
         Route::post('templates/{id}/delete','\App\Http\Controllers\TemplatesController@destroy')->name('templates.destroy');
-        Route::get('templates/api/data', '\App\Http\Controllers\TemplatesController@data')->name('templates_data');
         Route::get('templates/api/load', '\App\Http\Controllers\TemplatesController@loadTemplate');
 		Route::get('desctemplates/api/load', '\App\Http\Controllers\TemplatesController@loadDescTemplate');
         Route::get('templates/api/loadServiceTemplates', '\App\Http\Controllers\TemplatesController@loadServiceTemplates');
@@ -414,7 +393,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::post('bus/{id}/update','\App\Http\Controllers\BusController@update');
         Route::get('bus/{id}/delete','\App\Http\Controllers\BusController@destroy')->name('bus.destroy');
         Route::get('bus/{id}/deleteMsg','\App\Http\Controllers\BusController@DeleteMsg');
-        Route::get('bus/api/data', '\App\Http\Controllers\BusController@data')->name('bus_data');
         Route::get('/driver_bus_transfer/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransfer');
         Route::get('/driver_bus_transfer/table/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransferForTable');
         Route::post('/bus_day/update', '\App\Http\Controllers\BusController@updateBusDay');
@@ -441,7 +419,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::post('rate/{id}/update','\App\Http\Controllers\RateController@update');
         Route::get('rate/{id}/delete','\App\Http\Controllers\RateController@destroy')->name('rate.destroy');
         Route::get('rate/{id}/deleteMsg','\App\Http\Controllers\RateController@DeleteMsg');
-        Route::get('rate/api/data', '\App\Http\Controllers\RateController@data')->name('rate_data');
     });
 
 
@@ -451,7 +428,6 @@ Route::group(['middleware'=> 'web'],function(){
     Route::post('currency_rate/{id}/update','\App\Http\Controllers\CurrencyRateController@update');
     Route::get('currency_rate/{id}/delete','\App\Http\Controllers\CurrencyRateController@destroy')->name('currency_rate.destroy');
     Route::get('currency_rate/{id}/deleteMsg','\App\Http\Controllers\CurrencyRateController@DeleteMsg');
-    Route::get('currency_rate/api/data', '\App\Http\Controllers\CurrencyRateController@data')->name('currency_rate_data');
 });
 
 // Notifications
@@ -479,7 +455,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::post('currencies/{id}/update','\App\Http\Controllers\CurrenciesController@update');
         Route::get('currencies/{id}/delete','\App\Http\Controllers\CurrenciesController@destroy')->name('currencies.destroy');
         Route::get('currencies/{id}/deleteMsg','\App\Http\Controllers\CurrenciesController@DeleteMsg');
-        Route::get('currencies/api/data', '\App\Http\Controllers\CurrenciesController@data')->name('currencies_data');
     });
 
 //Criteria Routes
@@ -488,7 +463,6 @@ Route::group(['middleware'=> 'web'],function(){
     Route::post('criteria/{id}/update','\App\Http\Controllers\CriteriaController@update');
     Route::get('criteria/{id}/delete','\App\Http\Controllers\CriteriaController@destroy')->name('criteria.destroy');
     Route::get('criteria/{id}/deleteMsg','\App\Http\Controllers\CriteriaController@DeleteMsg');
-    Route::get('criteria/api/data', '\App\Http\Controllers\CriteriaController@data')->name('criteria_data');
 });
 
 //Comments Routes
@@ -514,7 +488,6 @@ Route::group(['middleware'=> 'web'],function(){
         Route::resource('cruises', 'CruisesController');
         Route::get('/cruises/{id}/delete', 'CruisesController@destroy')->name('cruise.destroy');
         Route::get('/cruises/{id}/delete_msg', 'CruisesController@deleteMsg');
-        Route::get('/cruises/api/data', 'CruisesController@data')->name('cruises_data');
         Route::post('/cruises/{id}/api/attach', 'CruisesController@getAttach')->name('cruises_attach');
     });
     
@@ -539,13 +512,11 @@ Route::group(['middleware'=> 'web'],function(){
         Route::resource('flights', 'FlightController');
         Route::get('flights/{id}/delete', 'FlightController@destroy')->name('flight.destroy');
         Route::get('flights/{id}/delete_msg', 'FlightController@deleteMsg')->name('flights_delete_msg');
-        Route::get('flights/api/data', 'FlightController@data')->name('flights.data');
         Route::post('/flights/{id}/api/attach', 'FlightController@getAttach')->name('flights_attach');
     });
 
     Route::group(['middleware' => 'web'], function(){
         Route::resource('settings', 'SettingController');
-        Route::get('/settings/api/data', 'SettingController@data');
     });
 
     Route::get('/supplier_search', 'SupplierSearchController@index')->name('supplier_search');
@@ -554,7 +525,6 @@ Route::group(['middleware'=> 'web'],function(){
     Route::get('/supplier_criteria', 'SupplierSearchController@getCriterias')->name('criterias_for_search');
     Route::group(['middleware' => 'web', 'prefix' => 'activities'], function(){
         Route::get('/', 'ActivitiesController@index')->name('activities_index');
-        Route::get('/api/data', 'ActivitiesController@data')->name('activities_data');
     });
     Route::post('/file/{id}/delete', 'FileController@delete')->name('file_delete');
     Route::post('/import', 'ImportController@getFile')->name('file_import');
@@ -623,7 +593,6 @@ Route::group(['middleware' => 'web'], function () {
     Route::resource('announcements', 'AnnouncementController');
     Route::get('/announcement/{id}/delete', 'AnnouncementController@destroy')->name('announcement.destroy');
     Route::get('/announcement/{id}/delete_msg', 'AnnouncementController@deleteMsg')->name('announcement.deleteMsg');
-    Route::get('/announcement/api/data', 'AnnouncementController@data')->name('announcements_data');
     Route::post('/announcement/{id}/reply', 'AnnouncementController@reply')->name('announcement_reply');
     Route::get('/announcement/{id}/generate-announcements', 'AnnouncementController@generateAnnouncements')->name('announcements_generate');
 });
@@ -664,8 +633,13 @@ Route::group(['middleware' => 'web'], function () {
     Route::post('/permissions/update', 'ScaffoldInterface\PermissionController@update');
 });
 
-//Emails Routes
+//===============================================================================
+// OLD EMAIL ROUTES (DEPRECATED - Use SnappyMail Instead)
+// These routes are kept for backward compatibility but will be removed in future
+// To use the new webmail system, go to: /email/webmail
+//===============================================================================
 Route::group(['middleware' => 'web'], function () {
+	// Note: These old email routes are DEPRECATED. Use SnappyMail via /email/webmail
 	Route::get('email/parseEmails', 'EmailController@parseEmails')->name('email.parseEmails');
 	Route::get('email/ajax/mail', 'EmailController@parseEmails')->name('email.ajaxMail');
 	Route::get('email/another', 'EmailController@another')->name('email.another');
@@ -702,15 +676,34 @@ Route::group(['middleware' => 'web'], function () {
 	Route::get('email/attachmentList/{folderName}/{id}', 'EmailController@attachmentList')->name('email.attachmentList')
         ->where('folderName', '.*');
 });
+//===============================================================================
+// END OF DEPRECATED EMAIL ROUTES
+//===============================================================================
 
+//SnappyMail Routes (Webmail Integration)
+Route::group(['middleware' => ['auth', 'web']], function () {
+    // SSO Login to SnappyMail
+    Route::get('/email/webmail', 'SnappyMailController@sso')->name('snappymail.sso');
 
+    // Direct access to SnappyMail (without SSO)
+    Route::get('/email/webmail/direct', 'SnappyMailController@direct')->name('snappymail.direct');
+
+    // Admin panel access
+    Route::get('/email/webmail/admin', 'SnappyMailController@admin')->name('snappymail.admin');
+
+    // User email configuration
+    Route::get('/email/configure', 'SnappyMailController@configure')->name('snappymail.configure');
+    Route::post('/email/configure', 'SnappyMailController@saveConfiguration')->name('snappymail.save');
+
+    // SnappyMail status check
+    Route::get('/email/webmail/status', 'SnappyMailController@status')->name('snappymail.status');
+});
 
 //Driver Routes
 Route::group(['middleware' => 'web'], function () {
 	Route::resource('driver', '\App\Http\Controllers\DriverController');
     Route::get('/driver/{id}/delete', 'DriverController@destroy')->name('driver.destroy');
     Route::get('/driver/{id}/delete_msg', 'DriverController@deleteMsg');
-	Route::get('/driver/api/data', 'DriverController@data')->name('driver.data');
 });
 
 Route::group(['middleware' => 'web'], function () {
@@ -778,7 +771,6 @@ Route::get('TMS-Client/quotation_requests', '\App\Http\Controllers\TMSClient\Log
  Route::resource('client_tour_package', '\App\Http\Controllers\TMSClient\TourPackageController');
 Route::resource('TMS-Client-tours', '\App\Http\Controllers\TMSClient\TourController');
 	Route::get('TMS-Client-simpletours/create', '\App\Http\Controllers\TMSClient\TourController@simple_create');
-Route::get('client_tour_data/api/data', '\App\Http\Controllers\TMSClient\TourController@tour_data')->name('client_tour_data');
 //Route::post('/customLogin', '\App\Http\Controllers\TMSClient\LoginController@customLogin')->name('custom.login');
 Route::any('/sevice_modal/show/{id}', '\App\Http\Controllers\TMSClient\ModalController@show')->name('service_modal.show');
  Route::post('/searchPackageData', '\App\Http\Controllers\TMSClient\ModalController@getData');

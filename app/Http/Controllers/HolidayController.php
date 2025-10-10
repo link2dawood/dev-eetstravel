@@ -33,25 +33,6 @@ class HolidayController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $holidaycalendarday);
     }
 
-    public function data(Request $request)
-    {
-        
-        return Datatables::of(Holidaycalendarday::where('user_id', \Illuminate\Support\Facades\Auth::id())->get()
-        )
-            ->addColumn('action', function ($holidaycalendarday) {
-                return $this->getButton($holidaycalendarday->id, $holidaycalendarday);
-            })
-            ->rawColumns(['action'])
-
-            ->make(true);
-    }
-
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         $title = 'Index - Calendar holidays';

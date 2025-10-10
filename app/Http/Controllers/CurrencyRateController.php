@@ -26,20 +26,6 @@ class CurrencyRateController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $currency_rate);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(CurrencyRate::query())
-            ->addColumn('action', function ($currency_rate) {
-                return $this->getButton($currency_rate->id, $currency_rate);
-            })
-            ->rawColumns(['action'])
-
-            ->make(true);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

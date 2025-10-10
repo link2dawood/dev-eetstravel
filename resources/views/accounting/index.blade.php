@@ -22,143 +22,63 @@
          
             <br>
             <br>
-      
 
-            <table id="transactions-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%; display = "none"'>
-                <thead>
-                    <tr>
-                        <th>id</th>
-						<th>Date</th>
-						<th>Invoice No</th>
-                        <th>Tour Name</th>
-						<th>Client Name</th>
-                        <th>Amount Recieveable</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach($accountingData as $transaction)
-                    <tr>
-                        <td>{{ $transaction->id }}</td>
-                        <td>{{ $transaction->date }}</td>
-                        <td>{{ $transaction->invoice_no }}</td>
-                        <td>{{ $transaction->tourName }}</td>
-                        <td>{{ $transaction->clientName }}</td>
-                        <td>{{ $transaction->amount_receiveable }}</td>
-                        <td>{{ $transaction->Status }}</td>
-                        <td>{!! $transaction->action_buttons !!}</td>
-                    </tr>
-                @endforeach
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th>id</th>
-						<th>Date</th>
-						<th>Invoice No</th>
-                        <th>Tour Name</th>
-						<th>Client Name</th>
-                        <th>Amount Recieveable</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </tfoot>
+            <div class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" id="accounting-search" class="form-control" placeholder="Search client invoices..." onkeyup="filterTable('transactions-table', this.value)">
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button class="btn btn-success btn-sm" onclick="exportTableToCSV('transactions-table', 'client_invoices_export.csv')">
+                            <i class="fa fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            </table>
+            <div class="table-responsive">
+                <table id="transactions-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0, 'transactions-table')">id <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(1, 'transactions-table')">Date <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(2, 'transactions-table')">Invoice No <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(3, 'transactions-table')">Tour Name <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(4, 'transactions-table')">Client Name <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(5, 'transactions-table')">Amount Receivable <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(6, 'transactions-table')">Status <i class="fa fa-sort"></i></th>
+                            <th class="actions-button">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @forelse($accountingData as $transaction)
+                        <tr>
+                            <td>{{ $transaction->id }}</td>
+                            <td>{{ $transaction->date }}</td>
+                            <td>{{ $transaction->invoice_no }}</td>
+                            <td>{{ $transaction->tourName }}</td>
+                            <td>{{ $transaction->clientName }}</td>
+                            <td>{{ $transaction->amount_receiveable }}</td>
+                            <td>{{ $transaction->Status }}</td>
+                            <td>{!! $transaction->action_buttons !!}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center">No client invoices found</td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
 @endsection
 @push('scripts')
-
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-    $(document).ready(function() {
-        let permission = $('#permission').attr('data-permission');
-        let classNameStatus = permission ? 'touredit-status' : '';
-        let table = $('#transactions-table').DataTable({
-            dom: "<'row'<'col-md-4'l><'col-md-4'B><'col-md-4'f>>" +
-                "<tr>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Invoice List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Invoice List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Invoice List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths =
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            pageLength: 50,
-            columnDefs: [
-                { targets: [7], orderable: false } // Actions column not sortable
-            ],
-            'columnDefs': [{
-                'targets': 5,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                   
-					var url = "{{ route('tour.update', ':id') }}".replace(':id', rowData.id);
-
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $('<select class="form-control"><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#transactions-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#transactions-table tfoot th').appendTo('#transactions-table thead');
-
-    })
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBootstrapTable('transactions-table');
+    });
 </script>
 @endpush

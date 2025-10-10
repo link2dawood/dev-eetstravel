@@ -144,27 +144,6 @@ class TemplatesController extends Controller
         return view('templates.index', compact('title', 'templatesData'));
     }
 
-    public function data(Request $request)
-    {
-        $json = [];
-
-        $services = $this->serviceTypes;
-
-        foreach ($services as $id => $service) {
-            if ($service !== 'tourPackage') {
-                $json[] = [
-                    "name" => ucfirst($service),
-                    "action" => "<div style='text-align: center;'><a class='btn btn-warning btn-sm show-button' href='" . route('templates.show', ['template' => $id]) . "' ><i class='fa fa-info-circle'></i></a></div>",
-                    "id" => $id
-                ];
-            }
-        }
-
-        $data = ["data" => $json];
-
-        return response()->json($data);
-    }
-
     public function show($template, Request $request)
     {
         $title = 'Show - Template';
@@ -602,4 +581,92 @@ class TemplatesController extends Controller
             return response()->json($data);
         }
 	}
+
+    /**
+     * Send tour email using Laravel Mail (modern approach)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendTourEmail(Request $request)
+    {
+        try {
+            $request->validate([
+                'tour_id' => 'required|exists:tours,id',
+                'email_type' => 'required|in:confirmation,quotation,invoice,reminder,cancellation',
+                'recipient' => 'required|email',
+                'custom_content' => 'nullable|string',
+            ]);
+
+            $tour = Tour::findOrFail($request->tour_id);
+            $emailType = $request->email_type;
+            $customContent = $request->custom_content;
+
+            // Send email using Laravel Mail
+            Mail::to($request->recipient)
+                ->send(new \App\Mail\TourEmail($tour, $emailType, $customContent));
+
+            LaravelFlashSessionHelper::setFlashMessage("Email sent successfully to {$request->recipient}", 'success');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            LaravelFlashSessionHelper::setFlashMessage("Email sending failed: " . $e->getMessage(), 'error');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sending failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Send email via SMTP (alternative to old IMAP method)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendViaSMTP(Request $request)
+    {
+        try {
+            $recipient = $request->email_sent;
+            $subject = $request->email_subject;
+            $body = $request->email_body;
+            $attachments = $request->file('files', []);
+
+            Mail::send([], [], function($message) use ($recipient, $subject, $body, $attachments) {
+                $message->to($recipient)
+                        ->subject($subject)
+                        ->html($body);
+
+                // Add attachments
+                foreach ($attachments as $attachment) {
+                    $message->attach($attachment->getRealPath(), [
+                        'as' => $attachment->getClientOriginalName(),
+                        'mime' => $attachment->getMimeType()
+                    ]);
+                }
+            });
+
+            LaravelFlashSessionHelper::setFlashMessage("Email sent successfully", 'success');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            LaravelFlashSessionHelper::setFlashMessage("Email sending failed: " . $e->getMessage(), 'error');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sending failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

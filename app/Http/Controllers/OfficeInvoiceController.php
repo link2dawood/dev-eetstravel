@@ -116,42 +116,9 @@ public function store(Request $request)
     // Redirect or return response
     return redirect()->back()->with('success', 'Office invoices saved successfully.');
 }
-	
+
 	// get invoice data in table SQL Innerjoins ---//
-public function data($id)
-{
 
-    
-	     $result = DB::select('select * from officeinvoice_data');
-	$result = DB::table('officeinvoice_data')
-    ->where('from_office', '=', $id)
-    ->get();
-	
-		 $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
-         $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
-         $permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
-         
-         $perm = [];        
-         $perm['show'] = Auth::user()->can($permission_show);        
-         $perm['edit'] = Auth::user()->can($permission_edit);
-         $perm['destroy'] = Auth::user()->can($permission_destroy);
-         $perm['clone'] = Auth::user()->can('accounting.create');
-
-	 return Datatables::of($result)->addColumn('action', function ($result) use($perm) {
-		 
-                return $this->getShowButton($result->officeinvoice_dataId  , false, $result, $perm);
-            })
-		 	 ->addColumn('officeName',function($result){
-            $office = Offices::find($result->to_office);
-            return $office->office_name;
-        })
-            ->rawColumns(['select', 'action', 'link'])
-            ->make(true);
-		// the result in 'data' key
-      //  return response()->json(['data' => $result]); // the result in 'data' key
-   
-}
-	
 	 public function office_invoice_details(Request $request , $id)
     {
        // $invoice_detail = DB::table('office_invoices')>where('officeinvoice_dataId', '=', $id)
@@ -193,32 +160,6 @@ public function getOfficeInvoicesdeatailsdata($id)
 		$office_earnings = Office_Earnings::find($id);
 		return view('office.office_earning.edit', compact('office_earnings'));
 	}
-	public function update($id,Request $request){
-        $office_earnings = Office_Earnings::find($id);
-        $office_earnings->update($request->except(["attach"]));
-		return redirect()->back();
-	}
-	public function pdfExport(Request $request, $id){
-  $officeinvoice_dataId = DB::table('officeinvoice_data')
-    ->where('officeinvoice_dataId', $id)
-    ->first();
-		$invoice_items = DB::table('office_invoices')
-    ->where('officeinvoice_dataId', $id)->get();
-		$from_office = Offices::find($officeinvoice_dataId->from_office);
-		$to_office = Offices::find($officeinvoice_dataId->to_office);
-
-    view()->share([
-        'officeinvoice_dataId' => $officeinvoice_dataId,
-		'invoice_items' => $invoice_items,
-		'from_office' => $from_office,
-		'to_office' => $to_office,
-      
-    ]);
-    PDF::setOptions(['isHtml5ParserEnabled' => true,'defaultPaperSize' =>'a3']);
-    $pdf = PDF::loadView('export.office_invoices.officeInvoicesPdf');
-    $pdfName = 'office_invoice.pdf';
-    return $pdf->download(str_replace(" ","_",$pdfName));
-   }
     public function DeleteMsg($id, Request $request)
     {
         $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/office_earning/' . $id . '/delete');

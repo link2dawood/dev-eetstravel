@@ -44,46 +44,6 @@ class CruisesController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $cruise);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(
-            Cruises::distinct()->leftJoin('countries as countries_from', 'countries_from.alias', '=', 'cruises.country_from')
-                ->leftJoin('cities as cities_from', 'cities_from.id', '=', 'cruises.city_from')
-                ->leftJoin('countries as countries_to', 'countries_to.alias', '=', 'cruises.country_to')
-                ->leftJoin('cities as cities_to', 'cities_to.id', '=', 'cruises.city_to')
-                ->select(
-                    [
-                        'cruises.id',
-                        'cruises.name',
-                        'cruises.date_from',
-                        'cruises.date_to',
-                        'cities_from.name as city_from',
-                        'countries_from.name as country_from',
-                        'cities_to.name as city_to',
-                        'countries_to.name as country_to',
-                    ]
-                )
-        )
-            ->when(!is_null($request->date_from), function ($query) use ($request) {
-            return $query->where('date_from', '>=', $request->date_from);
-        })
-            ->when(!is_null($request->date_to), function ($query) use ($request) {
-                return $query->where('date_to', '<=', $request->date_to);
-        })
-            ->addColumn('action', function ($cruise) {
-            return $this->getButton($cruise->id, $cruise);
-        })
-            ->addColumn('date_from', function ($cruise){
-                return $cruise->date_from = (new Carbon($cruise->date_from))->format('Y-m-d H:i');
-            })
-            ->addColumn('date_to', function ($cruise){
-                return $cruise->date_to  = (new Carbon($cruise->date_to))->format('Y-m-d H:i');
-            })
-            ->addColumn('select', function ($cruise) {
-            return DatatablesHelperController::getSelectButton($cruise->id, $cruise->name);
-        })->rawColumns(['select', 'action'])->make(true);
-    }
-
     public function deleteMsg($id, Request $request)
     {
 //        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/cruises/'. $id . '/delete');
@@ -101,7 +61,24 @@ class CruisesController extends Controller
      */
     public function index()
     {
-        return view('cruises.index');
+        $title = 'Index - Cruises';
+        $cruises = Cruises::distinct()
+            ->leftJoin('countries as countries_from', 'countries_from.alias', '=', 'cruises.country_from')
+            ->leftJoin('cities as cities_from', 'cities_from.id', '=', 'cruises.city_from')
+            ->leftJoin('countries as countries_to', 'countries_to.alias', '=', 'cruises.country_to')
+            ->leftJoin('cities as cities_to', 'cities_to.id', '=', 'cruises.city_to')
+            ->select([
+                'cruises.id',
+                'cruises.name',
+                'cruises.date_from',
+                'cruises.date_to',
+                'cities_from.name as city_from',
+                'countries_from.name as country_from',
+                'cities_to.name as city_to',
+                'countries_to.name as country_to',
+            ])
+            ->paginate(15);
+        return view('cruises.index', compact('cruises', 'title'));
     }
 
     /**

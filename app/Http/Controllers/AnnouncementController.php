@@ -63,57 +63,6 @@ class AnnouncementController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $announcement);
     }
 
-   public function data(Request $request)
-{
-    $query = Announcement::distinct()
-        ->leftJoin('users', 'users.id', '=', 'announcements.author')
-        ->select(
-            'announcements.id as id',
-            'announcements.title as title',
-            'announcements.content as content',
-            'announcements.created_at as created_at',
-            'users.name as sender',
-            'announcements.id as ann_id' // keep ID for media lookup
-        )
-        ->where('parent_id', null);
-
-    // Get pagination parameters
-    $perPage = $request->get('length', 15);
-    $page = $request->get('start', 0) / $perPage + 1;
-
-    // Get total count
-    $total = $query->count();
-
-    // Apply pagination
-    $announcements = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-    // Process each announcement
-    foreach($announcements as $announcement) {
-        $announcement->action = $this->getActionButtons($announcement->id, $announcement);
-
-        // fetch related media
-        $mediaItems = Announcement::find($announcement->ann_id)
-                        ->getMedia('announcement_files');
-
-        if ($mediaItems->isEmpty()) {
-            $announcement->files = [];
-        } else {
-            $announcement->files = $mediaItems->map(function ($media) {
-                return [
-                    'url' => $media->getUrl(),
-                    'name' => $media->file_name,
-                ];
-            });
-        }
-    }
-
-    return response()->json([
-        'data' => $announcements,
-        'recordsTotal' => $total,
-        'recordsFiltered' => $total
-    ]);
-}
-
     public function deleteMsg($id, Request $request)
     {
         $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/announcement/' . $id . '/delete');

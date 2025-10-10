@@ -31,25 +31,6 @@ class CriteriaController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $criteria);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(Criteria::leftJoin('criteria_types', 'criteria_types.id', '=', 'criterias.criteria_type')
-            ->select('criterias.id','criterias.name','criterias.short_name','criterias.icon','criteria_types.name as criteria_type')
-        )
-            ->addColumn('action', function ($criteria) {
-                return $this->getButton($criteria->id, $criteria);
-            })
-            ->addColumn('icon', function ($criteria){
-                return View::make('component.icon_for_criteria', ['icon' => $criteria->icon])->render();
-            })
-            ->rawColumns(['action', 'icon'])
-
-            ->make(true);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

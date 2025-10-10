@@ -26,35 +26,6 @@ class CurrenciesController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $currency_rate);
     }
 
-    public function data(Request $request)
-    {
-        $query = Currencies::query();
-
-        // Get pagination parameters
-        $perPage = $request->get('length', 15);
-        $page = $request->get('start', 0) / $perPage + 1;
-
-        // Get total count
-        $total = $query->count();
-
-        // Apply pagination
-        $currencies = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        // Process each currency
-        foreach($currencies as $currency) {
-            $currency->action = $this->getButton($currency->id, $currency);
-        }
-
-        return response()->json([
-            'data' => $currencies,
-            'recordsTotal' => $total,
-            'recordsFiltered' => $total
-        ]);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

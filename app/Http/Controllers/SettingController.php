@@ -130,17 +130,6 @@ class SettingController extends Controller
     /**
      * return datatables data
      */
-    public function data(Request $request)
-    {
-        return Datatables::of($this->settings->all())
-            ->addColumn('action', function ($setting) {
-                return $this->getButton($setting->id);
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
-
-
     public function getButton($id)
     {
         $url = ['edit'       => route('settings.edit', ['id' => $id])];

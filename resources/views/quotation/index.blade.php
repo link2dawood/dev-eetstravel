@@ -23,18 +23,30 @@
 				
 
                 <br>
-               
+
                 {{--     TAB QUOTATION    --}}
                 <div class="tab-content">
-                   
-                        <table id="quotation_table" class="table table-striped table-bordered table-hover" style='background:#fff;width: 100%;'>
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" id="quotation-search" class="form-control" placeholder="Search quotations..." onkeyup="filterTable('quotation_table', this.value)">
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button class="btn btn-success btn-sm" onclick="exportTableToCSV('quotation_table', 'quotations_export.csv')">
+                                    <i class="fa fa-download"></i> Export CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="quotation_table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff;width: 100%;'>
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>{{trans('main.Name')}}</th>
-                                    <th>{{trans('main.Tour')}}</th>
-                                    <th>{{trans('main.Assigned')}}</th>
-                                    <th>{{trans('main.CreatedAt')}}</th>
+                                    <th onclick="sortTable(0, 'quotation_table')">ID <i class="fa fa-sort"></i></th>
+                                    <th onclick="sortTable(1, 'quotation_table')">{{trans('main.Name')}} <i class="fa fa-sort"></i></th>
+                                    <th onclick="sortTable(2, 'quotation_table')">{{trans('main.Tour')}} <i class="fa fa-sort"></i></th>
+                                    <th onclick="sortTable(3, 'quotation_table')">{{trans('main.Assigned')}} <i class="fa fa-sort"></i></th>
+                                    <th onclick="sortTable(4, 'quotation_table')">{{trans('main.CreatedAt')}} <i class="fa fa-sort"></i></th>
                                     <th class="actions-button">{{trans('main.Frontsheet')}}</th>
                                     <th class="actions-button" style="width: 140px!important">{{trans('main.Actions')}}</th>
                                 </tr>
@@ -53,18 +65,31 @@
                                 @endforeach
                             </tbody>
                         </table>
-						
-						
-						       <table id="go-ahead-table" class="table table-striped table-bordered table-hover" style='background:#fff;width: 100%; '>
+                    </div>
+
+                    <div class="mb-3" style="margin-top: 20px;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" id="goahead-search" class="form-control" placeholder="Search go-ahead tours..." onkeyup="filterTable('go-ahead-table', this.value)">
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button class="btn btn-success btn-sm" onclick="exportTableToCSV('go-ahead-table', 'goahead_tours_export.csv')">
+                                    <i class="fa fa-download"></i> Export CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+						       <table id="go-ahead-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff;width: 100%; '>
                             <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>{{trans('main.Name')}}</th>
-                                <th>{{trans('main.DepDate')}}</th>
-                                <th>{{trans('main.CountryBegin')}}</th>
-                                <th>{{trans('main.CityBegin')}}</th>
-                                <th>{{trans('main.Status')}}</th>
-                                <th>{{trans('main.Externalname')}}</th>
+                                <th onclick="sortTable(0, 'go-ahead-table')">ID <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(1, 'go-ahead-table')">{{trans('main.Name')}} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(2, 'go-ahead-table')">{{trans('main.DepDate')}} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(3, 'go-ahead-table')">{{trans('main.CountryBegin')}} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(4, 'go-ahead-table')">{{trans('main.CityBegin')}} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(5, 'go-ahead-table')">{{trans('main.Status')}} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(6, 'go-ahead-table')">{{trans('main.Externalname')}} <i class="fa fa-sort"></i></th>
                                 <th class="actions-button" style="width: 140px">{{trans('main.Actions')}}</th>
                             </tr>
                             </thead>
@@ -83,6 +108,7 @@
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
                 
 
                 {{--     TAB QUOTATION    --}}
@@ -98,93 +124,13 @@
 
 
 @push('scripts')
-
-    <script>
-		
-        $(document).ready(function() {
-            // Initialize simple client-side DataTable
-            let table = $('#quotation_table').DataTable({
-                dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'csv',
-                        title: 'List Quotation of The Agency',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        title: 'List Quotation of The Agency',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'List Quotation of The Agency',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    }
-                ],
-                pageLength: 50,
-                order: [[0, 'desc']], // Sort by ID descending by default
-                columnDefs: [
-                    {
-                        targets: [5, 6], // Frontsheet and Actions columns
-                        orderable: false,
-                        searchable: false
-                    }
-                ]
-            });
-        })
-    </script>
-
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-        $(document).ready(function() {
-            // Initialize simple client-side DataTable for go-ahead tours
-            let goAheadTable = $('#go-ahead-table').DataTable({
-                dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-                buttons: [
-                    {
-                        extend: 'csv',
-                        title: 'Go-Ahead Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        title: 'Go-Ahead Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'Go-Ahead Tours List',
-                        exportOptions: {
-                            columns: ':not(.actions-button)'
-                        }
-                    }
-                ],
-                pageLength: 50,
-                order: [[0, 'desc']], // Sort by ID descending by default
-                columnDefs: [
-                    {
-                        targets: [7], // Actions column
-                        orderable: false,
-                        searchable: false
-                    }
-                ]
-            });
-        })
-    </script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBootstrapTable('quotation_table');
+        initializeBootstrapTable('go-ahead-table');
+    });
+</script>
 
 
 

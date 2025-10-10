@@ -20,33 +20,61 @@
                     {{session('export_all')}}
                 </div>
                 @endif
-				<br>
-				<br>
-				<table id="cruise-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 98%; table-layout: fixed'>
-					<thead>
-					<tr>
-						<th>Id</th>
-						<th>{!!trans('main.Name')!!}</th>
-						<th>{!!trans('main.Datefrom')!!}</th>
-						<th>{!!trans('main.Dateto')!!}</th>
-						<th>{!!trans('main.CountryFrom')!!}</th>
-						<th>{!!trans('main.Cityfrom')!!}</th>
-						<th class="actions-button" style="width: 140px">{!!trans('main.Actions')!!}</th>
-					</tr>
-					</thead>
-
-					<tfoot>
-					<tr>
-						<th class="not"></th>
-						<th>{!!trans('main.Name')!!}</th>
-						<th>{!!trans('main.Datefrom')!!}</th>
-						<th>{!!trans('main.Dateto')!!}</th>
-						<th>{!!trans('main.CountryFrom')!!}</th>
-						<th>{!!trans('main.Cityfrom')!!}</th>
-						<th class="not" style="width: 140px"></th>
-					</tr>
-					</tfoot>
-				</table>
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" id="cruise-search" class="form-control" placeholder="Search cruises..." onkeyup="filterTable('cruise-table', this.value)">
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('cruise-table', 'cruises_export.csv')">
+                                <i class="fa fa-download"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="cruise-table" class="table table-striped table-bordered table-hover bootstrap-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0, 'cruise-table')">ID <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(1, 'cruise-table')">{!!trans('main.Name')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(2, 'cruise-table')">{!!trans('main.Datefrom')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(3, 'cruise-table')">{!!trans('main.Dateto')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(4, 'cruise-table')">{!!trans('main.CountryFrom')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(5, 'cruise-table')">{!!trans('main.Cityfrom')!!} <i class="fa fa-sort"></i></th>
+                                <th>{!!trans('main.Actions')!!}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($cruises as $cruise)
+                            <tr>
+                                <td>{{ $cruise->id }}</td>
+                                <td>{{ $cruise->name ?? '' }}</td>
+                                <td>{{ $cruise->date_from ? \Carbon\Carbon::parse($cruise->date_from)->format('Y-m-d H:i') : '' }}</td>
+                                <td>{{ $cruise->date_to ? \Carbon\Carbon::parse($cruise->date_to)->format('Y-m-d H:i') : '' }}</td>
+                                <td>{{ $cruise->country_from ?? '' }}</td>
+                                <td>{{ $cruise->city_from ?? '' }}</td>
+                                <td>
+                                    {!! \App\Http\Controllers\DatatablesHelperController::getActionButton([
+                                        'show' => route('cruises.show', ['cruise' => $cruise->id]),
+                                        'edit' => route('cruises.edit', ['cruise' => $cruise->id]),
+                                        'delete_msg' => "/cruises/{$cruise->id}/delete_msg"
+                                    ], false, $cruise) !!}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center">No cruises found</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ $cruises->links() }}
+                    </div>
+                </div>
 			</div>
 		</div>
 	</section>
@@ -54,107 +82,10 @@
 @endsection
 
 @push('scripts')
-
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-	$(document).ready(function() {
-		let table = $('#cruise-table').DataTable({
-			dom: 	"<'row'<'col-sm-4'l><'col-sm-3'B><'col-sm-5'f>>" +
-					"<'row'<'col-sm-12'tr>>" +
-					"<'row'<'col-sm-5'i><'col-sm-7'p>>",
-			buttons: [
-				{
-					extend: 'csv',
-                    title: 'Cruises List',
-					exportOptions: {
-						columns: ':not(.actions-button)'
-					}
-				},
-				{
-					extend: 'excel',
-                    title: 'Cruises List',
-					exportOptions: {
-						columns: ':not(.actions-button)'
-					}
-				},
-				{
-					extend: 'pdfHtml5',
-                    title: 'Cruises List',
-					exportOptions: {
-						columns: ':not(.actions-button)'
-					}
-				},
-				{
-					text: 'Import',
-					action: () => {
-						getModalForImport();
-					}
-				},
-				{
-					extend: 'collection',
-					text: 'Export All',
-					buttons: [
-						{
-							text: 'Pdf',
-							action: () => {
-								exportAll('pdf');
-							}
-						},
-						{
-							text: 'Excel',
-							action: () => {
-								exportAll('xlsx');
-							}
-						},
-						{
-							text: 'Csv',
-							action: () => {
-								exportAll('csv');
-							}
-						}
-					],
-                    autoClose: true
-				}
-			],
-            language : {
-                search: "Global Search :"
-            },
-			processing: true,
-			serverSide: true,
-            pageLength: 50,
-			ajax: {
-				url: "{{route('cruises_data')}}"
-			},
-			columns: [
-				{data: 'id', name: 'cruises.id'},
-				{data: 'name', name: 'cruises.name'},
-				{data: 'date_from', name: 'cruises.date_from'},
-				{data: 'date_to', name: 'cruises.date_to'},
-				{data: 'country_from', name: 'countries_from.name'},
-				{data: 'city_from', name: 'cities_from.name'},
-				{data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-			],
-		});
-		$('#cruise-table tfoot th').each(function() {
-			let column = this;
-			if(column.className !== 'not') {
-				let title = $(this).text();
-				$(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-			}
-		});
-		table.columns().every(function() {
-			let that = this;
-
-			$('input', this.footer()).on('keyup change', function() {
-				if(that.search() !== this.value) {
-					that.search(this.value).draw();
-				}
-			});
-		});
-		$('#cruise-table tfoot th').appendTo('#cruise-table thead');
-        $('#search-form').on('submit', function(e) {
-            table.draw();
-            e.preventDefault();
-        });
-	});
+$(document).ready(function() {
+    initializeBootstrapTable('cruise-table');
+});
 </script>
 @endpush

@@ -63,27 +63,6 @@ class OfficeEarningController extends Controller {
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
     
-    public function data(Request $request, $id)
-    {
-        
-         $office_earnings = Office_Earnings::where("office_id", $id)->get();
-         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Offices'];
-         $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Offices'];
-         $permission_show = PermissionHelper::$relationsPermissionShow['App\Offices'];
-         
-         $perm = [];        
-         $perm['show'] = Auth::user()->can($permission_show);        
-         $perm['edit'] = Auth::user()->can($permission_edit);
-         $perm['destroy'] = Auth::user()->can($permission_destroy);
-         $perm['clone'] = Auth::user()->can('office.create');
-         
-        return Datatables::of($office_earnings)->addColumn('action', function ($office_earnings) use($perm) {
-                return $this->getButton($office_earnings->id, false, $office_earnings, $perm);
-            })
-            ->rawColumns(['select', 'action', 'link'])
-            ->make(true);
-    }
-
     public function create(Request $request, $id)
     {
 		$office = Offices::find($id);

@@ -23,171 +23,64 @@
          
             <br>
             <br>
-      
 
-            <table id="inovices-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 90%; table-layout: fixed ; display = "none"'>
-                <thead>
-            <tr>
-				<th>Id</th>
-                <th>Date</th>
-				<th>Payment To</th>
-				<th>Transaction No</th>
-				<th>Invoice No</th>
-				<th>Amount</th>
-                <th>Unallocated</th>
-				<th>Action</th>
-            </tr>
-        </thead>
-                <tfoot>
-                    <tr>
-				<th>Id</th>
-                <th>Date</th>
-				<th>Payment To</th>
-				<th>Transaction No</th>
-				<th>Invoice No</th>
-				<th>Amount</th>
-                <th>Unallocated</th>
-				<th>Action</th>
-            </tr>
-                </tfoot>
-              
-            </table>
+            <div class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" id="transaction-search" class="form-control" placeholder="Search transactions..." onkeyup="filterTable('inovices-table', this.value)">
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button class="btn btn-success btn-sm" onclick="exportTableToCSV('inovices-table', 'transactions_export.csv')">
+                            <i class="fa fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="inovices-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0, 'inovices-table')">Id <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(1, 'inovices-table')">Date <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(2, 'inovices-table')">Payment To <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(3, 'inovices-table')">Transaction No <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(4, 'inovices-table')">Invoice No <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(5, 'inovices-table')">Amount <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(6, 'inovices-table')">Unallocated <i class="fa fa-sort"></i></th>
+                            <th class="actions-button">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @forelse($transactionsData as $transaction)
+                        <tr>
+                            <td>{{ $transaction->id }}</td>
+                            <td>{{ $transaction->date }}</td>
+                            <td>{{ $transaction->pay_to }}</td>
+                            <td>{{ $transaction->transaction_no }}</td>
+                            <td>{{ $transaction->invoice_no }}</td>
+                            <td>{{ $transaction->amount }}</td>
+                            <td>{{ $transaction->unallocated }}</td>
+                            <td>{!! $transaction->action_buttons !!}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center">No transactions found</td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
 
 @endsection
 @push('scripts')
-
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-    $(document).ready(function() {
-        let permission = $('#permission').attr('data-permission');
-        let classNameStatus = permission ? 'touredit-status' : '';
-        let table = $('#inovices-table').DataTable({
-            dom: "<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths = 
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('transaction_data')}}",
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-				{
-                    data: 'date',
-                    name: 'date',
-                    className: 'touredit-name'
-                }
-					,
-					  {
-                    data: 'pay_to',
-                    name: 'pay_to',
-                    className: 'touredit-name'
-                },  
-				
-					  {
-                    data: 'trans_no',
-                    name: 'trans_no',
-                    className: 'touredit-name'
-                },
-					  {
-                    data: 'invoice_no',
-                    name: 'invoice_no',
-                    className: 'touredit-name'
-                },
-				 {
-                    data: 'amount',
-                    name: 'amount',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'unallocated',
-                    name: 'unallocated',
-                    className: 'touredit-name'
-                },
-                
-                {
-                    data: 'action',
-                    name: 'action',
-                    searchable: false,
-                    sorting: false,
-                    orderable: false
-                }
-            ],
-            'columnDefs': [{
-
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $('<select class="form-control"><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#inovices-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#inovices-table tfoot th').appendTo('#inovices-table thead');
-
-    })
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBootstrapTable('inovices-table');
+    });
 </script>
 @endpush

@@ -61,51 +61,6 @@ class FlightController extends Controller
      * @param  Request $request
      * @return \Illuminate\Http\Response
      */
-    public function data(Request $request)
-    {
-        return Datatables::of(
-            Flight::distinct()->leftJoin('countries as countries_from', 'countries_from.alias', '=', 'flights.country_from')
-                ->leftJoin('cities as cities_from', 'cities_from.id', '=', 'flights.city_from')
-                ->leftJoin('countries as countries_to', 'countries_to.alias', '=', 'flights.country_to')
-                ->leftJoin('cities as cities_to', 'cities_to.id', '=', 'flights.city_to')
-                ->select(
-                    [
-                        'flights.id',
-                        'flights.name',
-                        'flights.date_from',
-                        'flights.date_to',
-                        'cities_from.name as city_from',
-                        'countries_from.name as country_from',
-                        'cities_to.name as city_to',
-                        'countries_to.name as country_to',
-                    ]
-                )
-        )
-            ->when(!is_null($request->date_from), function ($query) use ($request) {
-                return $query->where('date_from', '>=', $request->date_from);
-            })
-            ->when(!is_null($request->date_to), function ($query) use ($request) {
-                return $query->where('date_to', '<=', $request->date_to);
-            })
-            ->addColumn('date_from', function ($flight){
-              return $flight->date_from = (new Carbon($flight->date_from))->format('Y-m-d H:i');
-            })
-            ->addColumn('date_from', function ($flight){
-                return $flight->date_to  = (new Carbon($flight->date_to))->format('Y-m-d H:i');
-            })
-            ->addColumn('action', function ($flight) {
-                return $this->getButton($flight->id, $flight);
-            })->addColumn('select', function($flight){
-                $data = "Country From: {$flight->country_from}({$flight->city_from}) To: {$flight->country_to}({$flight->city_to})";
-                return DatatablesHelperController::getSelectButton($flight->id, $data);
-            })->rawColumns(['select', 'action'])->make(true);
-    }
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
         $query = Flight::distinct()

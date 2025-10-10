@@ -35,36 +35,6 @@ class StatusController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $status);
     }
 
-    public function data(Request $request)
-    {
-        $query = Status::leftJoin('status_types', 'status_types.type', '=', 'status.type')
-            ->select('status.id', 'status.name', 'status.color', 'status.sort_order', 'status_types.name as status_type');
-
-        // Get pagination parameters
-        $perPage = $request->get('length', 15);
-        $page = $request->get('start', 0) / $perPage + 1;
-
-        // Get total count
-        $total = $query->count();
-
-        // Apply pagination
-        $statuses = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        // Process each status
-        foreach($statuses as $status) {
-            $status->action = $this->getButton($status->id, $status);
-        }
-
-        return response()->json([
-            'data' => $statuses,
-            'recordsTotal' => $total,
-            'recordsFiltered' => $total
-        ]);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

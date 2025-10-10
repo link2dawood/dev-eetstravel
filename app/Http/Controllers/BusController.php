@@ -63,28 +63,6 @@ class BusController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $bus);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(Bus::query()
-            ->leftJoin('transfers', 'transfers.id', '=', 'buses.transfer_id')
-            ->select(
-                [
-                    'buses.*',
-                    'transfers.name as transfer_name'
-                ])
-            )
-            ->addColumn('action', function ($bus) {
-                return $this->getButton($bus->id, $bus);
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
-
-    /**
-     * BusController constructor.
-     * @param BusRepository $busRepository
-     * @param BusDayHelper $busDayHelper
-     */
     public function __construct(BusRepository $busRepository, BusDayHelper $busDayHelper)
     {
         $this->middleware('permissions.required');

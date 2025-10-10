@@ -15,7 +15,15 @@
       "WebFetch(domain:bootsnipp.com)",
       "WebSearch",
       "Bash(node:*)",
-      "Bash(killall:*)"
+      "Bash(killall:*)",
+      "Bash(awk:*)",
+      "Bash(grep:*)",
+      "Bash(wget:*)",
+      "Bash(rm:*)",
+      "Bash(unzip:*)",
+      "Bash(openssl rand:*)",
+      "Read(//etc/apache2/sites-enabled/**)",
+      "Bash(systemctl reload:*)"
     ],
     "deny": [],
     "ask": []

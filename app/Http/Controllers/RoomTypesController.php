@@ -26,35 +26,6 @@ class RoomTypesController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $room_types);
     }
 
-    public function data(Request $request)
-    {
-        $query = RoomTypes::query();
-
-        // Get pagination parameters
-        $perPage = $request->get('length', 15);
-        $page = $request->get('start', 0) / $perPage + 1;
-
-        // Get total count
-        $total = $query->count();
-
-        // Apply pagination
-        $roomTypes = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        // Process each room type
-        foreach($roomTypes as $roomType) {
-            $roomType->action = $this->getButton($roomType->id, $roomType);
-        }
-
-        return response()->json([
-            'data' => $roomTypes,
-            'recordsTotal' => $total,
-            'recordsFiltered' => $total
-        ]);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

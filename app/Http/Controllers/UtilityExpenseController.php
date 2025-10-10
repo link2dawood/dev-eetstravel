@@ -66,27 +66,6 @@ class UtilityExpenseController extends Controller {
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
-    public function data(Request $request, $id)
-    {
-        
-         $office_utility_expenses = Office_Utility_Expenses::where("office_id", $id)->get();;
-         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Offices'];
-         $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Offices'];
-         $permission_show = PermissionHelper::$relationsPermissionShow['App\Offices'];
-         
-         $perm = [];        
-         $perm['show'] = Auth::user()->can($permission_show);        
-         $perm['edit'] = Auth::user()->can($permission_edit);
-         $perm['destroy'] = Auth::user()->can($permission_destroy);
-         $perm['clone'] = Auth::user()->can('office.create');
-        
-        return Datatables::of($office_utility_expenses)->addColumn('action', function ($office_utility_expenses) use($perm) {
-                return $this->getButton($office_utility_expenses->id, false, $office_utility_expenses, $perm);
-            })
-            ->rawColumns(['select', 'action', 'link'])
-            ->make(true);
-    }
-
     public function create(Request $request , $id)
     {
     	

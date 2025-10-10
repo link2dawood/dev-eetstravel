@@ -25,7 +25,6 @@ use App\Http\Requests\UpdateEventRequest;
 use App\Event;
 use Amranidev\Ajaxis\Ajaxis;
 use URL;
-use Yajra\Datatables\Datatables;
 use Illuminate\Support\Facades\Session;
 use App\Library\Services\DeleteModel;
 

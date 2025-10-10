@@ -31,22 +31,6 @@ class RateController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $rate);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(Rate::leftJoin('rate_types', 'rate_types.id', '=', 'rates.rate_type')
-            ->select('rates.id', 'rates.name', 'rates.mark', 'rates.sort_order', 'rate_types.name as rate_type')
-        )
-            ->addColumn('action', function ($rate) {
-                return $this->getButton($rate->id, $rate);
-            })
-            ->rawColumns(['action'])
-
-            ->make(true);
-    }
-
-    /**
-     * TaskController constructor.
-     */
     public function __construct()
     {
         $this->middleware('preventBackHistory');

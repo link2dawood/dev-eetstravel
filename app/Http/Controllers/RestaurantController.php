@@ -41,25 +41,6 @@ class   RestaurantController extends Controller
     }
 
     /**
-     * get action buttons
-     * @param  int $id
-     * @return string
-     */
-    public function getButton($id)
-    {
-        $url = array('show'       => route('restaurant.show', ['id' => $id]),
-                     'edit'       => route('restaurant.edit', ['id' => $id]),
-                     'delete_msg' => "/restaurant/{$id}/deleteMsg");
-        return DatatablesHelperController::getActionButton($url);
-    }
-
-    // Removed data() method - using direct data in index() method instead of DataTables
-    // public function data(Request $request)
-    // {
-    //     return Datatables::of(...)
-    // }
-
-    /**
      * Display a listing of the resource.
      *
      * @return  \Illuminate\Http\Response

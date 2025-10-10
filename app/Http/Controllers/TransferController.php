@@ -55,35 +55,6 @@ class TransferController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $transfer);
     }
 
-    public function data(Request $request)
-    {
-        return Datatables::of(
-            Transfer::distinct()->leftJoin('countries', 'countries.alias', '=', 'transfers.country')
-                ->leftJoin('cities', 'cities.id', '=', 'transfers.city')
-                ->select(
-                    [
-                        'transfers.id',
-                        'transfers.name',
-                        'transfers.address_first',
-                        'cities.name as city',
-                        'countries.name as country',
-                        'transfers.work_phone',
-                        'transfers.contact_name'
-                    ]
-                )
-        )->addColumn('action', function ($transfer) {
-            return $this->getButton($transfer->id, $transfer);
-        })->addColumn('select', function($transfer){
-            return DatatablesHelperController::getSelectButton($transfer->id, $transfer->name);
-        })->rawColumns(['action', 'select'])
-            ->make(true);
-    }
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return  \Illuminate\Http\Response
-     */
     public function index()
     {
         $title = 'Index - transfer';

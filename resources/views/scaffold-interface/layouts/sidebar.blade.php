@@ -181,6 +181,12 @@
                         <i class="fa fa-file-code-o" aria-hidden="true"></i>
                         <span>{{trans('main.Email')}} {{trans('main.Templates')}}</span></a>
                 </li>
+                <li class="{!! \App\Helper\DashboardHelper::isMenuActive('snappymail.sso', $route) !!}">
+                    <a href="{{route('snappymail.sso')}}" target="_blank">
+                        <i class="fa fa-envelope-open" aria-hidden="true"></i>
+                        <span>Webmail (SnappyMail)</span>
+                    </a>
+                </li>
                 @endif
                 @if(Auth::user()->can('comment.index'))
                 <li class="{!! \App\Helper\DashboardHelper::isMenuActive('comment.index', $route) !!}">

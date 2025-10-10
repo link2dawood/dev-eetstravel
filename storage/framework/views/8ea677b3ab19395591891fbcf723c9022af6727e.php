@@ -168,6 +168,12 @@
                         <i class="fa fa-file-code-o" aria-hidden="true"></i>
                         <span><?php echo e(trans('main.Email')); ?> <?php echo e(trans('main.Templates')); ?></span></a>
                 </li>
+                <li class="<?php echo \App\Helper\DashboardHelper::isMenuActive('snappymail.sso', $route); ?>">
+                    <a href="<?php echo e(route('snappymail.sso')); ?>" target="_blank">
+                        <i class="fa fa-envelope-open" aria-hidden="true"></i>
+                        <span>Webmail (SnappyMail)</span>
+                    </a>
+                </li>
                 <?php endif; ?>
                 <?php if(Auth::user()->can('comment.index')): ?>
                 <li class="<?php echo \App\Helper\DashboardHelper::isMenuActive('comment.index', $route); ?>">

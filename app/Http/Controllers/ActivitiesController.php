@@ -9,26 +9,6 @@ use Yajra\Datatables\Datatables;
 class ActivitiesController extends Controller
 {
 
-    public function data(){
-        return Datatables::of(Activity::distinct()
-        ->leftJoin('users', 'users.id', '=', 'activity_log.causer_id')
-        ->select('activity_log.description', 'activity_log.properties', 'activity_log.created_at', 'users.name as causer')->orderBy('created_at', 'desc'))
-            ->addColumn('action', function($activity){
-        	return $activity->getExtraProperty('action');
-        })->addColumn('description', function($activity){
-        	// $link = $activity->getExtraProperty('link');
-        	// if ($link) {
-        	// 	return $link = "$activity->description";
-        	// }
-        	return $activity->description;
-        })->addColumn('link', function($activity){
-            $link = $activity->getExtraProperty('link');
-            if ($link) {
-                return $link = "<a class='btn btn-warning btn-sm pull-right' href='$link'><i class='fa fa-info-circle'></i></a>";
-            }
-        })->rawColumns(['description', 'link'])->make(true);
-    }
-
     public function index(){
     	$logs = Activity::all();
 

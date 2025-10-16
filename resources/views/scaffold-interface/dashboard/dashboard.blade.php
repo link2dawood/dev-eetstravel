@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('title','Dashboard')
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">

@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('content')
 	@include('layouts.title',
    ['title' => 'Roles', 'sub_title' => 'Roles List',

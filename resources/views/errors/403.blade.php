@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Access Denied')
 @section('content')
 <section class="content">

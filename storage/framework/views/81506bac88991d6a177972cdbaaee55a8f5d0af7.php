@@ -12,7 +12,7 @@
                 <?php if(empty($breadcrumb['route'])): ?>
                         <li class="active">
                             <?php if(!empty($breadcrumb['icon'])): ?>
-                                <i class="fa fa-<?php echo e($breadcrumb['icon']); ?>"></i>
+                                <i class="ti ti-<?php echo e($breadcrumb['icon']); ?>"></i>
                             <?php endif; ?>
                                 <?php echo e($breadcrumb['title']); ?>
 
@@ -20,7 +20,7 @@
                     <?php else: ?>
                         <li><a href="<?php echo e($breadcrumb['route']); ?>">
                                 <?php if(!empty($breadcrumb['icon'])): ?>
-                                    <i class="fa fa-<?php echo e($breadcrumb['icon']); ?>"></i>
+                                    <i class="ti ti-<?php echo e($breadcrumb['icon']); ?>"></i>
                                 <?php endif; ?>
                                 <?php echo e($breadcrumb['title']); ?>
 

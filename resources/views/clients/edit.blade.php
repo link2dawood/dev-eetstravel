@@ -1,126 +1,161 @@
-@extends('scaffold-interface.layouts.app')
-@section('title','Edit')
+@extends('scaffold-interface.layouts.tabler-app')
+@section('title','Edit Client')
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Client', 'sub_title' => 'Client Edit',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Clients', 'icon' => 'handshake-o', 'route' => route('clients.index')],
-   ['title' => 'Edit', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box box-body border_top_none">
-				<span id="client_id_span" data-info="{{$client->id}}"></span>
-                <form method='POST' action='{{route('clients.update', ['client' => $client->id])}}' enctype="multipart/form-data">
-                @if (count($errors) > 0)
-                    <br>
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url('/home') }}"><i class="ti ti-home"></i> Home</a></li>
+                                <li class="breadcrumb-item"><a href="{{ route('clients.index') }}">Clients</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                            </ol>
+                        </nav>
                     </div>
-                @endif
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="margin_button">
-                                <a href="javascript:history.back()">
-                                    <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
-                                </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Edit')!!}</button>
-                            </div>
-                        </div>
-                    </div>
-                <div class="row">
-                    <div class="col-md-6">
-
-                            {{csrf_field()}}
-                            {{method_field('PUT')}}
-                            <div class="form-group ">
-                                <label for="name">{!!trans('main.Name')!!}</label>
-                                <input id="name" name="name" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->name }}{{ old('name') }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="address">{!!trans('main.Address')!!}</label>
-                                <input id="address" name="address" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->address }}{{ old('address') }}">
-                            </div>
-						<div class="form-group">
-                                    <label for="account_no">{!!trans('Account No')!!}</label>
-                                    <input id="account_no" name="account_no" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->account_no }}{{old('account_no')}}">
-                                </div>
-								<div class="form-group">
-                                    <label for="company_address">{!!trans('Company Address')!!}</label>
-                                    <input id="company_address" name="company_address" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->company_address }}{{old('company_address')}}">
-                                </div>
-								<div class="form-group">
-                                    <label for="invoice_address">{!!trans('Invoice Address')!!}</label>
-                                    <input id="invoice_address" name="invoice_address" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->invoice_address }}{{old('invoice_address')}}">
-                                </div>
-							
-                            @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => $client->country,
-                             'city_label' => 'city','city_translation' =>'main.City', 'city_default' => \App\Helper\CitiesHelper::getCityById($client->city)['name']])
-                            @endcomponent
-                            <div class="form-group">
-                                <label for="work_phone">{!!trans('main.WorkPhone')!!}</label>
-                                <input id="work_phone" name="work_phone" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_phone }}{{ old('work_phone') }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact_phone">{!!trans('main.ContactPhone')!!}</label>
-                                <input id="contact_phone" name="contact_phone" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->contact_phone }}{{ old('contact_phone') }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="work_email">{!!trans('main.WorkEmail')!!}</label>
-                                <input id="work_email" name="work_email" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_email }}{{ old('work_email') }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact_email">{!!trans('main.ContactEmail')!!}</label>
-                                <input id="contact_email" name="contact_email" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->contact_email }}{{ old('contact_email') }}">
-                            </div>
-							<div class="form-group">
-								<label for="password">{!!trans('password')!!}</label>
-								<input id="password" name="password" type="password" class="form-control" >
-                             </div>
-                            <div class="form-group">
-                                <label for="work_fax">{!!trans('main.WorkFax')!!}</label>
-                                <input id="work_fax" name="work_fax" type="text" class="form-control"
-                                       value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_fax }}{{ old('work_fax') }}">
-                            </div>
-                            <div class="form-group">
-                                <label>{!!trans('main.Files')!!}</label>
-                                @component('component.file_upload_field')@endcomponent
-                            </div>
-                            <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-                        <a href="{{\App\Helper\AdminHelper::getBackButton(route('clients.index'))}}">
-                            <button class='btn btn-warning' type='button'>{!!trans('main.Cancel')!!}</button>
+                    <h2 class="page-title">Edit Client</h2>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="javascript:history.back()" class="btn btn-primary">
+                            <i class="ti ti-arrow-left"></i> {!!trans('main.Back')!!}
                         </a>
                     </div>
-					<div class="col-md-6">
-						<div class="margin_button">
-							<button class='btn btn-success' id="add_contact" type='button'>
-								<i class="fa fa-plus"></i>
-								{!!trans('main.AddContact')!!}
-							</button>
-						</div>
-						<div class="row">
-							<div class="col-md-6">
-								<div id="items-contacts">
-
-								</div>
-							</div>
-						</div>
-					</div>
                 </div>
-                </form>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <span id="client_id_span" data-info="{{$client->id}}"></span>
+                            @if (count($errors) > 0)
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            <form method='POST' action='{{route('clients.update', ['client' => $client->id])}}' enctype="multipart/form-data">
+                                {{csrf_field()}}
+                                {{method_field('PUT')}}
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="name" class="form-label">{!!trans('main.Name')!!}</label>
+                                            <input id="name" name="name" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->name }}{{ old('name') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="address" class="form-label">{!!trans('main.Address')!!}</label>
+                                            <input id="address" name="address" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->address }}{{ old('address') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="account_no" class="form-label">{!!trans('Account No')!!}</label>
+                                            <input id="account_no" name="account_no" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->account_no }}{{old('account_no')}}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="company_address" class="form-label">{!!trans('Company Address')!!}</label>
+                                            <input id="company_address" name="company_address" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->company_address }}{{old('company_address')}}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="invoice_address" class="form-label">{!!trans('Invoice Address')!!}</label>
+                                            <input id="invoice_address" name="invoice_address" type="text" class="form-control" value="{{ $errors != null && count($errors) > 0 ? '' : $client->invoice_address }}{{old('invoice_address')}}">
+                                        </div>
+
+                                        @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => $client->country,
+                                         'city_label' => 'city','city_translation' =>'main.City', 'city_default' => \App\Helper\CitiesHelper::getCityById($client->city)['name']])
+                                        @endcomponent
+
+                                        <div class="form-group mb-3">
+                                            <label for="work_phone" class="form-label">{!!trans('main.WorkPhone')!!}</label>
+                                            <input id="work_phone" name="work_phone" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_phone }}{{ old('work_phone') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="contact_phone" class="form-label">{!!trans('main.ContactPhone')!!}</label>
+                                            <input id="contact_phone" name="contact_phone" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->contact_phone }}{{ old('contact_phone') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="work_email" class="form-label">{!!trans('main.WorkEmail')!!}</label>
+                                            <input id="work_email" name="work_email" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_email }}{{ old('work_email') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="contact_email" class="form-label">{!!trans('main.ContactEmail')!!}</label>
+                                            <input id="contact_email" name="contact_email" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->contact_email }}{{ old('contact_email') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="password" class="form-label">{!!trans('password')!!}</label>
+                                            <input id="password" name="password" type="password" class="form-control" >
+                                         </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="work_fax" class="form-label">{!!trans('main.WorkFax')!!}</label>
+                                            <input id="work_fax" name="work_fax" type="text" class="form-control"
+                                                   value="{{ $errors != null && count($errors) > 0 ? '' : $client->work_fax }}{{ old('work_fax') }}">
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">{!!trans('main.Files')!!}</label>
+                                            @component('component.file_upload_field')@endcomponent
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <button class='btn btn-success' id="add_contact" type='button'>
+                                                <i class="ti ti-plus"></i>
+                                                {!!trans('main.AddContact')!!}
+                                            </button>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div id="items-contacts">
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer text-end">
+                                    <button class='btn btn-success' type='submit'>
+                                        <i class="ti ti-device-floppy"></i> {!!trans('main.Save')!!}
+                                    </button>
+                                    <a href="{{\App\Helper\AdminHelper::getBackButton(route('clients.index'))}}">
+                                        <button class='btn btn-warning' type='button'>
+                                            <i class="ti ti-x"></i> {!!trans('main.Cancel')!!}
+                                        </button>
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
 @push('scripts')

@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Settings')
 @section('content')
 	@include('layouts.title',

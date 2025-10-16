@@ -23,7 +23,9 @@
       "Bash(unzip:*)",
       "Bash(openssl rand:*)",
       "Read(//etc/apache2/sites-enabled/**)",
-      "Bash(systemctl reload:*)"
+      "Bash(systemctl reload:*)",
+      "Bash(mkdir:*)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "ask": []

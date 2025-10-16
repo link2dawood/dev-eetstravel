@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('content')
 	@include('layouts.title',
    ['title' => 'User', 'sub_title' => 'User Create',

@@ -11,14 +11,14 @@
                 @if(empty($breadcrumb['route']))
                         <li class="active">
                             @if(!empty($breadcrumb['icon']))
-                                <i class="fa fa-{{ $breadcrumb['icon']}}"></i>
+                                <i class="ti ti-{{ $breadcrumb['icon']}}"></i>
                             @endif
                                 {{ $breadcrumb['title'] }}
                         </li>
                     @else
                         <li><a href="{{ $breadcrumb['route']}}">
                                 @if(!empty($breadcrumb['icon']))
-                                    <i class="fa fa-{{ $breadcrumb['icon']}}"></i>
+                                    <i class="ti ti-{{ $breadcrumb['icon']}}"></i>
                                 @endif
                                 {{ $breadcrumb['title'] }}
                             </a>

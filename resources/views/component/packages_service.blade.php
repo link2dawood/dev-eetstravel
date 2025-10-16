@@ -1,4 +1,4 @@
-{{-- @extends('scaffold-interface.layouts.app') --}}
+{{-- @extends('scaffold-interface.layouts.tabler-app') --}}
 {{-- @section('content') --}}
 <div class="box box-primary">
 	<div class="box-body">

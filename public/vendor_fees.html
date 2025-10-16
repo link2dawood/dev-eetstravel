@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESCROW VENDOR FEES v5.1</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #fff;
+      --ink: #111;
+      --muted: #666;
+      --ring: #dcdfe5;
+      --brand: #4f46e5;
+      --brand-2: #4338ca;
+      --danger: #c2410c;
+      --radius: 14px;
+    }
+    
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    
+    body {
+      margin: 0;
+      font: 14px/1.4 -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--ring);
+    }
+    
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    
+    h1 { margin: 0; font-size: 18px; }
+    h2 { margin: 0 0 8px 0; font-size: 18px; }
+    
+    .section {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 0 0 16px 0;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+    
+    .row {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr .6fr .6fr 140px;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .row.header {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    
+    .row + .row { margin-top: 8px; }
+    
+    input[type="text"], 
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--ring);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(79,70,229,.15);
+    }
+    
+    input[readonly] {
+      background-color: #f3f4f6;
+      color: #6b7280;
+      cursor: not-allowed;
+    }
+    
+    input[type=number]::-webkit-outer-spin-button, 
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type=number] { -moz-appearance: textfield; }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--ring);
+      background: #fff;
+      color: #111;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    
+    .btn:hover { background: #f5f5ff; }
+    .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .btn.primary:hover { background: var(--brand-2); }
+    .btn.danger { color: #b91c1c; background: #fff3f3; border-color: #f3d1d1; }
+    .btn.danger:hover { background: #fee2e2; }
+    .btn.edit { background: #fef3c7; color: #92400e; border-color: #fde68a; padding: 6px 8px; font-size: 12px; }
+    .btn.edit:hover { background: #fde68a; }
+    .btn.small { padding: 6px 8px; font-size: 12px; }
+    
+    .muted { color: #6b7280; }
+    
+    .totals {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr .6fr .6fr 140px;
+      gap: 8px;
+      align-items: center;
+      padding-top: 8px;
+      margin-top: 12px;
+      border-top: 1px solid var(--ring);
+      font-weight: 700;
+    }
+    
+    .totals .label { text-align: right; color: #6b7280; font-weight: 700; }
+    .totals .amount { text-align: center; font-weight: 700; }
+    
+    .grid-sections { display: flex; flex-direction: column; gap: 16px; }
+    
+    .footer {
+      color: #9ca3af;
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 32px;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--ring); }
+    .modal-title { margin: 0; font-size: 20px; font-weight: 600; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 20px; border-top: 1px solid var(--ring); display: flex; gap: 10px; justify-content: flex-end; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: var(--ink); }
+    .form-input {
+      width: 100%;
+      border: 1px solid var(--ring);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(79,70,229,.15); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div id="actions" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" onclick="app.save()" tabindex="-1">💾 Save Escrow</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none" onchange="app.load(event)">
+        <button class="btn" onclick="document.getElementById('fileInput').click()" tabindex="-1">📁 Load Escrow</button>
+        <button class="btn danger" onclick="app.clear()" tabindex="-1">🗑️ Clear Fees</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="app" class="grid-sections"></div>
+  </main>
+
+ <script>
+  const app = (function() {
+    'use strict';
+    
+    // ============================================
+    // UTILITIES & CONSTANTS
+    // ============================================
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const DECIMALS = 2;
+    const toMoney = n => (Number(n) || 0).toFixed(DECIMALS);
+    const toNum = v => { 
+      const x = parseFloat(v); 
+      return Number.isFinite(x) ? Number(x.toFixed(DECIMALS)) : 0; 
+    };
+    
+    /**
+     * Create DOM element with attributes and children
+     */
+    const el = (tag, attrs = {}, children = []) => {
+      const n = document.createElement(tag);
+      Object.entries(attrs).forEach(([k, v]) => {
+        if (k === 'class') n.className = v;
+        else if (k === 'style') n.style.cssText = v;
+        else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
+        else if (v != null) n.setAttribute(k, v);
+      });
+      (Array.isArray(children) ? children : [children]).forEach(c => 
+        c != null && n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c)
+      );
+      return n;
+    };
+
+    // ============================================
+    // APPLICATION STATE
+    // ============================================
+    const state = { 
+      vendorCharges: {},
+      escrowSetup: null,
+      fundingCredits: null,
+      loadedFilename: null
+    };
+    
+    let idxCounter = 0;
+    let focusTarget = null;
+
+    // ============================================
+    // SECTION CONFIGURATIONS
+    // ============================================
+    const SECTIONS = {
+      sellerAgentCommissions: {
+        title: "Seller Agent Commissions",
+        items: ["Seller Agent 1"],
+        getParty: (label, data) => {
+          const idx = parseInt(label.match(/\d+/)?.[0]) - 1 || 0;
+          return data.participants?.sellerAgents?.[idx]?.company || "";
+        }
+      },
+      buyerAgentCommissions: {
+        title: "Buyer Agent Commissions",
+        items: ["Buyer Agent 1"],
+        getParty: (label, data) => {
+          const idx = parseInt(label.match(/\d+/)?.[0]) - 1 || 0;
+          return data.participants?.buyerAgents?.[idx]?.company || "";
+        }
+      },
+      tcFees: {
+        title: "Transaction Coordinator Fees",
+        items: ["Seller Agent TC", "Buyer Agent TC"],
+        getParty: (label, data) => {
+          const tcs = data.participants?.transactionCoordinators || [];
+          if (!Array.isArray(tcs)) return "";
+          const role = label.includes("Seller") ? "seller" : "buyer";
+          return tcs.find(tc => tc.role === role)?.company || "";
+        }
+      },
+      escrowFees: {
+        title: "Escrow Fees",
+        items: [
+          "Escrow Fees", "Loan Tie-in Fee", "Document Preparation Fee",
+          "Insurance Processing Fee", "Email Documents Fee", "Demand Payoff Fee",
+          "1099 Processing Fee", "Wire Fee", "Messenger Fee", "Notary Fee"
+        ],
+        getParty: (label, data) => data.escrow?.company || ""
+      },
+      titleFees: {
+        title: "Title Fees",
+        items: [
+          "Owner's Title Insurance", "Lender's Title Insurance", "Other Policy Fee",
+          "Sub Escrow Fee", "Reconveyance Fee", "Recording Fee", "Endorsement Fee",
+          "Tax Service Fee", "Wire Fee", "Messenger Fee", "Binder Fee"
+        ],
+        getParty: (label, data) => data.participants?.title?.company || ""
+      },
+      lender1Fees: {
+        title: "Lender 1 Fees",
+        items: [
+          "Origination Fee", "Broker Fee", "Appraisal Fee", "Underwriting Fee",
+          "Credit Report Fee", "Funding Fee", "Processing Fee", "Document Prep Fee",
+          "Inspection Fee", "Flood Certification Fee", "Interest Amount"
+        ],
+        getParty: (label, data, key) => {
+          const idx = parseInt(key.match(/\d+/)?.[0]) - 1 || 0;
+          return data.participants?.lenders?.[idx]?.company || "";
+        }
+      },
+      hoaFees: {
+        title: "HOA",
+        items: [
+          "HOA Transfer Fee", "HOA Certification Fee", "HOA Doc Fee",
+          "HOA Processing Fee", "Dues", "Late Fees", "Special Assessments", "Moving Fee"
+        ],
+        getParty: (label, data) => data.participants?.hoa?.hoaName || ""
+      },
+      homeInsuranceFees: {
+        title: "Home Owner's Insurance Fee",
+        items: ["Insurance Premium"],
+        getParty: (label, data) => data.participants?.insurance?.company || ""
+      },
+      payoff1: {
+        title: "Payoffs",
+        items: [
+          "Payoff Balance", "Prepayment Penalty", "Reconveyance Fee",
+          "Recording Fee", "Statement Fee", "Late Charges"
+        ],
+        getParty: (label, data, key) => {
+          const idx = parseInt(key.replace("payoff", "")) - 1 || 0;
+          return data.participants?.payoffContacts?.[idx]?.lender || "";
+        }
+      },
+      otherFees: {
+        title: "Other",
+        items: ["NHD Fee", "Home Warranty Fee", "Termite Fee", "Retrofit Fee", "Certificate of Compliance"],
+        getParty: (label, data) => {
+          const p = data.participants || {};
+          const map = {
+            "NHD Fee": p.nhdCompany?.company,
+            "Home Warranty Fee": p.homeWarranty?.company,
+            "Termite Fee": p.termiteCompany?.company,
+            "Retrofit Fee": p.retrofitCompany?.company,
+            "Certificate of Compliance": p.certificateCompliance?.company
+          };
+          return map[label] || "";
+        }
+      }
+    };
+
+    // ============================================
+    // MODAL MANAGEMENT
+    // ============================================
+    /**
+     * Display modal dialog for data entry
+     */
+    function showModal(title, fields, onSave) {
+      const overlay = el('div', {class: 'modal-overlay'});
+      const modal = el('div', {class: 'modal'});
+      const header = el('div', {class: 'modal-header'}, [
+        el('h3', {class: 'modal-title'}, [title])
+      ]);
+      
+      const body = el('div', {class: 'modal-body'});
+      const inputs = {};
+      
+      fields.forEach(field => {
+        const group = el('div', {class: 'form-group'});
+        group.appendChild(el('label', {class: 'form-label'}, [field.label]));
+        
+        const input = el('input', {
+          class: 'form-input',
+          type: field.type || 'text',
+          value: field.value || '',
+          placeholder: field.placeholder || ''
+        });
+        
+        inputs[field.key] = input;
+        group.appendChild(input);
+        body.appendChild(group);
+      });
+      
+      const footer = el('div', {class: 'modal-footer'}, [
+        el('button', {
+          class: 'btn',
+          onclick: () => document.body.removeChild(overlay)
+        }, ['Cancel']),
+        el('button', {
+          class: 'btn primary',
+          onclick: () => {
+            const values = {};
+            Object.entries(inputs).forEach(([key, input]) => {
+              values[key] = input.value;
+            });
+            onSave(values);
+            document.body.removeChild(overlay);
+            render();
+          }
+        }, ['Save Changes'])
+      ]);
+      
+      modal.appendChild(header);
+      modal.appendChild(body);
+      modal.appendChild(footer);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      
+      // Handle overlay click to close
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) document.body.removeChild(overlay);
+      });
+      
+      // Auto-focus first input
+      const firstInput = Object.values(inputs)[0];
+      if (firstInput) setTimeout(() => firstInput.focus(), 50);
+    }
+
+    /**
+     * Create selection modal for fee types
+     */
+    function showSelectionModal(title, options, onSelect) {
+      const overlay = el('div', {class: 'modal-overlay'});
+      const modal = el('div', {class: 'modal'});
+      
+      modal.appendChild(el('div', {class: 'modal-header'}, [
+        el('h3', {class: 'modal-title'}, [title])
+      ]));
+      
+      const body = el('div', {class: 'modal-body'});
+      options.forEach(option => {
+        body.appendChild(el('button', {
+          class: 'btn',
+          style: 'width:100%;margin-bottom:8px;',
+          onclick: () => {
+            document.body.removeChild(overlay);
+            onSelect(option);
+          }
+        }, [option]));
+      });
+      
+      modal.appendChild(body);
+      modal.appendChild(el('div', {class: 'modal-footer'}, [
+        el('button', {
+          class: 'btn',
+          onclick: () => document.body.removeChild(overlay)
+        }, ['Cancel'])
+      ]));
+      
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    }
+
+    // ============================================
+    // FIELD DEFINITIONS - MATCHING ESCROWSETUP
+    // ============================================
+    /**
+     * Get modal fields for agent data - matches escrowSetup structure
+     */
+    function getAgentFields(agent = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: agent.company || '' },
+        { key: 'companyLicense', label: 'Company License', value: agent.companyLicense || '' },
+        { key: 'name', label: 'Agent Name', value: agent.name || '' },
+        { key: 'agentLicense', label: 'Agent License', value: agent.agentLicense || '' },
+        { key: 'email', label: 'Email', value: agent.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: agent.phone || '' },
+        { key: 'address', label: 'Address', value: agent.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for TC data - matches escrowSetup structure
+     */
+    function getTCFields(tc = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: tc.company || '' },
+        { key: 'contact', label: 'Contact Name', value: tc.contact || '' },
+        { key: 'email', label: 'Email', value: tc.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: tc.phone || '' },
+        { key: 'address', label: 'Address', value: tc.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for escrow data - matches escrowSetup structure
+     */
+    function getEscrowFields(escrow = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: escrow.company || '' },
+        { key: 'officer', label: 'Officer Name', value: escrow.officer || '' },
+        { key: 'number', label: 'Escrow Number', value: escrow.number || '' },
+        { key: 'initials', label: 'Initials', value: escrow.initials || '' },
+        { key: 'phone', label: 'Phone', value: escrow.phone || '' },
+        { key: 'email', label: 'Email', value: escrow.email || '', type: 'email' }
+      ];
+    }
+
+    /**
+     * Get modal fields for title data - matches escrowSetup structure
+     */
+    function getTitleFields(title = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: title.company || '' },
+        { key: 'policyNumber', label: 'Policy Number', value: title.policyNumber || '' },
+        { key: 'titleOfficer', label: 'Title Officer', value: title.titleOfficer || '' },
+        { key: 'email', label: 'Email', value: title.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: title.phone || '' },
+        { key: 'titleRep', label: 'Title Rep', value: title.titleRep || '' },
+        { key: 'titleRepPhone', label: 'Title Rep Phone', value: title.titleRepPhone || '' },
+        { key: 'titleRepEmail', label: 'Title Rep Email', value: title.titleRepEmail || '', type: 'email' },
+        { key: 'address', label: 'Address', value: title.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for lender data - matches escrowSetup structure
+     */
+    function getLenderFields(lender = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: lender.company || '' },
+        { key: 'loanNumber', label: 'Loan Number', value: lender.loanNumber || '' },
+        { key: 'license', label: 'License', value: lender.license || '' },
+        { key: 'name', label: 'Loan Officer', value: lender.name || '' },
+        { key: 'email', label: 'Email', value: lender.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: lender.phone || '' },
+        { key: 'processor', label: 'Processor', value: lender.processor || '' },
+        { key: 'processorPhone', label: 'Processor Phone', value: lender.processorPhone || '' },
+        { key: 'processorEmail', label: 'Processor Email', value: lender.processorEmail || '', type: 'email' },
+        { key: 'address', label: 'Address', value: lender.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for HOA data - matches escrowSetup structure
+     */
+    function getHOAFields(hoa = {}) {
+      return [
+        { key: 'hoaName', label: 'HOA Name', value: hoa.hoaName || '' },
+        { key: 'referenceNumber', label: 'Reference Number', value: hoa.referenceNumber || '' },
+        { key: 'management', label: 'Management Company', value: hoa.management || '' },
+        { key: 'name', label: 'Contact Name', value: hoa.name || '' },
+        { key: 'email', label: 'Email', value: hoa.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: hoa.phone || '' },
+        { key: 'address', label: 'Address', value: hoa.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for insurance data - matches escrowSetup structure
+     */
+    function getInsuranceFields(insurance = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: insurance.company || '' },
+        { key: 'policyNumber', label: 'Policy Number', value: insurance.policyNumber || '' },
+        { key: 'name', label: 'Agent Name', value: insurance.name || '' },
+        { key: 'email', label: 'Email', value: insurance.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: insurance.phone || '' },
+        { key: 'address', label: 'Address', value: insurance.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for payoff data - matches escrowSetup structure
+     */
+    function getPayoffFields(payoff = {}) {
+      return [
+        { key: 'lender', label: 'Lender Name', value: payoff.lender || '' },
+        { key: 'loanNumber', label: 'Loan Number', value: payoff.loanNumber || '' },
+        { key: 'instrumentNumber', label: 'Instrument Number', value: payoff.instrumentNumber || '' },
+        { key: 'recordingDate', label: 'Recording Date', value: payoff.recordingDate || '' },
+        { key: 'name', label: 'Contact Name', value: payoff.name || '' },
+        { key: 'email', label: 'Email', value: payoff.email || '', type: 'email' },
+        { key: 'phone', label: 'Phone', value: payoff.phone || '' },
+        { key: 'address', label: 'Address', value: payoff.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for vendor data - matches escrowSetup structure
+     */
+    function getVendorFields(vendor = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: vendor.company || '' },
+        { key: 'contact', label: 'Contact Name', value: vendor.contact || '' },
+        { key: 'phone', label: 'Phone', value: vendor.phone || '' },
+        { key: 'email', label: 'Email', value: vendor.email || '', type: 'email' },
+        { key: 'address', label: 'Address', value: vendor.address || '' }
+      ];
+    }
+
+    /**
+     * Get modal fields for other fee companies (NHD, warranty, etc) - matches escrowSetup structure
+     */
+    function getOtherFeeFields(company = {}) {
+      return [
+        { key: 'company', label: 'Company Name', value: company.company || '' },
+        { key: 'contact', label: 'Contact Name', value: company.contact || '' },
+        { key: 'phone', label: 'Phone', value: company.phone || '' },
+        { key: 'email', label: 'Email', value: company.email || '', type: 'email' },
+        { key: 'address', label: 'Address', value: company.address || '' }
+      ];
+    }
+
+    // ============================================
+    // PARTY DATA HANDLERS
+    // ============================================
+    /**
+     * Initialize escrow setup structure
+     */
+    function initEscrowSetup() {
+      if (!state.escrowSetup) state.escrowSetup = { participants: {} };
+      if (!state.escrowSetup.participants) state.escrowSetup.participants = {};
+    }
+
+    /**
+     * Edit existing party data
+     */
+    function editPartyData(sectionKey, itemIndex, label) {
+      initEscrowSetup();
+      
+      const handlers = {
+        sellerAgentCommissions: () => editAgent('seller', label),
+        buyerAgentCommissions: () => editAgent('buyer', label),
+        tcFees: () => editTC(label),
+        escrowFees: () => editEscrow(),
+        titleFees: () => editTitle(),
+        hoaFees: () => editHOA(),
+        homeInsuranceFees: () => editInsurance(),
+        vendorMisc: () => editVendor(label),
+        otherFees: () => editOtherFee(label)
+      };
+      
+      if (sectionKey.startsWith('lender')) editLender(sectionKey);
+      else if (sectionKey.startsWith('payoff')) editPayoff(sectionKey);
+      else if (handlers[sectionKey]) handlers[sectionKey]();
+    }
+
+    function editAgent(type, label) {
+      const idx = parseInt(label.match(/\d+/)?.[0]) - 1 || 0;
+      const agentsKey = type === 'seller' ? 'sellerAgents' : 'buyerAgents';
+      
+      if (!state.escrowSetup.participants[agentsKey]) {
+        state.escrowSetup.participants[agentsKey] = [];
+      }
+      
+      while (state.escrowSetup.participants[agentsKey].length <= idx) {
+        state.escrowSetup.participants[agentsKey].push({});
+      }
+      
+      const agent = state.escrowSetup.participants[agentsKey][idx];
+      const title = type === 'seller' ? `Edit Seller Agent ${idx + 1}` : `Edit Buyer Agent ${idx + 1}`;
+      
+      showModal(title, getAgentFields(agent), values => Object.assign(agent, values));
+    }
+
+    function editTC(label) {
+      const role = label.includes("Seller") ? "seller" : "buyer";
+      if (!state.escrowSetup.participants.transactionCoordinators) {
+        state.escrowSetup.participants.transactionCoordinators = [];
+      }
+      
+      let tc = state.escrowSetup.participants.transactionCoordinators.find(t => t.role === role);
+      if (!tc) {
+        tc = { role };
+        state.escrowSetup.participants.transactionCoordinators.push(tc);
+      }
+      
+      showModal(`Edit ${label}`, getTCFields(tc), values => Object.assign(tc, values));
+    }
+
+    function editEscrow() {
+      if (!state.escrowSetup.escrow) state.escrowSetup.escrow = {};
+      const escrow = state.escrowSetup.escrow;
+      
+      showModal('Edit Escrow Company', getEscrowFields(escrow), values => Object.assign(escrow, values));
+    }
+
+    function editTitle() {
+      if (!state.escrowSetup.participants.title) {
+        state.escrowSetup.participants.title = {};
+      }
+      const title = state.escrowSetup.participants.title;
+      
+      showModal('Edit Title Company', getTitleFields(title), values => Object.assign(title, values));
+    }
+
+    function editLender(sectionKey) {
+      const idx = parseInt(sectionKey.match(/\d+/)?.[0]) - 1 || 0;
+      if (!state.escrowSetup.participants.lenders) {
+        state.escrowSetup.participants.lenders = [];
+      }
+      
+      while (state.escrowSetup.participants.lenders.length <= idx) {
+        state.escrowSetup.participants.lenders.push({});
+      }
+      
+      const lender = state.escrowSetup.participants.lenders[idx];
+      
+      showModal(`Edit Lender ${idx + 1}`, getLenderFields(lender), values => Object.assign(lender, values));
+    }
+
+    function editHOA() {
+      if (!state.escrowSetup.participants.hoa) {
+        state.escrowSetup.participants.hoa = {};
+      }
+      const hoa = state.escrowSetup.participants.hoa;
+      
+      showModal('Edit HOA', getHOAFields(hoa), values => Object.assign(hoa, values));
+    }
+
+    function editInsurance() {
+      if (!state.escrowSetup.participants.insurance) {
+        state.escrowSetup.participants.insurance = {};
+      }
+      const insurance = state.escrowSetup.participants.insurance;
+      
+      showModal('Edit Insurance Company', getInsuranceFields(insurance), values => Object.assign(insurance, values));
+    }
+
+    function editPayoff(sectionKey) {
+      const idx = parseInt(sectionKey.replace('payoff', '')) - 1 || 0;
+      if (!state.escrowSetup.participants.payoffContacts) {
+        state.escrowSetup.participants.payoffContacts = [];
+      }
+      
+      while (state.escrowSetup.participants.payoffContacts.length <= idx) {
+        state.escrowSetup.participants.payoffContacts.push({});
+      }
+      
+      const payoff = state.escrowSetup.participants.payoffContacts[idx];
+      
+      showModal(`Edit Payoff ${idx + 1}`, getPayoffFields(payoff), values => Object.assign(payoff, values));
+    }
+
+    function editOtherFee(label) {
+      const p = state.escrowSetup.participants;
+      const feeHandlers = {
+        'NHD Fee': () => {
+          if (!p.nhdCompany) p.nhdCompany = {};
+          showModal('Edit NHD Company', getOtherFeeFields(p.nhdCompany), values => Object.assign(p.nhdCompany, values));
+        },
+        'Home Warranty Fee': () => {
+          if (!p.homeWarranty) p.homeWarranty = {};
+          showModal('Edit Home Warranty Company', getOtherFeeFields(p.homeWarranty), values => Object.assign(p.homeWarranty, values));
+        },
+        'Termite Fee': () => {
+          if (!p.termiteCompany) p.termiteCompany = {};
+          showModal('Edit Termite Company', getOtherFeeFields(p.termiteCompany), values => Object.assign(p.termiteCompany, values));
+        },
+        'Retrofit Fee': () => {
+          if (!p.retrofitCompany) p.retrofitCompany = {};
+          showModal('Edit Retrofit Company', getOtherFeeFields(p.retrofitCompany), values => Object.assign(p.retrofitCompany, values));
+        },
+        'Certificate of Compliance': () => {
+          if (!p.certificateCompliance) p.certificateCompliance = {};
+          showModal('Edit Certificate Company', getOtherFeeFields(p.certificateCompliance), values => Object.assign(p.certificateCompliance, values));
+        }
+      };
+      
+      if (feeHandlers[label]) feeHandlers[label]();
+    }
+
+    function editVendor(label) {
+      const idx = parseInt(label.match(/\d+/)?.[0]) - 1 || 0;
+      if (!state.escrowSetup.participants.otherVendorsBook) {
+        state.escrowSetup.participants.otherVendorsBook = [];
+      }
+      
+      while (state.escrowSetup.participants.otherVendorsBook.length <= idx) {
+        state.escrowSetup.participants.otherVendorsBook.push({});
+      }
+      
+      const vendor = state.escrowSetup.participants.otherVendorsBook[idx];
+      
+      showModal(`Edit Vendor ${idx + 1}`, getVendorFields(vendor), values => Object.assign(vendor, values));
+    }
+
+    /**
+     * Add new item with party data collection
+     */
+    function addNewItem(sectionKey, items) {
+      initEscrowSetup();
+      
+      const section = SECTIONS[sectionKey] || buildSections().find(s => s.key === sectionKey);
+      if (!section) return;
+      
+      const handlers = {
+        tcFees: () => addTC(items),
+        sellerAgentCommissions: () => addAgent('seller', items),
+        buyerAgentCommissions: () => addAgent('buyer', items),
+        vendorMisc: () => addVendor(items),
+        otherFees: () => addOtherFee(items)
+      };
+      
+      if (sectionKey.startsWith('lender') || sectionKey.startsWith('payoff')) {
+        addSimpleItem(sectionKey, items, section);
+      } else if (handlers[sectionKey]) {
+        handlers[sectionKey]();
+      } else {
+        addSimpleItem(sectionKey, items, section);
+      }
+    }
+
+    function addTC(items) {
+      showSelectionModal('Select TC Type', ['Seller Agent TC', 'Buyer Agent TC'], tcType => {
+        const role = tcType.includes("Seller") ? "seller" : "buyer";
+        if (!state.escrowSetup.participants.transactionCoordinators) {
+          state.escrowSetup.participants.transactionCoordinators = [];
+        }
+        
+        let tc = state.escrowSetup.participants.transactionCoordinators.find(t => t.role === role);
+        if (tc) {
+          items.push({ party: tc.company || '', label: tcType, seller: 0, buyer: 0 });
+          render();
+        } else {
+          showModal(`Add ${tcType}`, getTCFields(), values => {
+            state.escrowSetup.participants.transactionCoordinators.push({ ...values, role });
+            items.push({ party: values.company || '', label: tcType, seller: 0, buyer: 0 });
+          });
+        }
+      });
+    }
+
+    function addAgent(type, items) {
+      const agentsKey = type === 'seller' ? 'sellerAgents' : 'buyerAgents';
+      if (!state.escrowSetup.participants[agentsKey]) {
+        state.escrowSetup.participants[agentsKey] = [];
+      }
+      
+      const idx = state.escrowSetup.participants[agentsKey].length;
+      const title = type === 'seller' ? `Add Seller Agent ${idx + 1}` : `Add Buyer Agent ${idx + 1}`;
+      const label = type === 'seller' ? `Seller Agent ${idx + 1}` : `Buyer Agent ${idx + 1}`;
+      
+      showModal(title, getAgentFields(), values => {
+        state.escrowSetup.participants[agentsKey].push(values);
+        items.push({ party: values.company || '', label, seller: 0, buyer: 0 });
+      });
+    }
+
+    function addVendor(items) {
+      if (!state.escrowSetup.participants.otherVendorsBook) {
+        state.escrowSetup.participants.otherVendorsBook = [];
+      }
+      
+      const idx = state.escrowSetup.participants.otherVendorsBook.length;
+      
+      showModal(`Add Vendor ${idx + 1}`, getVendorFields(), values => {
+        state.escrowSetup.participants.otherVendorsBook.push(values);
+        items.push({ party: values.company || '', label: `Vendor Fee ${idx + 1}`, seller: 0, buyer: 0 });
+      });
+    }
+
+    function addOtherFee(items) {
+      const feeTypes = ['NHD Fee', 'Home Warranty Fee', 'Termite Fee', 'Retrofit Fee', 'Certificate of Compliance', 'Custom Fee'];
+      
+      showSelectionModal('Select Fee Type', feeTypes, feeType => {
+        const handlers = {
+          'NHD Fee': () => {
+            if (!state.escrowSetup.participants.nhdCompany) state.escrowSetup.participants.nhdCompany = {};
+            showModal('Add NHD Company', getOtherFeeFields(), values => {
+              Object.assign(state.escrowSetup.participants.nhdCompany, values);
+              items.push({ party: values.company || '', label: 'NHD Fee', seller: 0, buyer: 0 });
+            });
+          },
+          'Home Warranty Fee': () => {
+            if (!state.escrowSetup.participants.homeWarranty) state.escrowSetup.participants.homeWarranty = {};
+            showModal('Add Home Warranty Company', getOtherFeeFields(), values => {
+              Object.assign(state.escrowSetup.participants.homeWarranty, values);
+              items.push({ party: values.company || '', label: 'Home Warranty Fee', seller: 0, buyer: 0 });
+            });
+          },
+          'Termite Fee': () => {
+            if (!state.escrowSetup.participants.termiteCompany) state.escrowSetup.participants.termiteCompany = {};
+            showModal('Add Termite Company', getOtherFeeFields(), values => {
+              Object.assign(state.escrowSetup.participants.termiteCompany, values);
+              items.push({ party: values.company || '', label: 'Termite Fee', seller: 0, buyer: 0 });
+            });
+          },
+          'Retrofit Fee': () => {
+            if (!state.escrowSetup.participants.retrofitCompany) state.escrowSetup.participants.retrofitCompany = {};
+            showModal('Add Retrofit Company', getOtherFeeFields(), values => {
+              Object.assign(state.escrowSetup.participants.retrofitCompany, values);
+              items.push({ party: values.company || '', label: 'Retrofit Fee', seller: 0, buyer: 0 });
+            });
+          },
+          'Certificate of Compliance': () => {
+            if (!state.escrowSetup.participants.certificateCompliance) state.escrowSetup.participants.certificateCompliance = {};
+            showModal('Add Certificate Company', getOtherFeeFields(), values => {
+              Object.assign(state.escrowSetup.participants.certificateCompliance, values);
+              items.push({ party: values.company || '', label: 'Certificate of Compliance', seller: 0, buyer: 0 });
+            });
+          },
+          'Custom Fee': () => {
+            items.push({ party: '', label: 'Custom Fee', seller: 0, buyer: 0 });
+            render();
+          }
+        };
+        
+        if (handlers[feeType]) handlers[feeType]();
+      });
+    }
+
+    function addSimpleItem(sectionKey, items, section) {
+      const partyName = section.getParty ? 
+        section.getParty(items[0]?.label || '', state.escrowSetup || {}, sectionKey) : '';
+      
+      const label = sectionKey.startsWith('lender') ? 'New Lender Fee' :
+                   sectionKey.startsWith('payoff') ? 'New Payoff Fee' : 'New Item';
+      
+      items.push({ party: partyName, label, seller: 0, buyer: 0 });
+      render();
+    }
+
+    // ============================================
+    // SECTION MANAGEMENT
+    // ============================================
+    /**
+     * Order sections for consistent display
+     */
+    function orderSections(obj) {
+      const ordered = {};
+      const keys = Object.keys(obj);
+      const sectionOrder = ['sellerAgentCommissions', 'buyerAgentCommissions', 'tcFees', 'escrowFees', 'titleFees'];
+      
+      // Add standard sections
+      sectionOrder.forEach(key => {
+        if (keys.includes(key)) ordered[key] = obj[key];
+      });
+      
+      // Add lender sections
+      keys.filter(k => k.match(/^lender\d+Fees$/))
+        .sort((a, b) => parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]))
+        .forEach(key => ordered[key] = obj[key]);
+      
+      // Add HOA and Insurance
+      ['hoaFees', 'homeInsuranceFees'].forEach(key => {
+        if (keys.includes(key)) ordered[key] = obj[key];
+      });
+      
+      // Add payoff sections
+      keys.filter(k => k.match(/^payoff\d+$/))
+        .sort((a, b) => {
+          const numA = parseInt(a.replace('payoff', '') || '1');
+          const numB = parseInt(b.replace('payoff', '') || '1');
+          return numA - numB;
+        })
+        .forEach(key => ordered[key] = obj[key]);
+      
+      // Add remaining sections
+      ['otherFees', 'vendorMisc'].forEach(key => {
+        if (keys.includes(key)) ordered[key] = obj[key];
+      });
+      
+      // Add any missed sections
+      keys.forEach(key => {
+        if (!(key in ordered)) ordered[key] = obj[key];
+      });
+      
+      return ordered;
+    }
+
+    /**
+     * Build dynamic sections based on loaded data
+     */
+    function buildSections() {
+      const sections = [];
+      const p = state.escrowSetup?.participants || {};
+      
+      Object.entries(SECTIONS).forEach(([key, config]) => {
+        const section = { key, ...config };
+        
+        // Handle dynamic agent sections
+        if (key === 'sellerAgentCommissions' && p.sellerAgents?.length > 1) {
+          section.items = p.sellerAgents.map((_, i) => `Seller Agent ${i + 1}`);
+        } else if (key === 'buyerAgentCommissions' && p.buyerAgents?.length > 1) {
+          section.items = p.buyerAgents.map((_, i) => `Buyer Agent ${i + 1}`);
+        }
+        
+        sections.push(section);
+        
+        // Add extra lender sections
+        if (key === 'lender1Fees' && p.lenders?.length > 1) {
+          for (let i = 2; i <= p.lenders.length; i++) {
+            sections.push({
+              key: `lender${i}Fees`,
+              title: `Lender ${i} Fees`,
+              items: [...config.items],
+              getParty: config.getParty
+            });
+          }
+        }
+        
+        // Add extra payoff sections
+        if (key === 'payoff1' && p.payoffContacts?.length > 1) {
+          sections[sections.length - 1].title = 'Payoffs 1';
+          for (let i = 2; i <= p.payoffContacts.length; i++) {
+            sections.push({
+              key: `payoff${i}`,
+              title: `Payoffs ${i}`,
+              items: [...config.items],
+              getParty: config.getParty
+            });
+          }
+        }
+      });
+      
+      // Add vendor section if needed
+      if (p.otherVendorsBook?.length > 0) {
+        sections.push({
+          key: "vendorMisc",
+          title: "Vendor Fees",
+          items: p.otherVendorsBook.map((_, i) => `Vendor Fee ${i + 1}`),
+          getParty: (label, data) => {
+            const idx = parseInt(label.match(/\d+/)?.[0]) - 1 || 0;
+            return data.participants?.otherVendorsBook?.[idx]?.company || "";
+          }
+        });
+      }
+      
+      return sections;
+    }
+
+    /**
+     * Initialize vendor charges
+     */
+    function initializeCharges(isNew = false) {
+      const charges = state.vendorCharges || {};
+      const sections = buildSections();
+      
+      sections.forEach(section => {
+        const current = charges[section.key] || [];
+        const needed = section.items.length;
+        
+        // Resize array to match needed items
+        if (current.length < needed) {
+          for (let i = current.length; i < needed; i++) {
+            current.push({ party: "", label: section.items[i], seller: 0, buyer: 0 });
+          }
+        } else {
+          current.length = needed;
+        }
+        
+        // Update party data
+        charges[section.key] = current.map((item, idx) => ({
+          party: section.getParty ? 
+            section.getParty(section.items[idx], state.escrowSetup || {}, section.key) : "",
+          label: section.items[idx],
+          seller: toNum(item.seller),
+          buyer: toNum(item.buyer)
+        }));
+      });
+      
+      state.vendorCharges = charges;
+    }
+
+    // ============================================
+    // UI COMPONENTS
+    // ============================================
+    /**
+     * Create money input field
+     */
+    function moneyInput(value, onChange) {
+      const input = el("input", { 
+        type: "number", 
+        step: "0.01", 
+        inputmode: "decimal", 
+        value: toMoney(value) 
+      });
+      
+      input.addEventListener('input', e => onChange(toNum(e.target.value)));
+      input.addEventListener('blur', () => {
+        input.value = toMoney(input.value);
+        render();
+      });
+      
+      return input;
+    }
+
+    /**
+     * Create section UI
+     */
+    function createSection(section) {
+      const items = state.vendorCharges[section.key] || [];
+      const container = el('div', {class: 'section'});
+      
+      // Header
+      container.appendChild(el('h2', {}, [section.title]));
+      container.appendChild(el('div', {class: 'row header'}, [
+        el('div', {}, ['Party']),
+        el('div', {}, ['Item']),
+        el('div', {}, ['Seller ($)']),
+        el('div', {}, ['Buyer ($)']),
+        el('div', {}, ['Actions'])
+      ]));
+      
+      // Items
+      const frag = document.createDocumentFragment();
+      items.forEach((item, idx) => {
+        const row = el('div', {class: 'row'});
+        
+        row.appendChild(el('input', {
+          type: 'text',
+          value: item.party,
+          readonly: true,
+          title: 'Auto-populated from JSON data'
+        }));
+        
+        row.appendChild(el('input', {
+          type: 'text',
+          value: item.label,
+          oninput: e => item.label = e.target.value
+        }));
+        
+        const sellerInput = moneyInput(item.seller, v => item.seller = v);
+        sellerInput.dataset.idx = String(idxCounter++);
+        row.appendChild(sellerInput);
+        
+        const buyerInput = moneyInput(item.buyer, v => item.buyer = v);
+        buyerInput.dataset.idx = String(idxCounter++);
+        row.appendChild(buyerInput);
+        
+        const actionsDiv = el('div', {style: 'display:flex;gap:4px'});
+        
+        actionsDiv.appendChild(el('button', {
+          class: 'btn edit small',
+          onclick: () => editPartyData(section.key, idx, item.label),
+          title: 'Edit party details',
+          tabindex: -1
+        }, ['Edit']));
+        
+        actionsDiv.appendChild(el('button', {
+          class: 'btn danger small',
+          onclick: () => { 
+            items.splice(idx, 1); 
+            render(); 
+          },
+          title: 'Delete this row',
+          tabindex: -1
+        }, ['Del']));
+        
+        row.appendChild(actionsDiv);
+        frag.appendChild(row);
+      });
+      container.appendChild(frag);
+      
+      // Add button
+      container.appendChild(el('div', {style: 'margin-top:10px'}, [
+        el('button', {
+          class: 'btn primary',
+          onclick: () => addNewItem(section.key, items),
+          tabindex: -1
+        }, ['+ Add Item'])
+      ]));
+      
+      // Section totals
+      const totals = items.reduce((acc, item) => ({
+        seller: acc.seller + Number(item.seller),
+        buyer: acc.buyer + Number(item.buyer)
+      }), {seller: 0, buyer: 0});
+      
+      container.appendChild(el('div', {class: 'totals'}, [
+        el('div', {}, ['']),
+        el('div', {class: 'label'}, ['Section Total:']),
+        el('div', {class: 'amount'}, [toMoney(totals.seller)]),
+        el('div', {class: 'amount'}, [toMoney(totals.buyer)]),
+        el('div', {}, [''])
+      ]));
+      
+      return container;
+    }
+
+    /**
+     * Setup keyboard navigation
+     */
+    function setupTabbing() {
+      const inputs = Array.from(document.querySelectorAll('#app input[type="number"]'))
+        .sort((a, b) => +a.dataset.idx - +b.dataset.idx);
+      
+      inputs.forEach((input, i) => {
+        input.tabIndex = i + 1;
+        
+        input.addEventListener('keydown', e => {
+          if (e.key !== 'Tab') return;
+          e.preventDefault();
+          
+          const next = inputs[(i + (e.shiftKey ? -1 : 1) + inputs.length) % inputs.length];
+          focusTarget = next?.dataset.idx;
+          input.blur();
+        });
+        
+        input.addEventListener('focus', () => {
+          input.select();
+          input.dataset.selAll = '1';
+        });
+        
+        input.addEventListener('mouseup', e => {
+          if (input.dataset.selAll === '1') {
+            e.preventDefault();
+            input.select();
+            input.dataset.selAll = '0';
+          }
+        });
+      });
+    }
+
+    // ============================================
+    // MAIN RENDER
+    // ============================================
+    function render() {
+      // Update header
+      $('#year').textContent = new Date().getFullYear();
+      const escrow = state.escrowSetup?.escrow || {};
+      let headerText = escrow.number ? 
+        `Escrow #${escrow.number} • Initials ${escrow.initials || ''} • Officer ${escrow.officer || ''}` : '';
+      
+      if (state.loadedFilename) {
+        headerText += (headerText ? ' • ' : '') + `File: ${state.loadedFilename}`;
+      }
+      
+      $('#escrowMeta').textContent = headerText;
+      
+      // Reset and render
+      const app = $('#app');
+      app.innerHTML = '';
+      idxCounter = 0;
+      
+      const sections = buildSections();
+      const frag = document.createDocumentFragment();
+      
+      sections.forEach(section => frag.appendChild(createSection(section)));
+      
+      // Grand total
+      const grand = Object.values(state.vendorCharges).reduce((acc, items) => {
+        items.forEach(item => {
+          acc.seller += Number(item.seller);
+          acc.buyer += Number(item.buyer);
+        });
+        return acc;
+      }, {seller: 0, buyer: 0});
+      
+      frag.appendChild(el('div', {class: 'section', style: 'background:#f8f9fb'}, [
+        el('h2', {}, ['Grand Total (All Sections)']),
+        el('div', {class: 'totals', style: 'border-top:2px solid var(--brand)'}, [
+          el('div', {}, ['']),
+          el('div', {class: 'label', style: 'font-size:16px'}, ['GRAND TOTAL:']),
+          el('div', {class: 'amount', style: 'font-size:16px'}, [toMoney(grand.seller)]),
+          el('div', {class: 'amount', style: 'font-size:16px'}, [toMoney(grand.buyer)]),
+          el('div', {}, [''])
+        ])
+      ]));
+      
+      app.appendChild(frag);
+      setupTabbing();
+      
+      // Restore focus
+      if (focusTarget) {
+        const target = $(`#app input[data-idx="${focusTarget}"]`);
+        if (target) {
+          target.focus();
+          target.select();
+        }
+        focusTarget = null;
+      }
+    }
+
+    // ============================================
+    // DATA OPERATIONS
+    // ============================================
+    /**
+     * Calculate section totals for export
+     */
+    function calculateTotals() {
+      const totals = {};
+      const targets = ['escrowFees', 'titleFees', 'hoaFees'];
+      
+      Object.entries(state.vendorCharges).forEach(([key, items]) => {
+        const isTarget = targets.includes(key) || 
+                        key.startsWith('lender') || 
+                        key.startsWith('payoff');
+        
+        if (isTarget && items.length) {
+          const sum = items.reduce((acc, item) => ({
+            seller: acc.seller + Number(item.seller),
+            buyer: acc.buyer + Number(item.buyer)
+          }), {seller: 0, buyer: 0});
+          
+          const section = buildSections().find(s => s.key === key);
+          const party = section?.getParty ? 
+            section.getParty(items[0]?.label, state.escrowSetup || {}, key) : "";
+          
+          totals[key] = {
+            party,
+            seller: sum.seller,
+            buyer: sum.buyer,
+            combined: sum.seller + sum.buyer
+          };
+        }
+      });
+      
+      return orderSections(totals);
+    }
+
+    // ============================================
+    // PUBLIC API
+    // ============================================
+    return {
+      save() {
+        const output = {};
+        
+        if (state.escrowSetup) output.escrowSetup = state.escrowSetup;
+        if (state.fundingCredits) output.fundingCredits = state.fundingCredits;
+        output.vendorCharges = orderSections(state.vendorCharges);
+        output.vendorChargesTotals = calculateTotals();
+        
+        const blob = new Blob([JSON.stringify(output, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const filename = state.loadedFilename || 
+          `escrow-${state.escrowSetup?.escrow?.number || 'data'}-${
+            state.escrowSetup?.escrow?.initials || 'XX'}-with-vendor-fees.json`;
+        link.download = filename;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert(`File saved as: ${filename}\n\nVendor Fees saved with section totals. Funding Credits preserved if present.`);
+      },
+
+      load(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        state.loadedFilename = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const data = JSON.parse(e.target.result);
+            
+            const existingCharges = state.vendorCharges ? 
+              JSON.parse(JSON.stringify(state.vendorCharges)) : null;
+            
+            state.escrowSetup = data.escrowSetup || null;
+            state.vendorCharges = data.vendorCharges || existingCharges || {};
+            state.fundingCredits = data.fundingCredits || null;
+            
+            initializeCharges(!data.vendorCharges);
+            render();
+            
+            event.target.value = '';
+            
+            const sections = buildSections();
+            const info = [];
+            
+            const sellers = sections.find(s => s.key === 'sellerAgentCommissions');
+            if (sellers?.items.length > 1) info.push(`${sellers.items.length} seller agents`);
+            
+            const buyers = sections.find(s => s.key === 'buyerAgentCommissions');
+            if (buyers?.items.length > 1) info.push(`${buyers.items.length} buyer agents`);
+            
+            const lenders = sections.filter(s => s.key.match(/^lender\d+Fees$/));
+            if (lenders.length > 1) info.push(`${lenders.length} lenders`);
+            
+            const payoffs = sections.filter(s => s.key.match(/^payoff\d+$/));
+            if (payoffs.length > 0) info.push(`${payoffs.length} payoffs`);
+            
+            const vendors = sections.find(s => s.key === 'vendorMisc');
+            if (vendors) info.push(`${vendors.items.length} vendors`);
+            
+            if (state.fundingCredits) info.push('Funding Credits preserved');
+            
+            alert(`File loaded: ${file.name}${info.length ? 
+              '\n\nDynamic sections: ' + info.join(', ') : ''}`);
+          } catch(err) {
+            alert('Error loading file: ' + err.message);
+            event.target.value = '';
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      clear() {
+        if (!confirm('Clear all Vendor Fees? (Escrow data and Funding Credits will be preserved)')) return;
+        state.vendorCharges = {};
+        state.loadedFilename = null;
+        initializeCharges(true);
+        render();
+      },
+
+      init() {
+        initializeCharges(true);
+        render();
+      }
+    };
+  })();
+
+  // Initialize application
+  app.init();
+  </script>
+</body>
+</html>

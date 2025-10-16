@@ -1,89 +1,126 @@
-@extends('scaffold-interface.layouts.app')
-@section('title','Index')
+@extends('scaffold-interface.layouts.tabler-app')
+@section('title','Hotels')
 @section('content')
-	@include('layouts.title',
-   ['title' => 'Hotels', 'sub_title' => 'Hotels List',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Hotels', 'icon' => 'hotel', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <br>
-            <div class="col-lg-12">
-                <div class="alert alert-danger" id="errors_message" style="text-align: center; display: none">
-                </div>
-            </div>
-            <div class="box-body">
-                <div>
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('hotel.create'), \App\Hotel::class) !!}
-                </div>
-                @if(session('export_all'))
-                <div class="alert alert-info col-md-12" style="text-align: center;">
-                    {{session('export_all')}}
-                </div>
-                @endif
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="hotels-search" class="form-control" placeholder="Search hotels..." onkeyup="filterTable('hotels-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('hotels-table', 'hotels_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
-                            </button>
-                        </div>
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url('/home') }}"><i class="ti ti-home"></i> Home</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Hotels</li>
+                            </ol>
+                        </nav>
                     </div>
+                    <h2 class="page-title">
+                        Hotels
+                    </h2>
                 </div>
-                <div class="table-responsive">
-                    <table id="hotels-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff;width: 98%;'>
-                        <thead>
-                          <tr>
-                            <th onclick="sortTable(0, 'hotels-table')" style="width: 1%;">Id <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(1, 'hotels-table')" style="width: 10%;">{!!trans('main.Name')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(2, 'hotels-table')" style="width: 10%;">{!!trans('main.Address')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(3, 'hotels-table')" style="width: 10%;">{!!trans('main.Country')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(4, 'hotels-table')" style="width: 10%;">{!!trans('main.City')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(5, 'hotels-table')" style="width: 10%;">{!!trans('main.WorkPhone')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(6, 'hotels-table')" style="width: 10%;">{!!trans('main.ContactEmail')!!} <i class="fa fa-sort"></i></th>
-                            <th class="actions-button" style="width:150px; text-align: center;">{!!trans('main.Actions')!!}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($hotels as $hotel)
-                            <tr>
-                                <td>{{ $hotel->id }}</td>
-                                <td>{{ $hotel->name }}</td>
-                                <td>{{ $hotel->address }}</td>
-                                <td>{{ $hotel->country_name ?? '' }}</td>
-                                <td>{{ $hotel->city_name ?? '' }}</td>
-                                <td>{{ $hotel->work_phone }}</td>
-                                <td>{{ $hotel->contact_email }}</td>
-                                <td>
-                                    @include('component.action_buttons', [
-                                        'show_route' => route('hotel.show', $hotel->id),
-                                        'edit_route' => route('hotel.edit', $hotel->id),
-                                        'delete_route' => route('hotel.destroy', $hotel->id),
-                                        'model' => $hotel
-                                    ])
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center">No hotels found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        {{ $hotels->links() }}
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        {!! \App\Helper\PermissionHelper::getCreateButton(route('hotel.create'), \App\Hotel::class) !!}
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-12">
+                    <div class="card">
+                        @if(session('export_all'))
+                        <div class="alert alert-info m-3">
+                            {{session('export_all')}}
+                        </div>
+                        @endif
+
+                        <div class="card-header">
+                            <h3 class="card-title">Hotels List</h3>
+                            <div class="col-auto ms-auto">
+                                <button class="btn btn-success btn-sm" onclick="exportTableToCSV('hotels-table', 'hotels_export.csv')">
+                                    <i class="ti ti-download"></i> Export CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-body border-bottom py-3">
+                            <div class="d-flex">
+                                <div class="text-muted">
+                                    Show
+                                    <div class="mx-2 d-inline-block">
+                                        <input type="text" class="form-control form-control-sm" value="10" size="3" aria-label="Items per page">
+                                    </div>
+                                    entries
+                                </div>
+                                <div class="ms-auto text-muted">
+                                    Search:
+                                    <div class="ms-2 d-inline-block">
+                                        <input type="text" id="hotels-search" class="form-control form-control-sm" placeholder="Search hotels..." onkeyup="filterTable('hotels-table', this.value)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="hotels-table" class="table card-table table-vcenter text-nowrap datatable">
+                                <thead>
+                                    <tr>
+                                        <th class="w-1" onclick="sortTable(0, 'hotels-table')">Id <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(1, 'hotels-table')">{!!trans('main.Name')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(2, 'hotels-table')">{!!trans('main.Address')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(3, 'hotels-table')">{!!trans('main.Country')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(4, 'hotels-table')">{!!trans('main.City')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(5, 'hotels-table')">{!!trans('main.WorkPhone')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th onclick="sortTable(6, 'hotels-table')">{!!trans('main.ContactEmail')!!} <i class="ti ti-chevron-up"></i></th>
+                                        <th class="w-1">{!!trans('main.Actions')!!}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($hotels as $hotel)
+                                    <tr>
+                                        <td><span class="text-muted">{{ $hotel->id }}</span></td>
+                                        <td>{{ $hotel->name }}</td>
+                                        <td>{{ $hotel->address }}</td>
+                                        <td>{{ $hotel->country_name ?? '' }}</td>
+                                        <td>{{ $hotel->city_name ?? '' }}</td>
+                                        <td>{{ $hotel->work_phone }}</td>
+                                        <td>{{ $hotel->contact_email }}</td>
+                                        <td>
+                                            @include('component.action_buttons', [
+                                                'show_route' => route('hotel.show', $hotel->id),
+                                                'edit_route' => route('hotel.edit', $hotel->id),
+                                                'delete_route' => route('hotel.destroy', $hotel->id),
+                                                'model' => $hotel
+                                            ])
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="ti ti-building icon mb-2" style="font-size: 3rem;"></i>
+                                            <p>No hotels found</p>
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-footer d-flex align-items-center">
+                            {{ $hotels->links() }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
 

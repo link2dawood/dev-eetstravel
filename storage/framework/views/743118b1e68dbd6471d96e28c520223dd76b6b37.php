@@ -287,4 +287,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php $__env->stopSection(); ?>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('scaffold-interface.layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/scaffold-interface/dashboard/dashboard.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/scaffold-interface/dashboard/dashboard.blade.php ENDPATH**/ ?>

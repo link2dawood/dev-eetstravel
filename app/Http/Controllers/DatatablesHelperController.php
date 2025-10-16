@@ -20,26 +20,26 @@ class DatatablesHelperController extends Controller
         $action = '';
         // show button
         if(Auth::user()->can($permission_show)){
-            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='fa fa-info-circle'></i></a>";
+            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye icon'></i></a>";
             $btnCnt++;
         }
 
         // edit button
         if(Auth::user()->can($permission_edit)){
-            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='fa fa-pencil-square-o'></i></a>";
+            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit icon'></i></a>";
             $btnCnt++;
         }
 
         // destroy button
         if (Auth::user()->can($permission_destroy)){
-            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash icon'></i></a>";
             $btnCnt++;
         }
 
         // clone button for tour
         if (Auth::user()->can('tour.create') && isset($url['id']) && !$isQuotation){
             $action .= "<button class='btn btn-success btn-sm clone-tour-button' data-toggle='modal' data-id='{$url['id']}' data-target='#tour-clone-modal' style='display: none'>" .
-            "<i class='fa fa-plus'></i></button>";
+            "<i class='ti ti-copy icon'></i></button>";
             $btnCnt++;
         };
         IF($btnCnt > 1){
@@ -62,19 +62,19 @@ class DatatablesHelperController extends Controller
         $action = '';
         // show button
         if($perm['show']){
-            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='fa fa-info-circle'></i></a>";
+            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye icon'></i></a>";
             $btnCnt++;
         }
 
         // edit button
         if($perm['edit']){
-            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='fa fa-pencil-square-o'></i></a>";
+            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit icon'></i></a>";
             $btnCnt++;
         }
 
         // destroy button
         if ($perm['destroy']){
-            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash icon'></i></a>";
             $btnCnt++;
         }
 
@@ -82,7 +82,7 @@ class DatatablesHelperController extends Controller
 //        if (Auth::user()->can('tour.create') && isset($url['id']) && !$isQuotation){
         if ($perm['clone']  && isset($url['id'])){
             $action .= "<button class='btn btn-success btn-sm clone-tour-button' data-toggle='modal' data-id='{$url['id']}' data-target='#tour-clone-modal' style='display: none'>" .
-            "<i class='fa fa-plus'></i></button>";
+            "<i class='ti ti-copy icon'></i></button>";
             $btnCnt++;
         };
         IF($btnCnt > 1){
@@ -106,10 +106,10 @@ class DatatablesHelperController extends Controller
 
         $action = "";
             if(Auth::user()->can($permission_edit)){
-                $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='fa fa-pencil-square-o'></i></a>";
+                $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit icon'></i></a>";
             }
 
-            $action .= "<a class='btn btn-primary btn-sm' target=\"_blank\" href=\"{$url['print']}\" data-link=\"{$url['print']}\"><i class=\"fa fa-print\" aria-hidden=\"true\"></i></a>";
+            $action .= "<a class='btn btn-primary btn-sm' target=\"_blank\" href=\"{$url['print']}\" data-link=\"{$url['print']}\"><i class=\"ti ti-printer icon\" aria-hidden=\"true\"></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -117,7 +117,7 @@ class DatatablesHelperController extends Controller
     public static function getEditButton(array $url)
     {
         $action =
-            "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='fa fa-pencil-square-o'></i></a>";
+            "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit icon'></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -126,7 +126,7 @@ class DatatablesHelperController extends Controller
     {
 
         $action =
-            "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='fa fa-info-circle'></i></a>";
+            "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye icon'></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -138,10 +138,10 @@ class DatatablesHelperController extends Controller
 //        $permission_show = PermissionHelper::$relationsPermissionShow[get_class($obj)];
 
         $action = "<div style='text-align: right;'>";
-            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='fa fa-info-circle'></i></a>";
-        
+            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye icon'></i></a>";
+
         if(Auth::user()->can($permission_destroy)){
-            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+            $action .= "<a class='delete btn btn-danger btn-sm' style='margin-right: 5px' data-toggle=\"modal\" data-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash icon'></i></a>";
         }
         $action .= "</div>";
         return $action;

@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.app')
+@extends('scaffold-interface.layouts.tabler-app')
 @section('content')
 @include('layouts.title', ['title' => 'Supplier Search', 'sub_title' => 'global', 'breadcrumbs' => null])
 <div class="modal fade" id="addTourModal" tabindex="-1" aria-labelledby='addTourLabel' style="padding-left: 17px;padding-right: 17px;">

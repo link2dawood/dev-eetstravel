@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use URL;
 use Illuminate\Support\Facades\Session;
 use App\Library\Services\DeleteModel;
+use App\Comment;
+use DB;
 
 class DriverController extends Controller
 {
@@ -24,6 +26,174 @@ class DriverController extends Controller
      * @var DriverRepository
      */
     private $driverRepository;
+
+    public function __construct(DriverRepository $driverRepository)
+    {
+        $this->middleware('permissions.required');
+        $this->driverRepository = $driverRepository;
+        $this->middleware('preventBackHistory');
+        $this->middleware('auth');
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $title = 'Index - Drivers';
+        $drivers = Driver::query()
+            ->leftJoin('transfers', 'transfers.id', '=', 'drivers.transfer_id')
+            ->select([
+                'drivers.*',
+                'transfers.name as transfer_name'
+            ])
+            ->paginate(15);
+        return view('driver.index', compact('drivers', 'title'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        $title = 'Create - Driver';
+
+        $transfers = Transfer::all()->pluck('name', 'id')->toArray();
+
+        return view('driver.create', compact('title', 'transfers'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $this->validate($request, [
+            'name' => 'required',
+            'phone' => 'nullable',
+            'email' => 'nullable|email'
+        ]);
+
+        DB::beginTransaction();
+        $driver = $this->driverRepository->create($request->except('attach'));
+
+        $this->addFile($request, $driver);
+
+        DB::commit();
+
+        $data = ['route' => route('driver.index')];
+        LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name created", 'success');
+        return response()->json($data);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id, Request $request)
+    {
+        $title = 'Show - Driver';
+
+        $driver = Driver::query()->where('id', $id)->first();
+
+        if($driver == null){
+            return abort(404);
+        }
+
+        $files = $this->parseAttach($driver);
+
+        return view('driver.show', compact('title', 'driver', 'files'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id, Request $request)
+    {
+        $title = 'Edit - Driver';
+
+        $driver = Driver::query()->where('id', $id)->first();
+
+        if($driver == null){
+            return abort(404);
+        }
+
+        $transfers = Transfer::all()->pluck('name', 'id')->toArray();
+
+        $files = $this->parseAttach($driver);
+
+        return view('driver.edit', compact('title', 'driver', 'files', 'transfers'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $this->validate($request, [
+            'name' => 'required',
+            'phone' => 'nullable',
+            'email' => 'nullable|email'
+        ]);
+
+        DB::beginTransaction();
+        $this->driverRepository->updateById($id, $request->except('attach'));
+        $driver = $this->driverRepository->byId($id);
+        $this->addFile($request, $driver);
+
+        DB::commit();
+
+        LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name edited", 'success');
+        $data = ['route' => route('driver.index')];
+        return response()->json($data);
+    }
+
+    public function deleteMsg($id, Request $request)
+    {
+        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/driver/' . $id . '/delete');
+
+        if ($request->ajax()) {
+            return $msg;
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id, DeleteModel $deleteModel)
+    {
+        $driver = $this->driverRepository->byId($id);
+        $message = $deleteModel->check($driver, 'Driver');
+        if ($message){
+            Session::flash('message', $message);
+        } else {
+            LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name deleted", 'success');
+            $this->driverRepository->deleteById($id);
+            $this->removeFile($driver);
+            Comment::query()->where('reference_type', Comment::$services['driver'])->where('reference_id', $id)->delete();
+        }
+
+        return URL::to('driver');
+    }
 
     public function getButton($id, $driver)
 	{

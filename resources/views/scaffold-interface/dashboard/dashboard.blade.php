@@ -13,16 +13,22 @@
             <div class="row">
 				<div class="block-stretch">
                 @include('scaffold-interface.dashboard.components.tasks_calendar')
-            
-                {{--@include('scaffold-interface.dashboard.components.inbox_emails_vue')--}}
-				</div>
-				</div>
+                </div>
+			</div>
+
+            <div class="row">
+                <div class="block-stretch">
+                @include('scaffold-interface.dashboard.components.tours_table')
+                </div>
+            </div>
         
-		
-		 @include('scaffold-interface.dashboard.components.inbox_emails')
-        @include('scaffold-interface.dashboard.components.announcements_list')
-		@include('scaffold-interface.dashboard.components.tours_table')
-        @include('scaffold-interface.dashboard.components.tasks_list')
+            <div class="row">
+                <div class="block-stretch">
+                @include('scaffold-interface.dashboard.components.inbox_emails')
+                @include('scaffold-interface.dashboard.components.announcements_list')
+                @include('scaffold-interface.dashboard.components.tasks_list')
+                </div>
+            </div>
 		
         
 {{--
@@ -78,49 +84,96 @@ document.addEventListener('DOMContentLoaded', function() {
     var task_permission = document.getElementById('task_create_permission')?.getAttribute('data-info') === 'true';
     var holiday_permission = document.getElementById('holiday_list_permission')?.getAttribute('data-info') === 'true';
 
-    // Sample events for immediate display
-    var sampleEvents = [
-        {
-            id: '1',
-            title: 'Sample Task',
-            start: new Date().toISOString().split('T')[0],
-            backgroundColor: '#3b82f6',
-            borderColor: '#3b82f6',
-            textColor: '#ffffff'
-        },
-        {
-            id: '2',
-            title: 'Sample Tour',
-            start: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-            backgroundColor: '#10b981',
-            borderColor: '#10b981',
-            textColor: '#ffffff'
-        },
-        {
-            id: '3',
-            title: 'Holiday',
-            start: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-            backgroundColor: '#ef4444',
-            borderColor: '#ef4444',
-            textColor: '#ffffff'
-        }
-    ];
-
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         height: 'auto',
+            expandRows: true,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: ''
         },
-        events: sampleEvents,
+        events: function(info, successCallback, failureCallback) {
+            var startStr = info.startStr;
+            var endStr = info.endStr;
+            var url = '/home/getToursTasksForCalendar?start=' + startStr + '&end=' + endStr;
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                credentials: 'same-origin'
+            })
+                .then(function(response) {
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            successCallback([]);
+                            return null;
+                        }
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function(events) {
+                    if (!events) return; // handled above
+                    var transformed = events.map(function(event) {
+                        var backgroundColor = event.backgroundColor || '#6b7280';
+                        var borderColor = backgroundColor;
+                        var classNames = [];
+                        if (!event.backgroundColor) {
+                            if (event.id === 'Holiday') {
+                                backgroundColor = '#ef4444';
+                                borderColor = '#ef4444';
+                                classNames.push('event-holiday');
+                            } else if (event.c_type === 'month') {
+                                backgroundColor = '#3b82f6';
+                                borderColor = '#3b82f6';
+                                classNames.push('event-task');
+                            } else {
+                                backgroundColor = '#10b981';
+                                borderColor = '#10b981';
+                                classNames.push('event-tour');
+                            }
+                        } else {
+                            // If server provided backgroundColor, infer class by id/c_type for CSS consistency
+                            if (event.id === 'Holiday') classNames.push('event-holiday');
+                            else if (event.c_type === 'month') classNames.push('event-task');
+                            else classNames.push('event-tour');
+                        }
+                        return {
+                            id: event.id,
+                            title: event.title,
+                            start: event.date,
+                            allDay: event.allDay !== undefined ? event.allDay : false,
+                            backgroundColor: backgroundColor,
+                            borderColor: borderColor,
+                            textColor: '#ffffff',
+                            classNames: classNames,
+                            extendedProps: {
+                                original: event,
+                                c_type: event.c_type
+                            }
+                        };
+                    });
+                    successCallback(transformed);
+                })
+                .catch(function(error) {
+                    console.error('Error loading calendar data:', error);
+                    failureCallback(error);
+                });
+        },
         eventClick: function(info) {
             console.log('Event clicked:', info.event);
             if (info.event.url) {
                 window.open(info.event.url);
                 info.jsEvent.preventDefault();
-            } else if (info.event.id !== 'Holiday' && info.event.id !== 'error-1' && !info.event.id.startsWith('sample-')) {
+            } else if (
+                info.event &&
+                info.event.id !== 'Holiday' &&
+                info.event.id !== 'error-1' &&
+                !String(info.event.id || '').startsWith('sample-')
+            ) {
                 window.location = '{{ url("task") }}/' + info.event.id + '/edit?calendar_edit=1';
             }
         },
@@ -277,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add navigation buttons if permissions allow
     if (holiday_permission || task_permission) {
         var headerElement = document.querySelector('.calendar-compact .box-header');
-        var toolsArea = headerElement?.querySelector('.box-tools');
+        var toolsArea = headerElement && headerElement.querySelector ? headerElement.querySelector('.box-tools') : null;
 
         if (toolsArea) {
             if (holiday_permission) {

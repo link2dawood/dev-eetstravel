@@ -55,13 +55,11 @@
                                 <td>{{ $offer->offer_date ? \Carbon\Carbon::parse($offer->offer_date)->format('Y-m-d') : '' }}</td>
                                 <td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
                                 <td>{{ $offer->tour_name }}</td>
-                                <td>
-                                    <!-- Action buttons would go here -->
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-info btn-sm" title="View">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </div>
+                                <td onclick="event.stopPropagation();">
+                                    @include('component.action_buttons', [
+                                        'item' => (object)['id' => $offer->tour_id ?? 0],
+                                        'routePrefix' => 'tour'
+                                    ])
                                 </td>
                             </tr>
                             @empty

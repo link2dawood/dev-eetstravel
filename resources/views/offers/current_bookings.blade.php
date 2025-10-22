@@ -37,6 +37,7 @@
                                 <th onclick="sortTable(8, 'current-bookings-table')">TRI <i class="fa fa-sort"></i></th>
                                 <th onclick="sortTable(9, 'current-bookings-table')">{!! trans('Cancellation Policy') !!} <i class="fa fa-sort"></i></th>
                                 <th onclick="sortTable(10, 'current-bookings-table')">{!! trans('Payments Made') !!} <i class="fa fa-sort"></i></th>
+                                <th class="actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,6 +54,14 @@
                                 <td>-</td> <!-- TRI -->
                                 <td>{{ $booking->cancel_policy }}</td>
                                 <td>{{ $booking->payment_policy }}</td>
+                                <td onclick="event.stopPropagation();">
+                                    @if(!empty($booking->tour_id))
+                                        @include('component.action_buttons', [
+                                            'item' => (object)['id' => $booking->tour_id],
+                                            'routePrefix' => 'tour'
+                                        ])
+                                    @endif
+                                </td>
                             </tr>
                             @empty
                             <tr>

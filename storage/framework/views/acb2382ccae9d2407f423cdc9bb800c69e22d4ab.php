@@ -1,6 +1,5 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title','Tasks')
-@section('content')
+<?php $__env->startSection('title','Tasks'); ?>
+<?php $__env->startSection('content'); ?>
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row align-items-center">
@@ -115,10 +114,10 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @forelse($tasks->where('status.name', '!=', 'Completed') as $task)
-                                                        <tr class="clickable-row" onclick="window.location='{{ route('task.show', ['task' => $task->id]) }}'">
+                                                        <?php $__empty_1 = true; $__currentLoopData = $tasks->where('status.name', '!=', 'Completed'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                        <tr class="clickable-row" onclick="window.location='<?php echo e(route('task.show', ['task' => $task->id])); ?>'">
                                                             <td onclick="event.stopPropagation();"><input type="checkbox" class="form-check-input m-0 align-middle" aria-label="Select task"></td>
-                                                            <td>{{ $task->content }}</td>
+                                                            <td><?php echo e($task->content); ?></td>
                                                             <td class="text-center" onclick="event.stopPropagation();">
                                                                 <a href="#" class="btn btn-icon btn-sm btn-ghost-secondary" data-bs-toggle="tooltip" title="Star">
                                                                     <svg class="icon icon-tabler icon-tabler-star" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" /></svg>
@@ -130,36 +129,38 @@
                                                                 </a>
                                                             </td>
                                                             <td>
-                                                                @if($task->assignedTo)
-                                                                    <div class="avatar avatar-sm">{{ substr($task->assignedTo->name, 0, 2) }}</div>
-                                                                @endif
+                                                                <?php if($task->assignedTo): ?>
+                                                                    <div class="avatar avatar-sm"><?php echo e(substr($task->assignedTo->name, 0, 2)); ?></div>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td>
-                                                                <span class="badge" style="background-color: {{ $task->getStatusColor() }}">
-                                                                    {{ $task->getStatusName() }}
+                                                                <span class="badge" style="background-color: <?php echo e($task->getStatusColor()); ?>">
+                                                                    <?php echo e($task->getStatusName()); ?>
+
                                                                 </span>
                                                             </td>
                                                             <td>
-                                                                <span class="badge bg-{{ $task->task_type == '1' ? 'green' : ($task->task_type == '2' ? 'red' : 'blue') }}">
-                                                                    {{ \App\Task::$taskTypes[$task->task_type] ?? '' }}
+                                                                <span class="badge bg-<?php echo e($task->task_type == '1' ? 'green' : ($task->task_type == '2' ? 'red' : 'blue')); ?>">
+                                                                    <?php echo e(\App\Task::$taskTypes[$task->task_type] ?? ''); ?>
+
                                                                 </span>
                                                             </td>
-                                                            <td>TREP-{{ str_pad($task->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                                            <td>{{ $task->story_points ?? 0 }} SP</td>
+                                                            <td>TREP-<?php echo e(str_pad($task->id, 3, '0', STR_PAD_LEFT)); ?></td>
+                                                            <td><?php echo e($task->story_points ?? 0); ?> SP</td>
                                                             <td>
-                                                                @if($task->epic)
-                                                                    <span class="badge bg-azure-lt">{{ $task->epic }}</span>
-                                                                @endif
+                                                                <?php if($task->epic): ?>
+                                                                    <span class="badge bg-azure-lt"><?php echo e($task->epic); ?></span>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td onclick="event.stopPropagation();">
                                                                 <div class="d-flex justify-content-center gap-2">
-                                                                    <a href="{{ route('task.edit', ['task' => $task->id]) }}" class="text-decoration-none" title="Edit">
+                                                                    <a href="<?php echo e(route('task.edit', ['task' => $task->id])); ?>" class="text-decoration-none" title="Edit">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFA500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                                                         </svg>
                                                                     </a>
-                                                                    <a href="#" class="text-decoration-none" title="Delete" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-task-{{ $task->id }}').submit();">
+                                                                    <a href="#" class="text-decoration-none" title="Delete" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-task-<?php echo e($task->id); ?>').submit();">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                                             <polyline points="3 6 5 6 21 6"/>
                                                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -167,14 +168,14 @@
                                                                             <line x1="14" y1="11" x2="14" y2="17"/>
                                                                         </svg>
                                                                     </a>
-                                                                    <form id="delete-task-{{ $task->id }}" action="{{ route('task.destroy', $task->id) }}" method="POST" style="display: none;">
-                                                                        @csrf
-                                                                        @method('DELETE')
+                                                                    <form id="delete-task-<?php echo e($task->id); ?>" action="<?php echo e(route('task.destroy', $task->id)); ?>" method="POST" style="display: none;">
+                                                                        <?php echo csrf_field(); ?>
+                                                                        <?php echo method_field('DELETE'); ?>
                                                                     </form>
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        @empty
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                         <tr>
                                                             <td colspan="11" class="text-center py-4">
                                                                 <div class="empty">
@@ -186,7 +187,7 @@
                                                                         Try adjusting your search or filter to find what you're looking for.
                                                                     </p>
                                                                     <div class="empty-action">
-                                                                        <a href="{{ route('task.create') }}" class="btn btn-primary">
+                                                                        <a href="<?php echo e(route('task.create')); ?>" class="btn btn-primary">
                                                                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                                                             Add your first task
                                                                         </a>
@@ -194,14 +195,14 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        @endforelse
-                                                        @if($tasks->where('status.name', '!=', 'Completed')->count() > 0)
+                                                        <?php endif; ?>
+                                                        <?php if($tasks->where('status.name', '!=', 'Completed')->count() > 0): ?>
                                                         <tr>
                                                             <td colspan="11">
                                                                 <a href="#" class="btn btn-link">+ Add task</a>
                                                             </td>
                                                         </tr>
-                                                        @endif
+                                                        <?php endif; ?>
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -235,43 +236,44 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @forelse($tasks->where('status.name', 'Completed') as $task)
-                                                        <tr class="clickable-row" onclick="window.location='{{ route('task.show', ['task' => $task->id]) }}'">
+                                                        <?php $__empty_1 = true; $__currentLoopData = $tasks->where('status.name', 'Completed'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                                        <tr class="clickable-row" onclick="window.location='<?php echo e(route('task.show', ['task' => $task->id])); ?>'">
                                                             <td onclick="event.stopPropagation();"><input type="checkbox" class="form-check-input m-0 align-middle" aria-label="Select completed task"></td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <span class="me-2">{{ $task->content }}</span>
+                                                                    <span class="me-2"><?php echo e($task->content); ?></span>
                                                                 </div>
                                                             </td>
                                                             <td>
-                                                                @if($task->assignedTo)
-                                                                    <div class="avatar avatar-sm">{{ substr($task->assignedTo->name, 0, 2) }}</div>
-                                                                @endif
+                                                                <?php if($task->assignedTo): ?>
+                                                                    <div class="avatar avatar-sm"><?php echo e(substr($task->assignedTo->name, 0, 2)); ?></div>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td>
                                                                 <span class="badge bg-success">Completed</span>
                                                             </td>
                                                             <td>
-                                                                <span class="badge bg-{{ $task->task_type == '1' ? 'green' : ($task->task_type == '2' ? 'red' : 'blue') }}">
-                                                                    {{ \App\Task::$taskTypes[$task->task_type] ?? '' }}
+                                                                <span class="badge bg-<?php echo e($task->task_type == '1' ? 'green' : ($task->task_type == '2' ? 'red' : 'blue')); ?>">
+                                                                    <?php echo e(\App\Task::$taskTypes[$task->task_type] ?? ''); ?>
+
                                                                 </span>
                                                             </td>
-                                                            <td>TREP-{{ str_pad($task->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                                            <td>{{ $task->story_points ?? 0 }} SP</td>
+                                                            <td>TREP-<?php echo e(str_pad($task->id, 3, '0', STR_PAD_LEFT)); ?></td>
+                                                            <td><?php echo e($task->story_points ?? 0); ?> SP</td>
                                                             <td>
-                                                                @if($task->epic)
-                                                                    <span class="badge bg-azure-lt">{{ $task->epic }}</span>
-                                                                @endif
+                                                                <?php if($task->epic): ?>
+                                                                    <span class="badge bg-azure-lt"><?php echo e($task->epic); ?></span>
+                                                                <?php endif; ?>
                                                             </td>
                                                             <td onclick="event.stopPropagation();">
                                                                 <div class="d-flex justify-content-center gap-2">
-                                                                    <a href="{{ route('task.edit', ['task' => $task->id]) }}" class="text-decoration-none" title="Edit">
+                                                                    <a href="<?php echo e(route('task.edit', ['task' => $task->id])); ?>" class="text-decoration-none" title="Edit">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFA500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                                                         </svg>
                                                                     </a>
-                                                                    <a href="#" class="text-decoration-none" title="Delete" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-task-{{ $task->id }}').submit();">
+                                                                    <a href="#" class="text-decoration-none" title="Delete" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-task-<?php echo e($task->id); ?>').submit();">
                                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                                             <polyline points="3 6 5 6 21 6"/>
                                                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -279,14 +281,14 @@
                                                                             <line x1="14" y1="11" x2="14" y2="17"/>
                                                                         </svg>
                                                                     </a>
-                                                                    <form id="delete-task-{{ $task->id }}" action="{{ route('task.destroy', $task->id) }}" method="POST" style="display: none;">
-                                                                        @csrf
-                                                                        @method('DELETE')
+                                                                    <form id="delete-task-<?php echo e($task->id); ?>" action="<?php echo e(route('task.destroy', $task->id)); ?>" method="POST" style="display: none;">
+                                                                        <?php echo csrf_field(); ?>
+                                                                        <?php echo method_field('DELETE'); ?>
                                                                     </form>
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        @empty
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                                         <tr>
                                                             <td colspan="9" class="text-center py-4">
                                                                 <div class="empty">
@@ -297,7 +299,7 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        @endforelse
+                                                        <?php endif; ?>
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -309,18 +311,19 @@
                     </div>
                 </div>
 
-                @if(method_exists($tasks, 'links'))
+                <?php if(method_exists($tasks, 'links')): ?>
                     <div class="card-footer">
-                        {{ $tasks->links() }}
+                        <?php echo e($tasks->links()); ?>
+
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <span id="task_types" data-info="{{ $task_types }}"></span>
-    <span id="task_statuses" data-info="{{ json_encode($statuses) }}"></span>
-    <span id="status_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('task.edit') ? 'status' : '' }}"></span>
+    <span id="task_types" data-info="<?php echo e($task_types); ?>"></span>
+    <span id="task_statuses" data-info="<?php echo e(json_encode($statuses)); ?>"></span>
+    <span id="status_permission" data-info="<?php echo e(\App\Helper\PermissionHelper::checkPermission('task.edit') ? 'status' : ''); ?>"></span>
 
     <!-- Task Legend Modal -->
     <div class="modal modal-blur fade" id="taskLegendModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -331,7 +334,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @include('legend.task_legend')
+                    <?php echo $__env->make('legend.task_legend', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -339,9 +342,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
     $(document).ready(function() {
         // Initialize tooltips
@@ -351,7 +354,7 @@
         });
     });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
 <style>
     .clickable-rows .clickable-row {
@@ -382,3 +385,4 @@
         transform: scale(1.1);
     }
 </style>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/task/index.blade.php ENDPATH**/ ?>

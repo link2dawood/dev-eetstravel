@@ -1,1 +1,0 @@
-<?php echo e($status); ?><?php /**PATH /var/www/html/resources/views/component/tour_status_for_datatable.blade.php ENDPATH**/ ?>

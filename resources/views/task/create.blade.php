@@ -95,6 +95,10 @@
                                 {!! Form::select('task_type', \App\Task::$taskTypes, 0, ['class' => 'form-control']) !!}
                             </div>
                             <div class="form-group">
+                                <label for="story_points">Story Points</label>
+                                <input type="number" name="story_points" id="story_points" class="form-control" value="{{ old('story_points', 0) }}" min="0" max="100">
+                            </div>
+                            <div class="form-group">
                                 <label for="status">{!!trans('main.Status')!!}</label>
                                 <select name="status" id="status" class="form-control">
                                     @foreach($statuses as $status)

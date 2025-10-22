@@ -52,12 +52,10 @@
                             <td>{{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '' }}</td>
                             <td>{{ $tour->pax }}</td>
                             <td>{{ $tour->created_at ? $tour->created_at->format('Y-m-d H:i') : '' }}</td>
-                            <td>
+                            <td onclick="event.stopPropagation();">
                                 @include('component.action_buttons', [
-                                    'show_route' => route('tour.show', ['tour' => $tour->id]),
-                                    'edit_route' => route('tour.edit', ['tour' => $tour->id]),
-                                    'delete_route' => route('tour.destroy', $tour->id),
-                                    'model' => $tour
+                                    'item' => $tour,
+                                    'routePrefix' => 'tour'
                                 ])
                             </td>
                         </tr>

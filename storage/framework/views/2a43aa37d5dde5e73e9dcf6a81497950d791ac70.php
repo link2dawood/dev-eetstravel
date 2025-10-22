@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div v-else>
-                    <table class="table table-striped table-hover" style='background:#fff'>
+                    <table class="table table-striped table-hover clickable-rows" style='background:#fff'>
                         <thead>
                         <th>ID</th>
                         <th><?php echo e(trans('main.Name')); ?></th>
@@ -56,42 +56,68 @@
                         <th style="width: 140px"><?php echo e(trans('main.Actions')); ?></th>
                         </thead>
                         <tbody>
-                        <tr v-for="tour in tours">
-                            <td v-on:click.passive="showTour(tour)">{{tour['id']}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['name']}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['departure_date']}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['retirement_date']}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['pax']}} {{showPaxFree(tour)}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['country_begin']}} -
+                        <tr v-for="tour in tours" @click="showTour(tour)" class="clickable-row">
+                            <td>{{tour['id']}}</td>
+                            <td>{{tour['name']}}</td>
+                            <td>{{tour['departure_date']}}</td>
+                            <td>{{tour['retirement_date']}}</td>
+                            <td>{{tour['pax']}} {{showPaxFree(tour)}}</td>
+                            <td>{{tour['country_begin']}} -
                                 {{tour['city_begin']}}
                             </td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['country_end']}} -
+                            <td>{{tour['country_end']}} -
                                 {{tour['city_end']}}
                             </td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['ga']}}</td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['invoice']}}</td>
+                            <td>{{tour['ga']}}</td>
+                            <td>{{tour['invoice']}}</td>
                             <td class="<?php echo e(\App\Helper\PermissionHelper::checkPermission('tour.edit') ? 'touredit-status' : ''); ?>"
                                 :data-name-status="tour.status_name" :data-status-link="tour.status_link">
                                 {{tour['status_name']}}
                             </td>
-                            <td v-on:click.passive="showTour(tour)">{{tour['external_name']}}</td>
-                            <td>
-                                
+                            <td>{{tour['external_name']}}</td>
+                            <td @click.stop>
+                                <div class="btn-list flex-nowrap">
+                                    <!-- VIEW BUTTON -->
+                                    <!-- <a v-if="show" 
+                                       :href="tour.routes.show"
+                                       class="btn btn-icon btn-ghost-primary" 
+                                       title="View">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                            <path d="M22 12c-2.667 4 -6 6 -10 6s-7.333 -2 -10 -6c2.667 -4 6 -6 10 -6s7.333 2 10 6" />
+                                        </svg>
+                                    </a> -->
 
-                                <div style='width:150px; text-align: center;' class='buttons_margin'>
-                                    <!-- INFO BUTTON-->
-                                    <a v-if="show" :href="tour.routes.show"
-                                       class='btn btn-warning btn-sm show-button'><i class="fa fa-info-circle"
-                                                                                     aria-hidden="true"></i></a>
-                                    <!-- EDIT BUTTON-->
-                                    <a v-if="edit" :href="tour.routes.edit"
-                                       class='btn btn-primary btn-sm'><i class="fa fa-pencil-square-o"
-                                                                         aria-hidden="true"></i></a>
-                                    <!-- DELETE BUTTON-->
-                                    <a v-if="destroy" :data-link="tour.routes.delete_msg" data-toggle="modal"
+                                    <!-- EDIT BUTTON -->
+                                    <a v-if="edit" 
+                                       :href="tour.routes.edit"
+                                       class="btn btn-icon btn-ghost-warning" 
+                                       title="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                            <path d="M16 5l3 3" />
+                                        </svg>
+                                    </a>
+
+                                    <!-- DELETE BUTTON -->
+                                    <a v-if="destroy" 
+                                       :data-link="tour.routes.delete_msg" 
+                                       data-toggle="modal"
                                        data-target="#myModal"
-                                       class='btn btn-danger btn-sm delete'><i class="fa fa-trash-o"
-                                                                               aria-hidden="true"></i></a>
+                                       class="btn btn-icon btn-ghost-danger delete" 
+                                       title="Delete">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M4 7l16 0" />
+                                            <path d="M10 11l0 6" />
+                                            <path d="M14 11l0 6" />
+                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                            <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
+                                        </svg>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -101,19 +127,15 @@
             </div>
             <div class="box-footer clearfix">
                 <?php if(Auth::user()->can('tour.create')): ?>
-                    <a href="<?php echo e(route('tour.create')); ?>">
-                        <button class="btn btn-primary pull-left" type="submit"><i class="fa fa-plus fa-md"
-                                                                                            aria-hidden="true"></i> <?php echo e(trans('main.NewTour')); ?>
+                    <a href="<?php echo e(route('tour.create')); ?>" class="btn btn-primary">
+                        <i class="fa fa-plus fa-md" aria-hidden="true"></i> <?php echo e(trans('main.NewTour')); ?>
 
-                        </button>
                     </a>
                 <?php endif; ?>
                 <?php if(Auth::user()->can('tour.index')): ?>
-                    <a href="<?php echo e(route('tour.index')); ?>">
-                        <button href="javascript:void(0)"
-                                class="btn btn-default pull-right"><?php echo e(trans('main.ViewAllTours')); ?>
+                    <a href="<?php echo e(route('tour.index')); ?>" class="btn btn-outline-secondary float-end">
+                        <?php echo e(trans('main.ViewAllTours')); ?>
 
-                        </button>
                     </a>
                 <?php endif; ?>
             </div>
@@ -192,4 +214,19 @@
         });
 
     });
-</script><?php /**PATH /var/www/html/resources/views/scaffold-interface/dashboard/components/tours_table.blade.php ENDPATH**/ ?>
+</script>
+
+<style>
+.clickable-rows .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable-rows .clickable-row:hover {
+    background-color: #f8f9fa !important;
+}
+
+.clickable-rows .clickable-row td:last-child {
+    cursor: default;
+}
+</style><?php /**PATH /var/www/html/resources/views/scaffold-interface/dashboard/components/tours_table.blade.php ENDPATH**/ ?>

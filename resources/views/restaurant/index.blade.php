@@ -1,6 +1,60 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Index')
 @section('content')
+<style>
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.action-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.action-btn.show svg {
+    stroke: #3b82f6;
+}
+
+.action-btn.edit svg {
+    stroke: #f59e0b;
+}
+
+.action-btn.delete svg {
+    stroke: #ef4444;
+}
+
+.action-btn:hover {
+    transform: scale(1.15);
+}
+
+.action-btn.show:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.action-btn.edit:hover {
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.action-btn.delete:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+</style>
+
 	@include('layouts.title',
    ['title' => 'Restaurants', 'sub_title' => 'Restaurants List',
    'breadcrumbs' => [
@@ -57,12 +111,33 @@
                         <td>{{ $restaurant->work_phone }}</td>
                         <td>{{ $restaurant->contact_email }}</td>
                         <td>
-                            @include('component.action_buttons', [
-                                'show_route' => route('restaurant.show', $restaurant->id),
-                                'edit_route' => route('restaurant.edit', $restaurant->id),
-                                'delete_route' => route('restaurant.destroy', $restaurant->id),
-                                'model' => $restaurant
-                            ])
+                            <div class="action-buttons">
+                                <a href="{{ route('restaurant.show', $restaurant->id) }}" class="action-btn show" title="View">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
+                                    </svg>
+                                </a>
+                                <a href="{{ route('restaurant.edit', $restaurant->id) }}" class="action-btn edit" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                        <path d="M16 5l3 3" />
+                                    </svg>
+                                </a>
+                                <a href="#" onclick="confirmRestaurantDelete(event, '{{ route('restaurant.destroy', $restaurant->id) }}')" class="action-btn delete" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M4 7l16 0" />
+                                        <path d="M10 11l0 6" />
+                                        <path d="M14 11l0 6" />
+                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                        <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
+                                    </svg>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -90,5 +165,35 @@
     document.addEventListener('DOMContentLoaded', function() {
         initializeBootstrapTable('restaurants-table');
     });
+
+    function confirmRestaurantDelete(event, deleteUrl) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (confirm("Are you sure you want to delete this restaurant?")) {
+            const form = document.createElement('form');
+            form.action = deleteUrl;
+            form.method = 'POST';
+            form.style.display = 'none';
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>
 @endpush

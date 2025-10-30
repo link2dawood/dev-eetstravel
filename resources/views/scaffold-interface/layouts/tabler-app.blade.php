@@ -20,6 +20,7 @@
     <link href="{{asset('css/select2.min.css')}}" rel="stylesheet"/>
     <link href="{{asset('css/bootstrap-datetimepicker.min.css')}}" rel="stylesheet"/>
     <link href="{{asset('css/bootstrap-datepicker.min.css')}}" rel="stylesheet" type="text/css"/>
+    <link href="{{asset('css/responsive-global.css')}}" rel="stylesheet" type="text/css"/>
 
     <style>
         @import url('https://rsms.me/inter/inter.css');
@@ -549,6 +550,7 @@
 
     @yield('colorpicker-css')
     @yield('post_styles')
+    @stack('styles')
 
     <script type="text/javascript" src="{{asset('js/lib/jquery.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/lib/moment.js')}}"></script>
@@ -630,6 +632,7 @@
     <script src="{{asset('js/ckeditor.js')}}"></script>
     <script src="{{asset('js/icheck.min.js')}}"></script>
     <script type="text/javascript" src="{{ asset('js/cities.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/action-buttons.js') }}"></script>
 
     @yield('colorpicker-js')
     @stack('scripts')

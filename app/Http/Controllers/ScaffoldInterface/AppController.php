@@ -98,16 +98,40 @@ class AppController extends Controller
             $announcement->action_buttons = $this->generateActionButtons($announcement, $routes);
         }
 
-        // Get tasks data directly
-        $tasks = \App\Task::where('assign', $user->id)
-            ->where('status', '!=', 7)
+        // Get tasks data - split by status flags
+        $todoTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', false)
+                      ->where('is_aborted', false);
+            })
             ->orderBy('dead_line', 'asc')
-            ->limit(5)
+            ->take(10)
+            ->get();
+
+        $completedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', true);
+            })
+            ->orderBy('dead_line', 'desc')
+            ->take(10)
+            ->get();
+
+        $abortedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_aborted', true);
+            })
+            ->orderBy('dead_line', 'desc')
+            ->take(10)
             ->get();
 
         $taskStatuses = \App\Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
 
-        foreach ($tasks as $task) {
+        // Process all tasks for action buttons
+        $allTasks = $todoTasks->merge($completedTasks)->merge($abortedTasks);
+        foreach ($allTasks as $task) {
             $task->tour_name = $task->tourName();
             $task->show_assigned_users = $task->showAssignedUsers();
             $task->task_type = \App\Task::$taskTypes[$task->task_type];
@@ -128,8 +152,10 @@ class AppController extends Controller
                 'chatUsers' => $chatUsers,
                 'imapConnected' => $check_email_server,
                 'announcements' => $announcements,
-                'tasks' => $tasks,
-                'taskStatuses' => $taskStatuses
+                'todoTasks' => $todoTasks,
+                'completedTasks' => $completedTasks,
+                'abortedTasks' => $abortedTasks,
+                'statuses' => $taskStatuses
             ]);
     }
 
@@ -452,15 +478,41 @@ class AppController extends Controller
     public function getTasksBlock()
     {
 		    $user = Auth::user();
-      
-       //$tasks = task::where("assign",$user->id)->get();
-		$tasks = task::where('assign', $user->id)
-    ->where('status', '!=', 7)
-    ->orderBy('dead_line', 'asc') // Order by deadline in ascending order
-    ->limit(5);
-		
-       
-        return view('scaffold-interface.dashboard.components.tasks_list',compact('tasks'));
+
+        // To-Do Tasks (not completed and not aborted)
+        $todoTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', false)
+                      ->where('is_aborted', false);
+            })
+            ->orderBy('dead_line', 'asc')
+            ->take(10)
+            ->get();
+
+        // Completed Tasks
+        $completedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', true);
+            })
+            ->orderBy('dead_line', 'desc')
+            ->take(10)
+            ->get();
+
+        // Aborted Tasks
+        $abortedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->where('assign', $user->id)
+            ->whereHas('status', function ($query) {
+                $query->where('is_aborted', true);
+            })
+            ->orderBy('dead_line', 'desc')
+            ->take(10)
+            ->get();
+
+        $statuses = \App\Status::where('type', 'task')->orderBy('sort_order')->get();
+
+        return view('scaffold-interface.dashboard.components.tasks_list', compact('todoTasks', 'completedTasks', 'abortedTasks', 'statuses'));
     }
 
     public function getAllHollydayCalendars(Request $request)

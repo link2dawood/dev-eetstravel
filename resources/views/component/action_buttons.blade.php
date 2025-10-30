@@ -1,78 +1,91 @@
 @php
     use App\Helper\PermissionHelper;
+    
     $permissions = [];
-
-    // Handle both old and new parameter formats
     $entity = $model ?? $item ?? null;
     $prefix = $routePrefix ?? '';
 
     if ($entity && Auth::check()) {
-        $permissions = PermissionHelper::getActionPermission(get_class($entity), Auth::id());
+        try {
+            $entityClass = get_class($entity);
+            $result = PermissionHelper::getActionPermission($entityClass, Auth::id());
+            $permissions = is_array($result) ? $result : [];
+        } catch (Exception $e) {
+            $permissions = [];
+        }
     }
+
+    // Initialize route variables
+    $show_route = null;
+    $edit_route = null;
+    $delete_route = null;
 
     // Build routes based on routePrefix if provided
     if ($prefix && $entity) {
-        // For tour routes, handle the mixed parameter naming
-        if ($prefix === 'tour') {
-            $show_route = $show_route ?? route('tour.show', ['tour' => $entity->id]);
-            $edit_route = $edit_route ?? route('tour.edit', ['tour' => $entity->id]);
-            $delete_route = $delete_route ?? route('tour.destroy', ['id' => $entity->id]);
-        } else {
-            // Standard resource route handling for other entities
-            $show_route = $show_route ?? route($prefix . '.show', [$prefix => $entity->id]);
-            $edit_route = $edit_route ?? route($prefix . '.edit', [$prefix => $entity->id]);
-            $delete_route = $delete_route ?? route($prefix . '.destroy', [$prefix => $entity->id]);
+        try {
+            if ($prefix === 'tour') {
+                $show_route = route('tour.show', ['tour' => $entity->id]);
+                $edit_route = route('tour.edit', ['tour' => $entity->id]);
+                $delete_route = route('tour.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'users') {
+                // Special handling for users routes
+                $show_route = route('users.show', ['user' => $entity->id]);
+                $edit_route = route('users.edit', ['user' => $entity->id]);
+                $delete_route = route('users.destroy', ['user' => $entity->id]);
+            } elseif ($prefix === 'announcements') {
+                // Special handling for announcements routes
+                $edit_route = route('announcements.edit', ['announcement' => $entity->id]);
+                $delete_route = route('announcements.destroy', ['announcement' => $entity->id]);
+            } else {
+                $show_route = route($prefix . '.show', [$prefix => $entity->id]);
+                $edit_route = route($prefix . '.edit', [$prefix => $entity->id]);
+                $delete_route = route($prefix . '.destroy', [$prefix => $entity->id]);
+            }
+        } catch (Exception $e) {
+            // Route doesn't exist, keep null
         }
     }
+
+    // Determine what actions are allowed
+    $canShow = false; // Hide view button for all pages
+    $canEdit = $edit_route && ($permissions['edit'] ?? true);
+    $canDelete = $delete_route && ($permissions['destroy'] ?? true);
 @endphp
 
-<div class="btn-group" role="group">
-    @if(($permissions['show'] ?? false) && isset($show_route))
-        <a href="{{ $show_route }}" class="btn btn-info btn-sm" title="View">
-            <i class="fa fa-eye"></i>
+<div class="btn-list flex-nowrap">
+    @if($canShow)
+        <a href="{{ $show_route }}" class="btn btn-icon btn-ghost-primary" title="View">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                <path d="M22 12c-2.667 4 -6 6 -10 6s-7.333 -2 -10 -6c2.667 -4 6 -6 10 -6s7.333 2 10 6" />
+            </svg>
         </a>
     @endif
 
-    @if(($permissions['edit'] ?? false) && isset($edit_route))
-        <a href="{{ $edit_route }}" class="btn btn-warning btn-sm" title="Edit">
-            <i class="fa fa-edit"></i>
+    @if($canEdit)
+        <a href="{{ $edit_route }}" class="btn btn-icon btn-ghost-warning" title="Edit">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                <path d="M16 5l3 3" />
+            </svg>
         </a>
     @endif
 
-    @if(($permissions['destroy'] ?? false) && isset($delete_route))
-        <button type="button" class="btn btn-danger btn-sm delete-btn"
+    @if($canDelete)
+        <button type="button" class="btn btn-icon btn-ghost-danger delete-btn"
                 data-url="{{ $delete_route }}"
-                title="Delete"
-                onclick="confirmDelete(this)">
-            <i class="fa fa-trash"></i>
+                title="Delete">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M4 7l16 0" />
+                <path d="M10 11l0 6" />
+                <path d="M14 11l0 6" />
+                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
+            </svg>
         </button>
     @endif
 </div>
-
-<script>
-function confirmDelete(button) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        const url = button.getAttribute('data-url');
-
-        fetch(url, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error deleting item');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting item');
-        });
-    }
-}
-</script>

@@ -58,6 +58,14 @@ class Task extends Model
         return $status ? $status->color : '#cccccc';
     }
 
+    public function isOverdue()
+    {
+        if (!$this->dead_line) {
+            return false;
+        }
+        return Carbon::parse($this->dead_line)->isPast();
+    }
+
     public function tour()
     {
         return $this->belongsTo('App\Tour', 'tour');
@@ -66,6 +74,11 @@ class Task extends Model
     public function tourModel()
     {
         return $this->belongsTo('App\Tour', 'tour');
+    }
+
+    public function epic()
+    {
+        return $this->belongsTo('App\Epic', 'epic_id');
     }
 
     public function tourName()
@@ -127,5 +140,23 @@ class Task extends Model
             $list .= $user->name . ' ';
         }
         return $list;
+    }
+
+    /**
+     * Check if the task is overdue
+     *
+     * @return bool
+     */
+    public function isOverdueOriginal()
+    {
+        if (!$this->dead_line) {
+            return false;
+        }
+
+        // Check if deadline has passed and task is not completed
+        $deadline = Carbon::parse($this->dead_line);
+        $isCompleted = $this->status && isset($this->status->is_completed) && $this->status->is_completed;
+        
+        return $deadline->isPast() && !$isCompleted;
     }
 }

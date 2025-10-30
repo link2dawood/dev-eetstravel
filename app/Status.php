@@ -34,6 +34,8 @@ class Status extends Model
 {
     protected $table = 'status';
 
+    protected $fillable = ['name', 'type', 'color', 'sort_order', 'status', 'is_completed', 'is_aborted'];
+
     // Sorting By default
 	protected static function boot()
 	{

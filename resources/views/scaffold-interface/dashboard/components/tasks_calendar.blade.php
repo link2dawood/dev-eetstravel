@@ -2,7 +2,7 @@
 
     <!--  TOUR TASKS CALENDAR  -->
 
-    <div class="box col-4 calendar-compact">
+    <div class="box col-12 calendar-compact">
         @if(Auth::user()->can('dashboard.calendar'))
         <div class="box-header">
             <h4>{!! trans('Calendar') !!}</h4>

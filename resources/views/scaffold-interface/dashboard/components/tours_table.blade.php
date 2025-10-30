@@ -56,7 +56,7 @@
                         <th style="width: 140px">{{ trans('main.Actions') }}</th>
                         </thead>
                         <tbody>
-                        <tr v-for="tour in tours" @click="showTour(tour)" class="clickable-row">
+                        <tr v-for="tour in paginatedTours" @click="showTour(tour)" class="clickable-row">
                             <td>@{{tour['id']}}</td>
                             <td>@{{tour['name']}}</td>
                             <td>@{{tour['departure_date']}}</td>
@@ -77,18 +77,6 @@
                             <td>@{{tour['external_name']}}</td>
                             <td @click.stop>
                                 <div class="btn-list flex-nowrap">
-                                    <!-- VIEW BUTTON -->
-                                    <!-- <a v-if="show" 
-                                       :href="tour.routes.show"
-                                       class="btn btn-icon btn-ghost-primary" 
-                                       title="View">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                            <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                            <path d="M22 12c-2.667 4 -6 6 -10 6s-7.333 -2 -10 -6c2.667 -4 6 -6 10 -6s7.333 2 10 6" />
-                                        </svg>
-                                    </a> -->
-
                                     <!-- EDIT BUTTON -->
                                     <a v-if="edit" 
                                        :href="tour.routes.edit"
@@ -123,6 +111,40 @@
                         </tr>
                         </tbody>
                     </table>
+
+                    <!-- Pagination Controls -->
+                    <div class="pagination-wrapper" v-if="tours && tours.length > 0">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <!-- Previous Button -->
+                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                <li class="page-item" 
+                                    v-for="page in visiblePages" 
+                                    :key="page"
+                                    :class="{ active: currentPage === page }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(page)">@{{ page }}</a>
+                                </li>
+
+                                <!-- Next Button -->
+                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        
+                        <!-- Pagination Info -->
+                        <div class="pagination-info text-center text-muted">
+                            Showing @{{ startRecord }} to @{{ endRecord }} of @{{ tours.length }} entries
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="box-footer clearfix">
@@ -163,6 +185,69 @@
                 edit: false,
                 destroy: false,
                 loading: true,
+                currentPage: 1,
+                perPage: 10
+            },
+
+            computed: {
+                totalPages: function() {
+                    if (!this.tours) return 0;
+                    return Math.ceil(this.tours.length / this.perPage);
+                },
+                
+                paginatedTours: function() {
+                    if (!this.tours) return [];
+                    const start = (this.currentPage - 1) * this.perPage;
+                    const end = start + this.perPage;
+                    return this.tours.slice(start, end);
+                },
+                
+                visiblePages: function() {
+                    const total = this.totalPages;
+                    const current = this.currentPage;
+                    const pages = [];
+                    
+                    if (total <= 7) {
+                        for (let i = 1; i <= total; i++) {
+                            pages.push(i);
+                        }
+                    } else {
+                        if (current <= 4) {
+                            for (let i = 1; i <= 5; i++) {
+                                pages.push(i);
+                            }
+                            pages.push('...');
+                            pages.push(total);
+                        } else if (current >= total - 3) {
+                            pages.push(1);
+                            pages.push('...');
+                            for (let i = total - 4; i <= total; i++) {
+                                pages.push(i);
+                            }
+                        } else {
+                            pages.push(1);
+                            pages.push('...');
+                            for (let i = current - 1; i <= current + 1; i++) {
+                                pages.push(i);
+                            }
+                            pages.push('...');
+                            pages.push(total);
+                        }
+                    }
+                    
+                    return pages;
+                },
+                
+                startRecord: function() {
+                    if (!this.tours || this.tours.length === 0) return 0;
+                    return (this.currentPage - 1) * this.perPage + 1;
+                },
+                
+                endRecord: function() {
+                    if (!this.tours) return 0;
+                    const end = this.currentPage * this.perPage;
+                    return end > this.tours.length ? this.tours.length : end;
+                }
             },
 
             created: function () {
@@ -195,11 +280,20 @@
                     });
 
                 },
+                
+                changePage: function(page) {
+                    if (page < 1 || page > this.totalPages || page === '...') return;
+                    this.currentPage = page;
+                    // Scroll to top of table
+                    document.querySelector('#tours').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                },
+                
                 showPaxFree: function (tour) {
                     if (tour.pax_free !== '') {
                         return tour.pax_free
                     }
                 },
+                
                 showTour: function (tour) {
                     if (this.show) {
                         window.location.href = tour.routes.show;
@@ -225,5 +319,45 @@
 
 .clickable-rows .clickable-row td:last-child {
     cursor: default;
+}
+
+/* Pagination Styles */
+.pagination-wrapper {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.pagination {
+    margin-bottom: 10px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pagination .page-link {
+    cursor: pointer;
+    color: #007bff;
+    padding: 8px 12px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.pagination .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.pagination-info {
+    font-size: 14px;
+    margin-top: 10px;
 }
 </style>

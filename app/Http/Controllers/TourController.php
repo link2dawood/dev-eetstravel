@@ -535,77 +535,115 @@ class TourController extends Controller
      * @return  \Illuminate\Http\Response
      */
     public function index()
-    {
-        // Cache key for tour data
-        $cacheKey = 'tours_index_data_' . md5(request()->getQueryString());
+{
+    // Get pagination parameters from request
+    $perPage = 10; // Number of records per page
+    
+    // Get current page for each section
+    $toursPage = request()->get('page', 1);
+    $clientPage = request()->get('client_page', 1);
+    $monthlyPage = request()->get('monthly_page', 1);
+    $cancelledPage = request()->get('cancelled_page', 1);
+    $archivedPage = request()->get('archived_page', 1);
 
-        // Use cache to improve performance (cache for 5 minutes)
-        $data = \Cache::remember($cacheKey, 300, function () {
+    // Single optimized query to get all tours with proper eager loading
+    $allToursQuery = Tour::with([
+        'users:id,name',
+        'status:id,name,color',
+        'city_begin:id,name',
+        'city_end:id,name',
+        'client:id,name'
+    ])
+    ->select('id', 'name', 'departure_date', 'external_name', 'status', 'responsible', 'client_id', 'city_begin', 'city_end')
+    ->orderBy('departure_date', 'desc');
 
-            // Single optimized query to get all tours with proper eager loading
-            $allTours = Tour::with([
-                'users:id,name',
-                'status:id,name,color',
-                'city_begin:id,name',
-                'city_end:id,name',
-                'client:id,name' // Include client relationship
-            ])
-            ->select('id', 'name', 'departure_date', 'external_name', 'status', 'responsible', 'client_id', 'city_begin', 'city_end')
-            ->orderBy('departure_date', 'desc')
-            ->get();
+    // Pre-load all responsible users to avoid N+1 queries
+    $allTours = $allToursQuery->get();
+    $responsibleUserIds = $allTours->pluck('responsible')->filter()->unique();
+    $responsibleUsers = \App\User::whereIn('id', $responsibleUserIds)
+        ->select('id', 'name')
+        ->get()
+        ->keyBy('id');
 
-            // Pre-load all responsible users to avoid N+1 queries
-            $responsibleUserIds = $allTours->pluck('responsible')->filter()->unique();
-            $responsibleUsers = \App\User::whereIn('id', $responsibleUserIds)
-                ->select('id', 'name')
-                ->get()
-                ->keyBy('id');
+    // Process tours once
+    $processedTours = $allTours->map(function($tour) use ($responsibleUsers) {
+        $tour->responsible_user_names = isset($responsibleUsers[$tour->responsible])
+            ? $responsibleUsers[$tour->responsible]->name
+            : '';
+        $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
+        $tour->client_name = $tour->client ? $tour->client->name : '';
+        return $tour;
+    });
 
-            // Process tours once and partition into different collections
-            $processedTours = $allTours->map(function($tour) use ($responsibleUsers) {
-                // Cache responsible user name
-                $tour->responsible_user_names = isset($responsibleUsers[$tour->responsible])
-                    ? $responsibleUsers[$tour->responsible]->name
-                    : '';
+    // Partition tours efficiently using collections and apply pagination
+    $tours = new \Illuminate\Pagination\LengthAwarePaginator(
+        $processedTours->whereNotIn('status', [46, 6, 39])->forPage($toursPage, $perPage),
+        $processedTours->whereNotIn('status', [46, 6, 39])->count(),
+        $perPage,
+        $toursPage,
+        ['path' => request()->url(), 'pageName' => 'page']
+    );
 
-                // Cache assigned user names
-                $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
+    $clientTours = new \Illuminate\Pagination\LengthAwarePaginator(
+        $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0)->forPage($clientPage, $perPage),
+        $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0)->count(),
+        $perPage,
+        $clientPage,
+        ['path' => request()->url(), 'pageName' => 'client_page']
+    );
 
-                // Cache client name if exists
-                $tour->client_name = $tour->client ? $tour->client->name : '';
+    $monthlyChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
+        $processedTours->where('status', 4)->forPage($monthlyPage, $perPage),
+        $processedTours->where('status', 4)->count(),
+        $perPage,
+        $monthlyPage,
+        ['path' => request()->url(), 'pageName' => 'monthly_page']
+    );
 
-                return $tour;
-            });
+    $cancelledChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
+        $processedTours->where('status', 46)->forPage($cancelledPage, $perPage),
+        $processedTours->where('status', 46)->count(),
+        $perPage,
+        $cancelledPage,
+        ['path' => request()->url(), 'pageName' => 'cancelled_page']
+    );
 
-            // Partition tours efficiently using collections
-            $tours = $processedTours->whereNotIn('status', [46, 6, 39]);
-            $clientTours = $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0);
-            $monthlyChartTours = $processedTours->where('status', 4);
-            $cancelledChartTours = $processedTours->where('status', 46);
-            $archivedTours = $processedTours->whereIn('status', [6, 39]);
+    $archivedTours = new \Illuminate\Pagination\LengthAwarePaginator(
+        $processedTours->whereIn('status', [6, 39])->forPage($archivedPage, $perPage),
+        $processedTours->whereIn('status', [6, 39])->count(),
+        $perPage,
+        $archivedPage,
+        ['path' => request()->url(), 'pageName' => 'archived_page']
+    );
 
-            // Get years efficiently
-            $years = Tour::selectRaw('YEAR(departure_date) as year')
-                ->whereNotNull('departure_date')
-                ->distinct()
-                ->orderBy('year', 'desc')
-                ->pluck('year')
-                ->toArray();
+    // Get years efficiently
+    $years = Tour::selectRaw('YEAR(departure_date) as year')
+        ->whereNotNull('departure_date')
+        ->distinct()
+        ->orderBy('year', 'desc')
+        ->pluck('year')
+        ->toArray();
 
-            return compact('tours', 'clientTours', 'monthlyChartTours', 'cancelledChartTours', 'archivedTours', 'years');
-        });
-
-        // Generate months array (this is fast, no need to cache)
-        $months = [];
-        for ($month = 1; $month <= 12; $month++) {
-            $date = Carbon::create(null, $month, 1);
-            $months[$month] = $date->formatLocalized('%B');
-        }
-
-        $title = 'Tour';
-
-        return view('tour.index', array_merge($data, compact('title', 'months')));
+    // Generate months array
+    $months = [];
+    for ($month = 1; $month <= 12; $month++) {
+        $date = Carbon::create(null, $month, 1);
+        $months[$month] = $date->formatLocalized('%B');
     }
+
+    $title = 'Tour';
+
+    return view('tour.index', compact(
+        'tours', 
+        'clientTours', 
+        'monthlyChartTours', 
+        'cancelledChartTours', 
+        'archivedTours', 
+        'years',
+        'title', 
+        'months'
+    ));
+}
 /**
  * Show the form for creating a new resource.
  *

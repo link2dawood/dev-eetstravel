@@ -25,7 +25,9 @@
       "Read(//etc/apache2/sites-enabled/**)",
       "Bash(systemctl reload:*)",
       "Bash(mkdir:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "WebFetch(domain:monday.com)",
+      "Bash(mysql:*)"
     ],
     "deny": [],
     "ask": []

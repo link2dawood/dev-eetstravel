@@ -20,6 +20,7 @@
     <link href="<?php echo e(asset('css/select2.min.css')); ?>" rel="stylesheet"/>
     <link href="<?php echo e(asset('css/bootstrap-datetimepicker.min.css')); ?>" rel="stylesheet"/>
     <link href="<?php echo e(asset('css/bootstrap-datepicker.min.css')); ?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('css/responsive-global.css')); ?>" rel="stylesheet" type="text/css"/>
 
     <style>
         @import  url('https://rsms.me/inter/inter.css');
@@ -549,6 +550,7 @@
 
     <?php echo $__env->yieldContent('colorpicker-css'); ?>
     <?php echo $__env->yieldContent('post_styles'); ?>
+    <?php echo $__env->yieldPushContent('styles'); ?>
 
     <script type="text/javascript" src="<?php echo e(asset('js/lib/jquery.min.js')); ?>"></script>
     <script type="text/javascript" src="<?php echo e(asset('js/lib/moment.js')); ?>"></script>
@@ -630,6 +632,7 @@
     <script src="<?php echo e(asset('js/ckeditor.js')); ?>"></script>
     <script src="<?php echo e(asset('js/icheck.min.js')); ?>"></script>
     <script type="text/javascript" src="<?php echo e(asset('js/cities.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/action-buttons.js')); ?>"></script>
 
     <?php echo $__env->yieldContent('colorpicker-js'); ?>
     <?php echo $__env->yieldPushContent('scripts'); ?>

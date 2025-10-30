@@ -79,6 +79,59 @@ class BookingRequestController extends Controller
 			return $button;
 		
 	}
+	// Add this method to your BookingRequestController
+
+public function currentBookings()
+{
+    // Get all hotel offers with their related data
+    $offers = HotelOffers::with([
+        'package.tour',
+        'package.service'
+    ])->get();
+
+    // Process the bookings data
+    $processedBookings = $offers->map(function($offer) {
+        $package = $offer->package;
+        $tour = $package ? $package->getTour() : null;
+        $service = $package ? $package->service() : null;
+        
+        // Get cancellation policy
+        $cancellationPolicies = DB::table('offer_cancellation_policies')
+            ->where('offer_id', $offer->id)
+            ->get();
+        
+        $cancelPolicy = '';
+        foreach ($cancellationPolicies as $policy) {
+            $cancelPolicy .= $policy->cancellation_days . ' days: ' . 
+                           $policy->cancellation_percentage . $policy->cancellation_type . '; ';
+        }
+        
+        // Get payment policy
+        $paymentPolicies = DB::table('offer_payment_policies')
+            ->where('offer_id', $offer->id)
+            ->get();
+        
+        $paymentPolicy = '';
+        foreach ($paymentPolicies as $payment) {
+            $paymentPolicy .= $payment->deposit_days . ' days: ' . 
+                            $payment->deposit_percentage . $payment->deposit_type . '; ';
+        }
+
+        return (object)[
+            'id' => $offer->id,
+            'tour_id' => $tour ? $tour->id : null, // THIS IS THE KEY FIELD
+            'tour_name' => $tour ? $tour->name : 'N/A',
+            'hotel_name' => $service ? $service->name : ($package ? $package->name : 'N/A'),
+            'city_name' => $service && $service->city ? $service->city->name : 'N/A',
+            'status_name' => $offer->status ?? 'N/A',
+            'stay_date' => $package ? ($package->date_from ?? 'N/A') : 'N/A',
+            'cancel_policy' => trim($cancelPolicy) ?: 'N/A',
+            'payment_policy' => trim($paymentPolicy) ?: 'N/A',
+        ];
+    });
+
+    return view('booking_request.current_bookings_index', compact('processedBookings'));
+}
 	public function setConnectionToServer()
     {
         try {

@@ -314,6 +314,7 @@ Route::group(['middleware'=> 'web'],function(){
 	Route::get('/task/getTasksBlock', '\App\Http\Controllers\ScaffoldInterface\AppController@getTasksBlock');
 	Route::resource('task','\App\Http\Controllers\TaskController');
 	Route::post('task/{id}/update','\App\Http\Controllers\TaskController@update');
+	Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
 	Route::get('task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
     Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
     Route::get('task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');

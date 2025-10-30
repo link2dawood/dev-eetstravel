@@ -1,0 +1,445 @@
+/* Global Responsive Styles for All Pages */
+
+/* Mobile First Approach - Base styles for all screen sizes */
+
+/* Ensure container is responsive */
+.container-xl, .container-fluid {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+/* Box component responsiveness */
+@media (max-width: 768px) {
+    .box {
+        margin-bottom: 10px;
+    }
+
+    .box-body {
+        padding: 10px;
+    }
+
+    .box-header {
+        padding: 10px 15px;
+    }
+
+    .box-footer {
+        padding: 10px 15px;
+    }
+}
+
+/* Row and column responsiveness */
+@media (max-width: 768px) {
+    .row {
+        margin-right: -10px;
+        margin-left: -10px;
+    }
+
+    [class*="col-"] {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    /* Stack columns on mobile */
+    .col-md-6, .col-md-4, .col-md-3, .col-md-8, .col-md-9 {
+        width: 100%;
+        float: none;
+    }
+}
+
+/* Table responsiveness - applies to all tables */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .table {
+        font-size: 14px;
+    }
+
+    .table thead {
+        font-size: 12px;
+    }
+
+    .table td, .table th {
+        padding: 8px 5px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Card-style tables on very small screens */
+    .table-responsive table {
+        border: 0;
+    }
+
+    .table-responsive table.mobile-card-view thead {
+        display: none;
+    }
+
+    .table-responsive table.mobile-card-view tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .table-responsive table.mobile-card-view td {
+        display: block;
+        text-align: right;
+        padding: 8px 10px;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-responsive table.mobile-card-view td:last-child {
+        border-bottom: none;
+    }
+
+    .table-responsive table.mobile-card-view td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        font-weight: bold;
+        text-align: left;
+        color: #333;
+    }
+}
+
+/* Button responsiveness */
+@media (max-width: 768px) {
+    .btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .btn-group > .btn {
+        margin-bottom: 5px;
+    }
+}
+
+/* Form responsiveness */
+@media (max-width: 768px) {
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    select.form-control {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .input-group {
+        display: block;
+    }
+
+    .input-group > * {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
+/* Modal responsiveness */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+
+    .modal-lg {
+        width: calc(100% - 20px);
+    }
+}
+
+/* Navigation responsiveness */
+@media (max-width: 768px) {
+    .navbar-nav {
+        margin: 0;
+    }
+
+    .navbar-nav > li {
+        float: none;
+    }
+
+    .navbar-vertical {
+        width: 100%;
+    }
+}
+
+/* Tab navigation responsiveness */
+@media (max-width: 768px) {
+    .nav-tabs > li {
+        float: none;
+        margin-bottom: 0;
+    }
+
+    .nav-tabs > li > a {
+        display: block;
+        padding: 12px 15px;
+        margin-right: 0;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .nav-tabs {
+        border-bottom: none;
+    }
+}
+
+/* Pagination responsiveness */
+@media (max-width: 768px) {
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination > li {
+        margin: 2px;
+    }
+
+    .pagination > li > a,
+    .pagination > li > span {
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Text alignment overrides for mobile */
+@media (max-width: 768px) {
+    .pull-right,
+    .text-right {
+        float: none;
+        text-align: left;
+    }
+
+    .pull-left {
+        float: none;
+    }
+
+    /* Allow exceptions for specific use cases */
+    .keep-right-mobile {
+        text-align: right;
+    }
+}
+
+/* Alert responsiveness */
+@media (max-width: 768px) {
+    .alert {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* Breadcrumb responsiveness */
+@media (max-width: 768px) {
+    .breadcrumb {
+        font-size: 12px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+    }
+
+    .breadcrumb > li {
+        display: inline-block;
+    }
+
+    .breadcrumb > li + li:before {
+        padding: 0 3px;
+    }
+}
+
+/* Content header responsiveness */
+@media (max-width: 768px) {
+    .content-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .content-header h1 small {
+        display: block;
+        margin-left: 0;
+        margin-top: 5px;
+    }
+}
+
+/* Dashboard widget responsiveness */
+@media (max-width: 768px) {
+    .dashboard-widget-chat,
+    .direct-chat {
+        margin-bottom: 15px;
+    }
+}
+
+/* Utility classes for responsive visibility */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-hide {
+        display: none !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print,
+    .btn,
+    .navbar,
+    .navbar-vertical,
+    .sidebar,
+    .box-tools {
+        display: none;
+    }
+
+    .table {
+        page-break-inside: auto;
+    }
+
+    .table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}
+
+/* Ensure images are responsive */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix for horizontal scrolling issues */
+body {
+    overflow-x: hidden;
+}
+
+.page-wrapper {
+    overflow-x: hidden;
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+    a, button, .btn, input[type="submit"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Improve dropdown menus on mobile */
+    .dropdown-menu {
+        position: static;
+        float: none;
+        width: 100%;
+        margin-top: 0;
+        border: 0;
+        box-shadow: none;
+    }
+}
+
+/* Loading overlay responsiveness */
+@media (max-width: 768px) {
+    .loadingoverlay_fontawesome {
+        font-size: 2rem;
+    }
+}
+
+/* Ensure flex layouts work on mobile */
+@media (max-width: 768px) {
+    .d-flex {
+        flex-direction: column;
+    }
+
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+}
+
+/* Search and filter bar responsiveness */
+@media (max-width: 768px) {
+    .bootstrap-search {
+        margin-bottom: 10px;
+    }
+
+    .bootstrap-search label {
+        display: block;
+        width: 100%;
+    }
+
+    .bootstrap-search input {
+        width: 100%;
+    }
+}
+
+/* Card layouts */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 15px;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+}
+
+/* Status labels and badges */
+@media (max-width: 768px) {
+    .label,
+    .badge {
+        font-size: 11px;
+        padding: 0.2em 0.4em;
+    }
+}
+
+/* Improve select2 dropdowns on mobile */
+@media (max-width: 768px) {
+    .select2-container,
+    .select2-dropdown {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Date picker responsiveness */
+@media (max-width: 768px) {
+    .datepicker,
+    .bootstrap-datetimepicker-widget {
+        font-size: 14px;
+    }
+}
+
+/* Sticky elements on mobile */
+@media (max-width: 768px) {
+    .sticky {
+        position: relative;
+        top: auto;
+    }
+
+    /* Prevent fixed positioning issues on mobile */
+    .nav-tabs-custom {
+        position: relative;
+    }
+}

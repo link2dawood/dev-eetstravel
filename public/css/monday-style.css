@@ -1,0 +1,724 @@
+/* Monday.com Style Task Management System */
+
+:root {
+    --monday-primary: #0073ea;
+    --monday-primary-hover: #0060b9;
+    --monday-primary-selected: #cce5ff;
+    --monday-success: #00c875;
+    --monday-warning: #fdab3d;
+    --monday-danger: #e2445c;
+    --monday-purple: #a25ddc;
+    --monday-dark-purple: #401694;
+    --monday-text-primary: #323338;
+    --monday-text-secondary: #676879;
+    --monday-border: #d0d4e4;
+    --monday-background: #ffffff;
+    --monday-background-hover: #f5f6f8;
+    --monday-background-group: #f6f7fb;
+    --monday-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --monday-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Board Container */
+.monday-board {
+    background: var(--monday-background);
+    border-radius: 8px;
+    box-shadow: var(--monday-shadow);
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+/* Board Header */
+.monday-board-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--monday-background);
+    border-bottom: 1px solid var(--monday-border);
+}
+
+.monday-board-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--monday-text-primary);
+    margin: 0;
+}
+
+.monday-board-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Toolbar */
+.monday-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--monday-background);
+    border-bottom: 1px solid var(--monday-border);
+    flex-wrap: wrap;
+}
+
+.monday-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--monday-border);
+    background: var(--monday-background);
+    color: var(--monday-text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.monday-btn:hover {
+    background: var(--monday-background-hover);
+    border-color: var(--monday-primary);
+}
+
+.monday-btn-primary {
+    background: var(--monday-primary);
+    color: white;
+    border-color: var(--monday-primary);
+}
+
+.monday-btn-primary:hover {
+    background: var(--monday-primary-hover);
+    border-color: var(--monday-primary-hover);
+}
+
+.monday-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.monday-search {
+    position: relative;
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+.monday-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid var(--monday-border);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.monday-search-input:focus {
+    outline: none;
+    border-color: var(--monday-primary);
+    box-shadow: 0 0 0 2px var(--monday-primary-selected);
+}
+
+.monday-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--monday-text-secondary);
+    width: 18px;
+    height: 18px;
+}
+
+/* Group Section */
+.monday-group {
+    margin-bottom: 1px;
+}
+
+.monday-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--monday-background-group);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    user-select: none;
+}
+
+.monday-group-header:hover {
+    background: #ecedf5;
+}
+
+.monday-group-collapse-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--monday-text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.monday-group-collapsed .monday-group-collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.monday-group-color {
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
+}
+
+.monday-group-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--monday-text-primary);
+    margin: 0;
+    flex-grow: 1;
+}
+
+.monday-group-count {
+    font-size: 13px;
+    color: var(--monday-text-secondary);
+    background: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.monday-group-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.monday-group-header:hover .monday-group-actions {
+    opacity: 1;
+}
+
+/* Table */
+.monday-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.monday-table-header {
+    background: var(--monday-background);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.monday-table-header th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--monday-text-secondary);
+    border-bottom: 1px solid var(--monday-border);
+    white-space: nowrap;
+}
+
+.monday-table-row {
+    background: var(--monday-background);
+    border-bottom: 1px solid var(--monday-border);
+    transition: background 0.15s ease;
+}
+
+.monday-table-row:hover {
+    background: var(--monday-background-hover);
+}
+
+.monday-table-row.completed {
+    opacity: 0.6;
+}
+
+.monday-table-row.completed .monday-table-cell-task {
+    text-decoration: line-through;
+}
+
+.monday-table-cell {
+    padding: 8px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--monday-border);
+}
+
+.monday-table-cell-task {
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.monday-table-cell-checkbox {
+    width: 40px;
+    padding: 8px;
+}
+
+/* Checkbox */
+.monday-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--monday-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    outline: none;
+}
+
+.monday-checkbox:hover {
+    border-color: var(--monday-primary);
+}
+
+.monday-checkbox:checked {
+    background-color: var(--monday-primary);
+    border-color: var(--monday-primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: 14px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Task Content */
+.monday-task-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.monday-task-priority-icon {
+    color: var(--monday-warning);
+    flex-shrink: 0;
+}
+
+.monday-task-text {
+    color: var(--monday-text-primary);
+    font-size: 14px;
+}
+
+/* Inline Editable */
+.monday-editable {
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+.monday-editable:hover {
+    background: var(--monday-background-hover);
+}
+
+.monday-editable-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 2px solid var(--monday-primary);
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+/* Status Badge */
+.monday-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+.monday-status:hover {
+    opacity: 0.85;
+    transform: scale(1.05);
+}
+
+/* Person Column */
+.monday-person {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.monday-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.monday-avatar-add {
+    background: var(--monday-background-hover);
+    border: 2px dashed var(--monday-border);
+    color: var(--monday-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.monday-avatar-add:hover {
+    border-color: var(--monday-primary);
+    color: var(--monday-primary);
+}
+
+/* Date Column */
+.monday-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--monday-text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.monday-date:hover {
+    background: var(--monday-background-hover);
+}
+
+.monday-date.overdue {
+    color: var(--monday-danger);
+}
+
+.monday-date-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Actions */
+.monday-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.monday-table-row:hover .monday-actions {
+    opacity: 1;
+}
+
+.monday-action-btn {
+    padding: 6px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.monday-action-btn:hover {
+    background: var(--monday-background-hover);
+}
+
+.monday-action-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.monday-action-btn.edit {
+    color: var(--monday-primary);
+}
+
+.monday-action-btn.delete {
+    color: var(--monday-danger);
+}
+
+/* Add Task Row */
+.monday-add-task-row {
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--monday-border);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.monday-add-task-row:hover {
+    background: var(--monday-background-hover);
+}
+
+.monday-add-task-text {
+    color: var(--monday-text-secondary);
+    font-size: 14px;
+}
+
+/* Badge */
+.monday-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Dropdown */
+.monday-dropdown {
+    position: relative;
+}
+
+.monday-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: white;
+    border: 1px solid var(--monday-border);
+    border-radius: 8px;
+    box-shadow: var(--monday-shadow-hover);
+    padding: 8px 0;
+    z-index: 1000;
+    display: none;
+}
+
+.monday-dropdown-menu.show {
+    display: block;
+}
+
+.monday-dropdown-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.monday-dropdown-item:hover {
+    background: var(--monday-background-hover);
+}
+
+/* Modal */
+.monday-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.monday-modal.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.monday-modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--monday-shadow-hover);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.monday-modal.show .monday-modal-content {
+    transform: scale(1);
+}
+
+.monday-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--monday-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.monday-modal-title {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--monday-text-primary);
+}
+
+.monday-modal-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--monday-text-secondary);
+}
+
+.monday-modal-close:hover {
+    color: var(--monday-text-primary);
+}
+
+.monday-modal-body {
+    padding: 24px;
+}
+
+.monday-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--monday-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Form Fields */
+.monday-form-group {
+    margin-bottom: 20px;
+}
+
+.monday-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--monday-text-primary);
+}
+
+.monday-form-input,
+.monday-form-textarea,
+.monday-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--monday-border);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.monday-form-input:focus,
+.monday-form-textarea:focus,
+.monday-form-select:focus {
+    outline: none;
+    border-color: var(--monday-primary);
+    box-shadow: 0 0 0 2px var(--monday-primary-selected);
+}
+
+.monday-form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .monday-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .monday-search {
+        max-width: 100%;
+    }
+
+    .monday-table-cell {
+        padding: 8px;
+    }
+
+    .monday-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Loading State */
+.monday-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.monday-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--monday-border);
+    border-top-color: var(--monday-primary);
+    border-radius: 50%;
+    animation: monday-spin 0.8s linear infinite;
+}
+
+@keyframes monday-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.monday-empty {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.monday-empty-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+    color: var(--monday-text-secondary);
+    opacity: 0.5;
+}
+
+.monday-empty-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--monday-text-primary);
+    margin-bottom: 8px;
+}
+
+.monday-empty-text {
+    font-size: 14px;
+    color: var(--monday-text-secondary);
+}
+
+/* Priority Star */
+.monday-priority-star {
+    color: var(--monday-warning);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.monday-priority-star:hover {
+    transform: scale(1.2);
+}
+
+/* Epic Badge */
+.monday-epic {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Story Points Badge */
+.monday-sp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    background: #e6f7ff;
+    color: #0073ea;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 40px;
+}

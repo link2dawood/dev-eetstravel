@@ -311,7 +311,7 @@
                             </p>
                             @if ($peopleCount != $tour->pax + $tour->pax_free)
                                 <div class="alert alert-warning">
-                                    <i class="fa fa-warning"></i>
+                                    <i class="ti ti-alert-triangle"></i>
                                     Pax Count ({{ $tour->pax + $tour->pax_free }}) doesn't match room capacity ({{ $peopleCount }})
                                 </div>
                             @endif
@@ -325,7 +325,7 @@
                     {{-- Add your front sheet table here --}}
                 @else
                     <div class="alert alert-info">
-                        <i class="fa fa-info-circle"></i> No quotation data available for front sheet.
+                        <i class="ti ti-info-circle"></i> No quotation data available for front sheet.
                     </div>
                 @endif
             </div>
@@ -336,24 +336,25 @@
                 <div class="tour-packages"></div>
                 
                 {{-- Comments Section --}}
-                <div class="box box-success">
-                    <div class="box-header">
-                        <i class="fa fa-comments-o"></i>
-                        <h3 class="box-title">{!! trans('main.Comments') !!}</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="ti ti-message me-2"></i>{!! trans('main.Comments') !!}
+                        </h3>
                     </div>
-                    <div class="box-body">
+                    <div class="card-body">
                         <div id="show_comments"></div>
                     </div>
-                    <div class="box-footer">
+                    <div class="card-footer">
                         <form method="POST" action="{{ route('comment.store') }}" id="form_comment">
                             @csrf
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <textarea class="form-control" id="content" name="content" rows="3" placeholder="Ctrl + Enter to post comment"></textarea>
                             </div>
                             <input type="hidden" name="reference_id" value="{{ $tour->id }}">
                             <input type="hidden" name="reference_type" value="{{ \App\Comment::$services['tour'] ?? 'tour' }}">
                             <button type="submit" class="btn btn-success">
-                                <i class="fa fa-send"></i> {!! trans('main.Send') !!}
+                                <i class="ti ti-send me-1"></i>{!! trans('main.Send') !!}
                             </button>
                         </form>
                     </div>
@@ -365,7 +366,7 @@
                 <h3 class="mb-4"><i class="ti ti-plane me-2"></i>Tour Information</h3>
                 <div class="row">
                     <div class="col-md-6">
-                        <table class="table table-bordered">
+                        <table class="table card-table table-vcenter">
                             <tbody>
                                 <tr>
                                     <td><strong>{!! trans('main.Name') !!}</strong></td>
@@ -387,7 +388,7 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <table class="table table-bordered">
+                        <table class="table card-table table-vcenter">
                             <tbody>
                                 <tr>
                                     <td><strong>{!! trans('main.DepDate') !!}</strong></td>
@@ -416,11 +417,11 @@
                 <h3 class="mb-4"><i class="ti ti-calculator me-2"></i>Quotations</h3>
                 @if (Auth::user()->can('quotation.add'))
                     <a href="{{ route('quotation.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="fa fa-plus"></i> {!! trans('main.AddQuotation') !!}
+                        <i class="ti ti-plus"></i> {!! trans('main.AddQuotation') !!}
                     </a>
                 @endif
                 
-                <table class="table table-bordered table-striped">
+                <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
                             <th>{!! trans('main.Name') !!}</th>
@@ -453,12 +454,12 @@
                                 </td>
                                 <td>
                                     <a href="{{ route('quotation.pdf', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="fa fa-print"></i>
+                                        <i class="ti ti-printer"></i>
                                     </a>
                                 </td>
                                 <td>
                                     <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-success">
-                                        <i class="fa fa-file-excel-o"></i>
+                                        <i class="ti ti-file-excel"></i>
                                     </a>
                                 </td>
                                 <td>{{ Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y') }}</td>
@@ -466,7 +467,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center">
-                                    <i class="fa fa-inbox"></i> No quotations found
+                                    <i class="ti ti-inbox"></i> No quotations found
                                 </td>
                             </tr>
                         @endforelse
@@ -479,11 +480,11 @@
                 <h3 class="mb-4"><i class="ti ti-bed me-2"></i>Guest Lists</h3>
                 @if (Auth::user()->can('guestList.add'))
                     <a href="{{ route('guestList.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="fa fa-plus"></i> Add Guest List
+                        <i class="ti ti-plus"></i> Add Guest List
                     </a>
                 @endif
                 
-                <table class="table table-bordered table-striped">
+                <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
                             <th>Version</th>
@@ -526,11 +527,11 @@
                                     @if(!$guestList->sent_at)
                                         <button class="btn btn-sm btn-primary send-guest-list" 
                                                 data-url="{{ route('guestlist.send', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
-                                            <i class="fa fa-send"></i>
+                                            <i class="ti ti-send"></i>
                                         </button>
                                         <button class="btn btn-sm btn-danger delete-guest-list"
                                                 data-url="{{ route('guestlist.delete', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
-                                            <i class="fa fa-trash"></i>
+                                            <i class="ti ti-trash"></i>
                                         </button>
                                     @endif
                                 </td>
@@ -538,7 +539,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center">
-                                    <i class="fa fa-inbox"></i> No guest lists found
+                                    <i class="ti ti-inbox"></i> No guest lists found
                                 </td>
                             </tr>
                         @endforelse
@@ -551,7 +552,7 @@
                 <h3 class="mb-4"><i class="ti ti-file-invoice me-2"></i>Invoices</h3>
                 {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-success mb-3') !!}
                 
-                <table class="table table-bordered table-striped">
+                <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -578,17 +579,17 @@
                                 <td>{{ $invoice['status'] }}</td>
                                 <td>
                                     <a href="{{ route('invoices.show', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-info">
-                                        <i class="fa fa-eye"></i>
+                                        <i class="ti ti-eye"></i>
                                     </a>
                                     <a href="{{ route('invoices.edit', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-warning">
-                                        <i class="fa fa-edit"></i>
+                                        <i class="ti ti-edit"></i>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="9" class="text-center">
-                                    <i class="fa fa-inbox"></i> No invoices found
+                                    <i class="ti ti-inbox"></i> No invoices found
                                 </td>
                             </tr>
                         @endforelse
@@ -601,7 +602,7 @@
                 <h3 class="mb-4"><i class="ti ti-cash me-2"></i>Billing</h3>
                 {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class, 'btn btn-success mb-3') !!}
                 
-                <table class="table table-bordered table-striped">
+                <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -620,17 +621,17 @@
                                 <td>{{ $billing['total_amount'] }}</td>
                                 <td>
                                     <a href="{{ route('accounting.show', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-info">
-                                        <i class="fa fa-eye"></i>
+                                        <i class="ti ti-eye"></i>
                                     </a>
                                     <a href="{{ route('accounting.edit', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-warning">
-                                        <i class="fa fa-edit"></i>
+                                        <i class="ti ti-edit"></i>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center">
-                                    <i class="fa fa-inbox"></i> No billing records found
+                                    <i class="ti ti-inbox"></i> No billing records found
                                 </td>
                             </tr>
                         @endforelse
@@ -648,15 +649,15 @@
 <a id="tour_to_quotation" href="{{ route('tour.convertToQuotation', ['id' => $tour->id]) }}" hidden></a>
 
 {{-- Service Modal --}}
-<div class="modal fade" id="service-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg">
+<div class="modal modal-blur fade" id="service-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">{!! trans('main.Addservice') !!}</h4>
+                <h5 class="modal-title">{!! trans('main.Addservice') !!}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <table id="search-table" class="table table-striped table-bordered">
+                <table id="search-table" class="table card-table table-vcenter table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>{!! trans('main.Name') !!}</th>

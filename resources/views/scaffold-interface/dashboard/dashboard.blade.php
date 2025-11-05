@@ -7,14 +7,14 @@
     'breadcrumbs' => [
     ['title' => 'Home', 'icon' => 'dashboard', 'route' => null]]])
     <section>
-			{{--@include('scaffold-interface.dashboard.components.new_emails')--}}
-		<div class="container-fluid">
-			
+            {{--@include('scaffold-interface.dashboard.components.new_emails')--}}
+        <div class="container-fluid">
+            
             <div class="row">
-				<div class="block-stretch">
+                <div class="block-stretch">
                 @include('scaffold-interface.dashboard.components.tasks_calendar')
                 </div>
-			</div>
+            </div>
 
             <div class="row">
                 <div class="block-stretch">
@@ -26,10 +26,23 @@
                 <div class="block-stretch">
                 @include('scaffold-interface.dashboard.components.inbox_emails')
                 @include('scaffold-interface.dashboard.components.announcements_list')
-                @include('scaffold-interface.dashboard.components.tasks_list')
+                
+                {{-- ================================== --}}
+                {{-- == THIS IS THE CORRECTED LINE == --}}
+                {{-- ================================== --}}
+                @include('scaffold-interface.dashboard.components.tasks_list', [
+                    'todoTasks' => $todoTasks,
+                    'completedTasks' => $completedTasks,
+                    'abortedTasks' => $abortedTasks,
+                    'statuses' => $statuses
+                ])
+                {{-- ================================== --}}
+                {{-- == END OF FIX == --}}
+                {{-- ================================== --}}
+
                 </div>
             </div>
-		
+        
         
 {{--
         <div class="row">
@@ -52,11 +65,11 @@
 
 
         </div>
---}}		
+--}}        
         {{--<div class="row">
             @include('scaffold-interface.dashboard.components.activities_list')
         </div>--}}
-		{{--@include('scaffold-interface.dashboard.components.weChat')--}}
+        {{--@include('scaffold-interface.dashboard.components.weChat')--}}
         @include('component.modal_add_tour')
         @include('scaffold-interface.dashboard.components.create_task_popup')
 
@@ -67,7 +80,6 @@
     <link href="{{URL::asset('css/calendar-enhancements.css')}}" rel="stylesheet"/>
 @endsection
 @section('post_scripts_calendar')
-<!-- FullCalendar CDN -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -363,4 +375,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @endsection
 @endsection
-    

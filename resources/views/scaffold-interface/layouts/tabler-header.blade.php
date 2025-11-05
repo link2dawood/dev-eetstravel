@@ -74,13 +74,13 @@
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show tasks">
                     <i class="ti ti-checkbox icon"></i>
                     @if($tasks)
-                        <span class="badge bg-red">{{ $tasks->count }}</span>
+                        <span class="badge bg-red">{{ count($tasks) }}</span>
                     @endif
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ trans('main.Youhave') }} {{ (@$tasks) ? @$tasks->count : "" }} {{ trans('main.tasks') }}</h3>
+                            <h3 class="card-title">{{ trans('main.Youhave') }} {{ $tasks ? count($tasks) : 0 }} {{ trans('main.tasks') }}</h3>
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
                             @foreach($tasks as $task)

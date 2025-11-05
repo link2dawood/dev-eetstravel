@@ -74,13 +74,13 @@
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show tasks">
                     <i class="ti ti-checkbox icon"></i>
                     <?php if($tasks): ?>
-                        <span class="badge bg-red"><?php echo e($tasks->count); ?></span>
+                        <span class="badge bg-red"><?php echo e(count($tasks)); ?></span>
                     <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><?php echo e(trans('main.Youhave')); ?> <?php echo e((@$tasks) ? @$tasks->count : ""); ?> <?php echo e(trans('main.tasks')); ?></h3>
+                            <h3 class="card-title"><?php echo e(trans('main.Youhave')); ?> <?php echo e($tasks ? count($tasks) : 0); ?> <?php echo e(trans('main.tasks')); ?></h3>
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
                             <?php $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -151,5 +151,4 @@
     opacity: 0.5;
 }
 </style>
-<?php $__env->stopPush(); ?>
-<?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-header.blade.php ENDPATH**/ ?>
+<?php $__env->stopPush(); ?><?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-header.blade.php ENDPATH**/ ?>

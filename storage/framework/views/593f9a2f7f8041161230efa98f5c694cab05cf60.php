@@ -21,6 +21,10 @@
     <link href="<?php echo e(asset('css/bootstrap-datetimepicker.min.css')); ?>" rel="stylesheet"/>
     <link href="<?php echo e(asset('css/bootstrap-datepicker.min.css')); ?>" rel="stylesheet" type="text/css"/>
     <link href="<?php echo e(asset('css/responsive-global.css')); ?>" rel="stylesheet" type="text/css"/>
+    
+    <!-- Modern UI Enhancements -->
+    <link href="<?php echo e(asset('css/modern-forms.css')); ?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('css/modern-tables.css')); ?>" rel="stylesheet" type="text/css"/>
 
     <style>
         @import  url('https://rsms.me/inter/inter.css');

@@ -3,7 +3,7 @@
 <?php $__env->startSection('content'); ?>
 
 <style>
-/* Monday.com Style - Inline for immediate loading (CSS remains unchanged) */
+/* Monday.com Style - Inline for immediate loading */
 :root {
     --monday-primary: #0073ea;
     --monday-primary-hover: #0060b9;
@@ -272,10 +272,9 @@
 }
 
 .monday-editable {
-    /* Removed from task and story points */
     padding: 6px 8px;
     border-radius: 4px;
-    /* cursor: pointer !important; */
+    cursor: pointer !important;
     transition: all 0.2s ease;
     min-height: 32px;
     display: flex;
@@ -283,10 +282,9 @@
 }
 
 .monday-editable:hover {
-    /* Removed hover effect to stop inline edit feel */
-    background: none;
-    outline: none;
-    box-shadow: none;
+    background: var(--monday-background-hover);
+    outline: 2px solid rgba(0, 115, 234, 0.3);
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
 }
 
 .monday-editable-input {
@@ -306,34 +304,35 @@
     border-radius: 4px;
     font-size: 13px;
     font-weight: 500;
-    /* Removed cursor pointer */
+    cursor: pointer;
     transition: all 0.2s ease;
     min-width: 100px;
 }
 
 .monday-status-clickable {
-    /* Removed for non-clickable status */
     min-width: 120px;
     font-weight: 600;
     user-select: none;
 }
 
 .monday-status-clickable:hover {
-    /* Removed hover effect for non-clickable status */
-    transform: none;
-    box-shadow: none;
-    filter: none;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    filter: brightness(1.05);
 }
 
 .monday-status-clickable svg {
-    /* Hide the dropdown icon in non-clickable status */
-    display: none;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.monday-status-clickable:hover svg {
+    opacity: 1;
 }
 
 .monday-status:hover {
-    /* Removed hover effect */
-    opacity: 1;
-    transform: none;
+    opacity: 0.85;
+    transform: scale(1.05);
 }
 
 .monday-person {
@@ -360,14 +359,13 @@
     background: var(--monday-background-hover);
     border: 2px dashed var(--monday-border);
     color: var(--monday-text-secondary);
-    /* Removed cursor pointer */
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .monday-avatar-add:hover {
-    /* Removed hover effect */
-    border-color: var(--monday-border);
-    color: var(--monday-text-secondary);
+    border-color: var(--monday-primary);
+    color: var(--monday-primary);
 }
 
 .monday-date {
@@ -376,15 +374,14 @@
     gap: 6px;
     color: var(--monday-text-secondary);
     font-size: 13px;
-    /* Removed cursor pointer */
+    cursor: pointer;
     padding: 4px 8px;
     border-radius: 4px;
     transition: all 0.2s ease;
 }
 
 .monday-date:hover {
-    /* Removed hover effect */
-    background: none;
+    background: var(--monday-background-hover);
 }
 
 .monday-date.overdue {
@@ -400,7 +397,7 @@
     display: flex;
     gap: 4px;
     justify-content: center;
-    /* opacity: 0; */ /* Kept visible for easier action */
+    opacity: 0;
     transition: opacity 0.2s ease;
 }
 
@@ -499,118 +496,6 @@
     background: var(--monday-background-hover);
 }
 
-.monday-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.monday-modal.show {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.monday-modal-content {
-    background: white;
-    border-radius: 8px;
-    box-shadow: var(--monday-shadow-hover);
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-}
-
-.monday-modal.show .monday-modal-content {
-    transform: scale(1);
-}
-
-.monday-modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--monday-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.monday-modal-title {
-    font-size: 20px;
-    font-weight: 500;
-    margin: 0;
-    color: var(--monday-text-primary);
-}
-
-.monday-modal-close {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    color: var(--monday-text-secondary);
-}
-
-.monday-modal-close:hover {
-    color: var(--monday-text-primary);
-}
-
-.monday-modal-body {
-    padding: 24px;
-}
-
-.monday-modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--monday-border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-}
-
-.monday-form-group {
-    margin-bottom: 20px;
-}
-
-.monday-form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--monday-text-primary);
-}
-
-.monday-form-input,
-.monday-form-textarea,
-.monday-form-select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--monday-border);
-    border-radius: 4px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.monday-form-input:focus,
-.monday-form-textarea:focus,
-.monday-form-select:focus {
-    outline: none;
-    border-color: var(--monday-primary);
-    box-shadow: 0 0 0 2px var(--monday-primary-selected);
-}
-
-.monday-form-textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
 .monday-empty {
     text-align: center;
     padding: 60px 20px;
@@ -668,15 +553,6 @@
     min-width: 40px;
 }
 
-.monday-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--monday-border);
-    border-top-color: var(--monday-primary);
-    border-radius: 50%;
-    animation: monday-spin 0.8s linear infinite;
-}
-
 .monday-pagination {
     display: flex;
     justify-content: center;
@@ -711,10 +587,6 @@
     font-size: 13px;
     color: var(--monday-text-secondary);
     padding: 0 12px;
-}
-
-@keyframes  monday-spin {
-    to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
@@ -812,35 +684,35 @@
                                 <td class="monday-table-cell-task">
                                     <div class="monday-task-content">
                                         <?php if($task->priority): ?>
-                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" onclick="editTask(<?php echo e($task->id); ?>)" title="High Priority: Click to edit task">
+                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" onclick="togglePriority(<?php echo e($task->id); ?>, event)">
                                             <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
                                         </svg>
                                         <?php else: ?>
-                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity: 0.3;" onclick="editTask(<?php echo e($task->id); ?>)" title="Normal Priority: Click to edit task">
+                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity: 0.3;" onclick="togglePriority(<?php echo e($task->id); ?>, event)">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
                                         </svg>
                                         <?php endif; ?>
-                                        <span class="monday-task-text" data-task-id="<?php echo e($task->id); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;"><?php echo e($task->content); ?></span>
+                                        <span class="monday-task-text monday-editable" data-field="content" data-task-id="<?php echo e($task->id); ?>" onclick="editInline(this)"><?php echo e($task->content); ?></span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
                                         <?php if($task->assigned_users && $task->assigned_users->count() > 0): ?>
                                             <?php $__currentLoopData = $task->assigned_users->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">
+                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>">
                                                     <?php echo e(strtoupper(substr($user->name, 0, 2))); ?>
 
                                                 </div>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             <?php if($task->assigned_users->count() > 3): ?>
-                                            <div class="monday-avatar" style="background-color: #757575" title="+<?php echo e($task->assigned_users->count() - 3); ?> more" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">
+                                            <div class="monday-avatar" style="background-color: #757575" title="+<?php echo e($task->assigned_users->count() - 3); ?> more">
                                                 +<?php echo e($task->assigned_users->count() - 3); ?>
 
                                             </div>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <div class="monday-avatar monday-avatar-add" onclick="editTask(<?php echo e($task->id); ?>)" title="Assign Person: Click to edit task">
+                                        <div class="monday-avatar monday-avatar-add" onclick="openPersonPicker(<?php echo e($task->id); ?>)">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -850,12 +722,16 @@
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <div class="monday-status" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; <?php if($task->getStatusName() === 'Pending'): ?> color: #000000 !important; <?php endif; ?> display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; cursor: pointer;" onclick="editTask(<?php echo e($task->id); ?>)" title="Status: Click to edit task">
+                                    <div class="monday-status monday-status-clickable" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px;" onclick="openStatusPicker(<?php echo e($task->id); ?>, this)">
                                         <span><?php echo e($task->getStatusName()); ?></span>
-                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="flex-shrink: 0;">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <div class="monday-date <?php echo e($task->isOverdue() ? 'overdue' : ''); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;" title="Deadline: Click to edit task">
+                                    <div class="monday-date <?php echo e($task->isOverdue() ? 'overdue' : ''); ?>" onclick="openDatePicker(<?php echo e($task->id); ?>)">
                                         <svg class="monday-date-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <circle cx="12" cy="12" r="9" />
@@ -883,12 +759,12 @@
                                 </td>
                                 <td class="monday-table-cell text-center">
                                     <?php if($task->story_points || $task->estimated_sp): ?>
-                                    <span class="monday-sp" data-task-id="<?php echo e($task->id); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;" title="Story Points: Click to edit task">
+                                    <span class="monday-sp monday-editable" data-field="story_points" data-task-id="<?php echo e($task->id); ?>" onclick="editInline(this)">
                                         <?php echo e($task->story_points ?? $task->estimated_sp); ?>
 
                                     </span>
                                     <?php else: ?>
-                                    <span class="monday-sp" data-task-id="<?php echo e($task->id); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="opacity: 0.5; cursor: pointer;" title="Story Points: Click to edit task">0</span>
+                                    <span class="monday-sp monday-editable" data-field="story_points" data-task-id="<?php echo e($task->id); ?>" onclick="editInline(this)" style="opacity: 0.5;">0</span>
                                     <?php endif; ?>
                                 </td>
                                <td class="monday-table-cell">
@@ -978,14 +854,14 @@
                             <tr class="monday-table-row completed" data-task-id="<?php echo e($task->id); ?>">
                                 <td class="monday-table-cell-task">
                                     <div class="monday-task-content">
-                                        <span class="monday-task-text" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;"><?php echo e($task->content); ?></span>
+                                        <span class="monday-task-text"><?php echo e($task->content); ?></span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
                                         <?php if($task->assigned_users && $task->assigned_users->count() > 0): ?>
                                             <?php $__currentLoopData = $task->assigned_users->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">
+                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>">
                                                     <?php echo e(strtoupper(substr($user->name, 0, 2))); ?>
 
                                                 </div>
@@ -994,12 +870,16 @@
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <div class="monday-status" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; cursor: pointer;" onclick="editTask(<?php echo e($task->id); ?>)" title="Status: Click to edit task">
+                                    <div class="monday-status monday-status-clickable" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px;" onclick="openStatusPicker(<?php echo e($task->id); ?>, this)">
                                         <span><?php echo e($task->getStatusName()); ?></span>
-                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="flex-shrink: 0;">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <div class="monday-date" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">
+                                    <div class="monday-date">
                                         <span class="text-muted"><?php echo e($task->dead_line ? \Carbon\Carbon::parse($task->dead_line)->format('M d') : '-'); ?></span>
                                     </div>
                                 </td>
@@ -1018,9 +898,9 @@
                                 </td>
                                 <td class="monday-table-cell text-center">
                                     <?php if($task->story_points || $task->estimated_sp): ?>
-                                    <span class="monday-sp" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;"><?php echo e($task->story_points ?? $task->estimated_sp); ?></span>
+                                    <span class="monday-sp"><?php echo e($task->story_points ?? $task->estimated_sp); ?></span>
                                     <?php else: ?>
-                                    <span class="text-muted" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">-</span>
+                                    <span class="text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="monday-table-cell">
@@ -1032,9 +912,19 @@
                                                 <path d="M16 5l3 3" />
                                             </svg>
                                         </button>
+                                        <button class="monday-action-btn delete" onclick="deleteTask(<?php echo e($task->id); ?>)" title="Delete" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px; color: #ef4444;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M4 7l16 0" />
+                                                <path d="M10 11l0 6" />
+                                                <path d="M14 11l0 6" />
+                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
-                            </tr>
+                                </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="8">
@@ -1091,13 +981,13 @@
                             <?php $__empty_1 = true; $__currentLoopData = $abortedTasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr class="monday-table-row" data-task-id="<?php echo e($task->id); ?>">
                                 <td class="monday-table-cell-task">
-                                    <span class="monday-task-text text-decoration-line-through text-muted" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;"><?php echo e($task->content); ?></span>
+                                    <span class="monday-task-text text-decoration-line-through text-muted"><?php echo e($task->content); ?></span>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
                                         <?php if($task->assigned_users && $task->assigned_users->count() > 0): ?>
                                             <?php $__currentLoopData = $task->assigned_users->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;">
+                                                <div class="monday-avatar" style="background-color: <?php echo e('#' . substr(md5($user->name), 0, 6)); ?>" title="<?php echo e($user->name); ?>">
                                                     <?php echo e(strtoupper(substr($user->name, 0, 2))); ?>
 
                                                 </div>
@@ -1106,15 +996,27 @@
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <div class="monday-status" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; cursor: pointer;" onclick="editTask(<?php echo e($task->id); ?>)" title="Status: Click to edit task">
+                                    <div class="monday-status monday-status-clickable" style="background-color: <?php echo e($task->getStatusColor()); ?>20; color: <?php echo e($task->getStatusColor()); ?>; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px;" onclick="openStatusPicker(<?php echo e($task->id); ?>, this)">
                                         <span><?php echo e($task->getStatusName()); ?></span>
-                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="flex-shrink: 0;">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <span class="text-muted" onclick="editTask(<?php echo e($task->id); ?>)" style="cursor: pointer;"><?php echo e($task->dead_line ? \Carbon\Carbon::parse($task->dead_line)->format('M d') : '-'); ?></span>
+                                    <span class="text-muted"><?php echo e($task->dead_line ? \Carbon\Carbon::parse($task->dead_line)->format('M d') : '-'); ?></span>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; gap: 8px; justify-content: center; opacity: 1;">
+                                        <button class="monday-action-btn edit" onclick="editTask(<?php echo e($task->id); ?>)" title="Edit" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 8px; color: #f59e0b;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                                <path d="M16 5l3 3" />
+                                            </svg>
+                                        </button>
                                         <button class="monday-action-btn delete" onclick="deleteTask(<?php echo e($task->id); ?>)" title="Delete" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px; color: #ef4444;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M4 7l16 0" />
@@ -1126,7 +1028,7 @@
                                         </button>
                                     </div>
                                 </td>
-                            </tr>
+                                </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="5">
@@ -1139,97 +1041,23 @@
                         </tbody>
                     </table>
                     
-                    
-<?php if($abortedTasks->hasPages()): ?>
-<div class="monday-pagination">
-    <button class="monday-pagination-btn" onclick="navigatePage('aborted', <?php echo e($abortedTasks->currentPage() - 1); ?>)" <?php echo e($abortedTasks->onFirstPage() ? 'disabled' : ''); ?>>
-        Previous
-    </button>
-    <span class="monday-pagination-info">
-        Page <?php echo e($abortedTasks->currentPage()); ?> of <?php echo e($abortedTasks->lastPage()); ?>
+                   
+                    <?php if($abortedTasks->hasPages()): ?>
+                    <div class="monday-pagination">
+                        <button class="monday-pagination-btn" onclick="navigatePage('aborted', <?php echo e($abortedTasks->currentPage() - 1); ?>)" <?php echo e($abortedTasks->onFirstPage() ? 'disabled' : ''); ?>>
+                            Previous
+                        </button>
+                        <span class="monday-pagination-info">
+                            Page <?php echo e($abortedTasks->currentPage()); ?> of <?php echo e($abortedTasks->lastPage()); ?>
 
-    </span>
-    <button class="monday-pagination-btn" onclick="navigatePage('aborted', <?php echo e($abortedTasks->currentPage() + 1); ?>)" <?php echo e(!$abortedTasks->hasMorePages() ? 'disabled' : ''); ?>>
-        Next
-    </button>
-</div>
-<?php endif; ?>
+                        </span>
+                        <button class="monday-pagination-btn" onclick="navigatePage('aborted', <?php echo e($abortedTasks->currentPage() + 1); ?>)" <?php echo e(!$abortedTasks->hasMorePages() ? 'disabled' : ''); ?>>
+                            Next
+                        </button>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="monday-modal" id="quickAddModal">
-    <div class="monday-modal-content">
-        <div class="monday-modal-header">
-            <h3 class="monday-modal-title">New Task</h3>
-            <button class="monday-modal-close" onclick="closeModal('quickAddModal')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
-        </div>
-        <div class="monday-modal-body">
-            <form id="quickAddForm">
-                <div class="monday-form-group">
-                    <label class="monday-form-label">Task Name *</label>
-                    <input type="text" class="monday-form-input" id="quick_task_name" name="content" required>
-                </div>
-                <div class="monday-form-group">
-                    <label class="monday-form-label">Description</label>
-                    <textarea class="monday-form-textarea" id="quick_description" name="description"></textarea>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="monday-form-group">
-                            <label class="monday-form-label">Status *</label>
-                            <select class="monday-form-select" id="quick_status" name="status" required>
-                                <?php $__currentLoopData = $statuses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $status): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($status->id); ?>"><?php echo e($status->name); ?></option>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="monday-form-group">
-                            <label class="monday-form-label">Priority</label>
-                            <select class="monday-form-select" id="quick_priority" name="priority">
-                                <option value="0">Normal</option>
-                                <option value="1">High</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="monday-form-group">
-                            <label class="monday-form-label">Due Date *</label>
-                            <input type="date" class="monday-form-input" id="quick_due_date" name="end_date" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="monday-form-group">
-                            <label class="monday-form-label">Due Time *</label>
-                            <input type="time" class="monday-form-input" id="quick_due_time" name="end_time" value="18:00" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="monday-form-group">
-                    <label class="monday-form-label">Story Points</label>
-                    <input type="number" class="monday-form-input" id="quick_story_points" name="story_points" min="0" value="0">
-                </div>
-                <input type="hidden" id="quick_task_type" name="task_type" value="2">
-                <input type="hidden" id="quick_tour" name="tour" value="">
-                <input type="hidden" id="quick_assigned_user" name="assigned_user" value="">
-                <input type="hidden" name="_token" value="<?php echo e(csrf_token()); ?>">
-            </form>
-        </div>
-        <div class="monday-modal-footer">
-            <button type="button" class="monday-btn" onclick="closeModal('quickAddModal')">Cancel</button>
-            <button type="button" class="monday-btn monday-btn-primary" onclick="saveQuickTask()">Create Task</button>
         </div>
     </div>
 </div>
@@ -1253,104 +1081,217 @@ function toggleGroup(groupName) {
     }
 }
 
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
-        }
-    }
-}
-
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('monday-modal')) {
-        closeModal(event.target.id);
-    }
-});
-
+// ===================================
+// == NEW TASK BUTTON REDIRECT ==
+// ===================================
 document.getElementById('newTaskBtn')?.addEventListener('click', function() {
-    openModal('quickAddModal');
+    // This now redirects to your full "Create Task" page
+    window.location.href = '<?php echo e(route("task.create")); ?>';
 });
+// ===================================
 
-function openQuickAdd(group) {
-    openModal('quickAddModal');
+
+let currentEditingElement = null;
+
+function editInline(element) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (currentEditingElement) {
+        saveInlineEdit(currentEditingElement);
+    }
+
+    const field = element.dataset.field;
+    const taskId = element.dataset.taskId;
+    const currentValue = element.textContent.trim();
+
+    currentEditingElement = element;
+
+    const input = document.createElement('input');
+    input.type = field === 'story_points' ? 'number' : 'text';
+    input.className = 'monday-editable-input';
+    input.value = currentValue;
+
+    element.innerHTML = '';
+    element.appendChild(input);
+    input.focus();
+    input.select();
+
+    input.addEventListener('blur', () => saveInlineEdit(element));
+    input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+            saveInlineEdit(element);
+        } else if (e.key === 'Escape') {
+            cancelInlineEdit(element, currentValue);
+        }
+    });
 }
 
-function saveQuickTask() {
-    const form = document.getElementById('quickAddForm');
-    const formData = new FormData(form);
+function saveInlineEdit(element) {
+    const input = element.querySelector('input');
+    if (!input) return;
 
-    if (!formData.get('content') || !formData.get('status') || !formData.get('end_date') || !formData.get('end_time')) {
-        alert('Please fill in all required fields');
+    const field = element.dataset.field;
+    const taskId = element.dataset.taskId;
+    const newValue = input.value.trim();
+    const oldValue = input.defaultValue;
+
+    if (newValue === oldValue) {
+        element.textContent = oldValue;
+        currentEditingElement = null;
         return;
     }
 
-    const saveBtn = event.target;
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '<div class="monday-spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>';
-    saveBtn.disabled = true;
+    element.textContent = newValue || '-';
+    currentEditingElement = null;
 
-    fetch('/task', {
+    updateTaskField(taskId, field, newValue);
+}
+
+function cancelInlineEdit(element, originalValue) {
+    element.textContent = originalValue;
+    currentEditingElement = null;
+}
+
+function updateTaskField(taskId, field, value) {
+    const formData = new FormData();
+    formData.append('_token', '<?php echo e(csrf_token()); ?>'); // Using Blade for CSRF token
+    formData.append('field', field);
+    formData.append('value', value);
+
+    fetch(`/task/${taskId}/update-field`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': formData.get('_token'),
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
             'Accept': 'application/json',
         },
         body: formData
     })
     .then(response => response.json())
     .then(data => {
-        if (data.route) {
-            window.location.href = data.route || window.location.href;
-        } else {
-            alert('Task created successfully!');
-            closeModal('quickAddModal');
-            location.reload();
-        }
+        console.log('Field updated successfully');
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error creating task. Please try again.');
-    })
-    .finally(() => {
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+        console.error('Error updating field:', error);
+        alert('Error updating task. Please refresh the page.');
     });
 }
 
-// *** REMOVED INLINE EDITING FUNCTIONS: editInline, saveInlineEdit, cancelInlineEdit, updateTaskField ***
-
-// Re-defining core action functions to only redirect to the edit page
 function togglePriority(taskId, event) {
     event.stopPropagation();
-    // Redirect to edit page instead of updating inline
-    editTask(taskId);
+    const icon = event.target.closest('svg');
+    const isFilled = icon.getAttribute('fill') === 'currentColor';
+
+    if (isFilled) {
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('stroke', 'currentColor');
+        icon.setAttribute('stroke-width', '2');
+        icon.style.opacity = '0.3';
+        updateTaskField(taskId, 'priority', 0);
+    } else {
+        icon.setAttribute('fill', 'currentColor');
+        icon.removeAttribute('stroke');
+        icon.removeAttribute('stroke-width');
+        icon.style.opacity = '1';
+        updateTaskField(taskId, 'priority', 1);
+    }
 }
 
 function openStatusPicker(taskId, element) {
     event.stopPropagation();
-    // Redirect to edit page instead of opening a dropdown
-    editTask(taskId);
+
+    // Close any existing status pickers
+    document.querySelectorAll('.monday-dropdown-menu').forEach(menu => menu.remove());
+
+    // Get statuses from PHP
+    const allStatuses = <?php echo json_encode($statuses, 15, 512) ?>;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'monday-dropdown-menu show';
+    dropdown.style.cssText = `
+        position: fixed;
+        z-index: 9999;
+        background: white;
+        border: 1px solid #d0d4e4;
+        border-radius: 8px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        padding: 8px;
+        min-width: 180px;
+        max-height: 300px;
+        overflow-y: auto;
+    `;
+
+    // Position dropdown
+    const rect = element.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+
+    allStatuses.forEach(status => {
+        const item = document.createElement('div');
+        item.className = 'monday-dropdown-item';
+        item.style.cssText = `
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin: 3px 0;
+            background-color: ${status.color}20;
+            color: ${status.color};
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        `;
+        item.textContent = status.name;
+
+        item.onmouseover = () => {
+            item.style.transform = 'translateX(4px)';
+            item.style.backgroundColor = status.color + '30';
+        };
+        item.onmouseout = () => {
+            item.style.transform = 'translateX(0)';
+            item.style.backgroundColor = status.color + '20';
+        };
+
+        item.onclick = (e) => {
+            e.stopPropagation();
+            // Use updateTaskField
+            updateTaskField(taskId, 'status', status.id);
+            
+            // Optimistically update the UI
+            const statusText = element.querySelector('span');
+            if(statusText) {
+                statusText.textContent = status.name;
+            }
+            element.style.backgroundColor = status.color + '20';
+            element.style.color = status.color;
+            
+            dropdown.remove();
+            
+            // Reload page after a short delay to reflect status changes (e.g., move to new group)
+            setTimeout(() => location.reload(), 500);
+        };
+        dropdown.appendChild(item);
+    });
+
+    document.body.appendChild(dropdown);
+
+    // Close on click outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && e.target !== element) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 10);
 }
 
 function openPersonPicker(taskId) {
-    // Redirect to edit page
     editTask(taskId);
 }
 
 function openDatePicker(taskId) {
-    // Redirect to edit page
     editTask(taskId);
 }
 
@@ -1366,7 +1307,7 @@ function deleteTask(taskId) {
     fetch(`/task/${taskId}`, {
         method: 'DELETE',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
             'Content-Type': 'application/json',
         },
     })
@@ -1377,7 +1318,7 @@ function deleteTask(taskId) {
             row.style.opacity = '0';
             row.style.transform = 'translateX(-20px)';
             setTimeout(() => {
-                location.reload();
+                location.reload(); // Reload to update list and counts
             }, 300);
         }
     })
@@ -1408,12 +1349,6 @@ document.getElementById('taskSearch')?.addEventListener('input', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('quick_due_date');
-    if (dateInput && !dateInput.value) {
-        dateInput.value = today;
-    }
-
     document.querySelectorAll('.monday-table-row').forEach(row => {
         row.style.transition = 'all 0.3s ease';
     });

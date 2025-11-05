@@ -4,113 +4,6 @@
 @section('post_styles')
 <link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>
-    /* Tab Navigation Styles */
-    .nav-tabs-custom {
-        margin-bottom: 20px;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        border-radius: 4px;
-    }
-    
-    .nav-tabs-custom > .nav-tabs {
-        border-bottom: 2px solid #f4f4f4;
-        margin: 0;
-    }
-    
-    .nav-tabs-custom > .nav-tabs > li {
-        margin-bottom: -2px;
-    }
-    
-    .nav-tabs-custom > .nav-tabs > li > a {
-        border-radius: 0;
-        border: none;
-        color: #444;
-        padding: 12px 20px;
-    }
-    
-    .nav-tabs-custom > .nav-tabs > li.active > a {
-        border-bottom: 3px solid #007bff;
-        color: #007bff;
-        font-weight: 600;
-    }
-    
-    .nav-tabs-custom > .nav-tabs > li > a:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .tab-content {
-        padding: 20px;
-    }
-    
-    /* Table Styles */
-    .table-bordered {
-        border: 1px solid #dee2e6;
-    }
-    
-    .table-bordered td,
-    .table-bordered th {
-        border: 1px solid #dee2e6;
-        padding: 12px;
-    }
-    
-    /* Box Styles */
-    .box {
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        margin-bottom: 20px;
-        background: #fff;
-    }
-    
-    .box-header {
-        padding: 15px;
-        border-bottom: 1px solid #f4f4f4;
-    }
-    
-    .box-body {
-        padding: 15px;
-    }
-    
-    /* Button Styles */
-    .margin_button {
-        margin-bottom: 15px;
-    }
-    
-    .margin_button .btn {
-        margin-right: 5px;
-        margin-bottom: 5px;
-    }
-    
-    /* Modal Styles */
-    .modal-dialog {
-        margin: 30px auto;
-    }
-    
-    /* Status Badge */
-    .badge {
-        padding: 5px 10px;
-        border-radius: 3px;
-        font-size: 12px;
-    }
-    
-    /* Alert Styles */
-    .alert {
-        padding: 15px;
-        margin-bottom: 20px;
-        border: 1px solid transparent;
-        border-radius: 4px;
-    }
-    
-    .alert-warning {
-        background-color: #fff3cd;
-        border-color: #ffc107;
-        color: #856404;
-    }
-    
-    .alert-info {
-        background-color: #d1ecf1;
-        border-color: #17a2b8;
-        color: #0c5460;
-    }
     
     /* Toggle Switch */
     .toggle {
@@ -177,80 +70,98 @@
 @endsection
 
 @section('content')
-<div class="container-fluid">
+<div class="container-xl">
     {{-- Page Header --}}
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1 class="page-title">Tour: {{ $tour->name }}</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url('/home') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('tour.index') }}"><i class="fa fa-suitcase"></i> Tours</a></li>
-                    <li class="breadcrumb-item active">Show</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-
-    {{-- Action Buttons --}}
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="margin_button">
-                <a href="{{ route('tour.index') }}" class="btn btn-primary">
-                    <i class="fa fa-arrow-left"></i> {!! trans('main.Back') !!}
-                </a>
-                @if (Auth::user()->can('tour.edit'))
-                    <a href="{{ route('tour.edit', ['tour' => $tour->id]) }}" class="btn btn-warning">
-                        <i class="fa fa-edit"></i> {!! trans('main.Edit') !!}
-                    </a>
-                @endif
-                @if (Auth::user()->can('task.create'))
-                    <a href="{{ url('task') }}/create?tour={{ $tour->id }}" class="btn btn-success">
-                        <i class="fa fa-plus"></i> {!! trans('main.AddTask') !!}
-                    </a>
-                @endif
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                {{-- Page pre-title --}}
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('tour.index') }}">Tours</a></li>
+                            <li class="breadcrumb-item active">{{ $tour->name }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <h2 class="page-title">
+                    <i class="ti ti-plane me-2"></i> {{ $tour->name }}
+                </h2>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="pull-right">
-                <div class="dropdown" style="display: inline-block; margin-right: 5px;">
-                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                        <i class="fa fa-file-excel-o"></i> Export
-                        <span class="caret"></span>
+            {{-- Page title actions --}}
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary">
+                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
+                    </a>
+                    @if (Auth::user()->can('tour.edit'))
+                        <a href="{{ route('tour.edit', ['tour' => $tour->id]) }}" class="btn btn-warning">
+                            <i class="ti ti-edit me-1"></i>{!! trans('main.Edit') !!}
+                        </a>
+                    @endif
+                    @if (Auth::user()->can('task.create'))
+                        <a href="{{ url('task') }}/create?tour={{ $tour->id }}" class="btn btn-success">
+                            <i class="ti ti-plus me-1"></i>{!! trans('main.AddTask') !!}
+                        </a>
+                    @endif
+                    
+                    {{-- Export Dropdown --}}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-file-export me-1"></i>Export
+                        </button>
+                        <div class="dropdown-menu">
+                            <h6 class="dropdown-header">Export Tour</h6>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");'>
+                                <i class="ti ti-file-spreadsheet me-2"></i>CSV - Tour
+                            </a>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");'>
+                                <i class="ti ti-file-spreadsheet me-2"></i>CSV - Service
+                            </a>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");'>
+                                <i class="ti ti-file-excel me-2"></i>Excel
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {{-- Voucher Dropdown --}}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-file-invoice me-1"></i>{!! trans('main.Voucher') !!}
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}");'>
+                                <i class="ti ti-file-type-pdf me-2"></i>PDF
+                            </a>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}");'>
+                                <i class="ti ti-file-type-doc me-2"></i>DOC
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {{-- Itinerary Dropdown --}}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-route me-1"></i>{!! trans('main.Itinerary') !!}
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");'>
+                                <i class="ti ti-file-type-pdf me-2"></i>PDF
+                            </a>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}");'>
+                                <i class="ti ti-file-code me-2"></i>HTML
+                            </a>
+                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}");'>
+                                <i class="ti ti-file-type-doc me-2"></i>DOC
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-info" onclick="showLandingPageModal()">
+                        <i class="ti ti-world me-1"></i>Landing Page
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");'>CSV - Tour</a></li>
-                        <li><a href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");'>CSV - Service</a></li>
-                        <li><a href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");'>Excel</a></li>
-                    </ul>
                 </div>
-                
-                <div class="dropdown" style="display: inline-block; margin-right: 5px;">
-                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                        <i class="fa fa-file-pdf-o"></i> {!! trans('main.Voucher') !!}
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}");'>PDF</a></li>
-                        <li><a href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}");'>DOC</a></li>
-                    </ul>
-                </div>
-                
-                <div class="dropdown" style="display: inline-block; margin-right: 5px;">
-                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                        <i class="fa fa-file-text-o"></i> {!! trans('main.Itinerary') !!}
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");'>PDF</a></li>
-                        <li><a href="#" onclick='export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}");'>HTML</a></li>
-                        <li><a href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}");'>DOC</a></li>
-                    </ul>
-                </div>
-                
-                <button class="btn btn-default" onclick="showLandingPageModal()">
-                    <i class="fa fa-globe"></i> Landing Page
-                </button>
             </div>
         </div>
     </div>
@@ -258,32 +169,28 @@
     {{-- Office Selection --}}
     <div class="row mb-3">
         <div class="col-md-12">
-            <div class="box">
-                <div class="box-body">
-                    <div class="row">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <label>Select Office:</label>
+                            <label class="form-label">Select Office:</label>
                             <div class="input-group">
-                                <select class="form-control selectedOffice">
+                                <select class="form-select selectedOffice">
                                     @foreach($offices as $office)
                                         <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
                                             {{ $office->office_name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <span class="input-group-btn">
-                                    <button class="btn btn-primary select-office-btn" type="button">
-                                        <i class="fa fa-check"></i> Select
-                                    </button>
-                                </span>
+                                <button class="btn btn-primary select-office-btn" type="button">
+                                    <i class="ti ti-check me-1"></i>Select
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <span class="pull-right">
-                                <button class="btn btn-info" data-toggle="modal" data-target="#legendModal">
-                                    <i class="fa fa-question-circle"></i> Help
-                                </button>
-                            </span>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-info mt-4" data-bs-toggle="modal" data-bs-target="#legendModal">
+                                <i class="ti ti-help me-1"></i>Help
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -293,13 +200,15 @@
 
     {{-- Quotation/Tour Toggle --}}
     @if ($tour->is_quotation)
-        <div class="alert alert-warning">
-            <div class="row">
-                <div class="col-md-8">
-                    <h5><i class="fa fa-exchange"></i> Convert Quotation to Tour</h5>
+        <div class="alert alert-warning" role="alert">
+            <div class="d-flex">
+                <div class="flex-fill">
+                    <h4 class="alert-title">
+                        <i class="ti ti-exchange me-2"></i>Convert Quotation to Tour
+                    </h4>
                 </div>
-                <div class="col-md-4">
-                    <div class="toggle pull-right">
+                <div>
+                    <div class="toggle">
                         <input type="checkbox" id="check1" onclick="convertQuotationToTour()" checked />
                         <label></label>
                     </div>
@@ -307,13 +216,15 @@
             </div>
         </div>
     @else
-        <div class="alert alert-success">
-            <div class="row">
-                <div class="col-md-8">
-                    <h5><i class="fa fa-exchange"></i> Convert Tour to Quotation</h5>
+        <div class="alert alert-success" role="alert">
+            <div class="d-flex">
+                <div class="flex-fill">
+                    <h4 class="alert-title">
+                        <i class="ti ti-exchange me-2"></i>Convert Tour to Quotation
+                    </h4>
                 </div>
-                <div class="col-md-4">
-                    <div class="toggle pull-right">
+                <div>
+                    <div class="toggle">
                         <input type="checkbox" id="check2" onclick="convertTourToQuotation()" />
                         <label></label>
                     </div>
@@ -324,56 +235,65 @@
 
     {{-- Session Messages --}}
     @if(session('message_buses'))
-        <div class="alert alert-info alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <i class="fa fa-info-circle"></i> {{ session('message_buses') }}
+        <div class="alert alert-info alert-dismissible" role="alert">
+            <div class="d-flex">
+                <div>
+                    <i class="ti ti-info-circle me-2"></i>
+                </div>
+                <div class="flex-fill">
+                    {{ session('message_buses') }}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         </div>
     @endif
 
     {{-- Tabs --}}
-    <div class="nav-tabs-custom">
-        <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active">
-                <a href="#frontsheet-tab" aria-controls="frontsheet-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-file-text-o"></i> Front Sheet
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#service-tab" aria-controls="service-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-list"></i> {!! trans('main.Services') !!}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#tour-tab" aria-controls="tour-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-suitcase"></i> {!! trans('main.Tour') !!}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#quotation-tab" aria-controls="quotation-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-calculator"></i> {!! trans('main.Quotation') !!}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#roomlist-tab" aria-controls="roomlist-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-bed"></i> {!! trans('main.GuestList') !!}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#invoices-tab" aria-controls="invoices-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-file-text"></i> Invoices
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#billing-tab" aria-controls="billing-tab" role="tab" data-toggle="tab">
-                    <i class="fa fa-money"></i> Billing
-                </a>
-            </li>
-        </ul>
-
-        <div class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a href="#frontsheet-tab" class="nav-link active" data-bs-toggle="tab" aria-selected="true" role="tab">
+                        <i class="ti ti-file-text me-1"></i>Front Sheet
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#service-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-list me-1"></i>{!! trans('main.Services') !!}
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#tour-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-plane me-1"></i>{!! trans('main.Tour') !!}
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#quotation-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-calculator me-1"></i>{!! trans('main.Quotation') !!}
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#roomlist-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-bed me-1"></i>{!! trans('main.GuestList') !!}
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#invoices-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-file-invoice me-1"></i>Invoices
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#billing-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-cash me-1"></i>Billing
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
             {{-- Front Sheet Tab --}}
-            <div role="tabpanel" class="tab-pane fade in active" id="frontsheet-tab">
-                <h3><i class="fa fa-list"></i> Front Sheet</h3>
+            <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">
+                <h3 class="mb-4"><i class="ti ti-file-text me-2"></i>Front Sheet</h3>
                 @if(!empty($quotation) && isset($quotation->id))
                     <div class="row">
                         <div class="col-md-6">
@@ -411,8 +331,8 @@
             </div>
 
             {{-- Services Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="service-tab">
-                <h3><i class="fa fa-list"></i> Services</h3>
+            <div role="tabpanel" class="tab-pane" id="service-tab">
+                <h3 class="mb-4"><i class="ti ti-list me-2"></i>Services</h3>
                 <div class="tour-packages"></div>
                 
                 {{-- Comments Section --}}
@@ -441,8 +361,8 @@
             </div>
 
             {{-- Tour Info Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="tour-tab">
-                <h3><i class="fa fa-suitcase"></i> Tour Information</h3>
+            <div role="tabpanel" class="tab-pane" id="tour-tab">
+                <h3 class="mb-4"><i class="ti ti-plane me-2"></i>Tour Information</h3>
                 <div class="row">
                     <div class="col-md-6">
                         <table class="table table-bordered">
@@ -492,8 +412,8 @@
             </div>
 
             {{-- Quotations Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="quotation-tab">
-                <h3><i class="fa fa-calculator"></i> Quotations</h3>
+            <div role="tabpanel" class="tab-pane" id="quotation-tab">
+                <h3 class="mb-4"><i class="ti ti-calculator me-2"></i>Quotations</h3>
                 @if (Auth::user()->can('quotation.add'))
                     <a href="{{ route('quotation.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
                         <i class="fa fa-plus"></i> {!! trans('main.AddQuotation') !!}
@@ -555,8 +475,8 @@
             </div>
 
             {{-- Guest List Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="roomlist-tab">
-                <h3><i class="fa fa-bed"></i> Guest Lists</h3>
+            <div role="tabpanel" class="tab-pane" id="roomlist-tab">
+                <h3 class="mb-4"><i class="ti ti-bed me-2"></i>Guest Lists</h3>
                 @if (Auth::user()->can('guestList.add'))
                     <a href="{{ route('guestList.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
                         <i class="fa fa-plus"></i> Add Guest List
@@ -627,8 +547,8 @@
             </div>
 
             {{-- Invoices Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="invoices-tab">
-                <h3><i class="fa fa-file-text"></i> Invoices</h3>
+            <div role="tabpanel" class="tab-pane" id="invoices-tab">
+                <h3 class="mb-4"><i class="ti ti-file-invoice me-2"></i>Invoices</h3>
                 {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-success mb-3') !!}
                 
                 <table class="table table-bordered table-striped">
@@ -677,8 +597,8 @@
             </div>
 
             {{-- Billing Tab --}}
-            <div role="tabpanel" class="tab-pane fade" id="billing-tab">
-                <h3><i class="fa fa-money"></i> Billing</h3>
+            <div role="tabpanel" class="tab-pane" id="billing-tab">
+                <h3 class="mb-4"><i class="ti ti-cash me-2"></i>Billing</h3>
                 {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class, 'btn btn-success mb-3') !!}
                 
                 <table class="table table-bordered table-striped">

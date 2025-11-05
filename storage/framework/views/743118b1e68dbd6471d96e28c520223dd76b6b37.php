@@ -6,14 +6,14 @@
     'breadcrumbs' => [
     ['title' => 'Home', 'icon' => 'dashboard', 'route' => null]]], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
     <section>
-			
-		<div class="container-fluid">
-			
+            
+        <div class="container-fluid">
+            
             <div class="row">
-				<div class="block-stretch">
+                <div class="block-stretch">
                 <?php echo $__env->make('scaffold-interface.dashboard.components.tasks_calendar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                 </div>
-			</div>
+            </div>
 
             <div class="row">
                 <div class="block-stretch">
@@ -25,14 +25,27 @@
                 <div class="block-stretch">
                 <?php echo $__env->make('scaffold-interface.dashboard.components.inbox_emails', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                 <?php echo $__env->make('scaffold-interface.dashboard.components.announcements_list', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
-                <?php echo $__env->make('scaffold-interface.dashboard.components.tasks_list', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                
+                
+                
+                
+                <?php echo $__env->make('scaffold-interface.dashboard.components.tasks_list', [
+                    'todoTasks' => $todoTasks,
+                    'completedTasks' => $completedTasks,
+                    'abortedTasks' => $abortedTasks,
+                    'statuses' => $statuses
+                ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                
+                
+                
+
                 </div>
             </div>
-		
         
-		
         
-		
+        
+        
+        
         <?php echo $__env->make('component.modal_add_tour', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         <?php echo $__env->make('scaffold-interface.dashboard.components.create_task_popup', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
@@ -43,7 +56,6 @@
     <link href="<?php echo e(URL::asset('css/calendar-enhancements.css')); ?>" rel="stylesheet"/>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('post_scripts_calendar'); ?>
-<!-- FullCalendar CDN -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -339,5 +351,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php $__env->stopSection(); ?>
 <?php $__env->stopSection(); ?>
-    
 <?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/scaffold-interface/dashboard/dashboard.blade.php ENDPATH**/ ?>

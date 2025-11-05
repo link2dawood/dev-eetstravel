@@ -44,8 +44,8 @@ class TaskController extends Controller
     public function getButton($id, $task)
     {
         $url = [
-            'show'       => route('task.show', ['task' => $id]),
-            'edit'       => route('task.edit', ['task' => $id]),
+            'show'     => route('task.show', ['task' => $id]),
+            'edit'     => route('task.edit', ['task' => $id]),
             'delete_msg' => "/task/{$id}/deleteMsg"
         ];
 
@@ -53,19 +53,25 @@ class TaskController extends Controller
     }
 
     /**
-     * ✅ UPDATED INDEX METHOD
-     * Independent pagination for todo / completed / aborted tasks
+     * ✅ UPDATED INDEX METHOD - SYNCS ALL TASKS
+     * Displays all tasks grouped by status
+     * - To-Do (pending tasks)
+     * - Completed (completed tasks)
+     * - Aborted (aborted tasks)
      */
     public function index(Request $request)
     {
         $title = 'Index - task';
 
-        // Todo Tasks (default page param)
+        // ✅ SYNC: Fetch ALL tasks from database with proper relationships
+        
+        // Todo Tasks (default page param) - All non-completed, non-aborted tasks
         $todoTasks = Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
-                      ->where('is_aborted', false);
+                    ->where('is_aborted', false);
             })
+            ->orderBy('created_at', 'desc') 
             ->paginate(10, ['*'], 'todo_page');
 
         // Completed Tasks (custom page param)
@@ -73,6 +79,7 @@ class TaskController extends Controller
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', true);
             })
+            ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'completed_page');
 
         // Aborted Tasks (custom page param)
@@ -80,9 +87,12 @@ class TaskController extends Controller
             ->whereHas('status', function ($query) {
                 $query->where('is_aborted', true);
             })
+            ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'aborted_page');
 
         $task_types = json_encode(array_flip(Task::$taskTypes));
+        
+        // Get all statuses for the dropdown
         $statuses = Status::query()
             ->orderBy('sort_order', 'asc')
             ->where('type', 'task')
@@ -141,6 +151,9 @@ class TaskController extends Controller
         $task->task_type = $request->get('task_type');
         $task->status = $request->get('status');
         $task->priority = $request->get('priority') ?? 0;
+        $task->epic_id = $request->get('epic_id') ?? null; // ✅ Added epic support
+        $task->story_points = $request->get('story_points') ?? null; // ✅ Added story points
+        $task->estimated_sp = $request->get('estimated_sp') ?? null; // ✅ Added estimated SP
         $task->save();
 
         if ($assigned_user) {
@@ -159,13 +172,15 @@ class TaskController extends Controller
 
         if ($request->get('modal_create') == 1) {
             return redirect(route('dashboard_main'));
-        } elseif ($request->get('redirect_tour') != null) {
+        } 
+        
+        if ($request->get('redirect_tour') != null) {
             $data = ['route' => route('tour.show', ['tour' => $request->get('redirect_tour')])];
-        } else {
-            $data = ['route' => route('task.index')];
-        }
+            return response()->json($data);
+        } 
 
-        return response()->json($data);
+        // ✅ Always redirect back to task list
+        return redirect(route('task.index'));
     }
 
     /**
@@ -269,6 +284,9 @@ class TaskController extends Controller
         $task->task_type = $request->get('task_type');
         $task->status = $request->get('status');
         $task->priority = $request->get('priority') ?? 0;
+        $task->epic_id = $request->get('epic_id') ?? null; // ✅ Added epic support
+        $task->story_points = $request->get('story_points') ?? null; // ✅ Added story points
+        $task->estimated_sp = $request->get('estimated_sp') ?? null; // ✅ Added estimated SP
         $task->save();
         $task->assigned_users()->sync($assigned_user);
         $this->addFile($request, $task);
@@ -278,6 +296,7 @@ class TaskController extends Controller
         } else if ($request->get('tab')) {
             $data = ['route' => url('profile?' . $request->get('tab'))];
         } else {
+            // ✅ Default redirect to task index (the list)
             $data = ['route' => url('task')];
         }
 
@@ -307,6 +326,9 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($id, $tab = null)
     {
         $task = Task::findOrFail($id);
@@ -315,15 +337,11 @@ class TaskController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Task {$task->content} deleted", 'success');
 
-        if ($tab) {
-            if (!is_numeric($tab)) {
-                return URL::to('profile?tab=history-tasks-tab');
-            } else {
-                return URL::to('tour/' . $tab);
-            }
-        }
-
-        return URL::to('task');
+        // ✅ Return JSON for AJAX/Fetch requests
+        return response()->json([
+            'success' => true,
+            'message' => 'Task deleted successfully.'
+        ]);
     }
 
     public function validateTask(Request $request)
@@ -349,6 +367,9 @@ class TaskController extends Controller
         return view('component.task_datatables_status_update', ['taskStatuses' => $taskStatuses, 'task' => $task]);
     }
 
+    /**
+     * ✅ NEW: Update individual task fields (used by inline editing)
+     */
     public function updateField(Request $request, $id)
     {
         $task = Task::findOrFail($id);

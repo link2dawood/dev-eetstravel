@@ -102,10 +102,10 @@ class TourController extends Controller
      */
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('tour.show', ['tour' => $id]),
-                     'edit'       => route('tour.edit', ['tour' => $id]),
+        $url = array('show'        => route('tour.show', ['tour' => $id]),
+                     'edit'        => route('tour.edit', ['tour' => $id]),
                      'delete_msg' => "/tour/{$id}/deleteMsg",
-                     'id'         => $id);
+                     'id'          => $id);
 
         return DatatablesHelperController::getActionButtonTours($url, $isQuotation, $perm);
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
@@ -113,18 +113,18 @@ class TourController extends Controller
     
     public function getQuotationButton($id, $isQuotation = false, $tour)
     {
-        $url = array('show'       => route('tour.show', ['tour' => $id]),
-                     'edit'       => route('tour.edit', ['tour' => $id]),
+        $url = array('show'        => route('tour.show', ['tour' => $id]),
+                     'edit'        => route('tour.edit', ['tour' => $id]),
                      'delete_msg' => "/tour/{$id}/deleteMsg",
-                     'id'         => $id);
+                     'id'          => $id);
         return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
 
     public function getButtonForTasks($id, $tour, $task)
     {
-        $url = array('show'       => route('task.show', ['task' => $id]),
-            'edit'       => route('task.edit', ['task' => $id]),
-            'delete_msg' => "/task/{$id}/deleteMsg/{$tour}");
+        $url = array('show'        => route('task.show', ['task' => $id]),
+             'edit'        => route('task.edit', ['task' => $id]),
+             'delete_msg' => "/task/{$id}/deleteMsg/{$tour}");
 
         return DatatablesHelperController::getActionButton($url, false, $task);
     }
@@ -157,7 +157,7 @@ class TourController extends Controller
 		$tours = Tour::where('status', 6)->orWhere('status',39)
 			->get();
         //} else {
-            //$tours = $this->repository->allForAssigned();
+        //    //$tours = $this->repository->allForAssigned();
         //}
 
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
@@ -179,9 +179,9 @@ class TourController extends Controller
 					$client = Client::find($tour->client_id);
 					$client_name =  $client->name;
 				}
-				   
+				  
 				
-				   return $client_name;
+				 return $client_name;
 			})
             ->addColumn('status_name', function ($tour){
                 if(Auth::user()->can('tour.edit')){
@@ -213,9 +213,9 @@ class TourController extends Controller
 	public function monthly_chart_data(Request $request)
     {
         //if (Auth::user()->hasRole('admin')) {
-         $tours = Tour::where('status', 4);
+          $tours = Tour::where('status', 4);
         //} else {
-            //$tours = $this->repository->allForAssigned();
+        //    //$tours = $this->repository->allForAssigned();
         //}
 
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
@@ -275,9 +275,9 @@ class TourController extends Controller
 		public function cancelled_chart_data(Request $request)
     {
         //if (Auth::user()->hasRole('admin')) {
-         $tours = Tour::where('status', 6);
+          $tours = Tour::where('status', 6);
         //} else {
-            //$tours = $this->repository->allForAssigned();
+        //    //$tours = $this->repository->allForAssigned();
         //}
 
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
@@ -525,7 +525,7 @@ class TourController extends Controller
                 }
             }
         }
-           
+            
         return response()->json($res);
     }
     
@@ -634,13 +634,13 @@ class TourController extends Controller
     $title = 'Tour';
 
     return view('tour.index', compact(
-        'tours', 
-        'clientTours', 
-        'monthlyChartTours', 
-        'cancelledChartTours', 
-        'archivedTours', 
+        'tours',  
+        'clientTours',  
+        'monthlyChartTours',  
+        'cancelledChartTours',  
+        'archivedTours',  
         'years',
-        'title', 
+        'title',  
         'months'
     ));
 }
@@ -746,6 +746,7 @@ private function handleLandingPageImage($request, $tour)
                 $uniqueName = time() . '_' . uniqid() . '.' . $extension;
 
                 // Store file using Laravel's default storage
+                // NOTE: This assumes you have the 'public' disk configured to use storage_path('app/public')
                 $storedPath = $file->storeAs('uploads/tours', $uniqueName, 'public');
 
                 if ($storedPath) {
@@ -753,15 +754,17 @@ private function handleLandingPageImage($request, $tour)
                     $existingAttachment = $tour->attachments()->first();
                     if ($existingAttachment) {
                         // Delete old file
-                        if (file_exists(storage_path('app/public/' . $existingAttachment->path))) {
-                            unlink(storage_path('app/public/' . $existingAttachment->path));
+                        // NOTE: Check for existence in the storage path for the 'public' disk
+                        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($existingAttachment->path)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($existingAttachment->path);
                         }
                         $existingAttachment->delete();
                     }
 
                     // Create new attachment
                     $attachment = new Attachment();
-                    $attachment->url = asset('storage/' . $storedPath);
+                    // Use Storage::url for correct public URL, prepending 'storage/' if necessary
+                    $attachment->url = asset('storage/' . $storedPath); 
                     $attachment->path = $storedPath;
                     $attachment->original_name = $originalName;
                     $attachment->mime_type = $file->getMimeType();
@@ -774,6 +777,7 @@ private function handleLandingPageImage($request, $tour)
         }
     }
 }
+
 
 /**
  * Updated store method with proper file handling
@@ -900,7 +904,7 @@ public function store(StoreTourRequest $request)
             $this->createUpdateTourDates($tour->id, $dateRange);
         }
 
-        // Handle file uploads - only if files are provided
+        // Handle file uploads - START OF REPLACEMENT
         if ($request->hasFile('attach')) {
             $this->addFile($request, $tour);
         }
@@ -908,6 +912,7 @@ public function store(StoreTourRequest $request)
         if ($request->hasFile('files')) {
             $this->handleLandingPageImage($request, $tour);
         }
+        // Handle file uploads - END OF REPLACEMENT
 
         DB::commit();
 
@@ -997,14 +1002,14 @@ public function store(StoreTourRequest $request)
                     $listRoomsHotel[] = $item;
                 }*/
                 $listIdServices[] = ['id_service' => $package->reference, 'type_service' => $package->type];
-     
+      
             }
         }
 
-               $quotation_id = $tour->quotations()->first()->id??0;
+            $quotation_id = $tour->quotations()->first()->id??0;
         
 
-       $quotation = Quotation::find($quotation_id);
+        $quotation = Quotation::find($quotation_id);
 
         $comparison = Comparison::where(['id' => $quotation_id])->first();
 
@@ -1018,7 +1023,7 @@ public function store(StoreTourRequest $request)
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
- $select_office=Offices::where('status',1)->first();
+$select_office=Offices::where('status',1)->first();
 		 $offices=Offices::all();
 
         // Fetch invoices data directly for Bootstrap table
@@ -1215,15 +1220,15 @@ public function store(StoreTourRequest $request)
         $attachmenttypes = \App\Attachmenttype::all();
         
         $serviceTypes = [
-                    'hotel',
-                    'event',
-                    'guide',
-                    'transfer',
-                    'restaurant',
-                    'tourPackage',
-                    'cruise',
-                    'flight'
-                ];
+                     'hotel',
+                     'event',
+                     'guide',
+                     'transfer',
+                     'restaurant',
+                     'tourPackage',
+                     'cruise',
+                     'flight'
+                 ];
         $tourDays = TourDay::where('tour', $tour->id)->get()->sortBy('date');
         
         $tourTransfers = $tour->transfers;
@@ -1242,13 +1247,13 @@ public function store(StoreTourRequest $request)
         $listRoomsHotel = \App\TourRoomTypeHotel::where('tour_id', $tour->id )->get();        
         
         view()->share([ 'tour' => $tour, 
-                        'serviceTypes' => $serviceTypes,
-                        'tourDays' => $tourDays,
-                        'tourTransfers' => $tourTransfers,
-                        'usersResponsible' => $usersResponsible,
-                        'listRoomsHotel' => $listRoomsHotel,
-                        'attachmenttypes' => $attachmenttypes,
-                        'exclude' => $exclude ]);
+                         'serviceTypes' => $serviceTypes,
+                         'tourDays' => $tourDays,
+                         'tourTransfers' => $tourTransfers,
+                         'usersResponsible' => $usersResponsible,
+                         'listRoomsHotel' => $listRoomsHotel,
+                         'attachmenttypes' => $attachmenttypes,
+                         'exclude' => $exclude ]);
         return view('export.landing_page');
     }
 
@@ -1389,14 +1394,14 @@ public function store(StoreTourRequest $request)
 
                 //is transfer confirmed
                 foreach ($transfers_tour as $item){
-                   ($item->status == 17) ? $count_transfer_item++ : $count_transfer_item-- ;
+                    ($item->status == 17) ? $count_transfer_item++ : $count_transfer_item-- ;
                 }
 
                 foreach ($tourDatesAll as $tourDate) {
                         $count_statuses = 0;
                        foreach ($tourDate->packages as $package) {
-                           //is confirmed hotel and confirmed service
-                         if ($package->status == 23 || $package->status == 9 )  $count_statuses++ ;
+                            //is confirmed hotel and confirmed service
+                           if ($package->status == 23 || $package->status == 9 )  $count_statuses++ ;
                        }
 
                       if(count($tourDate->packages) == $count_statuses && $count_statuses > 0) $count_result++;
@@ -1417,7 +1422,7 @@ public function store(StoreTourRequest $request)
                         foreach ($tour->users as $user) {
                             $notification = Notification::query()->create(
                                 ['content' => "Tour {$tour->name} changed status to {$status_name}",
-                                    'link' => $uri]);
+                                     'link' => $uri]);
                             $user->notifications()->attach($notification);
                         }
                     }
@@ -1430,7 +1435,7 @@ public function store(StoreTourRequest $request)
                     return response()->json($data);
                 }
 
-          }else {
+           }else {
                 $status = Status::query()->where('id', $request->fieldValue)->first();
                 $status_name = $status ? $status->name : '';
                 $url = route('tour.show', ['id' => $tour->id]);
@@ -1441,17 +1446,17 @@ public function store(StoreTourRequest $request)
                     foreach ($tour->users as $user) {
                         $notification = Notification::query()->create(
                             ['content' => "Tour {$tour->name} changed status to {$status_name}",
-                                'link' => $uri]);
+                                 'link' => $uri]);
                         $user->notifications()->attach($notification);
                     }
                 }
 
-                $tour[$request->fieldName] = $request->fieldValue;
-                $tour->save();
+                $tour_model[$request->fieldName] = $request->fieldValue;
+                $tour_model->save();
 				
-          }
+            }
 
-          return response($tour);
+            return response($tour);
         }
 
         $transfers_tour = TourPackage::query()->where('tour_id', $tour)->get();
@@ -1469,7 +1474,7 @@ public function store(StoreTourRequest $request)
         }
         $request['pax'] = $request->get('pax') == null ? 0 : $request->get('pax', 0);
         $request['pax_free'] = $request->get('pax_free') == null ? 0 : $request->get('pax_free', 0);
-   
+    
         if($request->assigned_user == 'null'){
             $requestData = $request;
             $requestData['assigned_user'] = '';
@@ -1477,9 +1482,9 @@ public function store(StoreTourRequest $request)
                 'assigned_user' => 'required'
             ]);
         }
-   
+    
         $this->validate($request, [
-            'name'            => 'required',
+            'name'          => 'required',
             'departure_date'  => 'required|before_or_equal:retirement_date',
             'retirement_date' => 'required',
             'pax'             => 'numeric',
@@ -1513,46 +1518,46 @@ public function store(StoreTourRequest $request)
 		$formattedDate = $departure_date->format('md');
 		$modifiedString = preg_replace('/#\d+$/', '', $request->name);
 		$tour_name = $modifiedString." #".$formattedDate;
-        $tour->name = $tour_name;
-        $tour->overview = $request->overview;
-        $tour->remark = $request->remark;
-        $tour->departure_date = $request->departure_date;
-        $tour->retirement_date = $request->retirement_date;
-        $tour->pax = $request->pax;
-        $tour->pax_free = $request->pax_free;
+        $tour_model->name = $tour_name;
+        $tour_model->overview = $request->overview;
+        $tour_model->remark = $request->remark;
+        $tour_model->departure_date = $request->departure_date;
+        $tour_model->retirement_date = $request->retirement_date;
+        $tour_model->pax = $request->pax;
+        $tour_model->pax_free = $request->pax_free;
     //    $tour->rooms = $request->rooms;
-        $tour->country_begin = $request->country_begin;
-        $tour->total_amount = $request->total_amount == null ? 0 : $request->total_amount;
-        $tour->price_for_one = $request->price_for_one == null ? 0 : $tour->getPriceForOnePaxInTour();
-        $tour->city_begin = $request->city_begin;
-        $tour->country_end = $request->country_end;
-        $tour->city_end = $request->city_end;
-        $tour->invoice = $request->invoice;
-        $tour->ga = $request->ga;
-        $tour->responsible = $responsible_user;
-        $tour->author = Auth::user()->id;
-        $tour->phone = $request->phone == null ? '' : $request->phone;
-        $tour->itinerary_tl = $request->itinerary_tl;
+        $tour_model->country_begin = $request->country_begin;
+        $tour_model->total_amount = $request->total_amount == null ? 0 : $request->total_amount;
+        $tour_model->price_for_one = $request->price_for_one == null ? 0 : $tour_model->getPriceForOnePaxInTour();
+        $tour_model->city_begin = $request->city_begin;
+        $tour_model->country_end = $request->country_end;
+        $tour_model->city_end = $request->city_end;
+        $tour_model->invoice = $request->invoice;
+        $tour_model->ga = $request->ga;
+        $tour_model->responsible = $responsible_user;
+        $tour_model->author = Auth::user()->id;
+        $tour_model->phone = $request->phone == null ? '' : $request->phone;
+        $tour_model->itinerary_tl = $request->itinerary_tl;
 
         if ($request->assigned_user) {
             $a_users = explode(',', $request->assigned_user);
-			$tour->tasks()->each(function ($task) use ($a_users) {
+			$tour_model->tasks()->each(function ($task) use ($a_users) {
 				// Sync only the new assigned users for each task
 				$task->assigned_users()->sync($a_users);
 			});
-            $tour->users()->sync($a_users);
+            $tour_model->users()->sync($a_users);
         }
 
-        if($request->status != $tour->status){
-            $url = route('tour.show', ['id' => $tour->id]);
+        if($request->status != $tour_model->status){
+            $url = route('tour.show', ['id' => $tour]);
             $parsingURL = parse_url($url);
             $uri = $parsingURL['path'];
             $status = Status::query()->where('id', $request->status)->first();
 
-            if ($tour->users) {
-                foreach ($tour->users as $user) {
+            if ($tour_model->users) {
+                foreach ($tour_model->users as $user) {
                     $notification = Notification::query()->create(
-                        ['content' => "Tour {$tour->name} changed status to {$status->name}",
+                        ['content' => "Tour {$tour_model->name} changed status to {$status->name}",
                         'link' => $uri]);
                     $user->notifications()->attach($notification);
                 }
@@ -1560,10 +1565,10 @@ public function store(StoreTourRequest $request)
         }
 
         if ($request->status == 39) { //Tour Confirmed
-            $tourDatesAll = TourDay::where('tour', $id)->whereNull('deleted_at')->orderBy('date')->get();
+            $tourDatesAll = TourDay::where('tour', $tour)->whereNull('deleted_at')->orderBy('date')->get();
             $count_result = 0;
             $count_transfer_item  = 0;
-            $transfers_tour = TourPackage::query()->where('tour_id', $id)->get();
+            $transfers_tour = TourPackage::query()->where('tour_id', $tour)->get();
 
             //is transfer confirmed
             foreach ($transfers_tour as $item){
@@ -1581,7 +1586,7 @@ public function store(StoreTourRequest $request)
 
             }
 
-            if (count($tourDatesAll) == $count_result &&  count($transfers_tour) == $count_transfer_item) { $tour->status = $request->status; } else{
+            if (count($tourDatesAll) == $count_result &&  count($transfers_tour) == $count_transfer_item) { $tour_model->status = $request->status; } else{
 
                 $data = [
                     'range_data' => true,
@@ -1592,19 +1597,19 @@ public function store(StoreTourRequest $request)
             }
 
         } else {
-            $tour->status = $request->status;
+            $tour_model->status = $request->status;
         }
 
 
 
-        $tour->save();
-        $tour->external_name = $this->generateExternalName($request->country_begin, $tour->id);
-        $tour->save();
+        $tour_model->save();
+        $tour_model->external_name = $this->generateExternalName($request->country_begin, $tour_model->id);
+        $tour_model->save();
         DB::commit();
 
         if ($request->get('room_types_qty')) {
 
-            TourRoomTypeHotel::query()->where('tour_id', $tour->id)->delete();
+            TourRoomTypeHotel::query()->where('tour_id', $tour_model->id)->delete();
 
             $room_types_count = collect($request->get('room_types_qty'));
 
@@ -1612,7 +1617,7 @@ public function store(StoreTourRequest $request)
                 if($item) {
                     $create_tour_type = new TourRoomTypeHotel();
                     $create_tour_type->room_type_id = $key;
-                    $create_tour_type->tour_id = $tour->id;
+                    $create_tour_type->tour_id = $tour_model->id;
                     $create_tour_type->count = $item;
                     $create_tour_type->save();
                 }
@@ -1631,11 +1636,11 @@ public function store(StoreTourRequest $request)
 
             return response()->json($data);
         }
-        $this->createUpdateTourDates($tour->id, $dateRange);
+        $this->createUpdateTourDates($tour_model->id, $dateRange);
 
-        $this->addFile($request, $tour);
+        $this->addFile($request, $tour_model);
 		
-		Childrens::where('tour_id',$tour->id)->delete();
+		Childrens::where('tour_id',$tour_model->id)->delete();
 					// Retrieve child count, ages, and prices from the request
 					
 						$childCount = $request->input('child_count');
@@ -1649,25 +1654,25 @@ public function store(StoreTourRequest $request)
 							$passenger = new Childrens();
 							$passenger->age = $ages[$i]??0;
 							$passenger->price = $prices[$i]??0;
-							$passenger->tour_id = $tour->id; // Associate passenger with the tour
+							$passenger->tour_id = $tour_model->id; // Associate passenger with the tour
 							$passenger->save();
 
 						}
 					
 
-        LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} edited", 'success');
+        LaravelFlashSessionHelper::setFlashMessage("Tour {$tour_model->name} edited", 'success');
 
         if($request->get('calendar_edit') == 1){
             $data = ['route' => url('home')];
         }else if($request->get('tab')){
             $data = ['route' => url('profile?'.$request->get('tab'))];
         }else{
-            $data = ['route' => route('tour.show', [ 'id' => $id ])];
+            $data = ['route' => route('tour.show', [ 'id' => $tour ])];
         }
 		
 
 //        return response()->json(json_encode($data));
-		return redirect()->route('tour.show', [ 'id' => $id ]);
+		return redirect()->route('tour.show', [ 'id' => $tour ]);
         return response()->json($data);
 		
     }
@@ -1675,7 +1680,7 @@ public function store(StoreTourRequest $request)
     /**
      * Delete confirmation message by Ajaxis.
      *
-     * @link      https://github.com/amranidev/ajaxis
+     * @link     https://github.com/amranidev/ajaxis
      * @param    \Illuminate\Http\Request $request
      * @return  String
      */
@@ -1775,9 +1780,9 @@ public function store(StoreTourRequest $request)
     }
     /**
      * crud for tour dates
-     * @param  int $id        tour id
+     * @param  int $id         tour id
      * @param  DatePeriod $dateRange 
-     * @return void            
+     * @return void          
      */
     public function createUpdateTourDatesss($id, $dateRange)
     {
@@ -1806,8 +1811,8 @@ public function store(StoreTourRequest $request)
     $dateRange = collect(iterator_to_array($dateRange));
 
 		
-      // Get existing tour days
-    $existingTourDays = TourDay::where('tour', $tourId)->pluck('date')->toArray();
+    	// Get existing tour days
+    $existingTourDays = TourDay::where('tour', $tourId)->orderBy('date')->get();
 
     // Convert the provided date range to an array of date strings
     $newDateStrings = $dateRange->map(function($date) {
@@ -1816,20 +1821,17 @@ public function store(StoreTourRequest $request)
 
     // Check if the new date range is greater, smaller, or equal to the existing one
     $newDatesCount = $newDateStrings->count();
-    $existingDatesCount = count($existingTourDays);
+    $existingDatesCount = $existingTourDays->count();
 
-     // Check if the new date range is greater than the existing one
-    if (count($newDateStrings) > count($existingTourDays)) {
-        // Update existing tour days if the new range is greater
+    	// Check if the new date range is greater than the existing one
+    if ($newDatesCount > $existingDatesCount) {
+        // Update existing tour days
         foreach ($existingTourDays as $key => $tourDay) {
-            if ($key < $newDateStrings->count()  && is_object($tourDay)) {
-				
-                $tourDay->date = $newDateStrings[$key];
-                $tourDay->save();
-            }
+            $tourDay->date = $newDateStrings[$key];
+            $tourDay->save();
         }
         // Create new tour days for additional dates
-        for ($i = count($existingTourDays); $i < count($newDateStrings); $i++) {
+        for ($i = $existingDatesCount; $i < $newDatesCount; $i++) {
             $tourDay = new TourDay();
             $tourDay->date = $newDateStrings[$i];
             $tourDay->tour = $tourId;
@@ -1837,25 +1839,22 @@ public function store(StoreTourRequest $request)
         }
     }elseif ($newDatesCount < $existingDatesCount) {
         // If the new range is smaller, update existing tour days and delete remaining ones
-       // Update existing tour days up to the length of the new date range
-        foreach ($existingTourDays as $key => $tourDay) {
-            if ($key < $newDateStrings->count() && is_object($tourDay)) {
-                $tourDay->date = $newDateStrings[$key]??"";
-                $tourDay->save();
-            }
+        // Update existing tour days up to the length of the new date range
+        foreach ($existingTourDays->take($newDatesCount) as $key => $tourDay) {
+            $tourDay->date = $newDateStrings[$key];
+            $tourDay->save();
         }
         // Delete remaining tour days
-        TourDay::where('tour', $tourId)
-            ->whereNotIn('date', $newDateStrings)
-            ->delete();
+        $existingTourDays->skip($newDatesCount)->each(function ($tourDayToDelete) {
+            $tourDayToDelete->delete();
+        });
     
     } else {
         // If the ranges are equal, update existing tour days
-        foreach ($existingTourDays as $existingDate) {
-            if (!$newDateStrings->contains($existingDate)) {
-                TourDay::where('tour', $tourId)
-                    ->where('date', $existingDate)
-                    ->update(['date' => $newDateStrings[array_search($existingDate, $existingTourDays)]]);
+        foreach ($existingTourDays as $key => $tourDay) {
+            if ($tourDay->date != $newDateStrings[$key]) {
+                 $tourDay->date = $newDateStrings[$key];
+                 $tourDay->save();
             }
         }
     }
@@ -1915,7 +1914,7 @@ public function store(StoreTourRequest $request)
     /**
      * clone tour days with services
      * @param  $oldDates old tour days
-     * @param  int    $tourId   new tour id
+     * @param  int    $tourId    new tour id
      * @return void
      */
     public function cloneTourDays($oldDates, int $tourId)
@@ -2024,7 +2023,7 @@ public function store(StoreTourRequest $request)
             ->where('id', $tour_id)
             ->update([
                 'total_amount' => $total_amount,
-                'price_for_one' => $price_for_one,
+                'price_for_one' => $price_for_one
             ]);
 
         return response()->json([
@@ -2052,7 +2051,7 @@ public function store(StoreTourRequest $request)
             }
         }
         $this->validate( $request, [
-            'name'            => 'required',
+            'name'          => 'required',
             'departure_date'  => 'required|before_or_equal:retirement_date',
             'retirement_date' => 'required|before_or_equal:' . $endDate,
             'pax'             => 'required|numeric',
@@ -2103,10 +2102,10 @@ public function store(StoreTourRequest $request)
 public function quotation_data(Request $request)
     {
         //if (Auth::user()->hasRole('admin')) {
-         $tours = Tour::where("is_quotation",1)->get();
-       
+          $tours = Tour::where("is_quotation",1)->get();
+        
         //} else {
-            //$tours = $this->repository->allForAssigned();
+        //    //$tours = $this->repository->allForAssigned();
         //}
 
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Tour'];
@@ -2204,6 +2203,7 @@ public function quotation_data(Request $request)
                 "vch" => 1,
             ]);
         } else {
+
             $tour_package->update([
                 "vch" => 0,
             ]);
@@ -2271,9 +2271,9 @@ public function quotation_data(Request $request)
 }
    public function updateStatus(Request $request){
    
-    $office=Offices::where('status',1)->first();
+   $office=Offices::where('status',1)->first();
 	   if($office){
-		    $office->status=0;
+		   $office->status=0;
 	   $office->save();
 	   }
 		   $office=Offices::where('id',$request->id)->first();

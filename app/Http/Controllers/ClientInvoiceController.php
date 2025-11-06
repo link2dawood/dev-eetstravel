@@ -50,36 +50,43 @@ class ClientInvoiceController extends Controller
 
     public function index()
     {
-        // Get all transactions data (same as the AJAX data method)
-        $transactions = ClientInvoices::all();
-        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'];
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'];
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'];
+        try {
+            // Get all transactions data (same as the AJAX data method)
+            $transactions = ClientInvoices::all();
+            $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'] ?? 'accounting.destroy';
+            $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'] ?? 'accounting.edit';
+            $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'] ?? 'accounting.show';
 
-        $perm = [];
-        $perm['show'] = Auth::user()->can($permission_show);
-        $perm['edit'] = Auth::user()->can($permission_edit);
-        $perm['destroy'] = Auth::user()->can($permission_destroy);
-        $perm['clone'] = Auth::user()->can('accounting.create');
+            $perm = [];
+            $perm['show'] = Auth::user() ? Auth::user()->can($permission_show) : false;
+            $perm['edit'] = Auth::user() ? Auth::user()->can($permission_edit) : false;
+            $perm['destroy'] = Auth::user() ? Auth::user()->can($permission_destroy) : false;
+            $perm['clone'] = Auth::user() ? Auth::user()->can('accounting.create') : false;
 
-        // Add computed columns to each transaction
-        $accountingData = $transactions->map(function ($transaction) use ($perm) {
-            $office = Offices::find($transaction->office_id);
-            $transaction->officeName = $office->office_name ?? "";
+            // Add computed columns to each transaction
+            $accountingData = $transactions->map(function ($transaction) use ($perm) {
+                $office = Offices::find($transaction->office_id);
+                $transaction->officeName = $office ? $office->office_name : "";
 
-            $tour = Tour::find($transaction->tour_id);
-            $transaction->tourName = $tour->name ?? "";
+                $tour = Tour::find($transaction->tour_id);
+                $transaction->tourName = $tour ? $tour->name : "";
 
-            $client = Client::find($transaction->client_id);
-            $transaction->clientName = $client->name ?? "";
+                $client = Client::find($transaction->client_id);
+                $transaction->clientName = $client ? $client->name : "";
 
-            $transaction->Status = $transaction->status($transaction);
-            $transaction->action_buttons = $this->getButton($transaction->id, false, $transaction, $perm);
+                // Check if status method exists before calling it
+                $transaction->Status = method_exists($transaction, 'status') ? $transaction->status($transaction) : 'N/A';
+                $transaction->action_buttons = $this->getButton($transaction->id, false, $transaction, $perm);
 
-            return $transaction;
-        });
+                return $transaction;
+            });
 
-        return view('accounting.index', compact('accountingData'));
+            return view('accounting.index', compact('accountingData'));
+        } catch (\Exception $e) {
+            \Log::error('Error in ClientInvoiceController@index: ' . $e->getMessage());
+            $accountingData = collect([]);
+            return view('accounting.index', compact('accountingData'));
+        }
     }
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {

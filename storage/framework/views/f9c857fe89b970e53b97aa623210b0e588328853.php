@@ -1,7 +1,7 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Create Guest List')
 
-@section('post_styles')
+<?php $__env->startSection('title', 'Create Guest List'); ?>
+
+<?php $__env->startSection('post_styles'); ?>
 <style>
     :root {
         --primary: #667eea;
@@ -202,7 +202,7 @@
         animation: spin 0.6s linear infinite;
     }
 
-    @keyframes spin {
+    @keyframes  spin {
         to { transform: rotate(360deg); }
     }
 
@@ -250,11 +250,11 @@
         }
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-xl">
-    @include('layouts.title', [
+    <?php echo $__env->make('layouts.title', [
         'title' => 'Guest List',
         'sub_title' => 'Create New Guest List',
         'breadcrumbs' => [
@@ -262,30 +262,30 @@
             ['title' => 'Guest Lists', 'icon' => 'users', 'route' => route('guestlist.index')],
             ['title' => 'Create', 'icon' => 'plus', 'route' => null]
         ]
-    ])
+    ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
     <section class="content">
         <div class="box">
             <div class="box-body">
-                <form id="guestlist_form" method="POST" action="{{ route('guestlist.store') }}">
-                    @csrf
+                <form id="guestlist_form" method="POST" action="<?php echo e(route('guestlist.store')); ?>">
+                    <?php echo csrf_field(); ?>
 
-                    {{-- Error Messages --}}
-                    @if ($errors->any())
+                    
+                    <?php if($errors->any()): ?>
                         <div class="alert alert-danger">
                             <i class="ti ti-alert-circle"></i>
                             <div>
                                 <strong>Please fix the following errors:</strong>
                                 <ul>
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <li><?php echo e($error); ?></li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
-                    {{-- Basic Information --}}
+                    
                     <div class="section-header">
                         <i class="ti ti-info-circle"></i>
                         <h3>Basic Information</h3>
@@ -303,7 +303,7 @@
                                 name="name" 
                                 class="form-control" 
                                 placeholder="Enter guest list name"
-                                value="{{ old('name') }}"
+                                value="<?php echo e(old('name')); ?>"
                                 required
                             >
                             <p class="help-text">A descriptive name for this guest list</p>
@@ -314,14 +314,14 @@
                             <input 
                                 type="text" 
                                 class="form-control" 
-                                value="{{ $tour->name }}" 
+                                value="<?php echo e($tour->name); ?>" 
                                 disabled
                             >
-                            <input type="hidden" name="tourId" value="{{ $tour->id }}">
+                            <input type="hidden" name="tourId" value="<?php echo e($tour->id); ?>">
                         </div>
                     </div>
 
-                    {{-- Template Selection --}}
+                    
                     <div class="section-header">
                         <i class="ti ti-template"></i>
                         <h3>Template</h3>
@@ -335,7 +335,7 @@
                         <p class="help-text">Select a pre-designed template to format your guest list</p>
                     </div>
 
-                    {{-- Hotels Selection --}}
+                    
                     <div class="section-header">
                         <i class="ti ti-building"></i>
                         <h3>Hotels</h3>
@@ -351,14 +351,14 @@
 
                     <div class="form-group">
                         <select id="hotelselect" name="hotelIds[]" class="form-control" multiple required>
-                            @foreach($hotels as $hotel)
-                                <option value="{{ $hotel->id }}">{{ $hotel->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $hotels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hotel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($hotel->id); ?>"><?php echo e($hotel->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                         <p class="help-text">Select one or more hotels (Required)</p>
                     </div>
 
-                    {{-- Content --}}
+                    
                     <div class="section-header">
                         <i class="ti ti-document"></i>
                         <h3>Guest List Content</h3>
@@ -371,13 +371,13 @@
                                 id="roomlist_textarea" 
                                 name="roomlist_textarea" 
                                 class="form-control"
-                            >{{ old('roomlist_textarea') }}</textarea>
+                            ><?php echo e(old('roomlist_textarea')); ?></textarea>
                         </div>
                     </div>
 
-                    {{-- Action Buttons --}}
+                    
                     <div class="btn-actions">
-                        <a href="{{ route('guestlist.index') }}" class="btn btn-warning">
+                        <a href="<?php echo e(route('guestlist.index')); ?>" class="btn btn-warning">
                             <i class="ti ti-x"></i>
                             Cancel
                         </a>
@@ -391,7 +391,7 @@
         </div>
     </section>
 
-    {{-- Error Modal --}}
+    
     <div class="modal fade" id="error_send" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -416,13 +416,13 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('post_scripts')
-<script type="text/javascript" src="{{ asset('js/ckeditor/ckeditor.js') }}"></script>
+<?php $__env->startSection('post_scripts'); ?>
+<script type="text/javascript" src="<?php echo e(asset('js/ckeditor/ckeditor.js')); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tour_id = '{{ $tour->id }}';
+    const tour_id = '<?php echo e($tour->id); ?>';
     
     // Load templates
     $.ajax({
@@ -491,4 +491,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/guest_list/create.blade.php ENDPATH**/ ?>

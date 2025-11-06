@@ -37,6 +37,7 @@ use URL;
 use App\Offices;
 use PDF;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Schema;
 
 class ClientInvoiceController extends Controller
 {
@@ -48,46 +49,7 @@ class ClientInvoiceController extends Controller
      */
 
 
-    public function index()
-    {
-        try {
-            // Get all transactions data (same as the AJAX data method)
-            $transactions = ClientInvoices::all();
-            $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'] ?? 'accounting.destroy';
-            $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'] ?? 'accounting.edit';
-            $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'] ?? 'accounting.show';
-
-            $perm = [];
-            $perm['show'] = Auth::user() ? Auth::user()->can($permission_show) : false;
-            $perm['edit'] = Auth::user() ? Auth::user()->can($permission_edit) : false;
-            $perm['destroy'] = Auth::user() ? Auth::user()->can($permission_destroy) : false;
-            $perm['clone'] = Auth::user() ? Auth::user()->can('accounting.create') : false;
-
-            // Add computed columns to each transaction
-            $accountingData = $transactions->map(function ($transaction) use ($perm) {
-                $office = Offices::find($transaction->office_id);
-                $transaction->officeName = $office ? $office->office_name : "";
-
-                $tour = Tour::find($transaction->tour_id);
-                $transaction->tourName = $tour ? $tour->name : "";
-
-                $client = Client::find($transaction->client_id);
-                $transaction->clientName = $client ? $client->name : "";
-
-                // Check if status method exists before calling it
-                $transaction->Status = method_exists($transaction, 'status') ? $transaction->status($transaction) : 'N/A';
-                $transaction->action_buttons = $this->getButton($transaction->id, false, $transaction, $perm);
-
-                return $transaction;
-            });
-
-            return view('accounting.index', compact('accountingData'));
-        } catch (\Exception $e) {
-            \Log::error('Error in ClientInvoiceController@index: ' . $e->getMessage());
-            $accountingData = collect([]);
-            return view('accounting.index', compact('accountingData'));
-        }
-    }
+    
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
         $url = array(
@@ -118,7 +80,7 @@ class ClientInvoiceController extends Controller
     {
         $transactions = ClientInvoices::find($tourId);
         $tour = Tour::find($transactions->tour_id);
-        $offices = Offices::all();
+    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
         $tourName = $tour->name;
         $clients = Client::all();
         $hotels = Hotel::all();
@@ -135,7 +97,7 @@ class ClientInvoiceController extends Controller
         $tour = Tour::all()->first();
         $quotation = Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first();
 
-        $offices = Offices::all();
+    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $hotels = Hotel::all();
@@ -161,7 +123,7 @@ class ClientInvoiceController extends Controller
 		//dd($transactions->client);
         $tour = Tour::find($transactions->tour_id);
 
-        $office = Offices::find($transactions->office_id);
+    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
 
         $transactions_cust = ClientInvoices::where("tour_id", $transactions->tour_id)->get();
         $total_amount = 0;
@@ -271,16 +233,31 @@ class ClientInvoiceController extends Controller
     }
     public function validateTransaction(Request $request)
     {
-        $this->validate($request, [
-            'office_id'  => 'required',
-			'currency'  => 'required',
-            'tour_id'     => 'required',
-        ]);
+        // Build rules dynamically: require office only when the table exists and has rows.
+        $rules = [
+            'currency' => 'required',
+            'tour_id' => 'required',
+        ];
+
+        try {
+            if (Schema::hasTable('offices') && Offices::count() > 0) {
+                $rules['office_id'] = 'required';
+            } else {
+                // No offices available (or table missing) — accept office_id as nullable so form can be submitted.
+                $rules['office_id'] = 'nullable';
+            }
+        } catch (\Exception $e) {
+            // In case of any DB/schema issues, fallback to nullable to avoid blocking the form.
+            \Log::warning('validateTransaction: could not check offices table: ' . $e->getMessage());
+            $rules['office_id'] = 'nullable';
+        }
+
+        $this->validate($request, $rules);
     }
     public function edit($id, Request $request)
     {
         $transactions = ClientInvoices::find($id);
-        $offices = Offices::all();
+    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $quotation = Quotation::find($transactions->quotation_id);
@@ -495,7 +472,7 @@ class ClientInvoiceController extends Controller
 			$calculations =[];
 		}
         
-        $office = Offices::find($transactions->office_id);
+    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
         $client = Client::find($transactions->client_id);
         $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
         $tourdays = $tour->tour_days;
@@ -562,7 +539,7 @@ class ClientInvoiceController extends Controller
 			$quotation = [];
 			$calculations =[];
 		}
-        $office = Offices::find($transactions->office_id);
+    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
         $client = Client::find($transactions->client_id);
         $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
         $tourdays = $tour->tour_days;
@@ -614,7 +591,7 @@ class ClientInvoiceController extends Controller
 	public function add_payment(Request $request,$id)
     {
         $transactions = ClientInvoices::find($id);
-        $offices = Offices::all();
+    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $quotation = Quotation::find($transactions->quotation_id);

@@ -1,27 +1,67 @@
+{{-- 
+    Quotation Create Page - Tabler Design
+    Modern UI with Tabler components
+    Features: Page header, card layout, responsive table, form inputs
+--}}
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Quotation')
+@section('title', 'Create Quotation')
 @section('content')
 
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box box-body" id="quotation_body" style="border-top: none">
-                <div style="margin-bottom: 10px;">
-                    <a href="javascript:history.back()">
-                        <button class='btn btn-primary'>{{trans('main.Back')}}</button>
+<div class="container-xl">
+    {{-- Page Header --}}
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                {{-- Page pre-title --}}
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('tour.show', ['tour' => $tour->id]) }}">{{ $tour->name }}</a></li>
+                            <li class="breadcrumb-item active">Create Quotation</li>
+                        </ol>
+                    </nav>
+                </div>
+                <h2 class="page-title">
+                    <i class="ti ti-calculator me-2"></i>Create Quotation
+                </h2>
+            </div>
+            {{-- Page title actions --}}
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="javascript:history.back()" class="btn btn-ghost-secondary">
+                        <i class="ti ti-arrow-left me-1"></i>{{trans('main.Back')}}
                     </a>
-                    <button type="button" class="btn btn-success saved">{{trans('main.Save')}}</button>
+                    <button type="button" class="btn btn-success saved">
+                        <i class="ti ti-device-floppy me-1"></i>{{trans('main.Save')}}
+                    </button>
                 </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <input class="form-control" type="text" placeholder="Name" id="quotation_name">
-                    </div>
-                    <div class="col-md-2 text-red hide validate-name">
-                        <span style="line-height: 30px;">{{trans('main.Nameisrequiredfield')}}</span>
-                    </div>
-                    <div class="col-md-1 pull-right">
-                        <a href="#" class="namesToggle hideTitle">{{trans('main.Showtitles')}}</a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content Card --}}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Quotation Details</h3>
+            <div class="card-actions">
+                <a href="#" class="namesToggle hideTitle btn btn-sm btn-outline-secondary">
+                    <i class="ti ti-eye me-1"></i>{{trans('main.Showtitles')}}
+                </a>
+            </div>
+        </div>
+        <div class="card-body" id="quotation_body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Quotation Name <span class="text-danger">*</span></label>
+                    <input class="form-control" type="text" placeholder="Enter quotation name" id="quotation_name">
+                </div>
+                <div class="col-md-8">
+                    <div class="hide validate-name">
+                        <span class="text-danger"><i class="ti ti-alert-circle me-1"></i>{{trans('main.Nameisrequiredfield')}}</span>
                     </div>
                 </div>
+            </div>
 
                 <script>
                     let tourId = {{$tour->id}};
@@ -33,65 +73,66 @@
                     });
                 </script>
                 {{csrf_field()}}
-                <br>
+                
                 <div class="row">
                     <div class="col-md-12">
-                        <div id="quotation_table" style="overflow-x: scroll;">
-                            <table class="table table-bordered">
+                        <div class="table-responsive" id="quotation_table">
+                            <table class="table card-table table-vcenter table-nowrap">
                                 <thead>
-                                    <th>{{trans('main.Date')}}</th>
-                                    <th>{{trans('main.City')}}</th>
-                                    <th>{{trans('main.Hotel')}}</th>
+                                    <tr>
+                                        <th>{{trans('main.Date')}}</th>
+                                        <th>{{trans('main.City')}}</th>
+                                        <th>{{trans('main.Hotel')}}</th>
 									<th
-                                                        data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                                        data-original-title="Single Suppl."
+                                                        data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                        data-bs-title="Single Suppl."
                                                 >
                                                     SS
                                                 </th>
-									<th data-column="Hotel P.P" data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                                        data-original-title="Hotel P.P"
+									<th data-column="Hotel P.P" data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                        data-bs-title="Hotel P.P"
                                                 >
                                                     HPP
                                                 </th>
                                     <th data-column="lunchName"
-                                        data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                        data-original-title="Lunch Name"
+                                        data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        data-bs-title="Lunch Name"
                                     >
                                         L.Name</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Lunch"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Lunch"
                                     >Lun</th>
                                     <th data-column="dinnerName"
-                                        data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                        data-original-title="Dinner Name"
+                                        data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                        data-bs-title="Dinner Name"
                                     >D.Name</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Dinner"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Dinner"
                                     >Din</th>
                                     <th>Entr</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Comments"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Comments"
                                     >Com</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Local G\D"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Local G\D"
                                     >LGD</th>
                                     <th>BUS</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Group Cost"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Group Cost"
                                     >GC</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Driver">Dri</th>
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Driver">Dri</th>
                                     <th
-                                            data-container="body" data-toggle="tooltip" data-placement="bottom"
-                                            data-original-title="Porterage"
+                                            data-container="body" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                            data-bs-title="Porterage"
                                     >Por</th>
-
+                                    </tr>
                                 </thead>
 								@if(empty($quotation))
                                 <tbody id="quotation_table">
@@ -383,12 +424,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="box-footer">
-                    <button type="button" class="btn btn-success saved" >{{trans('main.Save')}}</button>
-                </div>
-            </div>
         </div>
-    </section>
+        <div class="card-footer text-end">
+            <button type="button" class="btn btn-success saved">
+                <i class="ti ti-device-floppy me-1"></i>{{trans('main.Save')}}
+            </button>
+        </div>
+    </div>
+</div>
 
 @stop
 

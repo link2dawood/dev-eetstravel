@@ -1,288 +1,270 @@
+{{-- 
+    Accounting Create Page - Tabler Design
+    Create new client invoices with modern Tabler styling
+--}}
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Create')
+@section('title', 'Create Invoice')
+
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Client Invoices',
-        'sub_title' => 'Create Billing',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
-    <section class="content">
-        <form method='POST' action='{!! url('accounting') !!}' enctype="multipart/form-data">
-
-            <div class="margin_button">
-                <a href="javascript:history.back()">
-                    <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-                </a>
-                <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
+<div class="container-xl">
+    {{-- Page Header --}}
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('accounting.index') }}">Invoices</a></li>
+                            <li class="breadcrumb-item active">Create Invoice</li>
+                        </ol>
+                    </nav>
+                </div>
+                <h2 class="page-title">
+                    <i class="ti ti-file-invoice me-2"></i>Create Client Invoice
+                </h2>
             </div>
-
-            <div class="box">
-                <div class="box box-body border_top_none">
-
-
-                    {{ csrf_field() }}
-                    @if (count($errors) > 0)
-                        <br>
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Invoice Detail</h1>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <input type='hidden' name='_token' value='{{ Session::token() }}'>
-
-                            <div class="form-group">
-                                <label for="currency">Currency</label>
-                                <select name="currency" id="currency" class="form-control" required>
-                                    <option value="" disabled="disabled" selected="selected">Choose option</option>
-                                    <option value="EUR">Euro
-                                    </option>
-                                    <option value="USD">Dollar</option>
-                                    <option value="CHF">Swiss Franks</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="office_id">{{ trans('Office') }}</label>
-                                <select name="office_id" id="office_id" class="form-control">
-
-                                    @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}">{{ $office->office_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-
-                            {{--
-                          <div  class="form-group">
-                                    <label for="name">{!! trans('Service') !!} *</label>
-                                    <select id="serviceDropdown"class="form-control" >
-                                        <option name = "service"selected>{!! trans('Hotels') !!}</option>
-                                        @foreach ($options as $option)
-                                            <option>
-                                                @if ($option === 'Transfer')
-                                                    Bus Company
-                                                @else
-                                                    {{ $option }}
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                           --}}
-
-
-
-
-
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="tour_id">{{ trans('main.Tour') }}</label>
-                                <select name="tour_id" id="tour_id" class="form-control">
-
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}">{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-							<div class="form-group">
-                                <label for="name">{!! trans('Extra Cost') !!} </label>
-                                {!! Form::text('extra_cost', '', ['class' => 'form-control', '']) !!}
-                            </div>
-                            @if (empty($quotation))
-                                <input id="quotation_id" type="hidden" name="quotation_id" value="">
-                            @else
-                                <input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
-                            @endif
-
-
-                            <div class="form-group" id="services" style="display:none">
-                                <label for="service">{{ trans('Service') }}</label>
-                                <select id="service" name="service" id="service" class="form-control">
-
-                                </select>
-                            </div>
-                            <div class="form-group" id="service_div">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="client_id">{{ trans('Client') }}</label>
-                                <select name="client_id" id="client_id" class="form-control">
-
-                                    @foreach ($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-							<div class="form-group" id="services">
-                                <label for="service">{{ trans('Note') }}</label>
-                                <textarea id="note" name="note" id="note" class="form-control" >
-
-                                </textarea>
-                            </div>
-                        </div>
-						
-							
-                    </div>
-
-
+            {{-- Page Actions --}}
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="javascript:history.back()" class="btn btn-ghost-secondary">
+                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
+                    </a>
+                    <button type="submit" form="invoice-form" class="btn btn-success">
+                        <i class="ti ti-device-floppy me-1"></i>{!! trans('main.Save') !!}
+                    </button>
                 </div>
             </div>
-            <div class="box box-secondry">
-                <div class="box box-body ">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Extra Items</h1>
-                            </div>
-                            <div>Extra Items In this Invoice?</div>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url('accounting') }}" enctype="multipart/form-data" id="invoice-form">
+        @csrf
+        <input type="hidden" name="_token" value="{{ Session::token() }}">
+        
+        @if (empty($quotation))
+            <input id="quotation_id" type="hidden" name="quotation_id" value="">
+        @else
+            <input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
+        @endif
+
+        @if (count($errors) > 0)
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <div class="d-flex">
+                    <div><i class="ti ti-alert-circle me-2"></i></div>
+                    <div>
+                        <h4 class="alert-title">Validation Errors</h4>
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        {{-- Invoice Detail Section --}}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="ti ti-file-text me-2"></i>Invoice Detail
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {{-- Currency --}}
+                    <div class="col-md-3">
+                        <label class="form-label required">Currency</label>
+                        <select name="currency" id="currency" class="form-select" required>
+                            <option value="" disabled selected>Choose currency...</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="USD">Dollar (USD)</option>
+                            <option value="CHF">Swiss Franks (CHF)</option>
+                        </select>
+                    </div>
+
+                    {{-- Office --}}
+                    <div class="col-md-3">
+                        <label class="form-label required">Office</label>
+                        <select name="office_id" id="office_id" class="form-select" required>
+                            <option value="" disabled selected>Choose office...</option>
+                            @foreach ($offices as $office)
+                                <option value="{{ $office->id }}">{{ $office->office_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Tour --}}
+                    <div class="col-md-3">
+                        <label class="form-label required">{{ trans('main.Tour') }}</label>
+                        <select name="tour_id" id="tour_id" class="form-select" required>
+                            <option value="" disabled selected>Choose tour...</option>
+                            @foreach ($tours as $tour)
+                                <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Client --}}
+                    <div class="col-md-3">
+                        <label class="form-label required">Client</label>
+                        <select name="client_id" id="client_id" class="form-select" required>
+                            <option value="" disabled selected>Choose client...</option>
+                            @foreach ($clients as $client)
+                                <option value="{{ $client->id }}">{{ $client->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Extra Cost --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Extra Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="ti ti-currency-dollar"></i>
+                            </span>
+                            <input type="number" name="extra_cost" class="form-control" placeholder="0.00" step="0.01">
                         </div>
-                        <div class="margin_button">
-                            <button class='btn btn-success' id="add_contact" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Extra Items') !!}
-                            </button>
-                        </div>
+                    </div>
 
-                        <div id="items-contacts" class="row col-md-10">
-                            <div class="item-contact row " style="margin-bottom: 0px">
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="item_name">Item Name</label>
-                                        <input id="item_name" name="items[1][item_name]" type="text" class="form-control"
-                                            value="" required="">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group" style="padding-left: 0">
-                                        <label for="item_desc">Quantity</label>
-                                        <input id="item_desc" name="items[1][quantity]" type="number" class="form-control"
-                                            onchange="calculateItemTotal(this)" value="" required="">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group " style="padding-right: 0">
-                                        <label for="amount">Price(excl. VAT)</label>
-                                        <input id="amount" name="items[1][amount]" type="number"
-                                            class="form-control" onchange="calculateItemTotal(this)" required="">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="vat">VAT Rate</label>
-                                        <select name="items[{{$count}}][vat]"  id="vat" class="form-control" onchange = "calculateItemTotal(this)" required>
-									<option value="" disabled="disabled" selected="selected"  >Choose option</option>
-									@foreach($taxes as $tax)
-									<option value="{{$tax->value/100}}">{{$tax->name}}</option>
-									@endforeach
-                                  
-                                </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group " style="padding-right: 0">
-                                        <label for="total_amount">Total Amount</label>
-                                        <input id="total_amount" name="items[1][total_amount]" type="number"
-                                            class="form-control item_total" value="" readonly="">
-                                    </div>
-                                </div>
-                                
+                    {{-- Note --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Note</label>
+                        <textarea id="note" name="note" class="form-control" rows="3" placeholder="Add any additional notes..."></textarea>
+                    </div>
 
-
-                            </div>
-                        </div>
-
+                    {{-- Hidden Service Fields --}}
+                    <div class="col-md-12" id="services" style="display:none">
+                        <label class="form-label">Service</label>
+                        <select id="service" name="service" class="form-select">
+                            <option value="" disabled selected>Choose service...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12" id="service_div"></div>
+                </div>
+            </div>
+        </div>
+        {{-- Extra Items Section --}}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="card-title">
+                            <i class="ti ti-list me-2"></i>Extra Items
+                        </h3>
+                        <p class="text-muted mb-0">Add extra items to this invoice</p>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-success" id="add_contact" type="button">
+                            <i class="ti ti-plus me-1"></i>Add Item
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="box box-secondry">
-                <div class="box box-body ">
-
-
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
+            <div class="card-body">
+                <div id="items-contacts" class="row g-3">
+                    <div class="item-contact col-12">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Item Name</label>
+                                <input id="item_name" name="items[1][item_name]" type="text" class="form-control" placeholder="Enter item name" required>
                             </div>
-                            <div>How is the client paying you?</div>
+                            <div class="col-md-2">
+                                <label class="form-label">Quantity</label>
+                                <input id="item_desc" name="items[1][quantity]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Price (excl. VAT)</label>
+                                <input id="amount" name="items[1][amount]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0.00" step="0.01" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">VAT Rate</label>
+                                <select name="items[{{$count}}][vat]" id="vat" class="form-select" onchange="calculateItemTotal(this)" required>
+                                    <option value="" disabled selected>Choose VAT...</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{$tax->value/100}}">{{$tax->name}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Total Amount</label>
+                                <input id="total_amount" name="items[1][total_amount]" type="number" class="form-control item_total" placeholder="0.00" readonly>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-icon btn-ghost-danger" id="delete_contact_item" title="Delete item">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </div>
                         </div>
-
-
-                        <div class="margin_button">
-                            <button class='btn btn-success' id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-
-
-                        <div id="payment-inputs" class="row col-md-10">
-
-                        </div>
-
-
                     </div>
-
-
-
-
-
-
-
                 </div>
             </div>
-            <a href="javascript:history.back()">
-                <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
+        </div>
+        {{-- Payment Section --}}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="card-title">
+                            <i class="ti ti-credit-card me-2"></i>Payment
+                        </h3>
+                        <p class="text-muted mb-0">How is the client paying you?</p>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-success" id="add_feild_button" type="button">
+                            <i class="ti ti-plus me-1"></i>Add Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="payment-inputs" class="row g-3">
+                    {{-- Payments will be dynamically added here --}}
+                </div>
+            </div>
+        </div>
+
+        {{-- Form Footer Actions --}}
+        <div class="d-flex justify-content-end gap-2 mt-3 mb-3">
+            <a href="javascript:history.back()" class="btn btn-ghost-secondary">
+                <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
             </a>
-            <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
+            <button class="btn btn-success" type="submit">
+                <i class="ti ti-device-floppy me-1"></i>{!! trans('main.Save') !!}
+            </button>
+        </div>
+    </form>
+</div>
 
-        </form>
-    </section>
-    <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
-    <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
+@endsection
 
-    <script type="text/javascript">
+@section('post_scripts')
+<script type="text/javascript" src="{{ asset('js/rooms.js') }}"></script>
+<script type="text/javascript" src="{{ asset('js/hide_elements.js') }}"></script>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        let contactItemCount = 1;
+
+        // File upload preview
         function readURL(input) {
-
             if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
+                const reader = new FileReader();
                 reader.onload = function(e) {
                     $('#pic').attr('src', e.target.result);
                     $('#file-caption-name').html(input.files[0].name);
                 }
-
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        $("#imgInp").change(function() {
+        $("#imgInp").on('change', function() {
             readURL(this);
         });
 
-
-
-
-
-        let contactItemCount = 1;
-
-
+        // Add extra invoice item
         function item_invoice_ajax() {
             $.ajax({
                 url: '/api/getItemInvoiceView',
@@ -294,12 +276,12 @@
                 contactItemCount++;
                 $('#items-contacts').append(res);
                 $('input[name="_token"]').each(function() {
-                    // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");
                 });
             });
         }
 
+        // Add payment field
         function payment_view_ajax() {
             $.ajax({
                 url: '/api/getPaymentView',
@@ -311,73 +293,75 @@
                 contactItemCount++;
                 $('#payment-inputs').append(res);
                 $('input[name="_token"]').each(function() {
-                    // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");
                 });
             });
         }
 
+        // Add item button
         $('#add_contact').on('click', function() {
             item_invoice_ajax();
         });
 
-
+        // Add payment button
         $('#add_feild_button').on('click', function() {
             payment_view_ajax();
         });
+
+        // Delete item button
         $(document).on('click', '#delete_contact_item', function() {
             $(this).closest('.item-contact').remove();
         });
 
-        $("#tour_id").change(function() {
-
-            let tour_id = $(this).val();
-
+        // Tour change handler - load quotation
+        $("#tour_id").on('change', function() {
+            const tour_id = $(this).val();
             $.ajax({
                 type: "GET",
                 url: `api/getTourquotation/${tour_id}`,
                 success: function(result) {
                     $("#quotation_id").val(result);
-                    console.log(result);
+                    console.log('Quotation loaded:', result);
                 },
                 error: function(result) {
-                    console.log(result);
+                    console.error('Error loading quotation:', result);
                 }
             });
-        })
+        });
 
-
-        function calculateItemTotal(iteminput) {
-
-            const itemContainer = iteminput.parentElement.parentElement.parentElement;
-
-
-            const quantity = parseFloat(itemContainer.querySelector("#item_desc").value) || 0;
-
-            const price = parseFloat(itemContainer.querySelector("#amount").value) || 0;
-            const vat = parseFloat(itemContainer.querySelector("#vat").value) || 0;
+        // Calculate item total with VAT
+        window.calculateItemTotal = function(iteminput) {
+            const itemContainer = iteminput.closest('.row');
+            const quantity = parseFloat(itemContainer.querySelector("#item_desc")?.value) || 0;
+            const price = parseFloat(itemContainer.querySelector("#amount")?.value) || 0;
+            const vat = parseFloat(itemContainer.querySelector("#vat")?.value) || 0;
 
             const total_price = quantity * price;
             const total_tax = total_price * vat;
             const itemTotal = total_price + total_tax;
 
             // Update the item total displayed for this item
-            itemContainer.querySelector("#total_amount").value = itemTotal.toFixed(2);
+            const totalElement = itemContainer.querySelector("#total_amount");
+            if (totalElement) {
+                totalElement.value = itemTotal.toFixed(2);
+            }
 
             // Recalculate the overall total
             calculateOverallTotal();
         }
 
+        // Calculate overall total
         function calculateOverallTotal() {
-            const itemTotals = document.querySelectorAll(".item-total");
+            const itemTotals = document.querySelectorAll(".item_total");
             let overallTotal = 0;
 
             itemTotals.forEach(itemTotal => {
-                overallTotal += parseFloat(itemTotal.textContent);
+                const value = parseFloat(itemTotal.value) || 0;
+                overallTotal += value;
             });
 
-            // Update the overall total
-            // document.getElementById("total").textContent = overallTotal.toFixed(2);
+            console.log('Overall total:', overallTotal.toFixed(2));
         }
-    </script>
+    });
+</script>
 @endsection

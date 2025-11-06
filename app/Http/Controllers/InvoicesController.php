@@ -166,96 +166,102 @@ class  InvoicesController extends Controller
     }
     public function store(Request $request)
     {
-      
         $this->validateInvoice($request);
-		
-		$currentDate = Carbon::now();
 
-        // $request->invoice_no  = (string) \Illuminate\Support\Str::uuid();
+        $currentDate = Carbon::now();
+
+        // Validate payment amounts
         $payment_methods = $request->payment_method;
         $payment_date = $request->paymentdate;
         $paid_amount = $request->paid_amount;
-        if(!empty($paid_amount)){
+
+        if (!empty($paid_amount)) {
             $payment_amount = 0;
             foreach ($paid_amount as $paidamount) {
                 $payment_amount += $paidamount;
             }
-         
-            if( $request->total_amount< $payment_amount){
-                LaravelFlashSessionHelper::setFlashMessage("Payments Cannot be  Greather than total Amount", 'error');
-                $data = ['route' => route('invoices.create')];
-                return response()->json($data);
-             
+
+            if ($request->total_amount < $payment_amount) {
+                LaravelFlashSessionHelper::setFlashMessage("Payments Cannot be Greater than Total Amount", 'error');
+                return redirect()->back()->withInput();
             }
         }
-   
-        $invoice = new Invoices();
-        $invoice->office_id    = $request->office_id;
-        $invoice->dueDate   = $currentDate->addWeek();
-        $invoice->receivedDate   = $currentDate;
-        $invoice->invoice_no   = $request->invoice_no;
-        $invoice->total_amount   = $request->total_amount;
-		$invoice->extra_amount   = $request->extra_amount;
-		$invoice->note   = $request->note;
-        $invoice->save();
-		
-        $this->addFile($request, $invoice);
-		 
-        foreach ($request->tour_id as $tour_id) {
-            $test = "package_id" . $tour_id;
-            $package_ids =  $request->$test;
 
-			if(!is_null($package_ids)){
-            foreach ($package_ids as $package_id) {
-				/*
-                if ($invoice->payment == "Final Payment") {
-                    $tour_package = TourPackage::find($package_id);
-                    $tour_package->paid = 1;
-                    $tour_package->save();
-                }*/
-				InvoicesTours::create([
-						
-					"invoices_id"    => $invoice->id,					
-					"invoices_tours_id"    => $tour_id,
-					"package_id"   => $package_id,
-					]);
-                //$invoice->tours()->attach($tour_id, ['package_id' => $package_id]);
+        try {
+            // Create Invoice
+            $invoice = new Invoices();
+            $invoice->office_id = $request->office_id;
+            $invoice->dueDate = $currentDate->copy()->addWeek();
+            $invoice->receivedDate = $currentDate;
+            $invoice->invoice_no = $request->invoice_no;
+            $invoice->total_amount = $request->total_amount;
+            $invoice->extra_amount = $request->extra_amount;
+            $invoice->note = $request->note;
+            $invoice->save();
+
+            // Add file attachments
+            $this->addFile($request, $invoice);
+
+            // Add tours and packages to invoice
+            $attachedTourId = null;
+            if (is_array($request->tour_id) && count($request->tour_id) > 0) {
+                foreach ($request->tour_id as $tour_id) {
+                    $test = "package_id" . $tour_id;
+                    $package_ids = $request->$test;
+
+                    if (!is_null($package_ids)) {
+                        foreach ($package_ids as $package_id) {
+                            InvoicesTours::create([
+                                "invoices_id" => $invoice->id,
+                                "invoices_tours_id" => $tour_id,
+                                "package_id" => $package_id,
+                            ]);
+                        }
+                    } else {
+                        InvoicesTours::create([
+                            "invoices_id" => $invoice->id,
+                            "invoices_tours_id" => $tour_id,
+                        ]);
+                    }
+
+                    // remember first attached tour id for redirect
+                    if ($attachedTourId === null) {
+                        $attachedTourId = $tour_id;
+                    }
+                }
             }
-			}else{
-				InvoicesTours::create([
-						
-					"invoices_id"    => $invoice->id,					
-					"invoices_tours_id"    => $tour_id,
-					]);
-			}
-        }
 
-       
-        $i = 0;
-		
-		
-        if(!empty($payment_methods)){
-        foreach ($payment_methods as $payment_method) {
-            // dd($payment_method == "null");
-            
-               // dd($payment_method);
-			
-                $transaction = Transaction::create([
-                    "date" =>  $payment_date[$i],
-                    "trans_no" => 'TXN-' . uniqid(),
-                    "amount" => $paid_amount[$i],
-                    "pay_to" => "Supplier",
-                    "invoice_id" => $invoice->id,
-                    "payment_method" => $payment_method,
-                ]);
-            
-            $i += 1;
+            // Add payment transactions
+            $i = 0;
+            if (!empty($payment_methods)) {
+                foreach ($payment_methods as $payment_method) {
+                    Transaction::create([
+                        "date" => $payment_date[$i],
+                        "trans_no" => 'TXN-' . uniqid(),
+                        "amount" => $paid_amount[$i],
+                        "pay_to" => "Supplier",
+                        "invoice_id" => $invoice->id,
+                        "payment_method" => $payment_method,
+                    ]);
+
+                    $i += 1;
+                }
+            }
+
+            // Success response - redirect to the related tour view if available, otherwise to invoices index
+            LaravelFlashSessionHelper::setFlashMessage("Invoice $invoice->invoice_no created successfully", 'success');
+
+            if ($attachedTourId) {
+                return redirect()->route('tour.show', ['tour' => $attachedTourId]);
+            }
+
+            return redirect()->route('invoices.index');
+
+        } catch (\Exception $e) {
+            // Error handling
+            LaravelFlashSessionHelper::setFlashMessage("Error creating invoice: " . $e->getMessage(), 'error');
+            return redirect()->back()->withInput();
         }
-        }
-        LaravelFlashSessionHelper::setFlashMessage("Invoice $invoice->invoice_no created", 'success');
-        $data = ['route' => route('invoices.index')];
-        return response()->json($data);
-        return view('invoices.index');
     }
     public function validateInvoice(Request $request)
     {

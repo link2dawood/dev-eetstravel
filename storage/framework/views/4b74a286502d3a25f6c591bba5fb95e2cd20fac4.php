@@ -1,8 +1,8 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Show Tour')
 
-@section('post_styles')
-<link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
+<?php $__env->startSection('title', 'Show Tour'); ?>
+
+<?php $__env->startSection('post_styles'); ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/tour-shopify.css')); ?>">
 <style>
     /* Toggle Switch */
     .toggle {
@@ -66,92 +66,98 @@
         color: #FFF;
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-xl">
-    {{-- Page Header --}}
+    
     <div class="page-header d-print-none">
         <div class="row g-2 align-items-center">
             <div class="col">
-                {{-- Page pre-title --}}
+                
                 <div class="page-pretitle">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('tour.index') }}">Tours</a></li>
-                            <li class="breadcrumb-item active">{{ $tour->name }}</li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(url('/home')); ?>">Home</a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(route('tour.index')); ?>">Tours</a></li>
+                            <li class="breadcrumb-item active"><?php echo e($tour->name); ?></li>
                         </ol>
                     </nav>
                 </div>
                 <h2 class="page-title">
-                    <i class="ti ti-plane me-2"></i> {{ $tour->name }}
+                    <i class="ti ti-plane me-2"></i> <?php echo e($tour->name); ?>
+
                 </h2>
             </div>
-            {{-- Page title actions --}}
+            
             <div class="col-auto ms-auto d-print-none">
                 <div class="btn-list">
-                    <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary">
-                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
+                    <a href="<?php echo e(route('tour.index')); ?>" class="btn btn-ghost-secondary">
+                        <i class="ti ti-arrow-left me-1"></i><?php echo trans('main.Back'); ?>
+
                     </a>
-                    @if (Auth::user()->can('tour.edit'))
-                        <a href="{{ route('tour.edit', ['tour' => $tour->id]) }}" class="btn btn-warning">
-                            <i class="ti ti-edit me-1"></i>{!! trans('main.Edit') !!}
+                    <?php if(Auth::user()->can('tour.edit')): ?>
+                        <a href="<?php echo e(route('tour.edit', ['tour' => $tour->id])); ?>" class="btn btn-warning">
+                            <i class="ti ti-edit me-1"></i><?php echo trans('main.Edit'); ?>
+
                         </a>
-                    @endif
-                    @if (Auth::user()->can('task.create'))
-                        <a href="{{ url('task') }}/create?tour={{ $tour->id }}" class="btn btn-success">
-                            <i class="ti ti-plus me-1"></i>{!! trans('main.AddTask') !!}
+                    <?php endif; ?>
+                    <?php if(Auth::user()->can('task.create')): ?>
+                        <a href="<?php echo e(url('task')); ?>/create?tour=<?php echo e($tour->id); ?>" class="btn btn-success">
+                            <i class="ti ti-plus me-1"></i><?php echo trans('main.AddTask'); ?>
+
                         </a>
-                    @endif
+                    <?php endif; ?>
                     
-                    {{-- Export Dropdown --}}
+                    
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="ti ti-file-export me-1"></i>Export
                         </button>
                         <div class="dropdown-menu">
                             <h6 class="dropdown-header">Export Tour</h6>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour'])); ?>");'>
                                 <i class="ti ti-file-spreadsheet me-2"></i>CSV - Tour
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service'])); ?>");'>
                                 <i class="ti ti-file-spreadsheet me-2"></i>CSV - Service
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_export', ['id' => $tour->id, 'export' => 'xlsx'])); ?>");'>
                                 <i class="ti ti-file-excel me-2"></i>Excel
                             </a>
                         </div>
                     </div>
                     
-                    {{-- Voucher Dropdown --}}
+                    
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-file-invoice me-1"></i>{!! trans('main.Voucher') !!}
+                            <i class="ti ti-file-invoice me-1"></i><?php echo trans('main.Voucher'); ?>
+
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher'])); ?>");'>
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher'])); ?>");'>
                                 <i class="ti ti-file-type-doc me-2"></i>DOC
                             </a>
                         </div>
                     </div>
                     
-                    {{-- Itinerary Dropdown --}}
+                    
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-route me-1"></i>{!! trans('main.Itinerary') !!}
+                            <i class="ti ti-route me-1"></i><?php echo trans('main.Itinerary'); ?>
+
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short'])); ?>");'>
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_html_export', ['id' => $tour->id, 'type' => 'html'])); ?>");'>
                                 <i class="ti ti-file-code me-2"></i>HTML
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='export_to("<?php echo e(route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short'])); ?>");'>
                                 <i class="ti ti-file-type-doc me-2"></i>DOC
                             </a>
                         </div>
@@ -165,7 +171,7 @@
         </div>
     </div>
 
-    {{-- Office Selection --}}
+    
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="card">
@@ -175,11 +181,12 @@
                             <label class="form-label">Select Office:</label>
                             <div class="input-group">
                                 <select class="form-select selectedOffice">
-                                    @foreach($offices as $office)
-                                        <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
-                                            {{ $office->office_name }}
+                                    <?php $__currentLoopData = $offices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $office): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($office->id); ?>" <?php echo e((isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : ''); ?>>
+                                            <?php echo e($office->office_name); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                                 <button class="btn btn-primary select-office-btn" type="button">
                                     <i class="ti ti-check me-1"></i>Select
@@ -197,8 +204,8 @@
         </div>
     </div>
 
-    {{-- Quotation/Tour Toggle --}}
-    @if ($tour->is_quotation)
+    
+    <?php if($tour->is_quotation): ?>
         <div class="alert alert-warning" role="alert">
             <div class="d-flex">
                 <div class="flex-fill">
@@ -214,7 +221,7 @@
                 </div>
             </div>
         </div>
-    @else
+    <?php else: ?>
         <div class="alert alert-success" role="alert">
             <div class="d-flex">
                 <div class="flex-fill">
@@ -230,24 +237,25 @@
                 </div>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- Session Messages --}}
-    @if(session('message_buses'))
+    
+    <?php if(session('message_buses')): ?>
         <div class="alert alert-info alert-dismissible" role="alert">
             <div class="d-flex">
                 <div>
                     <i class="ti ti-info-circle me-2"></i>
                 </div>
                 <div class="flex-fill">
-                    {{ session('message_buses') }}
+                    <?php echo e(session('message_buses')); ?>
+
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- Tabs --}}
+    
     <div class="card">
         <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
@@ -258,22 +266,26 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <a href="#service-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-list me-1"></i>{!! trans('main.Services') !!}
+                        <i class="ti ti-list me-1"></i><?php echo trans('main.Services'); ?>
+
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a href="#tour-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-plane me-1"></i>{!! trans('main.Tour') !!}
+                        <i class="ti ti-plane me-1"></i><?php echo trans('main.Tour'); ?>
+
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a href="#quotation-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-calculator me-1"></i>{!! trans('main.Quotation') !!}
+                        <i class="ti ti-calculator me-1"></i><?php echo trans('main.Quotation'); ?>
+
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a href="#roomlist-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-bed me-1"></i>{!! trans('main.GuestList') !!}
+                        <i class="ti ti-bed me-1"></i><?php echo trans('main.GuestList'); ?>
+
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -290,76 +302,79 @@
         </div>
         <div class="card-body">
             <div class="tab-content">
-            {{-- Front Sheet Tab --}}
+            
             <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">
                 <h3 class="mb-4"><i class="ti ti-file-text me-2"></i>Front Sheet</h3>
-                @if(!empty($quotation) && isset($quotation->id))
+                <?php if(!empty($quotation) && isset($quotation->id)): ?>
                     <div class="row">
                         <div class="col-md-6">
                             <p class="lead">
                                 <strong>Rooms:</strong>
-                                @php $peopleCount = 0; @endphp
-                                @foreach ($listRoomsHotel as $room)
-                                    @php
+                                <?php $peopleCount = 0; ?>
+                                <?php $__currentLoopData = $listRoomsHotel; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $room): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code]) 
                                             ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count 
                                             : 0;
-                                    @endphp
-                                    {{ $room->room_types->code }} : {{ $room->count }}
-                                @endforeach
+                                    ?>
+                                    <?php echo e($room->room_types->code); ?> : <?php echo e($room->count); ?>
+
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </p>
-                            @if ($peopleCount != $tour->pax + $tour->pax_free)
+                            <?php if($peopleCount != $tour->pax + $tour->pax_free): ?>
                                 <div class="alert alert-warning">
                                     <i class="ti ti-alert-triangle"></i>
-                                    Pax Count ({{ $tour->pax + $tour->pax_free }}) doesn't match room capacity ({{ $peopleCount }})
+                                    Pax Count (<?php echo e($tour->pax + $tour->pax_free); ?>) doesn't match room capacity (<?php echo e($peopleCount); ?>)
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-6">
                             <p class="lead">
-                                <strong>Pax:</strong> {{ $tour->pax }} + {{ $tour->pax_free }} (Free)
+                                <strong>Pax:</strong> <?php echo e($tour->pax); ?> + <?php echo e($tour->pax_free); ?> (Free)
                             </p>
                         </div>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="alert alert-info">
                         <i class="ti ti-info-circle"></i> No quotation data available for front sheet.
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
-            {{-- Services Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="service-tab">
                 <h3 class="mb-4"><i class="ti ti-list me-2"></i>Services</h3>
                 <div class="tour-packages"></div>
                 
-                {{-- Comments Section --}}
+                
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="ti ti-message me-2"></i>{!! trans('main.Comments') !!}
+                            <i class="ti ti-message me-2"></i><?php echo trans('main.Comments'); ?>
+
                         </h3>
                     </div>
                     <div class="card-body">
                         <div id="show_comments"></div>
                     </div>
                     <div class="card-footer">
-                        <form method="POST" action="{{ route('comment.store') }}" id="form_comment">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('comment.store')); ?>" id="form_comment">
+                            <?php echo csrf_field(); ?>
                             <div class="mb-3">
                                 <textarea class="form-control" id="content" name="content" rows="3" placeholder="Ctrl + Enter to post comment"></textarea>
                             </div>
-                            <input type="hidden" name="reference_id" value="{{ $tour->id }}">
-                            <input type="hidden" name="reference_type" value="{{ \App\Comment::$services['tour'] ?? 'tour' }}">
+                            <input type="hidden" name="reference_id" value="<?php echo e($tour->id); ?>">
+                            <input type="hidden" name="reference_type" value="<?php echo e(\App\Comment::$services['tour'] ?? 'tour'); ?>">
                             <button type="submit" class="btn btn-success">
-                                <i class="ti ti-send me-1"></i>{!! trans('main.Send') !!}
+                                <i class="ti ti-send me-1"></i><?php echo trans('main.Send'); ?>
+
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {{-- Tour Info Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="tour-tab">
                 <h3 class="mb-4"><i class="ti ti-plane me-2"></i>Tour Information</h3>
                 <div class="row">
@@ -367,20 +382,20 @@
                         <table class="table card-table table-vcenter">
                             <tbody>
                                 <tr>
-                                    <td><strong>{!! trans('main.Name') !!}</strong></td>
-                                    <td>{{ $tour->name ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.Name'); ?></strong></td>
+                                    <td><?php echo e($tour->name ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.ExternalName') !!}</strong></td>
-                                    <td>{{ $tour->external_name ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.ExternalName'); ?></strong></td>
+                                    <td><?php echo e($tour->external_name ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.Pax') !!}</strong></td>
-                                    <td>{{ $tour->pax ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.Pax'); ?></strong></td>
+                                    <td><?php echo e($tour->pax ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.PaxFree') !!}</strong></td>
-                                    <td>{{ $tour->pax_free ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.PaxFree'); ?></strong></td>
+                                    <td><?php echo e($tour->pax_free ?? '—'); ?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -389,20 +404,20 @@
                         <table class="table card-table table-vcenter">
                             <tbody>
                                 <tr>
-                                    <td><strong>{!! trans('main.DepDate') !!}</strong></td>
-                                    <td>{{ $tour->departure_date ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.DepDate'); ?></strong></td>
+                                    <td><?php echo e($tour->departure_date ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.RetDate') !!}</strong></td>
-                                    <td>{{ $tour->retirement_date ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.RetDate'); ?></strong></td>
+                                    <td><?php echo e($tour->retirement_date ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.Status') !!}</strong></td>
-                                    <td>{{ $status->name ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.Status'); ?></strong></td>
+                                    <td><?php echo e($status->name ?? '—'); ?></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>{!! trans('main.Phone') !!}</strong></td>
-                                    <td>{{ $tour->phone ?? '—' }}</td>
+                                    <td><strong><?php echo trans('main.Phone'); ?></strong></td>
+                                    <td><?php echo e($tour->phone ?? '—'); ?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -410,145 +425,153 @@
                 </div>
             </div>
 
-            {{-- Quotations Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="quotation-tab">
                 <h3 class="mb-4"><i class="ti ti-calculator me-2"></i>Quotations</h3>
-                @if (Auth::user()->can('quotation.add'))
-                    <a href="{{ route('quotation.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="ti ti-plus"></i> {!! trans('main.AddQuotation') !!}
+                <?php if(Auth::user()->can('quotation.add')): ?>
+                    <a href="<?php echo e(route('quotation.add', ['id' => $tour->id])); ?>" class="btn btn-success mb-3">
+                        <i class="ti ti-plus"></i> <?php echo trans('main.AddQuotation'); ?>
+
                     </a>
-                @endif
+                <?php endif; ?>
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Assigned') !!}</th>
-                            <th>{!! trans('main.Frontsheet') !!}</th>
-                            <th>{!! trans('main.Print') !!}</th>
+                            <th><?php echo trans('main.Name'); ?></th>
+                            <th><?php echo trans('main.Assigned'); ?></th>
+                            <th><?php echo trans('main.Frontsheet'); ?></th>
+                            <th><?php echo trans('main.Print'); ?></th>
                             <th>Excel</th>
-                            <th>{!! trans('main.CreatedAt') !!}</th>
+                            <th><?php echo trans('main.CreatedAt'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($tour->quotations as $quotation)
-                            <tr style="background-color: {{ $quotation->is_confirm == 0 ? '#ff00008f' : '#caffbd' }}">
+                        <?php $__empty_1 = true; $__currentLoopData = $tour->quotations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $quotation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <tr style="background-color: <?php echo e($quotation->is_confirm == 0 ? '#ff00008f' : '#caffbd'); ?>">
                                 <td>
-                                    @if (Auth::user()->can('quotation.edit'))
-                                        <a href="{{ route('quotation.edit', ['quotation' => $quotation->id]) }}">
-                                            {{ $quotation->name ?? '—' }}
+                                    <?php if(Auth::user()->can('quotation.edit')): ?>
+                                        <a href="<?php echo e(route('quotation.edit', ['quotation' => $quotation->id])); ?>">
+                                            <?php echo e($quotation->name ?? '—'); ?>
+
                                         </a>
-                                    @else
-                                        {{ $quotation->name ?? '—' }}
-                                    @endif
+                                    <?php else: ?>
+                                        <?php echo e($quotation->name ?? '—'); ?>
+
+                                    <?php endif; ?>
                                 </td>
-                                <td>{{ $quotation->userName() ?? '—' }}</td>
+                                <td><?php echo e($quotation->userName() ?? '—'); ?></td>
                                 <td>
-                                    @if (Auth::user()->can('comparison.show'))
-                                        <a href="{{ route('comparison.show', ['comparison' => $quotation->id]) }}">
+                                    <?php if(Auth::user()->can('comparison.show')): ?>
+                                        <a href="<?php echo e(route('comparison.show', ['comparison' => $quotation->id])); ?>">
                                             View Front Sheet
                                         </a>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a href="{{ route('quotation.pdf', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <a href="<?php echo e(route('quotation.pdf', ['id' => $quotation->id])); ?>" target="_blank" class="btn btn-sm btn-primary">
                                         <i class="ti ti-printer"></i>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-success">
+                                    <a href="<?php echo e(route('quotation.excel', ['id' => $quotation->id])); ?>" target="_blank" class="btn btn-sm btn-success">
                                         <i class="ti ti-file-excel"></i>
                                     </a>
                                 </td>
-                                <td>{{ Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y') }}</td>
+                                <td><?php echo e(Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y')); ?></td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="6" class="text-center">
                                     <i class="ti ti-inbox"></i> No quotations found
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Guest List Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="roomlist-tab">
                 <h3 class="mb-4"><i class="ti ti-bed me-2"></i>Guest Lists</h3>
-                @if (Auth::user()->can('guestList.add'))
-                    <a href="{{ route('guestList.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
+                <?php if(Auth::user()->can('guestList.add')): ?>
+                    <a href="<?php echo e(route('guestList.add', ['id' => $tour->id])); ?>" class="btn btn-success mb-3">
                         <i class="ti ti-plus"></i> Add Guest List
                     </a>
-                @endif
+                <?php endif; ?>
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
                         <tr>
                             <th>Version</th>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Author') !!}</th>
-                            <th>{!! trans('main.CreatedAt') !!}</th>
-                            <th>{!! trans('main.SentAt') !!}</th>
-                            <th>{!! trans('main.Hotels') !!}</th>
+                            <th><?php echo trans('main.Name'); ?></th>
+                            <th><?php echo trans('main.Author'); ?></th>
+                            <th><?php echo trans('main.CreatedAt'); ?></th>
+                            <th><?php echo trans('main.SentAt'); ?></th>
+                            <th><?php echo trans('main.Hotels'); ?></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($tour->guestLists as $guestList)
+                        <?php $__empty_1 = true; $__currentLoopData = $tour->guestLists; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $guestList): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $guestList->version }}</td>
+                                <td><?php echo e($guestList->version); ?></td>
                                 <td>
-                                    @if (Auth::user()->can('guestList.showbyid'))
-                                        <a href="{{ route('guestList.showbyid', ['id' => $guestList->id]) }}">
-                                            {{ $guestList->name }}
+                                    <?php if(Auth::user()->can('guestList.showbyid')): ?>
+                                        <a href="<?php echo e(route('guestList.showbyid', ['id' => $guestList->id])); ?>">
+                                            <?php echo e($guestList->name); ?>
+
                                         </a>
-                                    @else
-                                        {{ $guestList->name }}
-                                    @endif
+                                    <?php else: ?>
+                                        <?php echo e($guestList->name); ?>
+
+                                    <?php endif; ?>
                                 </td>
-                                <td>{{ $guestList->getAuthor()->name ?? '—' }}</td>
-                                <td>{{ Carbon\Carbon::parse($guestList->created_at)->format('d-m-Y') }}</td>
+                                <td><?php echo e($guestList->getAuthor()->name ?? '—'); ?></td>
+                                <td><?php echo e(Carbon\Carbon::parse($guestList->created_at)->format('d-m-Y')); ?></td>
                                 <td>
-                                    @if($guestList->sent_at)
-                                        {{ Carbon\Carbon::parse($guestList->sent_at)->format('d-m-Y') }}
-                                    @else
+                                    <?php if($guestList->sent_at): ?>
+                                        <?php echo e(Carbon\Carbon::parse($guestList->sent_at)->format('d-m-Y')); ?>
+
+                                    <?php else: ?>
                                         <span class="text-muted">Not sent</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    @foreach($guestList->getSelectedHotelNames() as $index => $hotelName)
-                                        {{ $hotelName }}{{ $index < count($guestList->getSelectedHotelNames()) - 1 ? ', ' : '' }}
-                                    @endforeach
+                                    <?php $__currentLoopData = $guestList->getSelectedHotelNames(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $hotelName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php echo e($hotelName); ?><?php echo e($index < count($guestList->getSelectedHotelNames()) - 1 ? ', ' : ''); ?>
+
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </td>
                                 <td>
-                                    @if(!$guestList->sent_at)
+                                    <?php if(!$guestList->sent_at): ?>
                                         <button class="btn btn-sm btn-primary send-guest-list" 
-                                                data-url="{{ route('guestlist.send', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
+                                                data-url="<?php echo e(route('guestlist.send', ['id' => $tour->id, 'guestlistid' => $guestList->id])); ?>">
                                             <i class="ti ti-send"></i>
                                         </button>
                                         <button class="btn btn-sm btn-danger delete-guest-list"
-                                                data-url="{{ route('guestlist.delete', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
+                                                data-url="<?php echo e(route('guestlist.delete', ['id' => $tour->id, 'guestlistid' => $guestList->id])); ?>">
                                             <i class="ti ti-trash"></i>
                                         </button>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="7" class="text-center">
                                     <i class="ti ti-inbox"></i> No guest lists found
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Invoices Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="invoices-tab">
                 <h3 class="mb-4"><i class="ti ti-file-invoice me-2"></i>Invoices</h3>
-                {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-success mb-3') !!}
+                <?php echo \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-success mb-3'); ?>
+
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
@@ -565,40 +588,41 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($invoicesData as $invoice)
+                        <?php $__empty_1 = true; $__currentLoopData = $invoicesData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $invoice['id'] }}</td>
-                                <td>{{ $invoice['invoice_no'] }}</td>
-                                <td>{{ $invoice['due_date'] }}</td>
-                                <td>{{ $invoice['received_date'] }}</td>
-                                <td>{{ $invoice['package_name'] }}</td>
-                                <td>{{ $invoice['office_name'] }}</td>
-                                <td>{{ $invoice['total_amount'] }}</td>
-                                <td>{{ $invoice['status'] }}</td>
+                                <td><?php echo e($invoice['id']); ?></td>
+                                <td><?php echo e($invoice['invoice_no']); ?></td>
+                                <td><?php echo e($invoice['due_date']); ?></td>
+                                <td><?php echo e($invoice['received_date']); ?></td>
+                                <td><?php echo e($invoice['package_name']); ?></td>
+                                <td><?php echo e($invoice['office_name']); ?></td>
+                                <td><?php echo e($invoice['total_amount']); ?></td>
+                                <td><?php echo e($invoice['status']); ?></td>
                                 <td>
-                                    <a href="{{ route('invoices.show', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-info">
+                                    <a href="<?php echo e(route('invoices.show', ['invoice' => $invoice['id']])); ?>" class="btn btn-sm btn-info">
                                         <i class="ti ti-eye"></i>
                                     </a>
-                                    <a href="{{ route('invoices.edit', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-warning">
+                                    <a href="<?php echo e(route('invoices.edit', ['invoice' => $invoice['id']])); ?>" class="btn btn-sm btn-warning">
                                         <i class="ti ti-edit"></i>
                                     </a>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="9" class="text-center">
                                     <i class="ti ti-inbox"></i> No invoices found
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            {{-- Billing Tab --}}
+            
             <div role="tabpanel" class="tab-pane" id="billing-tab">
                 <h3 class="mb-4"><i class="ti ti-cash me-2"></i>Billing</h3>
-                {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class, 'btn btn-success mb-3') !!}
+                <?php echo \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class, 'btn btn-success mb-3'); ?>
+
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
@@ -611,28 +635,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($billingData as $billing)
+                        <?php $__empty_1 = true; $__currentLoopData = $billingData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $billing): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $billing['id'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d') }}</td>
-                                <td>{{ $billing['office_name'] }}</td>
-                                <td>{{ $billing['total_amount'] }}</td>
+                                <td><?php echo e($billing['id']); ?></td>
+                                <td><?php echo e(\Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d')); ?></td>
+                                <td><?php echo e($billing['office_name']); ?></td>
+                                <td><?php echo e($billing['total_amount']); ?></td>
                                 <td>
-                                    <a href="{{ route('accounting.show', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-info">
+                                    <a href="<?php echo e(route('accounting.show', ['accounting' => $billing['id']])); ?>" class="btn btn-sm btn-info">
                                         <i class="ti ti-eye"></i>
                                     </a>
-                                    <a href="{{ route('accounting.edit', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-warning">
+                                    <a href="<?php echo e(route('accounting.edit', ['accounting' => $billing['id']])); ?>" class="btn btn-sm btn-warning">
                                         <i class="ti ti-edit"></i>
                                     </a>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="5" class="text-center">
                                     <i class="ti ti-inbox"></i> No billing records found
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -640,28 +664,28 @@
     </div>
 </div>
 
-{{-- Hidden Data --}}
-<span id="tour_date_id" data-tour-id="{{ $tour->id }}" hidden></span>
-<span id="tour_dates" data-departure_date="{{ $tour->departure_date }}" data-retirement_date="{{ $tour->retirement_date }}" hidden></span>
 
-{{-- Service Modal --}}
+<span id="tour_date_id" data-tour-id="<?php echo e($tour->id); ?>" hidden></span>
+<span id="tour_dates" data-departure_date="<?php echo e($tour->departure_date); ?>" data-retirement_date="<?php echo e($tour->retirement_date); ?>" hidden></span>
+
+
 <div class="modal modal-blur fade" id="service-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{!! trans('main.Addservice') !!}</h5>
+                <h5 class="modal-title"><?php echo trans('main.Addservice'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <table id="search-table" class="table card-table table-vcenter table-striped table-bordered">
                     <thead>
                         <tr>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Address') !!}</th>
-                            <th>{!! trans('main.Country') !!}</th>
-                            <th>{!! trans('main.City') !!}</th>
-                            <th>{!! trans('main.Phone') !!}</th>
-                            <th>{!! trans('main.ContactName') !!}</th>
+                            <th><?php echo trans('main.Name'); ?></th>
+                            <th><?php echo trans('main.Address'); ?></th>
+                            <th><?php echo trans('main.Country'); ?></th>
+                            <th><?php echo trans('main.City'); ?></th>
+                            <th><?php echo trans('main.Phone'); ?></th>
+                            <th><?php echo trans('main.ContactName'); ?></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -672,7 +696,7 @@
     </div>
 </div>
 
-{{-- Landing Page Modal --}}
+
 <div class="modal fade" id="landingpage_modal" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -685,7 +709,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="open-landing" onclick='export_to("{{ route('landing_page', ['id' => $tour->id]) }}");'>
+                <button type="button" class="btn btn-primary" id="open-landing" onclick='export_to("<?php echo e(route('landing_page', ['id' => $tour->id])); ?>");'>
                     Agree
                 </button>
             </div>
@@ -693,7 +717,7 @@
     </div>
 </div>
 
-{{-- Question Modal --}}
+
 <div class="modal fade" id="question_modal" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -712,7 +736,7 @@
     </div>
 </div>
 
-{{-- Error Modal --}}
+
 <div class="modal fade" id="error_send" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -730,14 +754,14 @@
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('post_scripts')
-<script src="{{ asset('js/tour-interactions.js') }}"></script>
-<script src="{{ asset('js/supplier-search.js') }}"></script>
-<script src="{{ asset('js/tour.js') }}"></script>
-<script src="{{ asset('js/comment.js') }}"></script>
-<script src="{{ asset('js/attachments.js') }}"></script>
+<?php $__env->startSection('post_scripts'); ?>
+<script src="<?php echo e(asset('js/tour-interactions.js')); ?>"></script>
+<script src="<?php echo e(asset('js/supplier-search.js')); ?>"></script>
+<script src="<?php echo e(asset('js/tour.js')); ?>"></script>
+<script src="<?php echo e(asset('js/comment.js')); ?>"></script>
+<script src="<?php echo e(asset('js/attachments.js')); ?>"></script>
 
 <script>
 $(document).ready(function() {
@@ -854,7 +878,7 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
         // Currently a quotation, checkbox is CHECKED by default
         if (!checkbox.checked) {
             // User unchecked it - wants to convert to Tour (Go Ahead)
-            url = "{{ route('tour.convert_to_tour', ['id' => $tour->id]) }}";
+            url = "<?php echo e(route('tour.convert_to_tour', ['id' => $tour->id])); ?>";
             confirmMessage = "Are you sure you want to convert this Quotation to Tour (Go Ahead)?";
         } else {
             // User checked it back - stay as Quotation
@@ -864,7 +888,7 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
         // Currently a tour, checkbox is UNCHECKED by default
         if (checkbox.checked) {
             // User checked it - wants to convert to Quotation
-            url = "{{ route('tour.convertToQuotation', ['id' => $tour->id]) }}";
+            url = "<?php echo e(route('tour.convertToQuotation', ['id' => $tour->id])); ?>";
             confirmMessage = "Are you sure you want to convert this Tour to Quotation?";
         } else {
             // User unchecked it back - stay as Tour
@@ -918,12 +942,12 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
 }
 // Show Landing Page Modal
 function showLandingPageModal() {
-    var img = "{{ $tour->attachments()->first() ? $tour->attachments()->first()->url : '' }}";
+    var img = "<?php echo e($tour->attachments()->first() ? $tour->attachments()->first()->url : ''); ?>";
     if (!img) {
         var modal = new bootstrap.Modal(document.getElementById('landingpage_modal'));
         modal.show();
     } else {
-        window.open("{{ route('landing_page', ['id' => $tour->id]) }}", '_blank');
+        window.open("<?php echo e(route('landing_page', ['id' => $tour->id])); ?>", '_blank');
     }
 }
 
@@ -944,4 +968,5 @@ $(document).ready(function() {
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/tour/show.blade.php ENDPATH**/ ?>

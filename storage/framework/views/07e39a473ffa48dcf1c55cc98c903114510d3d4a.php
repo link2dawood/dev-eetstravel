@@ -1,7 +1,7 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Create Invoice')
 
-@section('post_styles')
+<?php $__env->startSection('title', 'Create Invoice'); ?>
+
+<?php $__env->startSection('post_styles'); ?>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
     /* Modern Card Styling */
@@ -298,7 +298,7 @@
         animation: spinner 0.6s linear infinite;
     }
 
-    @keyframes spinner {
+    @keyframes  spinner {
         to {
             transform: rotate(360deg);
         }
@@ -328,19 +328,19 @@
         font-size: 14px;
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-xl">
-    {{-- Page Header --}}
+    
     <div class="page-header d-print-none mb-4">
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url('/home') }}"><i class="ti ti-home"></i> Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('tour.index') }}">Invoices</a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(url('/home')); ?>"><i class="ti ti-home"></i> Home</a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(route('tour.index')); ?>">Invoices</a></li>
                             <li class="breadcrumb-item active">Create</li>
                         </ol>
                     </nav>
@@ -352,21 +352,21 @@
         </div>
     </div>
 
-    <form id="myForm" method="POST" action="{{ url('invoices') }}" enctype="multipart/form-data">
-        @csrf
+    <form id="myForm" method="POST" action="<?php echo e(url('invoices')); ?>" enctype="multipart/form-data">
+        <?php echo csrf_field(); ?>
 
-        {{-- Error Messages --}}
-        @if (count($errors) > 0)
+        
+        <?php if(count($errors) > 0): ?>
             <div class="alert-danger-custom">
                 <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($error); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        {{-- Invoice Details Card --}}
+        
         <div class="invoice-card">
             <div class="card-header-custom">
                 <h2>
@@ -377,7 +377,7 @@
             </div>
             <div class="card-body-custom">
                 <div class="form-grid">
-                    {{-- Invoice Number --}}
+                    
                     <div class="form-group">
                         <label for="invoice_no">
                             Invoice Number
@@ -386,28 +386,28 @@
                         <input type="text" name="invoice_no" id="invoice_no" class="form-control" placeholder="INV-2024-001" required>
                     </div>
 
-                    {{-- Office --}}
+                    
                     <div class="form-group">
                         <label for="office_id">
                             Office
-                            @if($offices->isNotEmpty())<span class="required">*</span>@endif
+                            <?php if($offices->isNotEmpty()): ?><span class="required">*</span><?php endif; ?>
                         </label>
-                        @if($offices->isEmpty())
-                            {{-- If there are no offices available, show a disabled select with a helpful message so the browser won't show the default "Please select an item in the list." tooltip. --}}
+                        <?php if($offices->isEmpty()): ?>
+                            
                             <select name="office_id" id="office_id" class="form-control" disabled>
                                 <option value="">No offices available</option>
                             </select>
-                        @else
+                        <?php else: ?>
                             <select name="office_id" id="office_id" class="form-control" required>
                                 <option value="">Select Office</option>
-                                @foreach ($offices as $office)
-                                    <option value="{{ $office->id }}">{{ $office->office_name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $offices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $office): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($office->id); ?>"><?php echo e($office->office_name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
-                    {{-- Total Amount --}}
+                    
                     <div class="form-group">
                         <label for="total_amount">
                             Total Amount
@@ -416,48 +416,48 @@
                         <input type="number" step="0.01" name="total_amount" id="total_amount" class="form-control" placeholder="0.00" required>
                     </div>
 
-                    {{-- Extra Amount --}}
+                    
                     <div class="form-group">
                         <label for="extra_amount">Extra Cost</label>
                         <input type="number" step="0.01" name="extra_amount" id="extra_amount" class="form-control" placeholder="0.00">
                     </div>
                 </div>
 
-                {{-- Tour Selection --}}
+                
                 <div class="form-group">
                     <label for="tour_id">
                         Tours
                         <span class="required">*</span>
                     </label>
                     <select name="tour_id[]" id="tour_id" class="form-control select22" multiple="multiple" required>
-                        @foreach ($tours as $tour)
-                            <option value="{{ $tour->id }}">{{ $tour->name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $tours; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tour): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($tour->id); ?>"><?php echo e($tour->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
 
-                {{-- Services (Dynamic) --}}
+                
                 <div id="services" style="display:none"></div>
                 <div id="service_div"></div>
 
-                {{-- Note --}}
+                
                 <div class="form-group">
                     <label for="note">Notes</label>
                     <textarea name="note" id="note" class="form-control" placeholder="Add any additional notes here..."></textarea>
                 </div>
 
-                {{-- File Upload --}}
+                
                 <div class="form-group">
                     <label>Attachments</label>
                     <div class="file-upload-wrapper">
-                        @component('component.file_upload_field')
-                        @endcomponent
+                        <?php $__env->startComponent('component.file_upload_field'); ?>
+                        <?php echo $__env->renderComponent(); ?>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Payment Section Card --}}
+        
         <div class="invoice-card">
             <div class="card-header-custom">
                 <h2>
@@ -483,7 +483,7 @@
             </div>
         </div>
 
-        {{-- Action Buttons --}}
+        
         <div class="btn-actions">
             <a href="javascript:history.back()">
                 <button type="button" class="btn-custom btn-secondary-custom">
@@ -498,13 +498,13 @@
         </div>
     </form>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('post_scripts')
+<?php $__env->startSection('post_scripts'); ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script type="text/javascript" src="{{ asset('js/rooms.js') }}"></script>
-<script type="text/javascript" src="{{ asset('js/hide_elements.js') }}"></script>
+<script type="text/javascript" src="<?php echo e(asset('js/rooms.js')); ?>"></script>
+<script type="text/javascript" src="<?php echo e(asset('js/hide_elements.js')); ?>"></script>
 
 <script>
 $(document).ready(function() {
@@ -537,7 +537,7 @@ $(document).ready(function() {
     });
 
     // Tour selection handler
-    const APP_URL = '{{ url('/supplierdropdown') }}';
+    const APP_URL = '<?php echo e(url('/supplierdropdown')); ?>';
     let previousSelection = [];
     let selected = [];
     let appendedInputs = [];
@@ -613,7 +613,7 @@ $(document).ready(function() {
             contactItemCount++;
             $('#payment-inputs').append(res);
             $('input[name="_token"]').each(function() {
-                $(this).val("{{ csrf_token() }}");
+                $(this).val("<?php echo e(csrf_token()); ?>");
             });
         });
     }
@@ -627,4 +627,5 @@ $(document).ready(function() {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/invoices/create.blade.php ENDPATH**/ ?>

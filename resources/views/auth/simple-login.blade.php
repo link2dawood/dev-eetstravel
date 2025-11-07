@@ -9,9 +9,9 @@
     <!-- Bootstrap 3.3.7 -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- AdminLTE -->
-    <link rel="stylesheet" href="{{ asset('css/AdminLTE.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+    <!-- AdminLTE (use all-skins as fallback) -->
+    <link rel="stylesheet" href="{{ asset('css/skins/_all-skins.min.css') }}">
     <!-- iCheck -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.2/skins/square/blue.css">
 
@@ -113,11 +113,11 @@
     </div>
 
     <!-- jQuery 3 -->
-    <script src="{{ asset('js/jquery.min.js') }}"></script>
+    <script src="{{ asset('js/lib/jquery.min.js') }}"></script>
     <!-- Bootstrap 3.3.7 -->
-    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('js/lib/bootstrap.min.js') }}"></script>
     <!-- iCheck -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.2/icheck.min.js"></script>
+    <script src="{{ asset('js/icheck.min.js') }}"></script>
     <script>
         $(function () {
             $('input').iCheck({

@@ -94,9 +94,9 @@ class Task extends Model
 
     public function tourNameNotification()
     {
-
         if ($this->tour){
-            $tour = Tour::query()->where('id', $this->tour)->first();
+            // Use eager loaded relationship to avoid N+1 queries
+            $tour = $this->relationLoaded('tour') ? $this->tour : Tour::find($this->tour);
             if ($tour){
                 return "Task {$this->content} for tour " . $tour->name;
             }else{
@@ -117,21 +117,8 @@ class Task extends Model
         return Carbon::parse($value)->format('Y-m-d H:i');
     }
 
-    public function getAssignAttribute($value)
-    {
-        if (!is_numeric($value)) return $value;
-        else {
-            return User::find($value)->name;
-        }
-    }
-
-    /*public function getTourAttribute($value)
-    {
-        if ($value){
-            $tour = Tour::find($value);
-            if ($tour) return $tour->name;
-        }   
-    }*/ // todo What to do this function??
+    // Removed getAssignAttribute accessor to prevent conflicts
+    // Use $task->assignedTo relationship instead of $task->assign for displaying names
 
     public function showAssignedUsers()
     {

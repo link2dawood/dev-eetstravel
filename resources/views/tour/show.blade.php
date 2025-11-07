@@ -2,7 +2,6 @@
 @section('title', 'Show Tour')
 
 @section('post_styles')
-<link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>
     /* Toggle Switch */
     .toggle {
@@ -166,32 +165,28 @@
     </div>
 
     {{-- Office Selection --}}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Select Office:</label>
-                            <div class="input-group">
-                                <select class="form-select selectedOffice">
-                                    @foreach($offices as $office)
-                                        <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
-                                            {{ $office->office_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <button class="btn btn-primary select-office-btn" type="button">
-                                    <i class="ti ti-check me-1"></i>Select
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <button class="btn btn-info mt-4" data-bs-toggle="modal" data-bs-target="#legendModal">
-                                <i class="ti ti-help me-1"></i>Help
-                            </button>
-                        </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Select Office:</label>
+                    <div class="input-group">
+                        <select class="form-select selectedOffice" id="office-select" style="width: auto;">
+                            @foreach($offices as $office)
+                                <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
+                                    {{ $office->office_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button class="btn btn-primary select-office-btn" type="button">
+                            <i class="ti ti-check me-1"></i>Select
+                        </button>
                     </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#legendModal">
+                        <i class="ti ti-help me-1"></i>Help
+                    </button>
                 </div>
             </div>
         </div>

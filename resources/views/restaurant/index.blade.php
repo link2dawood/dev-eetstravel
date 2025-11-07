@@ -1,199 +1,112 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Restaurants')
+
 @section('content')
-<style>
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-}
-
-.action-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.action-btn.show svg {
-    stroke: #3b82f6;
-}
-
-.action-btn.edit svg {
-    stroke: #f59e0b;
-}
-
-.action-btn.delete svg {
-    stroke: #ef4444;
-}
-
-.action-btn:hover {
-    transform: scale(1.15);
-}
-
-.action-btn.show:hover {
-    background-color: rgba(59, 130, 246, 0.1);
-}
-
-.action-btn.edit:hover {
-    background-color: rgba(245, 158, 11, 0.1);
-}
-
-.action-btn.delete:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-}
-</style>
-
-	@include('layouts.title',
-   ['title' => 'Restaurants', 'sub_title' => 'Restaurants List',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Restaurants', 'icon' => 'coffee', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-            @if (Session::has('message'))
-                    <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
-                @endif
-				<div>
-					{!! \App\Helper\PermissionHelper::getCreateButton(route('restaurant.create'), \App\Restaurant::class) !!}
-				</div>
-        @if(session('export_all'))
-          	<div class="alert alert-info col-md-12" style="text-align: center;">
-         		{{session('export_all')}}
+<div class="container-xl">
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">Service Management</div>
+                <h2 class="page-title"><i class="ti ti-tools-kitchen-2 me-2"></i>Restaurants</h2>
             </div>
-        @endif
-        <div class="mb-3">
-            <div class="row">
-                <div class="col-md-6">
-                    <input type="text" id="restaurants-search" class="form-control" placeholder="Search restaurants..." onkeyup="filterTable('restaurants-table', this.value)">
+            <div class="col-auto ms-auto d-print-none">
+                {!! \App\Helper\PermissionHelper::getCreateButton(route('restaurant.create'), \App\Restaurant::class, 'btn btn-primary') !!}
+            </div>
+        </div>
+    </div>
+
+    @if (Session::has('message'))
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <div class="d-flex"><div><i class="ti ti-alert-circle me-2"></i></div><div class="flex-fill">{{ Session::get('message') }}</div><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        </div>
+    @endif
+    @if(session('export_all'))
+        <div class="alert alert-info alert-dismissible" role="alert">
+            <div class="d-flex"><div><i class="ti ti-info-circle me-2"></i></div><div class="flex-fill">{{ session('export_all') }}</div><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Restaurants List</h3></div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <div class="input-icon">
+                        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                        <input type="text" id="restaurants-search" class="form-control" placeholder="Search restaurants..." onkeyup="filterTable('restaurants-table', this.value)">
+                    </div>
                 </div>
-                <div class="col-md-6 text-right">
-                    <button class="btn btn-success btn-sm" onclick="exportTableToCSV('restaurants-table', 'restaurants_export.csv')">
-                        <i class="fa fa-download"></i> Export CSV
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success" onclick="exportTableToCSV('restaurants-table', 'restaurants_export.csv')">
+                        <i class="ti ti-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
                     </button>
                 </div>
             </div>
-        </div>
-        <div class="table-responsive">
-            <table id="restaurants-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%; table-layout: fixed;word-break: break-all;'>
-                <thead>
-                <tr>
-                    <th onclick="sortTable(0, 'restaurants-table')">ID <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(1, 'restaurants-table')">{{trans('main.Name')}} <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(2, 'restaurants-table')">{{trans('main.Address')}} <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(3, 'restaurants-table')">{{trans('main.Country')}} <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(4, 'restaurants-table')">{{trans('main.City')}} <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(5, 'restaurants-table')">{{trans('main.Phone')}} <i class="fa fa-sort"></i></th>
-                    <th onclick="sortTable(6, 'restaurants-table')">{{trans('main.Email')}} <i class="fa fa-sort"></i></th>
-                    <th class="actions-button" style="width: 140px">{{trans('main.Actions')}}</th>
-                </tr>
-                </thead>
-                <tbody>
-                    @forelse($restaurants as $restaurant)
-                    <tr>
-                        <td>{{ $restaurant->id }}</td>
-                        <td>{{ $restaurant->name }}</td>
-                        <td>{{ $restaurant->address_first }}</td>
-                        <td>{{ $restaurant->country_name ?? '' }}</td>
-                        <td>{{ $restaurant->city_name ?? '' }}</td>
-                        <td>{{ $restaurant->work_phone }}</td>
-                        <td>{{ $restaurant->contact_email }}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ route('restaurant.show', $restaurant->id) }}" class="action-btn show" title="View">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <circle cx="12" cy="12" r="2" />
-                                        <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
-                                    </svg>
-                                </a>
-                                <a href="{{ route('restaurant.edit', $restaurant->id) }}" class="action-btn edit" title="Edit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                        <path d="M16 5l3 3" />
-                                    </svg>
-                                </a>
-                                <a href="#" onclick="confirmRestaurantDelete(event, '{{ route('restaurant.destroy', $restaurant->id) }}')" class="action-btn delete" title="Delete">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <path d="M4 7l16 0" />
-                                        <path d="M10 11l0 6" />
-                                        <path d="M14 11l0 6" />
-                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                        <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                    </svg>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center">No restaurants found</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                {{ $restaurants->links() }}
+            <div class="table-responsive">
+                <table id="restaurants-table" class="table card-table table-vcenter table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:60px" onclick="sortTable(0, 'restaurants-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(1, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell" onclick="sortTable(2, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell" onclick="sortTable(3, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell" onclick="sortTable(4, 'restaurants-table')" class="cursor-pointer">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell" onclick="sortTable(5, 'restaurants-table')" class="cursor-pointer">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-xl-table-cell" onclick="sortTable(6, 'restaurants-table')" class="cursor-pointer">{!!trans('main.ContactEmail')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="text-end">{!!trans('main.Actions')!!}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($restaurants as $restaurant)
+                        <tr>
+                            <td><span class="text-muted">#{{ $restaurant->id }}</span></td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">{{ $restaurant->name }}</span>
+                                    <small class="text-muted d-lg-none">{{ $restaurant->city_name ?? '' }}</small>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $restaurant->address ?? '—' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->country_name ?? '—' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->city_name ?? '—' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $restaurant->work_phone ?? '—' }}</span></td>
+                            <td class="d-none d-xl-table-cell"><span class="text-muted">{{ $restaurant->contact_email ?? '—' }}</span></td>
+                            <td class="text-end">
+                                <div class="btn-list justify-content-end">
+                                    @include('component.action_buttons', ['item' => $restaurant, 'routePrefix' => 'restaurant'])
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="empty">
+                                    <div class="empty-icon"><i class="ti ti-tools-kitchen-2 icon" style="font-size: 3rem;"></i></div>
+                                    <p class="empty-title">No restaurants found</p>
+                                    <p class="empty-subtitle text-muted">Get started by adding your first restaurant</p>
+                                    <div class="empty-action">
+                                        {!! \App\Helper\PermissionHelper::getCreateButton(route('restaurant.create'), \App\Restaurant::class, 'btn btn-primary') !!}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+            @if($restaurants->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">Showing {{ $restaurants->firstItem() }} to {{ $restaurants->lastItem() }} of {{ $restaurants->total() }} entries</div>
+                <div>{{ $restaurants->links() }}</div>
+            </div>
+            @endif
         </div>
-        </div>
-        </div>
-</section>
+    </div>
+</div>
+<span id="service-name" hidden data-service-name='Restaurant'></span>
 @endsection
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeBootstrapTable('restaurants-table');
-    });
-
-    function confirmRestaurantDelete(event, deleteUrl) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        if (confirm("Are you sure you want to delete this restaurant?")) {
-            const form = document.createElement('form');
-            form.action = deleteUrl;
-            form.method = 'POST';
-            form.style.display = 'none';
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]');
-            if (csrfToken) {
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrfToken.getAttribute('content');
-                form.appendChild(csrfInput);
-            }
-
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
-
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
+<script>$(document).ready(function() { initializeBootstrapTable('restaurants-table'); });</script>
 @endpush

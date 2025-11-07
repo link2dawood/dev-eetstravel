@@ -1,6 +1,6 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
-@section('content')
+
+<?php $__env->startSection('title','Show'); ?>
+<?php $__env->startSection('content'); ?>
 <style>
     .nav-tabs {
         border-bottom: 2px solid #e9ecef;
@@ -30,7 +30,7 @@
         animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
+    @keyframes  fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
     }
@@ -179,12 +179,12 @@
     }
 </style>
 
-@include('layouts.title',
+<?php echo $__env->make('layouts.title',
    ['title' => 'Restaurant', 'sub_title' => 'Show Restaurant',
    'breadcrumbs' => [
    ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
    ['title' => 'Restaurants', 'icon' => 'coffee', 'route' => route('restaurant.index')],
-   ['title' => 'Show', 'route' => null]]])
+   ['title' => 'Show', 'route' => null]]], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
 <section class="content">
     <div class="box box-primary">
@@ -193,12 +193,14 @@
             <div class="margin_button">
                 <a href="javascript:history.back()">
                     <button class='btn btn-primary'>
-                        <i class="fa fa-arrow-left"></i> {{trans('main.Back')}}
+                        <i class="fa fa-arrow-left"></i> <?php echo e(trans('main.Back')); ?>
+
                     </button>
                 </a>
-                <a href="{!! route('restaurant.edit', $restaurant->id) !!}">
+                <a href="<?php echo route('restaurant.edit', $restaurant->id); ?>">
                     <button class='btn btn-warning'>
-                        <i class="fa fa-pencil"></i> {{trans('main.Edit')}}
+                        <i class="fa fa-pencil"></i> <?php echo e(trans('main.Edit')); ?>
+
                     </button>
                 </a>
             </div>
@@ -207,22 +209,26 @@
             <ul class="nav nav-tabs" role='tablist'>
                 <li role='presentation' class="active">
                     <a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>
-                        <i class="fa fa-info-circle"></i> {{trans('main.Info')}}
+                        <i class="fa fa-info-circle"></i> <?php echo e(trans('main.Info')); ?>
+
                     </a>
                 </li>
                 <li role='presentation'>
                     <a href="#history-tab" aria-controls='history-tab' role='tab' data-toggle='tab'>
-                        <i class="fa fa-history"></i> {{trans('main.History')}}
+                        <i class="fa fa-history"></i> <?php echo e(trans('main.History')); ?>
+
                     </a>
                 </li>
                 <li role='presentation'>
                     <a href="#menu-tab" aria-controls='menu-tab' role='tab' data-toggle='tab'>
-                        <i class="fa fa-cutlery"></i> {{trans('main.Menu')}}
+                        <i class="fa fa-cutlery"></i> <?php echo e(trans('main.Menu')); ?>
+
                     </a>
                 </li>
                 <li role='presentation'>
                     <a href="#invoices-tab" aria-controls='invoices-tab' role='tab' data-toggle='tab'>
-                        <i class="fa fa-file-invoice"></i> {{trans('Invoices')}}
+                        <i class="fa fa-file-invoice"></i> <?php echo e(trans('Invoices')); ?>
+
                     </a>
                 </li>
             </ul>
@@ -234,52 +240,55 @@
                 <div class="tab-pane fade in active" role='tabpanel' id='info-tab'>
                     <!-- Basic Information Section -->
                     <div class="info-section">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;">{{trans('main.BasicInformation')}}</h4>
+                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;"><?php echo e(trans('main.BasicInformation')); ?></h4>
                         <div class="info-row">
                             <div class="info-item">
-                                <label>{{trans('main.Name')}}</label>
-                                <div class="value">{!!$restaurant->name!!}</div>
+                                <label><?php echo e(trans('main.Name')); ?></label>
+                                <div class="value"><?php echo $restaurant->name; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.Code')}}</label>
-                                <div class="value">{!!$restaurant->code!!}</div>
+                                <label><?php echo e(trans('main.Code')); ?></label>
+                                <div class="value"><?php echo $restaurant->code; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.Country')}}</label>
+                                <label><?php echo e(trans('main.Country')); ?></label>
                                 <div class="value">
-                                    @if(!empty($restaurant->country))
-                                        {!! \App\Helper\CitiesHelper::getCountryById($restaurant->country)['name']!!}
-                                    @else
+                                    <?php if(!empty($restaurant->country)): ?>
+                                        <?php echo \App\Helper\CitiesHelper::getCountryById($restaurant->country)['name']; ?>
+
+                                    <?php else: ?>
                                         <span class="text-muted">-</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.City')}}</label>
+                                <label><?php echo e(trans('main.City')); ?></label>
                                 <div class="value">
-                                    @if(!empty($restaurant->city))
-                                        @if(is_numeric($restaurant->city))
-                                            {!! \App\Helper\CitiesHelper::getCityById($restaurant->city)['name']!!}
-                                        @else
-                                            {!! $restaurant->city!!}
-                                        @endif
-                                    @else
+                                    <?php if(!empty($restaurant->city)): ?>
+                                        <?php if(is_numeric($restaurant->city)): ?>
+                                            <?php echo \App\Helper\CitiesHelper::getCityById($restaurant->city)['name']; ?>
+
+                                        <?php else: ?>
+                                            <?php echo $restaurant->city; ?>
+
+                                        <?php endif; ?>
+                                    <?php else: ?>
                                         <span class="text-muted">-</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.Rate')}}</label>
-                                <div class="value">{!!$restaurant->rate_name!!}</div>
+                                <label><?php echo e(trans('main.Rate')); ?></label>
+                                <div class="value"><?php echo $restaurant->rate_name; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.Website')}}</label>
+                                <label><?php echo e(trans('main.Website')); ?></label>
                                 <div class="value">
-                                    @if($restaurant->website)
-                                        <a href="{!!$restaurant->website!!}" target="_blank">{!!$restaurant->website!!}</a>
-                                    @else
+                                    <?php if($restaurant->website): ?>
+                                        <a href="<?php echo $restaurant->website; ?>" target="_blank"><?php echo $restaurant->website; ?></a>
+                                    <?php else: ?>
                                         <span class="text-muted">-</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -287,101 +296,102 @@
 
                     <!-- Address Information Section -->
                     <div class="info-section">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;">{{trans('main.Address')}}</h4>
+                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;"><?php echo e(trans('main.Address')); ?></h4>
                         <div class="info-row">
                             <div class="info-item">
-                                <label>{{trans('main.AddressFirst')}}</label>
-                                <div class="value">{!!$restaurant->address_first!!}</div>
+                                <label><?php echo e(trans('main.AddressFirst')); ?></label>
+                                <div class="value"><?php echo $restaurant->address_first; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.AddressSecond')}}</label>
-                                <div class="value">{!!$restaurant->address_second!!}</div>
+                                <label><?php echo e(trans('main.AddressSecond')); ?></label>
+                                <div class="value"><?php echo $restaurant->address_second; ?></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Contact Information Section -->
                     <div class="info-section">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;">{{trans('main.ContactInformation')}}</h4>
+                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;"><?php echo e(trans('main.ContactInformation')); ?></h4>
                         <div class="info-row">
                             <div class="info-item">
-                                <label>{{trans('main.WorkPhone')}}</label>
-                                <div class="value">{!!$restaurant->work_phone!!}</div>
+                                <label><?php echo e(trans('main.WorkPhone')); ?></label>
+                                <div class="value"><?php echo $restaurant->work_phone; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.WorkFax')}}</label>
-                                <div class="value">{!!$restaurant->work_fax!!}</div>
+                                <label><?php echo e(trans('main.WorkFax')); ?></label>
+                                <div class="value"><?php echo $restaurant->work_fax; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.WorkEmail')}}</label>
-                                <div class="value">{!!$restaurant->work_email!!}</div>
+                                <label><?php echo e(trans('main.WorkEmail')); ?></label>
+                                <div class="value"><?php echo $restaurant->work_email; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.ContactName')}}</label>
-                                <div class="value">{!!$restaurant->contact_name!!}</div>
+                                <label><?php echo e(trans('main.ContactName')); ?></label>
+                                <div class="value"><?php echo $restaurant->contact_name; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.ContactPhone')}}</label>
-                                <div class="value">{!!$restaurant->contact_phone!!}</div>
+                                <label><?php echo e(trans('main.ContactPhone')); ?></label>
+                                <div class="value"><?php echo $restaurant->contact_phone; ?></div>
                             </div>
                             <div class="info-item">
-                                <label>{{trans('main.ContactEmail')}}</label>
-                                <div class="value">{!!$restaurant->contact_email!!}</div>
+                                <label><?php echo e(trans('main.ContactEmail')); ?></label>
+                                <div class="value"><?php echo $restaurant->contact_email; ?></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Additional Information Section -->
                     <div class="info-section">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;">{{trans('main.AdditionalInformation')}}</h4>
+                        <h4 style="margin-top: 0; margin-bottom: 20px; font-weight: 600;"><?php echo e(trans('main.AdditionalInformation')); ?></h4>
                         <div class="info-item" style="margin-bottom: 20px;">
-                            <label>{{trans('main.Criterias')}}</label>
+                            <label><?php echo e(trans('main.Criterias')); ?></label>
                             <div class="criteria-badges">
-                                @forelse($restaurant->criterias as $item)
-                                    @foreach($criterias as $criteria)
-                                        @if($criteria->id == $item->criteria_id)
-                                            <span class="criteria-badge">{!!$criteria->name!!}</span>
-                                        @endif
-                                    @endforeach
-                                @empty
+                                <?php $__empty_1 = true; $__currentLoopData = $restaurant->criterias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    <?php $__currentLoopData = $criterias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $criteria): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if($criteria->id == $item->criteria_id): ?>
+                                            <span class="criteria-badge"><?php echo $criteria->name; ?></span>
+                                        <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <span class="text-muted">-</span>
-                                @endforelse
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="info-item" style="margin-bottom: 20px;">
-                            <label>{{trans('main.Comments')}}</label>
-                            <div class="value">{!!$restaurant->comments!!}</div>
+                            <label><?php echo e(trans('main.Comments')); ?></label>
+                            <div class="value"><?php echo $restaurant->comments; ?></div>
                         </div>
                         <div class="info-item">
-                            <label>{{trans('main.IntComments')}}</label>
-                            <div class="value">{!!$restaurant->int_comments!!}</div>
+                            <label><?php echo e(trans('main.IntComments')); ?></label>
+                            <div class="value"><?php echo $restaurant->int_comments; ?></div>
                         </div>
                     </div>
 
                     <!-- Files Section -->
-                    @component('component.files', ['files' => $files])@endcomponent
+                    <?php $__env->startComponent('component.files', ['files' => $files]); ?><?php echo $__env->renderComponent(); ?>
 
                     <!-- Comments Section -->
                     <div class="comments-section" style="margin-top: 20px;">
                         <div class="box-header">
                             <i class="fa fa-comments-o"></i>
-                            <h3 class="box-title">{{trans('main.Comments')}}</h3>
+                            <h3 class="box-title"><?php echo e(trans('main.Comments')); ?></h3>
                         </div>
                         <div id="show_comments" style="margin-bottom: 20px;"></div>
-                        <form method='POST' action='{{route('comment.store')}}' enctype="multipart/form-data" id="form_comment">
-                            @csrf
+                        <form method='POST' action='<?php echo e(route('comment.store')); ?>' enctype="multipart/form-data" id="form_comment">
+                            <?php echo csrf_field(); ?>
                             <div class="form-group">
-                                <textarea class="form-control" id="content" name="content" placeholder="{{trans('main.AddComment')}}" rows="4"></textarea>
+                                <textarea class="form-control" id="content" name="content" placeholder="<?php echo e(trans('main.AddComment')); ?>" rows="4"></textarea>
                             </div>
                             <div class="form-group">
-                                <label>{{trans('main.Files')}}</label>
-                                @component('component.file_upload_field')@endcomponent
+                                <label><?php echo e(trans('main.Files')); ?></label>
+                                <?php $__env->startComponent('component.file_upload_field'); ?><?php echo $__env->renderComponent(); ?>
                             </div>
-                            <input type="hidden" id="parent_comment" name="parent" value="{{ null }}">
-                            <input type="hidden" id="default_reference_id" name="reference_id" value="{{ $restaurant->id }}">
-                            <input type="hidden" id="default_reference_type" name="reference_type" value="{{ \App\Comment::$services['restaurant']}}">
+                            <input type="hidden" id="parent_comment" name="parent" value="<?php echo e(null); ?>">
+                            <input type="hidden" id="default_reference_id" name="reference_id" value="<?php echo e($restaurant->id); ?>">
+                            <input type="hidden" id="default_reference_type" name="reference_type" value="<?php echo e(\App\Comment::$services['restaurant']); ?>">
                             <button type="submit" class="btn btn-success" id="btn_send_comment">
-                                <i class="fa fa-paper-plane"></i> {{trans('main.Send')}}
+                                <i class="fa fa-paper-plane"></i> <?php echo e(trans('main.Send')); ?>
+
                             </button>
                         </form>
                     </div>
@@ -395,7 +405,8 @@
                 <!-- Menu Tab -->
                 <div class="tab-pane fade" role='tabpanel' id='menu-tab'>
                     <div style="margin-bottom: 20px;">
-                        {!! \App\Helper\PermissionHelper::getCreateButton(route('menu.create'), \App\Menu::class) !!}
+                        <?php echo \App\Helper\PermissionHelper::getCreateButton(route('menu.create'), \App\Menu::class); ?>
+
                     </div>
 
                     <div class="menu-table table-responsive">
@@ -403,32 +414,32 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>{{trans('main.Name')}}</th>
-                                    <th>{{trans('main.Description')}}</th>
-                                    <th style="width: 140px;">{{trans('main.Actions')}}</th>
+                                    <th><?php echo e(trans('main.Name')); ?></th>
+                                    <th><?php echo e(trans('main.Description')); ?></th>
+                                    <th style="width: 140px;"><?php echo e(trans('main.Actions')); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($menus as $menu)
+                                <?php $__empty_1 = true; $__currentLoopData = $menus; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $menu): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
-                                        <td>{{ $menu->id }}</td>
-                                        <td>{{ $menu->name }}</td>
-                                        <td>{{ $menu->description }}</td>
+                                        <td><?php echo e($menu->id); ?></td>
+                                        <td><?php echo e($menu->name); ?></td>
+                                        <td><?php echo e($menu->description); ?></td>
                                         <td class="text-center">
-                                            @include('component.action_buttons', [
+                                            <?php echo $__env->make('component.action_buttons', [
                                                 'routePrefix' => 'menu',
                                                 'item' => $menu,
                                                 'showEdit' => true,
                                                 'showDelete' => true,
                                                 'showView' => true
-                                            ])
+                                            ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
-                                        <td colspan="4" class="text-center">{{trans('main.NoMenusFound')}}</td>
+                                        <td colspan="4" class="text-center"><?php echo e(trans('main.NoMenusFound')); ?></td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -437,7 +448,8 @@
                 <!-- Invoices Tab -->
                 <div class="tab-pane fade" role='tabpanel' id='invoices-tab'>
                     <div style="margin-bottom: 20px;">
-                        {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class) !!}
+                        <?php echo \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class); ?>
+
                     </div>
 
                     <div class="row" style="margin-bottom: 20px;">
@@ -471,63 +483,65 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @if(isset($invoices) && count($invoices) > 0)
-                                    @foreach($invoices as $invoice)
+                                <?php if(isset($invoices) && count($invoices) > 0): ?>
+                                    <?php $__currentLoopData = $invoices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
-                                            <td>{{ $invoice->id }}</td>
-                                            <td>{{ $invoice->invoice_no ?? 'N/A' }}</td>
-                                            <td>{{ $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') : 'N/A' }}</td>
-                                            <td>{{ $invoice->received_date ? \Carbon\Carbon::parse($invoice->received_date)->format('Y-m-d') : 'N/A' }}</td>
-                                            <td>{{ $invoice->tour_name ?? 'N/A' }}</td>
-                                            <td>{{ $invoice->service_name ?? 'N/A' }}</td>
-                                            <td>{{ $invoice->office_name ?? 'N/A' }}</td>
-                                            <td>{{ number_format($invoice->total_amount ?? 0, 2) }}</td>
+                                            <td><?php echo e($invoice->id); ?></td>
+                                            <td><?php echo e($invoice->invoice_no ?? 'N/A'); ?></td>
+                                            <td><?php echo e($invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') : 'N/A'); ?></td>
+                                            <td><?php echo e($invoice->received_date ? \Carbon\Carbon::parse($invoice->received_date)->format('Y-m-d') : 'N/A'); ?></td>
+                                            <td><?php echo e($invoice->tour_name ?? 'N/A'); ?></td>
+                                            <td><?php echo e($invoice->service_name ?? 'N/A'); ?></td>
+                                            <td><?php echo e($invoice->office_name ?? 'N/A'); ?></td>
+                                            <td><?php echo e(number_format($invoice->total_amount ?? 0, 2)); ?></td>
                                             <td>
-                                                <span class="badge badge-{{ $invoice->status == 'paid' ? 'success' : ($invoice->status == 'pending' ? 'warning' : 'danger') }}">
-                                                    {{ ucfirst($invoice->status ?? 'pending') }}
+                                                <span class="badge badge-<?php echo e($invoice->status == 'paid' ? 'success' : ($invoice->status == 'pending' ? 'warning' : 'danger')); ?>">
+                                                    <?php echo e(ucfirst($invoice->status ?? 'pending')); ?>
+
                                                 </span>
                                             </td>
                                             <td>
-                                                @include('component.action_buttons', [
+                                                <?php echo $__env->make('component.action_buttons', [
                                                     'routePrefix' => 'invoices',
                                                     'item' => $invoice,
                                                     'showEdit' => true,
                                                     'showDelete' => true,
                                                     'showView' => true
-                                                ])
+                                                ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                                             </td>
                                         </tr>
-                                    @endforeach
-                                @else
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php else: ?>
                                     <tr>
                                         <td colspan="10" class="text-center">No invoices found for this restaurant</td>
                                     </tr>
-                                @endif
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
 
-                    @if(isset($invoices) && method_exists($invoices, 'links'))
+                    <?php if(isset($invoices) && method_exists($invoices, 'links')): ?>
                         <div class="row" style="margin-top: 20px;">
                             <div class="col-md-12">
-                                {{ $invoices->links() }}
+                                <?php echo e($invoices->links()); ?>
+
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
             </div>
         </div>
     </div>
 
-    <span id="services_name" data-service-name='Restaurant' data-history-route="{{route('services_history', ['id' => $restaurant->id])}}"></span>
+    <span id="services_name" data-service-name='Restaurant' data-history-route="<?php echo e(route('services_history', ['id' => $restaurant->id])); ?>"></span>
 </section>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('post_scripts')
-    <script src="{{ asset('js/comment.js') }}"></script>
-    <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<?php $__env->startSection('post_scripts'); ?>
+    <script src="<?php echo e(asset('js/comment.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/bootstrap-tables.js')); ?>"></script>
     <script>
         $(document).ready(function() {
             initializeBootstrapTable('inovices-table');
@@ -595,4 +609,5 @@
             }
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/restaurant/show.blade.php ENDPATH**/ ?>

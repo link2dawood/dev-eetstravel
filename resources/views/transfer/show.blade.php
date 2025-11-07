@@ -1,340 +1,405 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Bus Company Details')
+
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Bus Company', 'sub_title' => 'Bus Company Show',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Bus Company', 'icon' => 'exchange', 'route' => route('transfer.index')],
-   ['title' => 'Show', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="margin_button">
-                            <a href="javascript:history.back()">
-                                <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                            </a>
-                            <a href="{!! route('transfer.edit', $transfer->id) !!}">
-                                <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                            </a>
-                        </div>
-                    </div>
+<div class="container-xl">
+    {{-- Page Header --}}
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('transfer.index') }}">Bus Companies</a></li>
+                            <li class="breadcrumb-item active">{{ $transfer->name }}</li>
+                        </ol>
+                    </nav>
                 </div>
-                <ul class="nav nav-tabs" role='tablist'>
-                    <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>Info</a></li>
-                    <li role='presentation'><a href="#history-tab" aria-controls='history-tab' role='tab' data-toggle='tab'>History</a></li>
-					<li role='presentation' class="tab" data-tab="invoices-tab"><a href="#invoices-tab" aria-controls='invoices-tab' role='tab'
-                                data-toggle='tab' id="invoices_tab" >{!! trans('Invoices') !!}</a></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade in active" role='tabpanel' id='info-tab'>
-                        <table class='table_show col-lg-6 table table-bordered'>
-                            <tbody>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Name')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->name!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.AddressFirst')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->address_first!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.AddressSecond')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->address_second!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Country')!!}: </i></b>
-                                </td>
-								@if(!empty($transfer->country))
-								<td class="info_td_show">{!! \App\Helper\CitiesHelper::getCountryById($transfer->country)['name']!!}</td>
-								@else
-								<td class="info_td_show"></td>
-								@endif
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.City')!!}: </i></b>
-                                </td>
-								@if(!empty($transfer->city))
-								<td class="info_td_show">{!! \App\Helper\CitiesHelper::getCityById($transfer->city)['name']!!}</td>
-								@else
-								<td class="info_td_show"></td>
-								@endif
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Code')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->code!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.WorkPhone')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->work_phone!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.WorkFax')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->work_fax!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.WorkEmail')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->work_email!!}</td>
-                            </tr>
-
-                            </tbody>
-                        </table>
-                        <table class='table_show col-lg-6 table table-bordered'>
-                            <tbody>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Comments')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->comments!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.IntComments')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->int_comments!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.ContactName')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->contact_name!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.ContactPhone')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->contact_phone!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.ContactEmail')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->contact_email!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Criterias')!!}: </i></b>
-                                </td>
-                                @forelse($criterias as $criteria)
-                                    @forelse($transfer->criterias as $item)
-                                        @if($criteria->id == $item->criteria_id)
-                                            <td class="info_td_show criteria_block" style="display: block">{!!$criteria->name!!}</td>
-                                        @endif
-                                    @empty
-                                        <td class="info_td_show"></td>
-                                    @endforelse
-                                @empty
-                                    <td class="info_td_show"></td>
-                                @endforelse
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Rate')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->rate_name!!}</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <b><i>{!!trans('main.Website')!!}: </i></b>
-                                </td>
-                                <td class="info_td_show">{!!$transfer->website!!}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                        <div class="clearfix"></div>
-                @component('component.files', ['files' => $files])@endcomponent
-
-        <span id="showPreviewBlock" data-info="{{ true }}"></span>
-        <div class="box box-success" style="position: relative; left: 0px; top: 0px;">
-            <div class="box-header ui-sortable-handle" style="cursor: move;">
-                <i class="fa fa-comments-o"></i>
-
-                <h3 class="box-title">{!!trans('main.Comments')!!}</h3>
+                <h2 class="page-title">
+                    <i class="ti ti-bus me-2"></i>{{ $transfer->name }}
+                </h2>
             </div>
-            <div class="box-body">
-                <div class="slimScrollDiv" style="position: relative; overflow-y: scroll;  width: auto;">
-                    <div class="box-body box chat" id="chat-box" style="width: auto; height: auto;">
-                        <div id="show_comments"></div>
-                    </div>
-                    <div class="slimScrollRail" style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51) none repeat scroll 0% 0%; opacity: 0.2; z-index: 90; right: 1px;"></div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="{{ route('transfer.index') }}" class="btn btn-ghost-secondary">
+                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
+                    </a>
+                    @if (Auth::user()->can('transfer.edit'))
+                        <a href="{{ route('transfer.edit', $transfer->id) }}" class="btn btn-warning">
+                            <i class="ti ti-edit me-1"></i>{!! trans('main.Edit') !!}
+                        </a>
+                    @endif
                 </div>
-            </div>
-            <!-- /.chat -->
-            <div class="box-footer">
-                <form method='POST' action='{{route('comment.store')}}' enctype="multipart/form-data" id="form_comment">
-                    <div class="input-group" style="width: 100%">
-                                        <span id="author_name" class="input-group-addon">
-                                            <span id="name"></span>
-                                            <a href="#" id="reply_close"><i class="fa fa-close"></i></a>
-                                        </span>
-                        <textarea class="form-control" id="content" name="content" placeholder="Ctrl + Enter to post comment"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>{!!trans('main.Files')!!}</label>
-                        @component('component.file_upload_field')@endcomponent
-                    </div>
-                    <input type="text" id="parent_comment" hidden name="parent" value="{{ null }}">
-                    <input type="text" id="default_reference_id" hidden name="reference_id" value="{{ $transfer->id }}">
-                    <input type="text" id="default_reference_type" hidden name="reference_type" value="{{ \App\Comment::$services['transfer']}}">
-
-                    <button type="submit" class="btn btn-success pull-right" id="btn_send_comment" style="margin-top: 5px;">{!!trans('main.Send')!!}</button>
-                </form>
             </div>
         </div>
-                    </div>
-                    <div class="tab-pane fade" role='tabpanel' id='history-tab'>
-                        <div id="history-container"></div>
-                    </div>
-					<div role="tabpanel" class="tab-pane fade in" id="invoices-tab">
-					<div id="tour_create" style="margin-bottom : 20px;">
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class) !!}
-                </div>
+    </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <input type="text" id="invoiceSearchInput" class="form-control" placeholder="Search invoices..." onkeyup="filterInvoiceTable()">
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-primary" onclick="exportInvoicesToCSV()">Export CSV</button>
-                            <button type="button" class="btn btn-success" onclick="exportInvoicesToExcel()">Export Excel</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table id="inovices-table" class="table table-striped table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Invoice No</th>
-                                <th>Due Date</th>
-                                <th>Received Date</th>
-                                <th>Tour</th>
-                                <th>Service</th>
-                                <th>Office Name</th>
-                                <th>Total Price</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if(isset($invoices) && $invoices->count() > 0)
-                                @foreach($invoices as $invoice)
+    {{-- Tabs --}}
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a href="#info-tab" class="nav-link active" data-bs-toggle="tab" aria-selected="true" role="tab">
+                        <i class="ti ti-info-circle me-1"></i>Information
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#history-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <i class="ti ti-history me-1"></i>History
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#invoices-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1" id="invoices_tab">
+                        <i class="ti ti-file-invoice me-1"></i>{!! trans('Invoices') !!}
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                {{-- Info Tab --}}
+                <div class="tab-pane fade show active" id="info-tab" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="mb-3"><i class="ti ti-building me-2"></i>Company Information</h3>
+                            <table class="table table-borderless">
+                                <tbody>
                                     <tr>
-                                        <td>{{ $invoice->id }}</td>
-                                        <td>{{ $invoice->invoice_no ?? 'N/A' }}</td>
-                                        <td>{{ $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') : 'N/A' }}</td>
-                                        <td>{{ $invoice->received_date ? \Carbon\Carbon::parse($invoice->received_date)->format('Y-m-d') : 'N/A' }}</td>
-                                        <td>{{ $invoice->tour_name ?? 'N/A' }}</td>
-                                        <td>{{ $invoice->service_name ?? 'N/A' }}</td>
-                                        <td>{{ $invoice->office_name ?? 'N/A' }}</td>
-                                        <td>{{ number_format($invoice->total_amount ?? 0, 2) }}</td>
+                                        <td class="w-50"><strong>{!!trans('main.Name')!!}:</strong></td>
+                                        <td>{{ $transfer->name ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.AddressFirst')!!}:</strong></td>
+                                        <td>{{ $transfer->address_first ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.AddressSecond')!!}:</strong></td>
+                                        <td>{{ $transfer->address_second ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Country')!!}:</strong></td>
                                         <td>
-                                            <span class="badge badge-{{ $invoice->status == 'paid' ? 'success' : ($invoice->status == 'pending' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($invoice->status ?? 'pending') }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @include('component.action_buttons', [
-                                                'routePrefix' => 'invoices',
-                                                'item' => $invoice,
-                                                'showEdit' => true,
-                                                'showDelete' => true,
-                                                'showView' => true
-                                            ])
+                                            @if(!empty($transfer->country))
+                                                {{ \App\Helper\CitiesHelper::getCountryById($transfer->country)['name'] ?? '—' }}
+                                            @else
+                                                —
+                                            @endif
                                         </td>
                                     </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="10" class="text-center">No invoices found for this transfer company</td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
+                                    <tr>
+                                        <td><strong>{!!trans('main.City')!!}:</strong></td>
+                                        <td>
+                                            @if(!empty($transfer->city))
+                                                {{ \App\Helper\CitiesHelper::getCityById($transfer->city)['name'] ?? '—' }}
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Code')!!}:</strong></td>
+                                        <td>{{ $transfer->code ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.WorkPhone')!!}:</strong></td>
+                                        <td>{{ $transfer->work_phone ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.WorkFax')!!}:</strong></td>
+                                        <td>{{ $transfer->work_fax ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.WorkEmail')!!}:</strong></td>
+                                        <td>{{ $transfer->work_email ?? '—' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h3 class="mb-3"><i class="ti ti-user me-2"></i>Contact & Details</h3>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td class="w-50"><strong>{!!trans('main.ContactName')!!}:</strong></td>
+                                        <td>{{ $transfer->contact_name ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.ContactPhone')!!}:</strong></td>
+                                        <td>{{ $transfer->contact_phone ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.ContactEmail')!!}:</strong></td>
+                                        <td>{{ $transfer->contact_email ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Website')!!}:</strong></td>
+                                        <td>
+                                            @if($transfer->website)
+                                                <a href="{{ $transfer->website }}" target="_blank" class="text-primary">
+                                                    {{ $transfer->website }}
+                                                </a>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Rate')!!}:</strong></td>
+                                        <td>{{ $transfer->rate_name ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Criterias')!!}:</strong></td>
+                                        <td>
+                                            @forelse($criterias as $criteria)
+                                                @forelse($transfer->criterias as $item)
+                                                    @if($criteria->id == $item->criteria_id)
+                                                        <span class="badge bg-blue-lt me-1">{{ $criteria->name }}</span>
+                                                    @endif
+                                                @empty
+                                                @endforelse
+                                            @empty
+                                                <span class="text-muted">—</span>
+                                            @endforelse
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.Comments')!!}:</strong></td>
+                                        <td>{{ $transfer->comments ?? '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{!!trans('main.IntComments')!!}:</strong></td>
+                                        <td>{{ $transfer->int_comments ?? '—' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Files Component --}}
+                    <div class="mt-4">
+                        @component('component.files', ['files' => $files])@endcomponent
+                    </div>
+
+                    {{-- Comments Section --}}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="ti ti-message me-2"></i>{!!trans('main.Comments')!!}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="show_comments" style="max-height: 400px; overflow-y: auto;"></div>
+                        </div>
+                        <div class="card-footer">
+                            <form method="POST" action="{{ route('comment.store') }}" enctype="multipart/form-data" id="form_comment">
+                                @csrf
+                                <div class="mb-3">
+                                    <span id="author_name" class="text-muted" style="display:none;">
+                                        <span id="name"></span>
+                                        <a href="#" id="reply_close" class="ms-2"><i class="ti ti-x"></i></a>
+                                    </span>
+                                    <textarea class="form-control" 
+                                              id="content" 
+                                              name="content" 
+                                              rows="3" 
+                                              placeholder="Ctrl + Enter to post comment"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">{!!trans('main.Files')!!}</label>
+                                    @component('component.file_upload_field')@endcomponent
+                                </div>
+                                <input type="hidden" id="parent_comment" name="parent" value="">
+                                <input type="hidden" id="default_reference_id" name="reference_id" value="{{ $transfer->id }}">
+                                <input type="hidden" id="default_reference_type" name="reference_type" value="{{ \App\Comment::$services['transfer'] ?? 'transfer' }}">
+                                <button type="submit" class="btn btn-primary" id="btn_send_comment">
+                                    <i class="ti ti-send me-1"></i>{!!trans('main.Send')!!}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
-                @if(isset($invoices) && method_exists($invoices, 'links'))
-                    <div class="row">
-                        <div class="col-md-12">
+                {{-- History Tab --}}
+                <div class="tab-pane fade" id="history-tab" role="tabpanel">
+                    <div id="history-container"></div>
+                </div>
+
+                {{-- Invoices Tab --}}
+                <div class="tab-pane fade" id="invoices-tab" role="tabpanel">
+                    <div class="mb-3">
+                        {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-primary') !!}
+                    </div>
+
+                    {{-- Search & Export --}}
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="input-icon">
+                                <span class="input-icon-addon">
+                                    <i class="ti ti-search"></i>
+                                </span>
+                                <input type="text" 
+                                       id="invoiceSearchInput" 
+                                       class="form-control" 
+                                       placeholder="Search invoices..." 
+                                       onkeyup="filterInvoiceTable()">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-success" onclick="exportInvoicesToCSV()">
+                                    <i class="ti ti-file-type-csv me-1"></i>CSV
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="exportInvoicesToExcel()">
+                                    <i class="ti ti-file-type-xls me-1"></i>Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Invoices Table --}}
+                    <div class="table-responsive">
+                        <table id="inovices-table" class="table card-table table-vcenter table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">ID</th>
+                                    <th>Invoice No</th>
+                                    <th class="d-none d-md-table-cell">Due Date</th>
+                                    <th class="d-none d-md-table-cell">Received Date</th>
+                                    <th class="d-none d-lg-table-cell">Tour</th>
+                                    <th class="d-none d-xl-table-cell">Service</th>
+                                    <th class="d-none d-xl-table-cell">Office</th>
+                                    <th>Total Price</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(isset($invoices) && $invoices->count() > 0)
+                                    @foreach($invoices as $invoice)
+                                        <tr>
+                                            <td>
+                                                <span class="text-muted">#{{ $invoice->id }}</span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ $invoice->invoice_no ?? 'N/A' }}</strong>
+                                            </td>
+                                            <td class="d-none d-md-table-cell">
+                                                {{ $invoice->due_date ? \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') : 'N/A' }}
+                                            </td>
+                                            <td class="d-none d-md-table-cell">
+                                                {{ $invoice->received_date ? \Carbon\Carbon::parse($invoice->received_date)->format('Y-m-d') : 'N/A' }}
+                                            </td>
+                                            <td class="d-none d-lg-table-cell">
+                                                {{ $invoice->tour_name ?? 'N/A' }}
+                                            </td>
+                                            <td class="d-none d-xl-table-cell">
+                                                {{ $invoice->service_name ?? 'N/A' }}
+                                            </td>
+                                            <td class="d-none d-xl-table-cell">
+                                                {{ $invoice->office_name ?? 'N/A' }}
+                                            </td>
+                                            <td>
+                                                <strong>{{ number_format($invoice->total_amount ?? 0, 2) }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ $invoice->status == 'paid' ? 'success' : ($invoice->status == 'pending' ? 'warning' : 'danger') }}">
+                                                    {{ ucfirst($invoice->status ?? 'pending') }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-list justify-content-end">
+                                                    @include('component.action_buttons', [
+                                                        'routePrefix' => 'invoices',
+                                                        'item' => $invoice,
+                                                        'showEdit' => true,
+                                                        'showDelete' => true,
+                                                        'showView' => true
+                                                    ])
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="10" class="text-center py-5">
+                                            <div class="empty">
+                                                <div class="empty-icon">
+                                                    <i class="ti ti-file-invoice icon" style="font-size: 3rem;"></i>
+                                                </div>
+                                                <p class="empty-title">No invoices found</p>
+                                                <p class="empty-subtitle text-muted">Invoices for this bus company will appear here</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Pagination --}}
+                    @if(isset($invoices) && method_exists($invoices, 'links') && $invoices->hasPages())
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted">
+                            Showing {{ $invoices->firstItem() }} to {{ $invoices->lastItem() }} of {{ $invoices->total() }} entries
+                        </div>
+                        <div>
                             {{ $invoices->links() }}
                         </div>
                     </div>
-                @endif
-
-
-
+                    @endif
                 </div>
-                </div>
-                
             </div>
         </div>
-    </section>
-    <span id="services_name" data-service-name='Transfer' data-history-route="{{route('services_history', ['id' => $transfer->id])}}"></span>
+    </div>
+</div>
+
+<span id="showPreviewBlock" data-info="{{ true }}" hidden></span>
+<span id="services_name" data-service-name='Transfer' data-history-route="{{route('services_history', ['id' => $transfer->id])}}" hidden></span>
 @endsection
 
 @section('post_scripts')
-    <script src="{{ asset('js/comment.js') }}"></script>
-    <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-    <script>
-        $(document).ready(function() {
-            // Initialize Bootstrap table functionality
-            initializeBootstrapTable('inovices-table');
-        });
+<script src="{{ asset('js/comment.js') }}"></script>
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Bootstrap table functionality
+        initializeBootstrapTable('inovices-table');
+    });
 
-        // Invoice table search functionality
-        function filterInvoiceTable() {
-            const input = document.getElementById('invoiceSearchInput');
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById('inovices-table');
-            const tr = table.getElementsByTagName('tr');
+    // Invoice table search functionality
+    function filterInvoiceTable() {
+        const input = document.getElementById('invoiceSearchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('inovices-table');
+        const tr = table.getElementsByTagName('tr');
 
-            for (let i = 1; i < tr.length; i++) {
-                let display = false;
-                const td = tr[i].getElementsByTagName('td');
+        for (let i = 1; i < tr.length; i++) {
+            let display = false;
+            const td = tr[i].getElementsByTagName('td');
 
-                for (let j = 0; j < td.length - 1; j++) { // Exclude action column
-                    if (td[j]) {
-                        const txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            display = true;
-                            break;
-                        }
+            for (let j = 0; j < td.length - 1; j++) { // Exclude action column
+                if (td[j]) {
+                    const txtValue = td[j].textContent || td[j].innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        display = true;
+                        break;
                     }
                 }
-
-                tr[i].style.display = display ? '' : 'none';
             }
-        }
 
-        // Export functions for invoices
-        function exportInvoicesToCSV() {
-            exportTableToCSV('inovices-table', 'transfer-invoices.csv');
+            tr[i].style.display = display ? '' : 'none';
         }
+    }
 
-        function exportInvoicesToExcel() {
-            exportTableToExcel('inovices-table', 'transfer-invoices');
-        }
-    </script>
+    // Export functions for invoices
+    function exportInvoicesToCSV() {
+        exportTableToCSV('inovices-table', 'transfer-invoices.csv');
+    }
+
+    function exportInvoicesToExcel() {
+        exportTableToExcel('inovices-table', 'transfer-invoices');
+    }
+</script>
 @endsection

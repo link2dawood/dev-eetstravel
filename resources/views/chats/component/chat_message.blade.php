@@ -8,7 +8,7 @@
     <!-- /.direct-chat-info -->
     <img class="direct-chat-img" src="{{$message->author->avatar_file_name == null ? asset('img/avatar.png') : $message->author->avatar->url('logo')}}"><!-- /.direct-chat-img -->
     <div class="direct-chat-text">
-        {!! nl2br($message->message) !!}
+        {!! nl2br(e($message->message)) !!}
     </div>
     <!-- /.direct-chat-text -->
 </div>

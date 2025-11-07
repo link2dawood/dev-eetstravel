@@ -13,6 +13,7 @@
             <div class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
+                        
                         <input type="text" id="past-offers-search" class="form-control" placeholder="Search past offers..." onkeyup="filterTable('past-offers-table', this.value)">
                     </div>
                     <div class="col-md-6 text-right">
@@ -26,6 +27,7 @@
                 <table id="past-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%; table-layout: fixed'>
                     <thead>
                         <tr>
+                            
                             <th onclick="sortTable(0, 'past-offers-table')">ID <i class="fa fa-sort"></i></th>
                             <th onclick="sortTable(1, 'past-offers-table')"><?php echo trans('Tour Name'); ?> <i class="fa fa-sort"></i></th>
                             <th onclick="sortTable(2, 'past-offers-table')"><?php echo trans('City'); ?> <i class="fa fa-sort"></i></th>
@@ -68,6 +70,13 @@
                     </tbody>
                 </table>
             </div>
+
+            
+            <div class="d-flex justify-content-end mt-4">
+                <?php echo e($tours->withQueryString()->links()); ?>
+
+            </div>
+
         </div>
     </div>
 </section>
@@ -77,10 +86,10 @@
 <script src="<?php echo e(asset('js/bootstrap-tables.js')); ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // If your initializeBootstrapTable function interferes with standard Laravel pagination
+        // you might need to disable it, but try keeping it first.
         initializeBootstrapTable('past-offers-table');
     });
 </script>
 <?php $__env->stopPush(); ?>
-
-
 <?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/offers/past_offers.blade.php ENDPATH**/ ?>

@@ -114,16 +114,19 @@ class OfferController extends Controller
 		return view("offers.current_offers",compact('room_types','tours'));
 	}
 	public function past_offers(){
-		$room_types = RoomTypes::all();
-		$currentDate = Carbon::now(); // Get the current date and time
-		$oneWeekLater = $currentDate->copy()->addWeek(); // Add one week to the current date
-		$tours = Tour::with(['status', 'city_begin', 'city_end'])
-			->where('status', '=', 46)
-			->orWhere('retirement_date', '<', $oneWeekLater)
-			->get();
+    $room_types = RoomTypes::all();
+    $currentDate = Carbon::now();
+    $oneWeekLater = $currentDate->copy()->addWeek();
 
-		return view("offers.past_offers",compact('room_types','tours'));
-	}
+    // Change get() to paginate(10)
+    $tours = Tour::with(['status', 'city_begin', 'city_end'])
+        ->where('status', '=', 46)
+        ->orWhere('retirement_date', '<', $oneWeekLater)
+        ->orderBy('id', 'desc') // It is good practice to order paginated results
+        ->paginate(10);
+
+    return view("offers.past_offers",compact('room_types','tours'));
+}
 	public function current_bookings(){
 		$room_types = RoomTypes::all();
 
@@ -215,120 +218,123 @@ class OfferController extends Controller
 		//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
 	}
 	
-	public function cancellation_policies_data(Request $request)
-	{
-		$sevenDaysAgo = Carbon::now()->subDays(7);
-		$roomTypes = RoomTypes::all();
-	
-	
-		$desiredStatuses = ["Offered with Option", "Offered No rooms blocked"];
-		if($request->offer_id){
-			$offers = OfferCancellationPolicies::with('hotelOffer')
-			->where('offer_id', $request->offer_id)
-			->get();
-		}
-		else{
-		$offers = OfferCancellationPolicies::with('hotelOffer')->get();
-		}
-		$permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
-		$permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
-		$permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
+public function cancellation_policies_data(Request $request)
+{
+    $sevenDaysAgo = Carbon::now()->subDays(7);
+    $roomTypes = RoomTypes::all();
 
-		$perm = [];
-		$perm['show'] = Auth::user()->can($permission_show);
-		$perm['edit'] = Auth::user()->can($permission_edit);
-		$perm['destroy'] = Auth::user()->can($permission_destroy);
-		$perm['clone'] = Auth::user()->can('accounting.create');
+    $desiredStatuses = ["Offered with Option", "Offered No rooms blocked"];
+    
+    if($request->offer_id){
+        $offers = OfferCancellationPolicies::with(['hotelOffer.tourPackage', 'hotelOffer.tour'])
+            ->where('offer_id', $request->offer_id)
+            ->get();
+    } else {
+        $offers = OfferCancellationPolicies::with(['hotelOffer.tourPackage', 'hotelOffer.tour'])
+            ->get();
+    }
+    
+    $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
+    $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
+    $permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
 
-		$dataTable = Datatables::of($offers);
+    $perm = [];
+    $perm['show'] = Auth::user()->can($permission_show);
+    $perm['edit'] = Auth::user()->can($permission_edit);
+    $perm['destroy'] = Auth::user()->can($permission_destroy);
+    $perm['clone'] = Auth::user()->can('accounting.create');
 
+    $dataTable = Datatables::of($offers);
 
-		$dataTable->addColumn('hotel_name', function ($offers) use ($perm) {
-			$package = TourPackage::find($offers->hotelOffer->package_id);
-			if(empty($package)){
-				return "";
-				//$offers->delete();
-			}
-			return $package->name??"";
-        });	
-		$dataTable->addColumn('city', function ($offers) use ($perm) {
-			$package = TourPackage::find($offers->hotelOffer->package_id);
-			if(empty($package)){
-				return "";
-			}
-			$city_id =  $package->service()->city??"";
-			$city = City::find($city_id);
-			return $city->name??"";
-        });
-		$dataTable->addColumn('stay_date', function ($offers) use ($perm) {
-			$package = TourPackage::find($offers->hotelOffer->package_id);
-			$stay_date = "";
-
-			if (!empty($package) && !empty($package->time_from)) {
-				$timeFrom = Carbon::parse($package->time_from);
-				$stay_date = $timeFrom->toDateString();
-			}
-
-			return $stay_date;
-		});
-		$dataTable->addColumn('room_types', function ($offers) use ($perm) {
-			return "";
-			$hotel = Hotel::find($offers->hotelOffer->package_id);
-            return $hotel->city;
-        });
-		$dataTable->addColumn('offer_price', function ($offers) use ($perm) {
-			return "";
-			$hotel = Hotel::find($offers->hotelOffer->package_id);
-            return $hotel->city;
-        });
-			
+    $dataTable->addColumn('hotel_name', function ($offer) {
+        return $offer->hotelOffer && $offer->hotelOffer->tourPackage 
+            ? $offer->hotelOffer->tourPackage->name 
+            : "";
+    });	
+    
+    $dataTable->addColumn('city', function ($offer) {
+        if (!$offer->hotelOffer || !$offer->hotelOffer->tourPackage) {
+            return "";
+        }
+        $city_id = $offer->hotelOffer->tourPackage->service()->city ?? "";
+        $city = City::find($city_id);
+        return $city->name ?? "";
+    });
+    
+    $dataTable->addColumn('stay_date', function ($offer) {
+        if (!$offer->hotelOffer || !$offer->hotelOffer->tourPackage) {
+            return "";
+        }
         
-		foreach ($roomTypes as $roomType) {
-			$columnName = $roomType->code;
+        $stay_date = "";
+        if (!empty($offer->hotelOffer->tourPackage->time_from)) {
+            $timeFrom = Carbon::parse($offer->hotelOffer->tourPackage->time_from);
+            $stay_date = $timeFrom->toDateString();
+        }
+        return $stay_date;
+    });
 
-			$dataTable->addColumn($columnName, function ($offer) use ($roomType) {
-				return "";
-				foreach ($offers->hotelOffer->offer_room_prices as $offerRoomPrice) {
-					if ($offerRoomPrice->room_type_id == $roomType->id) {
-						return $offerRoomPrice->price;
-					}
-				}
-				return "N/A";
-			});
-		}
+    foreach ($roomTypes as $roomType) {
+        $columnName = $roomType->code;
+        $dataTable->addColumn($columnName, function ($offer) use ($roomType) {
+            if (!$offer->hotelOffer || !$offer->hotelOffer->offer_room_prices) {
+                return "N/A";
+            }
+            foreach ($offer->hotelOffer->offer_room_prices as $offerRoomPrice) {
+                if ($offerRoomPrice->room_type_id == $roomType->id) {
+                    return $offerRoomPrice->price;
+                }
+            }
+            return "N/A";
+        });
+    }
 
-		$dataTable->addColumn('tour_name', function ($offers) use ($perm) {
-			$tour = Tour::find($offers->hotelOffer->tour_id);
-			$tour_name = "";
-			if(!empty($tour)){
-				$tour_name = $tour->name??"";
-			}
-            return $tour_name;
-        });
-		$dataTable->addColumn('cancel_policy', function ($offers) {
-               
-			$policy_content = "N/A";
-			if(isset($offers)){
-			$policy_content = $offers->cancellation_days.' days before arrival: '.$offers->cancellation_percentage. $offers->cancellation_type.' can be cancelled free of charge. ';
-			}
-			return $policy_content;
-		});
-		$dataTable ->addColumn('status', function ($offers) use ($perm) {
-			return $offers->hotelOffer->status;
-        });	
-		$dataTable ->addColumn('status_tms', function ($offers) use ($perm) {
-			return $offers->getStatusName??"";
-        });	
-		$dataTable ->addColumn('option_date', function ($offers) use ($perm) {
-			return $offers->hotelOffer->option_date;
-        });
-       $dataTable ->addColumn('action', function ($offers) use ($perm) {
-			return "";
-            return $this->getShowButton($offers->hotelOffer(),$perm);
-        });
-		return	$dataTable->rawColumns(['select', 'action', 'link'])
-			->make(true);
-	}
+    $dataTable->addColumn('tour_name', function ($offer) {
+        return $offer->hotelOffer && $offer->hotelOffer->tour 
+            ? $offer->hotelOffer->tour->name 
+            : "";
+    });
+    
+    $dataTable->addColumn('tour_id', function ($offer) {
+        return $offer->hotelOffer ? $offer->hotelOffer->tour_id : 0;
+    });
+    
+    $dataTable->addColumn('cancel_policy', function ($offer) {
+        if (!$offer) {
+            return "N/A";
+        }
+        return $offer->cancellation_days . ' days before arrival: ' . 
+               $offer->cancellation_percentage . $offer->cancellation_type . 
+               ' can be cancelled free of charge.';
+    });
+    
+    $dataTable->addColumn('status', function ($offer) {
+        return $offer->hotelOffer ? $offer->hotelOffer->status : "";
+    });	
+    
+    $dataTable->addColumn('status_tms', function ($offer) {
+        return $offer->getStatusName ?? "";
+    });	
+    
+    $dataTable->addColumn('option_date', function ($offer) {
+        return $offer->hotelOffer ? $offer->hotelOffer->option_date : "";
+    });
+    
+    $dataTable->addColumn('action', function ($offer) use ($perm) {
+        if (!$offer->hotelOffer) {
+            return "";
+        }
+        // Make sure you're passing the offer object correctly
+        return view('component.action_buttons', [
+            'item' => (object)['id' => $offer->hotelOffer->tour_id ?? 0],
+            'routePrefix' => 'tour',
+            'perm' => $perm
+        ])->render();
+    });
+    
+    return $dataTable->rawColumns(['select', 'action', 'link'])
+        ->make(true);
+}
 	public function recent_offers_data(Request $request)
 {
     $sevenDaysAgo = Carbon::now()->subDays(7);

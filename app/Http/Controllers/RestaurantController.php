@@ -26,7 +26,7 @@ use URL;
 use Illuminate\Support\Facades\Session;
 use App\Library\Services\DeleteModel;
 
-class   RestaurantController extends Controller
+class RestaurantController extends Controller
 {
     use FileTrait;
 
@@ -86,16 +86,14 @@ class   RestaurantController extends Controller
      */
     public function store(StoreRestaurantRequest $request)
     {
-		    $lastRestaurant = Restaurant::latest('id')->first();
-    $newId = $lastRestaurant ? $lastRestaurant->id + 1 : 1;
+        $lastRestaurant = Restaurant::latest('id')->first();
+        $newId = $lastRestaurant ? $lastRestaurant->id + 1 : 1;
 
-    $data = $request->except('attach', 'place_id', 'criterias');
-    $data['id'] = $newId;
-    $data['city'] = CitiesHelper::changeCityNameToID($request['city']);
+        $data = $request->except('attach', 'place_id', 'criterias');
+        $data['id'] = $newId;
+        $data['city'] = CitiesHelper::changeCityNameToID($request['city']);
 
-    $restaurant = $this->restaurants->create($data);
-   
- 
+        $restaurant = $this->restaurants->create($data);
 
         if(!empty($request->criterias)){
             $criterias = explode(',', $request->criterias);
@@ -107,11 +105,11 @@ class   RestaurantController extends Controller
                 $services_has_criteria->save();
             }
         }
+        
         LaravelFlashSessionHelper::setFlashMessage("Restaurant $restaurant->name created", 'success');
         $this->addFile($request, $restaurant);    
-        $data = ['route' => route('restaurant.index')];
-		return redirect()->route('restaurant.index');
-        return response()->json($data);
+        
+        return redirect()->route('restaurant.index');
     }
 
     /**
@@ -133,24 +131,40 @@ class   RestaurantController extends Controller
             ->select('restaurants.*', 'rates.name as rate_name')
             ->where('restaurants.id', $id)
             ->first();
-        $restaurant->getCriterias();
-
-        if($restaurant == null){
-            return abort(404);
+            
+        if (!$restaurant) {
+            return abort(404, 'Restaurant not found');
         }
 
+        // Get criterias
+        $restaurant->getCriterias();
+        
+        // Get all criterias for display
         $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
             ->orderBy('criterias.name','asc')
             ->select('criterias.*', 'criteria_types.name as criteria_name')
             ->where('criteria_types.service_type', '=', 'restaurant')
             ->get();
 
+        // Get menus for this restaurant
+        $menus = $restaurant->menus ?? collect([]);
+        
+        // Get invoices for this restaurant
+        $invoices = $restaurant->invoices ?? collect([]);
+        
+        // Get comments
+        $comments = Comment::where('reference_type', Comment::$services['restaurant'])
+            ->where('reference_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Get files
         $files = $this->parseAttach($restaurant);
 
         return view(
             'restaurant.show',
-            [ 'title' => $title, 'restaurant' => $restaurant, 'files' => $files,
-            'criterias' => $criterias]);
+            compact('title', 'restaurant', 'files', 'criterias', 'menus', 'invoices', 'comments')
+        );
     }
 
     /**
@@ -166,7 +180,6 @@ class   RestaurantController extends Controller
             return URL::to('restaurant/' . $id . '/edit');
         }
 
-
         $restaurant = $this->restaurants->getById($id);
 
         $restaurant->getCriterias();
@@ -177,10 +190,14 @@ class   RestaurantController extends Controller
             ->get();
         $rates = Rate::query()->orderBy('sort_order', 'asc')->get();
         $files = $this->parseAttach($restaurant);
-	
-        return view('restaurant.edit', ['title' => $title, 'restaurant' => $restaurant, 'files' => $files,
+    
+        return view('restaurant.edit', [
+            'title' => $title, 
+            'restaurant' => $restaurant, 
+            'files' => $files,
             'criterias' => $criterias,
-            'rates' => $rates]);
+            'rates' => $rates
+        ]);
     }
 
     /**
@@ -194,10 +211,13 @@ class   RestaurantController extends Controller
     {
         $request = CitiesHelper::setCityGeneral($request);
         $this->restaurants->updateById($id, $request->except('attach', 'place_id', 'criterias'));
+        
         ServicesHasCriteria::where('service_id', $id)
             ->where('service_type', ServicesHasCriteria::$serviceTypes['restaurant'])
             ->delete();
+            
         $restaurant = $this->restaurants->getById($id);
+        
         if(!empty($request->criterias)){
             $criterias = explode(',', $request->criterias);
             foreach ($criterias as $criteria){
@@ -212,9 +232,8 @@ class   RestaurantController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Restaurant $restaurant->name edited", 'success');
 
         $this->addFile($request, $restaurant);
-        $data = ['route' => route('restaurant.index')];
-		return redirect()->route('restaurant.index');
-        return response()->json($data);
+        
+        return redirect()->route('restaurant.index');
     }
 
     /**
@@ -226,8 +245,11 @@ class   RestaurantController extends Controller
      */
     public function DeleteMsg($id, Request $request)
     {
-//        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/restaurant/' . $id . '/delete');
-        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/restaurant/' . $id . '/delete');
+        $msg = Ajaxis::BtDeleting(
+            trans('main.Warning').'!!',
+            trans('main.WouldyouliketoremoveThis').'?', 
+            '/restaurant/' . $id . '/delete'
+        );
 
         if ($request->ajax()) {
             return $msg;
@@ -240,37 +262,34 @@ class   RestaurantController extends Controller
      * @param    int $id
      * @return  \Illuminate\Http\Response
      */
-//    public function destroy($id)
-//    {
-//        
-//        $restaurant = $this->restaurants->getById($id);
-//        $this->removeFile($restaurant);
-//        ServicesHasCriteria::where('service_id', $id)
-//            ->where('service_type', ServicesHasCriteria::$serviceTypes['restaurant'])
-//            ->delete();
-//        GooglePlaces::where('service_id', $id)->where('type', GooglePlaces::$services['restaurant'])->delete();
-//        $this->restaurants->deleteById($id);
-//        Comment::query()->where('reference_type', Comment::$services['restaurant'])->where('reference_id', $id)->delete();
-//        return URL::to('restaurant');
-//    }
-    
     public function destroy($id, DeleteModel $deleteModel)
     {
         $restaurant = $this->restaurants->getById($id);
 
         $message = $deleteModel->check($restaurant, 'Restaurant');
+        
         if ($message){
             Session::flash('message', $message);
         } else {        
             $this->removeFile($restaurant);
+            
             ServicesHasCriteria::where('service_id', $id)
                 ->where('service_type', ServicesHasCriteria::$serviceTypes['restaurant'])
                 ->delete();
+                
+            GooglePlaces::where('service_id', $id)
+                ->where('type', GooglePlaces::$services['restaurant'])
+                ->delete();
+                
+            Comment::query()
+                ->where('reference_type', Comment::$services['restaurant'])
+                ->where('reference_id', $id)
+                ->delete();
+                
             $this->restaurants->deleteById($id);
-            Comment::query()->where('reference_type', Comment::$services['restaurant'])->where('reference_id', $id)->delete();
+            
             LaravelFlashSessionHelper::setFlashMessage("Restaurant $restaurant->name deleted", 'success');
         }
-
 
         return URL::to('restaurant');
     }

@@ -49,56 +49,27 @@ class LoginController extends Controller
     }
 
     /**
-     * Handle a login request to the application.
+     * Attempt to log the user into the application.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * @return bool
      */
-    public function login(\Illuminate\Http\Request $request)
+    protected function attemptLogin(\Illuminate\Http\Request $request)
     {
-        $this->validateLogin($request);
+        return $this->guard()->attempt(
+            $this->credentials($request), 
+            $request->filled('remember')
+        );
+    }
 
-        // Check if user exists and test password
-        $user = \App\User::where('email', $request->input('email'))->first();
-        
-        // TEMPORARY DEBUG - Remove this after testing
-        if (!$user) {
-            return back()->withErrors([
-                'email' => 'DEBUG: User not found in database with email: ' . $request->input('email')
-            ])->withInput($request->only('email', 'remember'));
-        }
-        
-        $receivedPassword = $request->input('password');
-        $passwordCheck = \Illuminate\Support\Facades\Hash::check($receivedPassword, $user->password);
-        
-        if (!$passwordCheck) {
-            // Test with the expected password
-            $test123456 = \Illuminate\Support\Facades\Hash::check('123456', $user->password);
-            
-            return back()->withErrors([
-                'email' => 'DEBUG: Password mismatch! ' .
-                          'Received: "' . $receivedPassword . '" (length: ' . strlen($receivedPassword) . ')' .
-                          ' | Expected "123456" works: ' . ($test123456 ? 'YES' : 'NO') .
-                          ' | User: ' . $user->name . ' (ID: ' . $user->id . ')'
-            ])->withInput($request->only('email', 'remember'));
-        }
-
-        // Try authentication
-        if (method_exists($this, 'hasTooManyLoginAttempts') &&
-            $this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
-            return $this->sendLockoutResponse($request);
-        }
-
-        if ($this->attemptLogin($request)) {
-            return $this->sendLoginResponse($request);
-        }
-
-        // If we reach here, Auth::attempt failed even though password matched
-        return back()->withErrors([
-            'email' => 'DEBUG: Password matches but Auth::attempt() failed. This might be due to user status or other constraints.'
-        ])->withInput($request->only('email', 'remember'));
+    /**
+     * Get the needed authorization credentials from the request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    protected function credentials(\Illuminate\Http\Request $request)
+    {
+        return $request->only($this->username(), 'password');
     }
 }

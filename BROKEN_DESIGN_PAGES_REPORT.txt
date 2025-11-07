@@ -1,0 +1,745 @@
+================================================================================
+BROKEN DESIGN PAGES - COMPREHENSIVE REPORT
+Date: 2025-11-06
+Total Pages Found: 202 files with old AdminLTE/Bootstrap 3 design
+================================================================================
+
+WHAT WAS SEARCHED:
+- Pages using old "box box-primary" / "box-header" / "box-body" classes
+- Pages using old "data-dismiss" modal syntax  
+- Pages extending old layouts
+- Pages with design inconsistencies
+
+================================================================================
+CRITICAL PAGES (High Traffic - Fix First)
+================================================================================
+
+TRANSFERS (5 pages) - PRIORITY: HIGH
+------------------------------------
+1. resources/views/transfer/show.blade.php
+2. resources/views/transfer/index.blade.php
+3. resources/views/transfer/edit.blade.php
+4. resources/views/transfer/create.blade.php
+
+HOTELS (3 pages) - PRIORITY: HIGH
+----------------------------------
+1. resources/views/hotel/show.blade.php
+2. resources/views/hotel/index.blade.php
+3. resources/views/hotel/edit.blade.php
+
+GUIDES (4 pages) - PRIORITY: HIGH
+----------------------------------
+1. resources/views/guide/show.blade.php
+2. resources/views/guide/index.blade.php
+3. resources/views/guide/edit.blade.php
+4. resources/views/guide/create.blade.php
+
+EVENTS (4 pages) - PRIORITY: HIGH
+----------------------------------
+1. resources/views/event/show.blade.php
+2. resources/views/event/index.blade.php
+3. resources/views/event/edit.blade.php
+4. resources/views/event/create.blade.php
+
+RESTAURANTS (4 pages) - PRIORITY: HIGH
+---------------------------------------
+1. resources/views/restaurant/show.blade.php
+2. resources/views/restaurant/index.blade.php
+3. resources/views/restaurant/edit.blade.php
+4. resources/views/restaurant/create.blade.php
+
+FLIGHTS (4 pages) - PRIORITY: HIGH
+-----------------------------------
+1. resources/views/flight/show.blade.php
+2. resources/views/flight/index.blade.php
+3. resources/views/flight/edit.blade.php
+4. resources/views/flight/create.blade.php
+
+CRUISES (4 pages) - PRIORITY: HIGH
+-----------------------------------
+1. resources/views/cruises/show.blade.php
+2. resources/views/cruises/index.blade.php
+3. resources/views/cruises/edit.blade.php
+4. resources/views/cruises/create.blade.php
+
+BUSES (4 pages) - PRIORITY: HIGH
+---------------------------------
+1. resources/views/bus/show.blade.php
+2. resources/views/bus/index.blade.php
+3. resources/views/bus/edit.blade.php
+4. resources/views/bus/create.blade.php
+
+DRIVERS (4 pages) - PRIORITY: HIGH
+-----------------------------------
+1. resources/views/driver/show.blade.php
+2. resources/views/driver/index.blade.php
+3. resources/views/driver/edit.blade.php
+4. resources/views/driver/create.blade.php
+
+
+================================================================================
+TOUR-RELATED PAGES (High Priority)
+================================================================================
+
+TOUR PACKAGES (6 pages)
+------------------------
+1. resources/views/tour_package/show.blade.php
+2. resources/views/tour_package/index.blade.php
+3. resources/views/tour_package/edit.blade.php
+4. resources/views/tour_package/create.blade.php
+5. resources/views/tour_package/service.blade.php
+6. resources/views/tour/packages.blade.php
+
+TOUR EDITING (3 pages)
+-----------------------
+1. resources/views/tour/edit.blade.php
+2. resources/views/tour/create.blade.php
+3. resources/views/tour/monthly_chart.blade.php
+
+TOUR PACKAGE OFFERS (3 pages)
+------------------------------
+1. resources/views/tour_package/offers/index.blade.php
+2. resources/views/tour_package/offers/create.blade.php
+3. resources/views/tour_package/offers/offer_emails.blade.php
+
+
+================================================================================
+FINANCIAL/ACCOUNTING PAGES (High Priority)
+================================================================================
+
+INVOICES (2 pages)
+------------------
+1. resources/views/invoices/show.blade.php
+2. resources/views/invoices/index.blade.php
+
+TRANSACTIONS (3 pages)
+-----------------------
+1. resources/views/transaction/show.blade.php
+2. resources/views/transaction/index.blade.php
+3. resources/views/transaction/create.blade.php
+
+QUOTATIONS (2 pages)
+--------------------
+1. resources/views/quotation/index.blade.php
+2. resources/views/quotation/edit.blade.php
+3. resources/views/quotation/column_type.blade.php
+
+ACCOUNTING (3 pages)
+--------------------
+1. resources/views/accounting/show.blade.php
+2. resources/views/accounting/index.blade.php
+3. resources/views/accounting/service_transaction/create.blade.php
+
+OFFICE MANAGEMENT (13 pages)
+-----------------------------
+1. resources/views/office/show.blade.php
+2. resources/views/office/index.blade.php
+3. resources/views/office/edit.blade.php
+4. resources/views/office/create.blade.php
+5. resources/views/office/utility_expenses/edit.blade.php
+6. resources/views/office/utility_expenses/create.blade.php
+7. resources/views/office/tour_expenses/edit.blade.php
+8. resources/views/office/tour_expenses/create.blade.php
+9. resources/views/office/office_earning/edit.blade.php
+10. resources/views/office/office_earning/create.blade.php
+11. resources/views/office/office_balance/edit.blade.php
+12. resources/views/office/office_balance/create.blade.php
+13. resources/views/office/employe_salary/edit.blade.php
+14. resources/views/office/employe_salary/create.blade.php
+15. resources/views/office/office_invoices/create.blade.php
+16. resources/views/office/office_invoices/office_invoice_detail.blade.php
+
+OFFERS (5 pages)
+----------------
+1. resources/views/offers/show.blade.php
+2. resources/views/offers/past_offers.blade.php
+3. resources/views/offers/current_offers.blade.php
+4. resources/views/offers/current_bookings.blade.php
+5. resources/views/offers/cancellation_policies.blade.php
+
+
+================================================================================
+SYSTEM/SETTINGS PAGES (Medium Priority)
+================================================================================
+
+SETTINGS (4 pages)
+------------------
+1. resources/views/settings/show.blade.php
+2. resources/views/settings/index.blade.php
+3. resources/views/settings/edit.blade.php
+4. resources/views/settings/create.blade.php
+
+USERS (2 pages)
+---------------
+1. resources/views/scaffold-interface/users/edit.blade.php
+2. resources/views/scaffold-interface/users/create.blade.php
+
+ROLES (2 pages)
+---------------
+1. resources/views/scaffold-interface/roles/edit.blade.php
+2. resources/views/scaffold-interface/roles/create.blade.php
+
+PERMISSIONS (3 pages)
+----------------------
+1. resources/views/scaffold-interface/permissions/index.blade.php
+2. resources/views/scaffold-interface/permissions/edit.blade.php
+3. resources/views/scaffold-interface/permissions/create.blade.php
+
+STATUSES (4 pages)
+------------------
+1. resources/views/status/show.blade.php
+2. resources/views/status/index.blade.php
+3. resources/views/status/edit.blade.php
+4. resources/views/status/create.blade.php
+
+MENUS (3 pages)
+---------------
+1. resources/views/menu/show.blade.php
+2. resources/views/menu/edit.blade.php
+3. resources/views/menu/create.blade.php
+
+
+================================================================================
+CONFIGURATION PAGES (Medium Priority)
+================================================================================
+
+CURRENCIES (8 pages)
+--------------------
+1. resources/views/currencies/show.blade.php
+2. resources/views/currencies/index.blade.php
+3. resources/views/currencies/edit.blade.php
+4. resources/views/currencies/create.blade.php
+5. resources/views/currency_rate/show.blade.php
+6. resources/views/currency_rate/index.blade.php
+7. resources/views/currency_rate/edit.blade.php
+8. resources/views/currency_rate/create.blade.php
+
+TAXES (4 pages)
+---------------
+1. resources/views/taxes/show.blade.php
+2. resources/views/taxes/index.blade.php
+3. resources/views/taxes/edit.blade.php
+4. resources/views/taxes/create.blade.php
+
+ROOM TYPES (4 pages)
+--------------------
+1. resources/views/room_types/show.blade.php
+2. resources/views/room_types/index.blade.php
+3. resources/views/room_types/edit.blade.php
+4. resources/views/room_types/create.blade.php
+
+RATES (4 pages)
+---------------
+1. resources/views/rate/show.blade.php
+2. resources/views/rate/index.blade.php
+3. resources/views/rate/edit.blade.php
+4. resources/views/rate/create.blade.php
+
+CRITERIA (4 pages)
+------------------
+1. resources/views/criteria/show.blade.php
+2. resources/views/criteria/index.blade.php
+3. resources/views/criteria/edit.blade.php
+4. resources/views/criteria/create.blade.php
+
+SEASONS (2 pages)
+-----------------
+1. resources/views/season/edit.blade.php
+2. resources/views/season/create.blade.php
+
+TEMPLATES (2 pages)
+-------------------
+1. resources/views/templates/show.blade.php
+2. resources/views/templates/index.blade.php
+
+
+================================================================================
+SECONDARY PAGES (Lower Priority)
+================================================================================
+
+KONTINGENT (2 pages)
+--------------------
+1. resources/views/kontingent/edit.blade.php
+2. resources/views/kontingent/create.blade.php
+
+HOLIDAY CALENDAR (4 pages)
+---------------------------
+1. resources/views/holidaycalendar/show.blade.php
+2. resources/views/holidaycalendar/index.blade.php
+3. resources/views/holidaycalendar/edit.blade.php
+4. resources/views/holidaycalendar/create.blade.php
+
+GUEST LIST (1 page)
+-------------------
+1. resources/views/guest_list/index.blade.php
+
+TASKS (2 pages)
+---------------
+1. resources/views/task/show.blade.php
+2. resources/views/task/edit.blade.php (Note: task/index.blade.php already uses Tabler)
+
+ANNOUNCEMENTS (4 pages)
+------------------------
+1. resources/views/announcements/show_tree_view.blade.php
+2. resources/views/announcements/index.blade.php
+3. resources/views/announcements/edit.blade.php
+4. resources/views/announcements/create.blade.php
+
+CHATS (3 pages)
+---------------
+1. resources/views/chats/show.blade.php
+2. resources/views/chats/index.blade.php
+3. resources/views/chats/component/chat.blade.php
+
+COMMENTS (3 pages)
+------------------
+1. resources/views/comments/show.blade.php
+2. resources/views/comments/index.blade.php
+3. resources/views/comments/edit.blade.php
+
+ACTIVITIES (1 page)
+-------------------
+1. resources/views/activities/index.blade.php
+
+ATTACHMENTS (1 page)
+--------------------
+1. resources/views/attachment/index.blade.php
+
+COMPARISON (3 pages)
+--------------------
+1. resources/views/comparison/show.blade.php
+2. resources/views/comparison/frontsheet.blade.php
+3. resources/views/comparison/comments.blade.php
+
+PROFILE (2 pages)
+-----------------
+1. resources/views/profile/show.blade.php
+2. resources/views/profile/edit.blade.php
+
+
+================================================================================
+EMAIL SYSTEM (Old - Low Priority)
+================================================================================
+
+OLD EMAIL PAGES (10 pages) - Consider removing/replacing
+--------------------------------------------------------
+1. resources/views/email/layout.blade.php
+2. resources/views/email/index_old.blade.php
+3. resources/views/email/compose_template.blade.php
+4. resources/views/email/ajax_mail_template.blade.php
+5. resources/views/email/move_to_form.blade.php
+6. resources/views/email/add_folder_form.blade.php
+7. resources/views/email/parts/viewEmail.blade.php
+8. resources/views/email/parts/tourfolders.blade.php
+9. resources/views/email/parts/foldersList.blade.php
+10. resources/views/email/modals/message.blade.php
+11. resources/views/email/modals/createFolder.blade.php
+12. resources/views/email/modals/changeFolder.blade.php
+13. resources/views/email/components/changeFolder.blade.php
+
+Note: These are from the old email system. May be safe to archive.
+
+
+================================================================================
+DASHBOARD COMPONENTS (Medium Priority)
+================================================================================
+
+Components with old design:
+1. resources/views/scaffold-interface/dashboard/components/tours_table.blade.php
+2. resources/views/scaffold-interface/dashboard/components/tasks_calendar.blade.php
+3. resources/views/scaffold-interface/dashboard/components/create_task_popup.blade.php
+4. resources/views/scaffold-interface/dashboard/components/inbox_emails.blade.php
+5. resources/views/scaffold-interface/dashboard/components/announcements_list.blade.php
+6. resources/views/scaffold-interface/dashboard/components/tour_users.blade.php
+7. resources/views/scaffold-interface/dashboard/components/tours_calendar.blade.php
+8. resources/views/scaffold-interface/dashboard/components/tours_map.blade.php
+9. resources/views/scaffold-interface/dashboard/components/bus_calendar.blade.php
+10. resources/views/scaffold-interface/dashboard/components/weChat.blade.php
+11. resources/views/scaffold-interface/dashboard/components/chat_groups_list.blade.php
+12. resources/views/scaffold-interface/dashboard/components/commentaries_list.blade.php
+13. resources/views/scaffold-interface/dashboard/components/activities_list.blade.php
+14. resources/views/scaffold-interface/dashboard/components/payment_list.blade.php
+15. resources/views/scaffold-interface/dashboard/components/new_calender.blade.php
+
+
+================================================================================
+SHARED COMPONENTS (Fix Once, Benefits Many)
+================================================================================
+
+MODALS (3 components)
+---------------------
+1. resources/views/component/modal_add_tour.blade.php
+2. resources/views/component/modal_add_bus.blade.php
+3. resources/views/component/error_panel.blade.php
+
+SERVICE COMPONENTS (11 pages)
+------------------------------
+1. resources/views/service/transfer.blade.php
+2. resources/views/service/tour_package.blade.php
+3. resources/views/service/restaurant.blade.php
+4. resources/views/service/hotel.blade.php
+5. resources/views/service/guide.blade.php
+6. resources/views/service/flight.blade.php
+7. resources/views/service/event.blade.php
+8. resources/views/service/cruise.blade.php
+9. resources/views/component/service_import.blade.php
+10. resources/views/component/packages_service.blade.php
+
+REPORTING (5 pages)
+-------------------
+1. resources/views/reporting/index.blade.php
+2. resources/views/reporting/restaurant_show.blade.php
+3. resources/views/reporting/hotel_show.blade.php
+4. resources/views/reporting/guide_show.blade.php
+5. resources/views/reporting/event_show.blade.php
+
+
+================================================================================
+CLIENT PORTAL (TMS Client - Lower Priority)
+================================================================================
+
+1. resources/views/TMSClient/home/tour/show.blade.php
+2. resources/views/TMSClient/home/tour/packages.blade.php
+3. resources/views/TMSClient/home/tour/models/services_model.blade.php
+
+
+================================================================================
+ERROR PAGES (Quick Fix)
+================================================================================
+
+1. resources/views/errors/500.blade.php
+2. resources/views/errors/405.blade.php
+3. resources/views/errors/404.blade.php
+4. resources/views/errors/403.blade.php
+
+
+================================================================================
+PAGES ALREADY USING TABLER (Good Examples)
+================================================================================
+
+✅ resources/views/tour/index.blade.php (FIXED)
+✅ resources/views/tour/show.blade.php (FIXED)
+✅ resources/views/supplier_search/index.blade.php (FIXED)
+✅ resources/views/task/index_monday.blade.php
+✅ resources/views/task/index.blade.php
+✅ resources/views/scaffold-interface/layouts/tabler-app.blade.php
+
+
+================================================================================
+COMMON ISSUES FOUND
+================================================================================
+
+1. OLD ADMINLTE CLASSES (202 files)
+   - .box, .box-primary, .box-header, .box-body
+   - Should be: .card, .card-header, .card-body
+
+2. OLD MODAL SYNTAX (31 files)
+   - data-dismiss="modal"
+   - Should be: data-bs-dismiss="modal"
+
+3. OLD BUTTON CLASSES
+   - .btn-box-tool
+   - Should be: Tabler button variants
+
+4. OLD FORM GROUPS
+   - Inconsistent form-group usage
+   - Should be: Bootstrap 5 form structure
+
+5. OLD ICONS
+   - FontAwesome (fa fa-*)
+   - Should be: Tabler Icons (ti ti-*)
+
+
+================================================================================
+RECOMMENDED FIX STRATEGY
+================================================================================
+
+PHASE 1: HIGH TRAFFIC PAGES (Week 1)
+-------------------------------------
+Priority: Services that users interact with most
+
+1. Transfer pages (4 pages)
+2. Hotel pages (3 pages)
+3. Guide pages (4 pages)
+4. Event pages (4 pages)
+5. Restaurant pages (4 pages)
+6. Flight pages (4 pages)
+
+Estimated time: 2-3 hours each = 12-18 hours total
+
+PHASE 2: TOUR & FINANCIAL (Week 2)
+-----------------------------------
+Priority: Core business functionality
+
+1. Tour package pages (6 pages)
+2. Tour editing pages (3 pages)
+3. Invoice pages (2 pages)
+4. Transaction pages (3 pages)
+5. Quotation pages (3 pages)
+6. Accounting pages (3 pages)
+
+Estimated time: 2-3 hours each = 12-18 hours total
+
+PHASE 3: OFFICE & CONFIGURATION (Week 3)
+-----------------------------------------
+Priority: Administrative functions
+
+1. Office pages (16 pages)
+2. Currency pages (8 pages)
+3. Tax pages (4 pages)
+4. Room types (4 pages)
+5. Rates (4 pages)
+6. Criteria (4 pages)
+
+Estimated time: 1-2 hours each = 24-40 hours total
+
+PHASE 4: DASHBOARD & COMPONENTS (Week 4)
+-----------------------------------------
+Priority: Shared components
+
+1. Dashboard components (15 components)
+2. Shared modals (3 components)
+3. Service components (11 components)
+4. Reporting pages (5 pages)
+
+Estimated time: 1-2 hours each = 20-34 hours total
+
+PHASE 5: SECONDARY PAGES (Week 5)
+----------------------------------
+Priority: Less frequently used
+
+1. Settings (4 pages)
+2. Users/Roles/Permissions (7 pages)
+3. Tasks (2 remaining pages)
+4. Announcements (4 pages)
+5. Chats (3 pages)
+6. Comments (3 pages)
+7. Other misc pages (20+ pages)
+
+Estimated time: 1-2 hours each = 25-40 hours total
+
+PHASE 6: CLEANUP (Week 6)
+--------------------------
+Priority: Polish and final touches
+
+1. Error pages (4 pages) - Quick
+2. Email system pages (archive or update)
+3. Client portal (3 pages)
+4. Backup files (remove .backup files)
+5. Final QA testing
+
+
+TOTAL ESTIMATED TIME: 93-130 hours (12-17 work days)
+
+
+================================================================================
+TEMPLATE FOR FIXING PAGES
+================================================================================
+
+Step 1: Replace Layout
+----------------------
+OLD: @extends('scaffold-interface.layouts.app')
+NEW: @extends('scaffold-interface.layouts.tabler-app')
+
+Step 2: Replace Box Classes
+---------------------------
+OLD: <div class="box box-primary">
+     <div class="box-header">...</div>
+     <div class="box-body">...</div>
+     </div>
+     
+NEW: <div class="card">
+     <div class="card-header">...</div>
+     <div class="card-body">...</div>
+     </div>
+
+Step 3: Update Page Header
+---------------------------
+Add:
+<div class="page-header d-print-none">
+    <div class="row g-2 align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Section Name</div>
+            <h2 class="page-title">
+                <i class="ti ti-icon"></i> Page Title
+            </h2>
+        </div>
+        <div class="col-auto ms-auto">
+            <div class="btn-list">
+                <!-- Action buttons -->
+            </div>
+        </div>
+    </div>
+</div>
+
+Step 4: Update Forms
+---------------------
+OLD: <div class="form-group">
+NEW: <div class="mb-3">
+
+OLD: <label>Field</label>
+NEW: <label class="form-label">Field</label>
+
+Step 5: Update Tables
+----------------------
+OLD: <table class="table table-bordered">
+NEW: <table class="table card-table table-vcenter">
+
+Step 6: Update Modals
+----------------------
+OLD: data-dismiss="modal"
+NEW: data-bs-dismiss="modal"
+
+OLD: data-toggle="modal"
+NEW: data-bs-toggle="modal"
+
+OLD: <button class="close" data-dismiss="modal">×</button>
+NEW: <button class="btn-close" data-bs-dismiss="modal"></button>
+
+Step 7: Update Icons
+---------------------
+OLD: <i class="fa fa-edit"></i>
+NEW: <i class="ti ti-edit"></i>
+
+Step 8: Update Buttons
+-----------------------
+OLD: <button class="btn btn-success">
+NEW: <button class="btn btn-primary">
+
+Step 9: Add Responsive Classes
+-------------------------------
+Forms: col-12 col-md-6 col-lg-4
+Tables: table-responsive
+Grids: row g-2, row g-3
+
+Step 10: Test
+-------------
+- Desktop view
+- Tablet view (768px)
+- Mobile view (375px)
+- All interactive elements
+
+
+================================================================================
+AUTOMATION OPPORTUNITY
+================================================================================
+
+Consider creating a script to automate common replacements:
+1. Find/replace box classes → card classes
+2. Update modal attributes
+3. Replace icons
+4. Update button classes
+
+This could save 50%+ of manual work!
+
+
+================================================================================
+PRIORITY URLS TO FIX (START HERE)
+================================================================================
+
+Test these URLs and fix in order:
+
+1. http://127.0.0.1:8000/transfer (Transfer Index)
+2. http://127.0.0.1:8000/hotel (Hotel Index)
+3. http://127.0.0.1:8000/guide (Guide Index)
+4. http://127.0.0.1:8000/event (Event Index)
+5. http://127.0.0.1:8000/restaurant (Restaurant Index)
+6. http://127.0.0.1:8000/flight (Flight Index)
+7. http://127.0.0.1:8000/cruises (Cruises Index)
+8. http://127.0.0.1:8000/bus (Bus Index)
+9. http://127.0.0.1:8000/driver (Driver Index)
+10. http://127.0.0.1:8000/invoices (Invoices Index)
+
+
+================================================================================
+QUICK WINS (Easy Fixes)
+================================================================================
+
+These can be fixed quickly (< 30 min each):
+- Error pages (404, 403, 500, 405)
+- Settings CRUD pages
+- Status CRUD pages
+- Menu CRUD pages
+- Criteria CRUD pages
+- Room types CRUD pages
+- Rates CRUD pages
+
+Pattern: Most CRUD pages follow same structure, can use template
+
+
+================================================================================
+BENEFITS OF FIXING ALL PAGES
+================================================================================
+
+1. CONSISTENCY
+   - Unified design across entire application
+   - Professional appearance
+   - Better brand image
+
+2. USER EXPERIENCE
+   - Intuitive navigation
+   - Consistent interactions
+   - Reduced learning curve
+
+3. MOBILE EXPERIENCE
+   - All pages work on mobile
+   - Touch-friendly interfaces
+   - Responsive layouts
+
+4. MAINTAINABILITY
+   - Single design system
+   - Easier to update
+   - Less CSS conflicts
+
+5. PERFORMANCE
+   - Remove old AdminLTE CSS
+   - Faster page loads
+   - Optimized assets
+
+6. ACCESSIBILITY
+   - Better ARIA labels
+   - Semantic HTML
+   - Screen reader support
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Total Pages with Broken Design: 202 files
+Critical/High Priority: ~50 pages
+Medium Priority: ~80 pages
+Low Priority: ~70 pages
+
+Already Fixed: 3 pages
+- tour/index.blade.php ✅
+- tour/show.blade.php ✅
+- supplier_search/index.blade.php ✅
+
+Remaining: 199 pages
+
+Recommended Approach:
+1. Fix high-traffic service pages first (week 1-2)
+2. Fix financial/tour pages (week 3-4)
+3. Fix settings/config pages (week 5-6)
+4. Polish and test (week 7)
+
+Estimated Total: 12-17 work days (2.5-3.5 weeks full-time)
+
+
+================================================================================
+NEXT IMMEDIATE ACTION
+================================================================================
+
+Choose ONE of these to fix next:
+
+Option A: Transfer pages (most used service)
+Option B: Hotel pages (core functionality)
+Option C: Invoice pages (financial critical)
+
+Let me know which you'd like to tackle first, and I'll redesign it
+with full Tabler theme and responsive layout!
+
+
+================================================================================
+

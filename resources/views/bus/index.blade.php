@@ -1,171 +1,97 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Buses')
+
 @section('content')
-<style>
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-}
-
-.action-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.action-btn.show svg {
-    stroke: #3b82f6;
-}
-
-.action-btn.edit svg {
-    stroke: #f59e0b;
-}
-
-.action-btn.delete svg {
-    stroke: #ef4444;
-}
-
-.action-btn:hover {
-    transform: scale(1.15);
-}
-
-.action-btn.show:hover {
-    background-color: rgba(59, 130, 246, 0.1);
-}
-
-.action-btn.edit:hover {
-    background-color: rgba(245, 158, 11, 0.1);
-}
-
-.action-btn.delete:hover {
-    background-color: rgba(239, 68, 68, 0.1);
-}
-</style>
-
-    @include('layouts.title',
-           ['title' => 'Buses', 'sub_title' => 'Buses List',
-           'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Bus', 'icon' => 'bus', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                @if (Session::has('message'))
-                    <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
-                @endif
-                <div>
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class) !!}
-                </div>
-                <span id="help" class="btn btn-box-tool pull-right"><i class="fa fa-question-circle" aria-hidden="true"></i>
-                    @include('legend.buses_legend')
-                    </span>
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="bus-search" class="form-control" placeholder="Search buses..." onkeyup="filterTable('bus-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('bus-table', 'buses_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="bus-table" class="table table-striped table-bordered table-hover bootstrap-table">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0, 'bus-table')">ID <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(1, 'bus-table')">{!!trans('main.Name')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(2, 'bus-table')">{!!trans('main.Busnumber')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(3, 'bus-table')">{!!trans('main.BusCompany')!!} <i class="fa fa-sort"></i></th>
-                                <th>{!!trans('main.Actions')!!}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($buses as $bus)
-                            <tr>
-                                <td>{{ $bus->id }}</td>
-                                <td>{{ $bus->name ?? '' }}</td>
-                                <td>{{ $bus->bus_number ?? '' }}</td>
-                                <td>{{ $bus->transfer_name ?? '' }}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{{ route('bus.show', ['bu' => $bus->id]) }}" class="action-btn show" title="View">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <circle cx="12" cy="12" r="2" />
-                                                <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" />
-                                            </svg>
-                                        </a>
-                                        <a href="{{ route('bus.edit', ['bu' => $bus->id]) }}" class="action-btn edit" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </a>
-                                        <a href="#" onclick="confirmBusDelete(event, '/bus/{{ $bus->id }}/deleteMsg')" class="action-btn delete" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="text-center">No buses found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        {{ $buses->links() }}
-                    </div>
-                </div>
+<div class="container-xl">
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">Fleet Management</div>
+                <h2 class="page-title"><i class="ti ti-bus me-2"></i>Buses</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary') !!}
             </div>
         </div>
+    </div>
 
-    </section>
+    @if (Session::has('message'))
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <div class="d-flex"><div><i class="ti ti-alert-circle me-2"></i></div><div class="flex-fill">{{ Session::get('message') }}</div><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Buses List</h3></div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <div class="input-icon">
+                        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                        <input type="text" id="bus-search" class="form-control" placeholder="Search buses..." onkeyup="filterTable('bus-table', this.value)">
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success" onclick="exportTableToCSV('bus-table', 'buses_export.csv')">
+                        <i class="ti ti-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table id="bus-table" class="table card-table table-vcenter table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:60px" onclick="sortTable(0, 'bus-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(1, 'bus-table')" class="cursor-pointer">License Plate <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell" onclick="sortTable(2, 'bus-table')" class="cursor-pointer">Bus Company <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell" onclick="sortTable(3, 'bus-table')" class="cursor-pointer">Seats <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell" onclick="sortTable(4, 'bus-table')" class="cursor-pointer">Type <i class="ti ti-arrows-sort"></i></th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($buses as $bus)
+                        <tr>
+                            <td><span class="text-muted">#{{ $bus->id }}</span></td>
+                            <td><span class="fw-bold">{{ $bus->license_plate ?? '—' }}</span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $bus->transfer_name ?? '—' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $bus->seats ?? '—' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $bus->type ?? '—' }}</span></td>
+                            <td class="text-end">
+                                <div class="btn-list justify-content-end">
+                                    @include('component.action_buttons', ['item' => $bus, 'routePrefix' => 'bus'])
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="empty">
+                                    <div class="empty-icon"><i class="ti ti-bus icon" style="font-size: 3rem;"></i></div>
+                                    <p class="empty-title">No buses found</p>
+                                    <p class="empty-subtitle text-muted">Get started by adding your first bus</p>
+                                    <div class="empty-action">
+                                        {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary') !!}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($buses->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted">Showing {{ $buses->firstItem() }} to {{ $buses->lastItem() }} of {{ $buses->total() }} entries</div>
+                <div>{{ $buses->links() }}</div>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-$(document).ready(function() {
-    initializeBootstrapTable('bus-table');
-});
-
-function confirmBusDelete(event, deleteUrl) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    if (confirm("Are you sure you want to delete this bus?")) {
-        // Navigate to the delete message URL
-        window.location.href = deleteUrl;
-    }
-}
-</script>
+<script>$(document).ready(function() { initializeBootstrapTable('bus-table'); });</script>
 @endpush

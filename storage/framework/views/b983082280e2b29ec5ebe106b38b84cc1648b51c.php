@@ -561,6 +561,10 @@
     <script src="https://jsuites.net/v4/jsuites.js"></script>
     <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
     <script type="text/javascript" src="<?php echo e(asset('js/jquery.toast.js')); ?>"></script>
+    
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
     <script src="<?php echo e(asset('js/vue.js')); ?>"></script>
     <script src="<?php echo e(asset('js/piexif.min.js')); ?>"></script>
     <script src="<?php echo e(asset('js/purify.min.js')); ?>"></script>
@@ -624,6 +628,12 @@
     <script src="<?php echo e(asset('js/bootstrap-datepicker.min.js')); ?>"></script>
     <script src="<?php echo e(asset('js/script.js')); ?>"></script>
     <script src="<?php echo e(asset('js/magnific.js')); ?>"></script>
+    
+    <!-- Google Maps API (load before google_places.js) -->
+    <?php if(config('google.places.key')): ?>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo e(config('google.places.key')); ?>&libraries=places"></script>
+    <?php endif; ?>
+    
     <script src="<?php echo e(URL::asset('js/google_places.js')); ?>"></script>
     <script src="<?php echo e(URL::asset('js/jquery.scrollTo.min.js')); ?>"></script>
     <script type="text/javascript" src="<?php echo e(asset('js/pusher.min.js')); ?>"></script>

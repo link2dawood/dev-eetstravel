@@ -1,160 +1,302 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Edit')
+@section('title', 'Edit Bus Company')
+
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Bus Company', 'sub_title' => 'Bus Company Edit',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Bus Company', 'icon' => 'exchange', 'route' => route('transfer.index')],
-   ['title' => 'Edit', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box box-body border_top_none">
-                <form method='POST' action='{{route('transfer.update', ['transfer' => $transfer->id])}}' enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="margin_button">
-                            <a href="javascript:history.back()">
-                                <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
-                            </a>
-                            <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-                        </div>
-                    </div>
+<div class="container-xl">
+    {{-- Page Header --}}
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('transfer.index') }}">Bus Companies</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('transfer.show', $transfer->id) }}">{{ $transfer->name }}</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
                 </div>
-                <div class="row">
-                    <div class="col-md-6">
+                <h2 class="page-title">
+                    <i class="ti ti-edit me-2"></i>Edit Bus Company
+                </h2>
+            </div>
+        </div>
+    </div>
 
-                            {{csrf_field()}}
-                            {{method_field('PUT')}}
-                            <div class="form-group">
-                                <label for="name">{!!trans('main.Name')!!}</label>
-                                <input id="name" name="name" type="text" class="form-control" value="{!!$transfer->
-            name!!}">
+    {{-- Form Card --}}
+    <form method="POST" action="{{ route('transfer.update', ['transfer' => $transfer->id]) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Company Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label required">{!!trans('main.Name')!!}</label>
+                                <input id="name" 
+                                       name="name" 
+                                       type="text" 
+                                       class="form-control @error('name') is-invalid @enderror" 
+                                       value="{{ old('name', $transfer->name) }}" 
+                                       required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <div class="form-group">
-                                <label for="address_first">{!!trans('main.AddressFirst')!!}</label>
-                                <input id="address_first" name="address_first" type="text" class="form-control" value="{!!$transfer->
-            address_first!!}">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.Code')!!}</label>
+                                <input id="code" 
+                                       name="code" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('code', $transfer->code) }}">
                             </div>
-                            <div class="form-group">
-                                <label for="address_second">{!!trans('main.AddressSecond')!!}</label>
-                                <input id="address_second" name="address_second" type="text" class="form-control"
-                                       value="{!!$transfer->
-            address_second!!}">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label required">{!!trans('main.AddressFirst')!!}</label>
+                                <input id="address_first" 
+                                       name="address_first" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('address_first', $transfer->address_first) }}" 
+                                       required>
                             </div>
-						@if(!empty($transfer->city))
-                            @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => $transfer->country,
-                                                                'city_label' => 'city','city_translation' =>'main.City', 'city_default' => \App\Helper\CitiesHelper::getCityById($transfer->city)['name']])
-                            @endcomponent
-						@endif
-                            <div class="form-group">
-                                <label for="code">{!!trans('main.Code')!!}</label>
-                                <input id="code" name="code" type="text" class="form-control" value="{!!$transfer->
-            code!!}">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.AddressSecond')!!}</label>
+                                <input id="address_second" 
+                                       name="address_second" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('address_second', $transfer->address_second) }}">
                             </div>
-                            <div class="form-group">
-                                <label for="work_phone">{!!trans('main.WorkPhone')!!}</label>
-                                <input id="work_phone" name="work_phone" type="text" class="form-control" value="{!!$transfer->
-            work_phone!!}">
+
+                            {{-- City Component --}}
+                            <div class="col-12 mb-3">
+                                @if(!empty($transfer->city))
+                                    @component('component.city_form', [
+                                        'country_label' => 'country', 
+                                        'country_translation' => 'main.Country', 
+                                        'country_default' => $transfer->country,
+                                        'city_label' => 'city',
+                                        'city_translation' => 'main.City', 
+                                        'city_default' => \App\Helper\CitiesHelper::getCityById($transfer->city)['name']
+                                    ])
+                                    @endcomponent
+                                @else
+                                    @component('component.city_form', [
+                                        'country_label' => 'country', 
+                                        'country_translation' => 'main.Country', 
+                                        'country_default' => 0,
+                                        'city_label' => 'city',
+                                        'city_translation' => 'main.City', 
+                                        'city_default' => 0
+                                    ])
+                                    @endcomponent
+                                @endif
                             </div>
-                            <div class="form-group">
-                                <label for="work_fax">{!!trans('main.WorkFax')!!}</label>
-                                <input id="work_fax" name="work_fax" type="text" class="form-control" value="{!!$transfer->
-            work_fax!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="work_email">{!!trans('main.WorkEmail')!!}</label>
-                                <input id="work_email" name="work_email" type="text" class="form-control" value="{!!$transfer->
-            work_email!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact_name">{!!trans('main.ContactName')!!}</label>
-                                <input id="contact_name" name="contact_name" type="text" class="form-control" value="{!!$transfer->
-            contact_name!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact_phone">{!!trans('main.ContactPhone')!!}</label>
-                                <input id="contact_phone" name="contact_phone" type="text" class="form-control" value="{!!$transfer->
-            contact_phone!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact_email">{!!trans('main.ContactEmail')!!}</label>
-                                <input id="contact_email" name="contact_email" type="text" class="form-control" value="{!!$transfer->
-            contact_email!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="comments">{!!trans('main.Comments')!!}</label>
-                                <input id="comments" name="comments" type="text" class="form-control" value="{!!$transfer->
-            comments!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="int_comments">{!!trans('main.IntComments')!!}</label>
-                                <input id="int_comments" name="int_comments" type="text" class="form-control" value="{!!$transfer->
-            int_comments!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="website">{!!trans('main.Website')!!}</label>
-                                <input id="website" name="website" type="text" class="form-control" value="{!!$transfer->
-            website!!}">
-                            </div>
-                            <div class="form-group">
-                                <label for="criteria">{!!trans('main.Criteria')!!}</label>
-                            </div>
-                            @foreach($criterias as $criteria)
-                                <div class="form-group criteria_block">
-                                    <input type="checkbox"
-                                           @foreach($transfer->criterias as $item)
-                                           {{ $criteria->id == $item->criteria_id ? 'checked' : '' }}
-                                           @endforeach
-                                           value="{{ $criteria->id }}" name="criterias">
-                                    <label for="">{{ $criteria->name }}</label>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.WorkPhone')!!}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-phone"></i>
+                                    </span>
+                                    <input id="work_phone" 
+                                           name="work_phone" 
+                                           type="text" 
+                                           class="form-control" 
+                                           value="{{ old('work_phone', $transfer->work_phone) }}">
                                 </div>
-                            @endforeach
+                            </div>
 
-                            <div class="form-group">
-                                <label for="rate">{!!trans('main.Rate')!!}</label>
-                                <select name="rate" id="rate" class="form-control">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.WorkFax')!!}</label>
+                                <input id="work_fax" 
+                                       name="work_fax" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('work_fax', $transfer->work_fax) }}">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.WorkEmail')!!}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-mail"></i>
+                                    </span>
+                                    <input id="work_email" 
+                                           name="work_email" 
+                                           type="email" 
+                                           class="form-control" 
+                                           value="{{ old('work_email', $transfer->work_email) }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.Website')!!}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-world"></i>
+                                    </span>
+                                    <input id="website" 
+                                           name="website" 
+                                           type="url" 
+                                           class="form-control" 
+                                           value="{{ old('website', $transfer->website) }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.ContactName')!!}</label>
+                                <input id="contact_name" 
+                                       name="contact_name" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('contact_name', $transfer->contact_name) }}">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.ContactPhone')!!}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-phone"></i>
+                                    </span>
+                                    <input id="contact_phone" 
+                                           name="contact_phone" 
+                                           type="text" 
+                                           class="form-control" 
+                                           value="{{ old('contact_phone', $transfer->contact_phone) }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.ContactEmail')!!}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-mail"></i>
+                                    </span>
+                                    <input id="contact_email" 
+                                           name="contact_email" 
+                                           type="email" 
+                                           class="form-control" 
+                                           value="{{ old('contact_email', $transfer->contact_email) }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.Comments')!!}</label>
+                                <input id="comments" 
+                                       name="comments" 
+                                       type="text" 
+                                       class="form-control" 
+                                       value="{{ old('comments', $transfer->comments) }}">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">{!!trans('main.IntComments')!!}</label>
+                                <textarea id="int_comments" 
+                                          name="int_comments" 
+                                          rows="3" 
+                                          class="form-control">{{ old('int_comments', $transfer->int_comments) }}</textarea>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{!!trans('main.Rate')!!}</label>
+                                <select name="rate" id="rate" class="form-select">
                                     @foreach($rates as $rate)
-                                        <option value="{{ $rate->id }}" {{ $errors != null && count($errors) > 0 ? old('rate') == $rate->id ? 'selected' : '' : $transfer->rate == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
+                                        <option value="{{ $rate->id }}" 
+                                                {{ old('rate', $transfer->rate) == $rate->id ? 'selected' : '' }}>
+                                            {{ $rate->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                            {{--<div class="form-group">--}}
-                            {{--<label for="category">Category</label>--}}
-                            {{--<select id="category" name="category" class="form-control" value="{!!$transfer->--}}
-                            {{--category!!}">--}}
-                            {{--<option value="1"> First cat</option>--}}
-                            {{--<option value="2"> Second Cat</option>--}}
-                            {{--</select>--}}
-                            {{--</div>--}}
-                            <input type="text" hidden name="place_id" id="place_id">
-                            <div class="form-group">
-                                <label for="attach">{!!trans('main.Files')!!}</label>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">{!!trans('main.Criteria')!!}</label>
+                                <div class="row">
+                                    @foreach($criterias as $criteria)
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-check">
+                                                <input type="checkbox" 
+                                                       class="form-check-input" 
+                                                       value="{{ $criteria->id }}" 
+                                                       name="criterias"
+                                                       @foreach($transfer->criterias as $item)
+                                                           {{ $criteria->id == $item->criteria_id ? 'checked' : '' }}
+                                                       @endforeach>
+                                                <span class="form-check-label">{{ $criteria->name }}</span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label">{!!trans('main.Files')!!}</label>
                                 @component('component.file_upload_field')@endcomponent
                             </div>
-                            @component('component.files', ['files' => $files])@endcomponent
-                            <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-                        <a href="{{\App\Helper\AdminHelper::getBackButton(route('transfer.index'))}}">
-                            <button class='btn btn-warning' type='button'>{!!trans('main.Cancel')!!}</button>
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <span id="page" data-page="edit"></span>
-                        <button class="btn btn-primary btn_google_maps" id="btn_generate_map">
 
-                        </button>
-                        <button class="btn btn-primary btn_google_maps" id="btn_select_location">{!!trans('main.SelectLocation')!!}</button>
-                        <br>
-                        <span id="error_map"></span>
-                        <div class="block_map">
-                            <div id="map"></div>
+                            <div class="col-12">
+                                @component('component.files', ['files' => $files])@endcomponent
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-list">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="ti ti-check me-1"></i>{!!trans('main.Save')!!}
+                            </button>
+                            <a href="{{ route('transfer.show', $transfer->id) }}" class="btn">
+                                <i class="ti ti-x me-1"></i>Cancel
+                            </a>
                         </div>
                     </div>
                 </div>
-                </form>
+            </div>
+
+            {{-- Map Sidebar --}}
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 1rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="ti ti-map me-2"></i>Location
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button class="btn btn-primary w-100 mb-2" 
+                                    type="button" 
+                                    id="btn_generate_map">
+                                <i class="ti ti-map-pin me-1"></i>{!!trans('main.GenerateLocation')!!}
+                            </button>
+                            <button class="btn btn-outline-primary w-100" 
+                                    type="button" 
+                                    id="btn_select_location">
+                                <i class="ti ti-click me-1"></i>{!!trans('main.SelectLocation')!!}
+                            </button>
+                        </div>
+                        <span id="error_map" class="text-danger"></span>
+                        <div class="block_map">
+                            <div id="map" style="height: 400px; border-radius: 6px;"></div>
+                        </div>
+                        <input type="hidden" name="place_id" id="place_id">
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
+    </form>
+</div>
+
+<span id="page" data-page="edit" hidden></span>
 @endsection
 
 @push('scripts')

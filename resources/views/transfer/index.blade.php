@@ -2,6 +2,38 @@
 @section('title', 'Bus Companies')
 
 @section('content')
+<!-- Delete Confirmation Modal -->
+<div class="modal modal-blur fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                <h3>Are you sure?</h3>
+                <div class="text-muted" id="delete-message">Do you really want to delete this record?</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn w-100" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="col">
+                            <form id="deleteForm" method="GET" style="display: inline;">
+                                <button type="submit" class="btn btn-danger w-100">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container-xl">
     {{-- Page Header --}}
     <div class="page-header d-print-none">
@@ -185,6 +217,26 @@
 <script>
 $(document).ready(function() {
     initializeBootstrapTable('transfer-table');
+
+    // Handle delete button click
+    $('.delete').on('click', function(e) {
+        e.preventDefault();
+        var link = $(this).data('link');
+        
+        // If it's a deleteMsg URL, fetch the confirmation message
+        if (link.includes('deleteMsg')) {
+            $.get(link, function(response) {
+                $('#delete-message').html(response);
+                // Convert deleteMsg URL to actual delete URL
+                var deleteUrl = link.replace('deleteMsg', 'delete');
+                // Set the form action
+                $('#deleteForm').attr('action', deleteUrl);
+            });
+        
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('myModal'));
+        myModal.show();
+    });
 });
 </script>
 @endpush

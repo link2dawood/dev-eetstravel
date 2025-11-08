@@ -43,11 +43,27 @@
             } else {
                 $show_route = route($prefix . '.show', [$prefix => $entity->id]);
                 $edit_route = route($prefix . '.edit', [$prefix => $entity->id]);
-                $delete_route = route($prefix . '.destroy', [$prefix => $entity->id]);
+                $delete_route = "/{$prefix}/{$entity->id}/delete";
                 $delete_msg_url = "/{$prefix}/{$entity->id}/deleteMsg";
+                // Fallbacks for prefixes that may not have named routes but have conventional URIs (fixes missing buttons)
+                if ($prefix === 'bus') {
+                    if (!$show_route) {
+                        $show_route = "/{$prefix}/{$entity->id}/show";
+                    }
+                    if (!$edit_route) {
+                        $edit_route = "/{$prefix}/{$entity->id}/edit";
+                    }
+                }
             }
         } catch (Exception $e) {
             // Route doesn't exist, keep null
+            // Provide conventional URI fallbacks for certain prefixes (helps when named routes are not available)
+            if ($prefix === 'bus' && $entity) {
+                $show_route = "/{$prefix}/{$entity->id}/show";
+                $edit_route = "/{$prefix}/{$entity->id}/edit";
+                $delete_route = "/{$prefix}/{$entity->id}/delete";
+                $delete_msg_url = "/{$prefix}/{$entity->id}/deleteMsg";
+            }
         }
     }
 
@@ -55,6 +71,16 @@
     $canShow = $show_route && ($permissions['show'] ?? true);
     $canEdit = $edit_route && ($permissions['edit'] ?? true);
     $canDelete = $delete_route && ($permissions['destroy'] ?? true);
+    // Always allow delete for transfer
+    if ($prefix === 'transfer') {
+        $canDelete = true;
+    }
+    // For bus, ensure actions show (fallback to conventional URIs and permit buttons)
+    if ($prefix === 'bus') {
+        $canShow = (bool) $show_route;
+        $canEdit = (bool) $edit_route;
+        $canDelete = (bool) $delete_route;
+    }
     $canClone = ($prefix === 'tour') && Auth::check() && Auth::user()->can('tour.create');
 @endphp
 

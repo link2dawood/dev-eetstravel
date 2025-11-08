@@ -1,7 +1,7 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Buses')
 
-@section('content')
+<?php $__env->startSection('title', 'Buses'); ?>
+
+<?php $__env->startSection('content'); ?>
 <!-- Delete Confirmation Modal -->
 <div class="modal modal-blur fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
@@ -42,16 +42,17 @@
                 <h2 class="page-title"><i class="ti ti-bus me-2"></i>Buses</h2>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary') !!}
+                <?php echo \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary'); ?>
+
             </div>
         </div>
     </div>
 
-    @if (Session::has('message'))
+    <?php if(Session::has('message')): ?>
         <div class="alert alert-danger alert-dismissible" role="alert">
-            <div class="d-flex"><div><i class="ti ti-alert-circle me-2"></i></div><div class="flex-fill">{{ Session::get('message') }}</div><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <div class="d-flex"><div><i class="ti ti-alert-circle me-2"></i></div><div class="flex-fill"><?php echo e(Session::get('message')); ?></div><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         </div>
-    @endif
+    <?php endif; ?>
 
     <div class="card">
         <div class="card-header"><h3 class="card-title">Buses List</h3></div>
@@ -82,20 +83,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($buses as $bus)
+                        <?php $__empty_1 = true; $__currentLoopData = $buses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bus): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
-                            <td><span class="text-muted">#{{ $bus->id }}</span></td>
-                            <td><span class="fw-bold">{{ $bus->license_plate ?? '—' }}</span></td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $bus->transfer_name ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $bus->seats ?? '—' }}</span></td>
-                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $bus->type ?? '—' }}</span></td>
+                            <td><span class="text-muted">#<?php echo e($bus->id); ?></span></td>
+                            <td><span class="fw-bold"><?php echo e($bus->license_plate ?? '—'); ?></span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted"><?php echo e($bus->transfer_name ?? '—'); ?></span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted"><?php echo e($bus->seats ?? '—'); ?></span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted"><?php echo e($bus->type ?? '—'); ?></span></td>
                             <td class="text-end">
                                 <div class="btn-list justify-content-end">
-                                    @include('component.action_buttons', ['item' => $bus, 'routePrefix' => 'bus'])
+                                    <?php echo $__env->make('component.action_buttons', ['item' => $bus, 'routePrefix' => 'bus'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                                 </div>
                             </td>
                         </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="6" class="text-center py-5">
                                 <div class="empty">
@@ -103,28 +104,29 @@
                                     <p class="empty-title">No buses found</p>
                                     <p class="empty-subtitle text-muted">Get started by adding your first bus</p>
                                     <div class="empty-action">
-                                        {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary') !!}
+                                        <?php echo \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary'); ?>
+
                                     </div>
                                 </div>
                             </td>
                         </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            @if($buses->hasPages())
+            <?php if($buses->hasPages()): ?>
             <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="text-muted">Showing {{ $buses->firstItem() }} to {{ $buses->lastItem() }} of {{ $buses->total() }} entries</div>
-                <div>{{ $buses->links() }}</div>
+                <div class="text-muted">Showing <?php echo e($buses->firstItem()); ?> to <?php echo e($buses->lastItem()); ?> of <?php echo e($buses->total()); ?> entries</div>
+                <div><?php echo e($buses->links()); ?></div>
             </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<?php $__env->startPush('scripts'); ?>
+<script src="<?php echo e(asset('js/bootstrap-tables.js')); ?>"></script>
 <script>
 $(document).ready(function() {
     initializeBootstrapTable('bus-table');
@@ -150,4 +152,6 @@ $(document).ready(function() {
     });
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/bus/index.blade.php ENDPATH**/ ?>

@@ -2,6 +2,7 @@
 @section('title', 'Show Tour')
 
 @section('post_styles')
+<link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>
     /* Toggle Switch */
     .toggle {
@@ -165,28 +166,32 @@
     </div>
 
     {{-- Office Selection --}}
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-6">
-                    <label class="form-label">Select Office:</label>
-                    <div class="input-group">
-                        <select class="form-select selectedOffice" id="office-select" style="width: auto;">
-                            @foreach($offices as $office)
-                                <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
-                                    {{ $office->office_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <button class="btn btn-primary select-office-btn" type="button">
-                            <i class="ti ti-check me-1"></i>Select
-                        </button>
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Select Office:</label>
+                            <div class="input-group">
+                                <select class="form-select selectedOffice">
+                                    @foreach($offices as $office)
+                                        <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
+                                            {{ $office->office_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button class="btn btn-primary select-office-btn" type="button">
+                                    <i class="ti ti-check me-1"></i>Select
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-info mt-4" data-bs-toggle="modal" data-bs-target="#legendModal">
+                                <i class="ti ti-help me-1"></i>Help
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#legendModal">
-                        <i class="ti ti-help me-1"></i>Help
-                    </button>
                 </div>
             </div>
         </div>
@@ -287,11 +292,15 @@
             <div class="tab-content">
             {{-- Front Sheet Tab --}}
             <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">
-                <h3 class="mb-4"><i class="ti ti-file-text me-2"></i>Front Sheet</h3>
+                <h3 class="mb-4">
+                    <i class="ti ti-file-text me-2"></i>Front Sheet [- {{ $tour->external_name ?? $tour->name }} #{{ $tour->id }}]
+                </h3>
+                
                 @if(!empty($quotation) && isset($quotation->id))
-                    <div class="row">
+                    {{-- Summary Information --}}
+                    <div class="row mb-3">
                         <div class="col-md-6">
-                            <p class="lead">
+                            <h5>
                                 <strong>Rooms:</strong>
                                 @php $peopleCount = 0; @endphp
                                 @foreach ($listRoomsHotel as $room)
@@ -300,25 +309,116 @@
                                             ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count 
                                             : 0;
                                     @endphp
-                                    {{ $room->room_types->code }} : {{ $room->count }}
+                                    {{ $room->room_types->code }} : {{ $room->count }}{{ !$loop->last ? ', ' : '' }}
                                 @endforeach
-                            </p>
-                            @if ($peopleCount != $tour->pax + $tour->pax_free)
-                                <div class="alert alert-warning">
-                                    <i class="ti ti-alert-triangle"></i>
-                                    Pax Count ({{ $tour->pax + $tour->pax_free }}) doesn't match room capacity ({{ $peopleCount }})
-                                </div>
-                            @endif
+                            </h5>
                         </div>
                         <div class="col-md-6">
-                            <p class="lead">
-                                <strong>Pax:</strong> {{ $tour->pax }} + {{ $tour->pax_free }} (Free)
-                            </p>
+                            <h5>
+                                <strong>Pax:</strong> {{ $tour->pax }} +{{ $tour->pax_free }}
+                            </h5>
+                        </div>
+                    </div>
+
+                    @if ($peopleCount != $tour->pax + $tour->pax_free)
+                        <div class="alert alert-warning alert-dismissible" role="alert">
+                            <div class="d-flex">
+                                <div>
+                                    <i class="ti ti-alert-triangle me-2"></i>
+                                </div>
+                                <div class="flex-fill">
+                                    <strong>Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})</strong>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Front Sheet Table --}}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width: 100px;">Date</th>
+                                    <th style="min-width: 80px;">City</th>
+                                    <th style="min-width: 100px;">Quote Single</th>
+                                    <th style="min-width: 100px;">Quote SS</th>
+                                    <th style="min-width: 100px;">Quote HPP</th>
+                                    <th style="min-width: 200px;">CMFD HOTEL</th>
+                                    <th style="min-width: 80px;">Option</th>
+                                    <th style="min-width: 100px;">Offer SS</th>
+                                    <th style="min-width: 100px;">Offer HPP</th>
+                                    <th style="min-width: 80px;">®</th>
+                                    <th style="min-width: 120px;">VC sent to SHA</th>
+                                    <th style="min-width: 120px;">Budget HPP +/-</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    // Generate date range from tour departure to retirement
+                                    $startDate = \Carbon\Carbon::parse($tour->departure_date);
+                                    $endDate = \Carbon\Carbon::parse($tour->retirement_date);
+                                    $currentDate = $startDate->copy();
+                                    $dateArray = [];
+                                    
+                                    while ($currentDate->lte($endDate)) {
+                                        $dateArray[] = $currentDate->format('Y-m-d');
+                                        $currentDate->addDay();
+                                    }
+                                @endphp
+
+                                @foreach($dateArray as $date)
+                                    <tr>
+                                        <td>{{ $date }}</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td class="text-center"></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td class="text-center"></td>
+                                        <td class="text-center"></td>
+                                        <td></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Additional Information --}}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Column Descriptions</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><strong>Quote Single:</strong> Single room quoted price</li>
+                                                <li><strong>Quote SS:</strong> Single supplement quoted price</li>
+                                                <li><strong>Quote HPP:</strong> Half-board per person quoted price</li>
+                                                <li><strong>CMFD HOTEL:</strong> Confirmed hotel name</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><strong>Option:</strong> Option status</li>
+                                                <li><strong>Offer SS/HPP:</strong> Offered prices</li>
+                                                <li><strong>®:</strong> Registered/Confirmed</li>
+                                                <li><strong>VC sent to SHA:</strong> Voucher/Confirmation sent</li>
+                                                <li><strong>Budget HPP +/-:</strong> Budget variance</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @else
                     <div class="alert alert-info">
-                        <i class="ti ti-info-circle"></i> No quotation data available for front sheet.
+                        <i class="ti ti-info-circle"></i> No quotation data available for front sheet. Please create a quotation first.
                     </div>
                 @endif
             </div>
@@ -326,10 +426,237 @@
             {{-- Services Tab --}}
             <div role="tabpanel" class="tab-pane" id="service-tab">
                 <h3 class="mb-4"><i class="ti ti-list me-2"></i>Services</h3>
-                <div class="tour-packages"></div>
                 
+                {{-- Add Package Buttons --}}
+                <div class="btn-toolbar mb-3" role="toolbar">
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-success btn-sm" onclick="addDay()">
+                            <i class="ti ti-plus me-1"></i>Day
+                        </button>
+                        <button type="button" class="btn btn-info btn-sm" onclick="addAllDays()">Add All</button>
+                    </div>
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportCity()">City</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportExcel()">Excel</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportNumber()">Number</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportItinerary()">Itinerary</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printAll()">Print All</button>
+                    </div>
+                </div>
+
+                {{-- Pax Count Warning --}}
+                @php $peopleCount = 0; @endphp
+                @foreach ($listRoomsHotel as $room)
+                    @php
+                        $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code]) 
+                            ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count 
+                            : 0;
+                    @endphp
+                @endforeach
+                
+                @if ($peopleCount != $tour->pax + $tour->pax_free)
+                    <div class="alert alert-warning alert-dismissible" role="alert">
+                        <div class="d-flex">
+                            <div>
+                                <i class="ti ti-alert-triangle me-2"></i>
+                            </div>
+                            <div class="flex-fill">
+                                <strong>Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})</strong>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Service Days --}}
+                <div id="service-days-container">
+                    @php
+                        $startDate = \Carbon\Carbon::parse($tour->departure_date);
+                        $endDate = \Carbon\Carbon::parse($tour->retirement_date);
+                        $dayNumber = 1;
+                        $currentDate = $startDate->copy();
+                        
+                        // Get all tour packages for this tour
+                        $packages = collect();
+                        if (method_exists($tour, 'tourPackages')) {
+                            $packages = $tour->tourPackages;
+                        } elseif (method_exists($tour, 'packages')) {
+                            $packages = $tour->packages;
+                        } elseif (isset($tour->packages)) {
+                            $packages = collect($tour->packages);
+                        }
+                    @endphp
+
+                    @while($currentDate->lte($endDate))
+                        @php
+                            $dayName = $currentDate->format('l');
+                            $dateString = $currentDate->format('Y-m-d');
+                            
+                            // Get packages for this specific date
+                            $dayPackages = $packages->filter(function($package) use ($dateString) {
+                                $packageDate = isset($package->start_date) 
+                                    ? \Carbon\Carbon::parse($package->start_date)->format('Y-m-d')
+                                    : null;
+                                return $packageDate === $dateString;
+                            });
+                        @endphp
+
+                        {{-- Day Card --}}
+                        <div class="card mb-4" data-day="{{ $dayNumber }}" data-date="{{ $dateString }}">
+                            <div class="card-header bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <h4 class="card-title mb-0">
+                                            Day {{ $dayNumber }} - {{ $currentDate->format('F d, Y') }} ({{ $dayName }})
+                                        </h4>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-success btn-sm me-1" onclick="addDescription({{ $dayNumber }}, '{{ $dateString }}')">
+                                            <i class="ti ti-plus"></i> Add description
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" onclick="addService({{ $dayNumber }}, '{{ $dateString }}')">
+                                            <i class="ti ti-download"></i> Add Service
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                @if($dayPackages->count() > 0)
+                                    @foreach($dayPackages as $package)
+                                        <div class="service-item mb-4 pb-4 border-bottom">
+                                            {{-- Status Icons --}}
+                                            <div class="mb-3">
+                                                @if(isset($package->is_confirmed) && $package->is_confirmed)
+                                                    <i class="ti ti-check text-success me-2" title="Confirmed"></i>
+                                                @endif
+                                                @if(isset($package->is_voucher_sent) && $package->is_voucher_sent)
+                                                    <i class="ti ti-check text-success" title="Voucher Sent"></i>
+                                                @endif
+                                            </div>
+
+                                            {{-- Service Time --}}
+                                            @if(isset($package->time) && $package->time)
+                                                <div class="mb-2">
+                                                    <strong>{{ \Carbon\Carbon::parse($package->time)->format('H:i') }}</strong>
+                                                </div>
+                                            @endif
+
+                                            {{-- Service Details --}}
+                                            <div class="service-details">
+                                                <h5 class="mb-2">
+                                                    {{ $package->supplier->name ?? 'Service' }}
+                                                    @if(isset($package->supplier->city))
+                                                        - {{ $package->supplier->city }}
+                                                    @endif
+                                                </h5>
+                                                
+                                                @if(isset($package->pax) && $package->pax)
+                                                    <div class="mb-2">
+                                                        <strong>PAX:</strong> {{ $package->pax }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->room_configuration) && $package->room_configuration)
+                                                    <div class="mb-2">
+                                                        <strong>ROOM NO:</strong> {{ $package->room_configuration }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->total_price) || isset($package->price_per_person))
+                                                    <div class="mb-2">
+                                                        @if(isset($package->total_price))
+                                                            <strong>TTL:</strong> {{ $package->total_price }}<br>
+                                                        @endif
+                                                        @if(isset($package->price_per_person))
+                                                            <strong>PSN/TTL:</strong> {{ $package->price_per_person }}
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->driver_included))
+                                                    <div class="mb-2">
+                                                        <strong>DRIVER:</strong> {{ $package->driver_included ? 'Yes' : 'No' }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->rooms_info) && $package->rooms_info)
+                                                    <div class="mb-2">
+                                                        <strong>ROOMS:</strong><br>
+                                                        {{ $package->rooms_info }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->breakfast_info) && $package->breakfast_info)
+                                                    <div class="mb-2">
+                                                        <strong>BREAKFAST:</strong> {{ $package->breakfast_info }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->meals) && $package->meals)
+                                                    <div class="mb-2">
+                                                        <strong>MEALS:</strong> {{ $package->meals }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->special_meal) && $package->special_meal)
+                                                    <div class="mb-2">
+                                                        <strong>SPECIAL MEAL Req:</strong> {{ $package->special_meal }}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->notes) && $package->notes)
+                                                    <div class="alert alert-info mb-2">
+                                                        {!! nl2br(e($package->notes)) !!}
+                                                    </div>
+                                                @endif
+                                                
+                                                @if(isset($package->description) && $package->description)
+                                                    <div class="mt-3">
+                                                        <div class="description-content" id="desc-{{ $package->id }}">
+                                                            {!! nl2br(e(Str::limit($package->description, 500))) !!}
+                                                        </div>
+                                                        @if(strlen($package->description) > 500)
+                                                            <a href="javascript:void(0)" class="text-primary" onclick="toggleDescription({{ $package->id }})">
+                                                                <small>readmore</small>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Action Buttons --}}
+                                            <div class="mt-3">
+                                                <button class="btn btn-warning btn-sm me-1" onclick="editService({{ $package->id }})">
+                                                    <i class="ti ti-edit"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="deleteService({{ $package->id }})">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="text-center text-muted py-4">
+                                        <i class="ti ti-inbox fs-1"></i>
+                                        <p class="mt-2">No services added for this day</p>
+                                        <button class="btn btn-sm btn-primary" onclick="addService({{ $dayNumber }}, '{{ $dateString }}')">
+                                            <i class="ti ti-plus me-1"></i>Add First Service
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @php
+                            $currentDate->addDay();
+                            $dayNumber++;
+                        @endphp
+                    @endwhile
+                </div>
+
                 {{-- Comments Section --}}
-                <div class="card">
+                <div class="card mt-4">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="ti ti-message me-2"></i>{!! trans('main.Comments') !!}
@@ -846,23 +1173,25 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
     var confirmMessage;
     
     if (isCurrentlyQuotation) {
-        // Currently a quotation, checkbox is CHECKED by default
-        if (!checkbox.checked) {
-            // User unchecked it - wants to convert to Tour (Go Ahead)
+        // Currently a quotation
+        if (checkbox.checked) {
+            // Convert to Tour (Go Ahead)
             url = "{{ route('tour.convert_to_tour', ['id' => $tour->id]) }}";
             confirmMessage = "Are you sure you want to convert this Quotation to Tour (Go Ahead)?";
         } else {
-            // User checked it back - stay as Quotation
+            // Stay as Quotation
+            checkbox.checked = true;
             return;
         }
     } else {
-        // Currently a tour, checkbox is UNCHECKED by default
+        // Currently a tour
         if (checkbox.checked) {
-            // User checked it - wants to convert to Quotation
+            // Convert to Quotation
             url = "{{ route('tour.convertToQuotation', ['id' => $tour->id]) }}";
             confirmMessage = "Are you sure you want to convert this Tour to Quotation?";
         } else {
-            // User unchecked it back - stay as Tour
+            // Stay as Tour
+            checkbox.checked = false;
             return;
         }
     }
@@ -911,6 +1240,7 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
         checkbox.checked = !checkbox.checked;
     }
 }
+
 // Show Landing Page Modal
 function showLandingPageModal() {
     var img = "{{ $tour->attachments()->first() ? $tour->attachments()->first()->url : '' }}";

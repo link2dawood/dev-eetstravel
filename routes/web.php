@@ -590,12 +590,18 @@ Route::post('chat/message', ['uses'        => '\App\Http\Controllers\ChatControl
                     'as'          => 'chat.post'
 ]);
 
+
 Route::group(['middleware' => 'web'], function () {
+    
+    // Resource routes - this creates all 7 RESTful routes
     Route::resource('announcements', 'AnnouncementController');
-    Route::get('/announcement/{id}/delete', 'AnnouncementController@destroy')->name('announcement.destroy');
-    Route::get('/announcement/{id}/delete_msg', 'AnnouncementController@deleteMsg')->name('announcement.deleteMsg');
-    Route::post('/announcement/{id}/reply', 'AnnouncementController@reply')->name('announcement_reply');
-    Route::get('/announcement/{id}/generate-announcements', 'AnnouncementController@generateAnnouncements')->name('announcements_generate');
+    
+    // Additional custom routes (these should be after resource routes)
+    Route::post('announcements/{announcement}/reply', 'AnnouncementController@reply')
+        ->name('announcements.reply');
+    
+    Route::get('announcements/{announcement}/generate', 'AnnouncementController@generateAnnouncements')
+        ->name('announcements.generate');
 });
 
 Route::group(['middleware' => 'web'], function () {

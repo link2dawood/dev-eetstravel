@@ -46,7 +46,7 @@
                                 <td>{{ $announcement->title }}</td>
                                 <td>{{ Str::limit($announcement->content, 100) }}</td>
                                 <td>{{ $announcement->created_at ? $announcement->created_at->format('Y-m-d H:i') : '' }}</td>
-                                <td>{{ $announcement->sender->name ?? '' }}</td>
+                                <td>{{ optional($announcement->author)->name ?? 'Unknown' }}</td>
                                 <td>
                                     @if($announcement->files && $announcement->files->count() > 0)
                                         @foreach($announcement->files as $file)

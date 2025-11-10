@@ -1,4 +1,4 @@
-{{--Tour Status Error--}}
+
 <div class="modal fade" tabindex="-1" id="error_tour">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -6,7 +6,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss='modal' aria-label="Close"><span
                                 aria-hidden='true'>&times;</span></button>
-                    <h4 class="modal-title">{{ trans('main.Warning') }}!</h4>
+                    <h4 class="modal-title"><?php echo e(trans('main.Warning')); ?>!</h4>
                 </div>
                 <div class="modal-body">
                     <h3 class="error_tour_message"></h3>
@@ -21,21 +21,21 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
+
 <div class="modal fade" tabindex="-1" id="myModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">{{ trans('main.ConfirmDelete') }}</h4>
+                <h4 class="modal-title"><?php echo e(trans('main.ConfirmDelete')); ?></h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>{{ trans('main.AreYouSureDelete') }}</p>
+                <p><?php echo e(trans('main.AreYouSureDelete')); ?></p>
                 <p><strong id="deleteTourName"></strong></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ trans('main.Cancel') }}</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">{{ trans('main.Delete') }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo e(trans('main.Cancel')); ?></button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn"><?php echo e(trans('main.Delete')); ?></button>
             </div>
         </div>
     </div>
@@ -43,9 +43,9 @@
 
 <!--  TOUR TABLE  -->
 <div class="box box-primary">
-    @if(Auth::user()->can('dashboard.latest_tours'))
+    <?php if(Auth::user()->can('dashboard.latest_tours')): ?>
         <div class="box-header">
-            <h4>{{ trans('main.LatestTours') }}</h4>
+            <h4><?php echo e(trans('main.LatestTours')); ?></h4>
             <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                 </button>
@@ -63,43 +63,43 @@
                     <table class="table table-striped table-hover clickable-rows" style='background:#fff'>
                         <thead>
                         <th>ID</th>
-                        <th>{{ trans('main.Name') }}</th>
-                        <th>{{ trans('main.DepDate') }}</th>
-                        <th>{{ trans('main.RetDate') }}</th>
-                        <th>{{ trans('main.Pax') }}</th>
-                        <th>{{ trans('main.Begin') }}</th>
-                        <th>{{ trans('main.End') }}</th>
+                        <th><?php echo e(trans('main.Name')); ?></th>
+                        <th><?php echo e(trans('main.DepDate')); ?></th>
+                        <th><?php echo e(trans('main.RetDate')); ?></th>
+                        <th><?php echo e(trans('main.Pax')); ?></th>
+                        <th><?php echo e(trans('main.Begin')); ?></th>
+                        <th><?php echo e(trans('main.End')); ?></th>
                         <th>G/A</th>
-                        <th>{{ trans('main.Invoice') }}</th>
-                        <th>{{ trans('main.Status') }}</th>
-                        <th>{{ trans('main.ExternalName') }}</th>
-                        <th style="width: 140px">{{ trans('main.Actions') }}</th>
+                        <th><?php echo e(trans('main.Invoice')); ?></th>
+                        <th><?php echo e(trans('main.Status')); ?></th>
+                        <th><?php echo e(trans('main.ExternalName')); ?></th>
+                        <th style="width: 140px"><?php echo e(trans('main.Actions')); ?></th>
                         </thead>
                         <tbody>
                         <tr v-for="tour in paginatedTours" @click="showTour(tour)" class="clickable-row">
-                            <td>@{{tour['id']}}</td>
-                            <td>@{{tour['name']}}</td>
-                            <td>@{{tour['departure_date']}}</td>
-                            <td>@{{tour['retirement_date']}}</td>
-                            <td>@{{tour['pax']}} @{{showPaxFree(tour)}}</td>
-                            <td>@{{tour['country_begin']}} -
-                                @{{tour['city_begin']}}
+                            <td>{{tour['id']}}</td>
+                            <td>{{tour['name']}}</td>
+                            <td>{{tour['departure_date']}}</td>
+                            <td>{{tour['retirement_date']}}</td>
+                            <td>{{tour['pax']}} {{showPaxFree(tour)}}</td>
+                            <td>{{tour['country_begin']}} -
+                                {{tour['city_begin']}}
                             </td>
-                            <td>@{{tour['country_end']}} -
-                                @{{tour['city_end']}}
+                            <td>{{tour['country_end']}} -
+                                {{tour['city_end']}}
                             </td>
-                            <td>@{{tour['ga']}}</td>
-                            <td>@{{tour['invoice']}}</td>
-                            <td class="{{ \App\Helper\PermissionHelper::checkPermission('tour.edit') ? 'touredit-status' : '' }}"
+                            <td>{{tour['ga']}}</td>
+                            <td>{{tour['invoice']}}</td>
+                            <td class="<?php echo e(\App\Helper\PermissionHelper::checkPermission('tour.edit') ? 'touredit-status' : ''); ?>"
                                 :data-name-status="tour.status_name" :data-status-link="tour.status_link">
-                                @{{tour['status_name']}}
+                                {{tour['status_name']}}
                             </td>
-                            <td>@{{tour['external_name']}}</td>
+                            <td>{{tour['external_name']}}</td>
                             <td @click.stop>
                                 <!-- Use your action component here if available, otherwise use inline buttons -->
-                                @if(isset($useComponent) && $useComponent)
-                                    @include('components.action-buttons', ['model' => $tour, 'routePrefix' => 'tour'])
-                                @else
+                                <?php if(isset($useComponent) && $useComponent): ?>
+                                    <?php echo $__env->make('components.action-buttons', ['model' => $tour, 'routePrefix' => 'tour'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                                <?php else: ?>
                                     <div class="btn-list flex-nowrap">
                                         <!-- SHOW BUTTON -->
                                         <a v-if="show" 
@@ -128,7 +128,7 @@
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </td>
                         </tr>
                         </tbody>
@@ -150,7 +150,7 @@
                                     v-for="page in visiblePages" 
                                     :key="page"
                                     :class="{ active: currentPage === page }">
-                                    <a class="page-link" href="#" @click.prevent="changePage(page)">@{{ page }}</a>
+                                    <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
                                 </li>
 
                                 <!-- Next Button -->
@@ -164,31 +164,34 @@
                         
                         <!-- Pagination Info -->
                         <div class="pagination-info text-center text-muted">
-                            Showing @{{ startRecord }} to @{{ endRecord }} of @{{ tours.length }} entries
+                            Showing {{ startRecord }} to {{ endRecord }} of {{ tours.length }} entries
                         </div>
                     </div>
                 </div>
             </div>
             <div class="box-footer clearfix">
-                @if(Auth::user()->can('tour.create'))
-                    <a href="{{route('tour.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus fa-md" aria-hidden="true"></i> {{ trans('main.NewTour') }}
+                <?php if(Auth::user()->can('tour.create')): ?>
+                    <a href="<?php echo e(route('tour.create')); ?>" class="btn btn-primary">
+                        <i class="fa fa-plus fa-md" aria-hidden="true"></i> <?php echo e(trans('main.NewTour')); ?>
+
                     </a>
-                @endif
-                @if(Auth::user()->can('tour.index'))
-                    <a href="{{route('tour.index')}}" class="btn btn-outline-secondary float-end">
-                        {{ trans('main.ViewAllTours') }}
+                <?php endif; ?>
+                <?php if(Auth::user()->can('tour.index')): ?>
+                    <a href="<?php echo e(route('tour.index')); ?>" class="btn btn-outline-secondary float-end">
+                        <?php echo e(trans('main.ViewAllTours')); ?>
+
                     </a>
-                @endif
+                <?php endif; ?>
             </div>
-            @else
+            <?php else: ?>
                 <div class="box-header">
-                    <h4>{{ trans('main.LatestTours') }}</h4>
+                    <h4><?php echo e(trans('main.LatestTours')); ?></h4>
                 </div>
                 <div class="box-body">
-                    {{ trans('main.Youdonthavepermissions') }}
+                    <?php echo e(trans('main.Youdonthavepermissions')); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 </div>
 <!--  END TOUR TABLE  -->
@@ -448,4 +451,4 @@
     font-size: 14px;
     margin-top: 10px;
 }
-</style>
+</style><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/scaffold-interface/dashboard/components/tours_table.blade.php ENDPATH**/ ?>

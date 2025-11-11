@@ -41,11 +41,11 @@ class TaskController extends Controller
         $this->middleware('auth');
     }
 
-    public function getButton($id, $task)
+   public function getButton($id, $task)
     {
         $url = [
-            'show'     => route('task.show', ['task' => $id]),
-            'edit'     => route('task.edit', ['task' => $id]),
+            'show'       => route('task.show', ['id' => $id]),
+            'edit'       => route('task.edit', ['id' => $id]),
             'delete_msg' => "/task/{$id}/deleteMsg"
         ];
 

@@ -59,8 +59,7 @@ class AppController extends Controller
         $this->taskRepository = $taskRepository;
     }
 
-
-    /**
+/**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -78,9 +77,9 @@ class AppController extends Controller
             $room_type['count_room'] = null;
             $room_type['price_room'] = null;
             $room_types[] = $room_type;
-			
+            
         }
-	
+    
 
         $check_email_server = $user->email_server == 0 ? false : true;
 
@@ -103,7 +102,7 @@ class AppController extends Controller
             ->where('assign', $user->id)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
-                      ->where('is_aborted', false);
+                        ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
             ->take(10)
@@ -134,16 +133,35 @@ class AppController extends Controller
         foreach ($allTasks as $task) {
             $task->tour_name = $task->tourName();
             $task->show_assigned_users = $task->showAssignedUsers();
-            $task->task_type = \App\Task::$taskTypes[$task->task_type];
+            // Check if task_type exists before accessing
+            if (isset(\App\Task::$taskTypes[$task->task_type])) {
+                $task->task_type = \App\Task::$taskTypes[$task->task_type];
+            } else {
+                $task->task_type = 'Unknown'; // Or some default
+            }
             $task->tour_link_show = $task->tourLinkShow();
-            $task->data_update_link = route('task.update', ['task' => $task->id]);
-
-            $routes['show'] = route('task.show', ['task' => $task->id]);
-            $routes['edit'] = route('task.edit', ['task' => $task->id]);
+            $task->data_update_link = route('task.update', ['id' => $task->id]);
+            $routes['show'] = route('task.show', ['id' => $task->id]);
+            $routes['edit'] = route('task.edit', ['id' => $task->id]);
             $routes['delete_msg'] = "/task/$task->id/deleteMsg";
             $task->routes = $routes;
             $task->action_buttons = $this->generateActionButtons($task, $routes);
         }
+
+        // ==================================
+        // == THIS IS THE FIX YOU MISSED ==
+        // ==================================
+        // Get users with their tour counts
+        $tourUsers = \App\User::withCount('tours')
+            ->having('tours_count', '>', 0)
+            ->orderBy('tours_count', 'desc')
+            ->get()
+            ->map(function($user) {
+                return ['name' => $user->name, 'count' => $user->tours_count];
+            });
+        // ==================================
+        // == END OF FIX ==
+        // ==================================
 
         return view('scaffold-interface.dashboard.dashboard',
             [
@@ -155,7 +173,8 @@ class AppController extends Controller
                 'todoTasks' => $todoTasks,
                 'completedTasks' => $completedTasks,
                 'abortedTasks' => $abortedTasks,
-                'statuses' => $taskStatuses
+                'statuses' => $taskStatuses,
+                'tourUsers' => $tourUsers // <-- AND ADDING IT HERE
             ]);
     }
 

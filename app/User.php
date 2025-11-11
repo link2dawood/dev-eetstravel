@@ -9,7 +9,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\Traits\CausesActivity;
 
 /**
- * App\User
+ * App\User 
  *
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
  * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Permission[]                           $permissions

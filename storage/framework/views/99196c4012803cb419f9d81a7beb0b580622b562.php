@@ -1,4 +1,4 @@
-@php
+<?php
     use App\Helper\PermissionHelper;
     
     $permissions = [];
@@ -90,21 +90,21 @@
     }
     
     $canClone = ($prefix === 'tour') && Auth::check() && Auth::user()->can('tour.create');
-@endphp
+?>
 
 <div class="btn-list flex-nowrap">
-    @if($canShow)
-        <a href="{{ $show_route }}" class="btn btn-sm btn-warning" title="{{ trans('main.View') ?? 'View' }}">
+    <?php if($canShow): ?>
+        <a href="<?php echo e($show_route); ?>" class="btn btn-sm btn-warning" title="<?php echo e(trans('main.View') ?? 'View'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
                 <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
             </svg>
         </a>
-    @endif
+    <?php endif; ?>
 
-    @if($canEdit)
-        <a href="{{ $edit_route }}" class="btn btn-sm btn-primary" title="{{ trans('main.Edit') ?? 'Edit' }}">
+    <?php if($canEdit): ?>
+        <a href="<?php echo e($edit_route); ?>" class="btn btn-sm btn-primary" title="<?php echo e(trans('main.Edit') ?? 'Edit'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -112,16 +112,16 @@
                 <path d="M16 5l3 3" />
             </svg>
         </a>
-    @endif
+    <?php endif; ?>
 
-    @if($canDelete)
+    <?php if($canDelete): ?>
         <button type="button" 
                 class="btn btn-sm btn-danger delete-action-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#deleteModal"
-                data-delete-url="{{ $delete_msg_url }}"
-                data-entity-id="{{ $entity->id ?? '' }}"
-                title="{{ trans('main.Delete') ?? 'Delete' }}">
+                data-delete-url="<?php echo e($delete_msg_url); ?>"
+                data-entity-id="<?php echo e($entity->id ?? ''); ?>"
+                title="<?php echo e(trans('main.Delete') ?? 'Delete'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M4 7l16 0" />
@@ -131,26 +131,26 @@
                 <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
             </svg>
         </button>
-    @endif
+    <?php endif; ?>
 
-    @if($canClone)
+    <?php if($canClone): ?>
         <button type="button" 
                 class="btn btn-sm btn-success clone-tour-button"
                 data-bs-toggle="modal"
                 data-bs-target="#tour-clone-modal"
-                data-id="{{ $entity->id }}"
-                title="{{ trans('main.Clone') ?? 'Clone' }}">
+                data-id="<?php echo e($entity->id); ?>"
+                title="<?php echo e(trans('main.Clone') ?? 'Clone'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" />
                 <path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2" />
             </svg>
         </button>
-    @endif
+    <?php endif; ?>
 </div>
 
-{{-- Delete Modal --}}
-@once
+
+<?php if (! $__env->hasRenderedOnce('715350a4-5ad2-4d20-a794-6c6282341acf')): $__env->markAsRenderedOnce('715350a4-5ad2-4d20-a794-6c6282341acf'); ?>
 <div class="modal modal-blur fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -162,9 +162,9 @@
                     <path d="M12 9v2m0 4v.01" />
                     <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
                 </svg>
-                <h3>{{ trans('main.Warning') ?? 'Warning' }}!</h3>
+                <h3><?php echo e(trans('main.Warning') ?? 'Warning'); ?>!</h3>
                 <div class="text-secondary" id="deleteModalMessage">
-                    {{ trans('main.WouldyouliketoremoveThis') ?? 'Would you like to remove this item?' }}?
+                    <?php echo e(trans('main.WouldyouliketoremoveThis') ?? 'Would you like to remove this item?'); ?>?
                 </div>
             </div>
             <div class="modal-footer">
@@ -172,12 +172,14 @@
                     <div class="row">
                         <div class="col">
                             <button type="button" class="btn w-100" data-bs-dismiss="modal">
-                                {{ trans('main.Cancel') ?? 'Cancel' }}
+                                <?php echo e(trans('main.Cancel') ?? 'Cancel'); ?>
+
                             </button>
                         </div>
                         <div class="col">
                             <button type="button" class="btn btn-danger w-100" id="confirmDeleteBtn">
-                                {{ trans('main.Delete') ?? 'Delete' }}
+                                <?php echo e(trans('main.Delete') ?? 'Delete'); ?>
+
                             </button>
                         </div>
                     </div>
@@ -254,4 +256,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endonce
+<?php endif; ?><?php /**PATH D:\xamppp\htdocs\dev-eetstravel\resources\views/component/action_buttons.blade.php ENDPATH**/ ?>

@@ -1204,10 +1204,20 @@
             }, 10);
         }
 
-        function editTask(taskId) {
-            alert('Redirecting to edit task ' + taskId);
-        }
-
+       // ==========================================
+        // == 📍 THIS IS THE FIX ==
+        // ==========================================
+        function editTask(taskId) {
+            // OLD CODE:
+            // alert('Redirecting to edit task ' + taskId);
+            
+            // NEW CODE:
+            // This redirects to the correct route (e.g., /task/3/edit)
+            window.location.href = '/task/' + taskId + '/edit';
+        }
+        // ==========================================
+        // == END OF FIX ==
+        //
         function deleteTask(taskId) {
             if (confirm('Are you sure you want to delete this task?')) {
                 const row = document.querySelector(`tr[data-task-id="${taskId}"]`);

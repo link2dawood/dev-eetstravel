@@ -84,7 +84,7 @@
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
                             @foreach($tasks as $task)
-                            <a href="{!! route('task.show', ['task' => $task->id]) !!}" class="list-group-item">
+                            <a href="{!! route('task.show', ['id' => $task->id]) !!}" class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
                                         <span class="avatar">

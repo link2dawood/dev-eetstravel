@@ -192,16 +192,31 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id, DeleteModel $deleteModel)
-    {
+   public function destroy($id, DeleteModel $deleteModel)
+{
+    try {
+        // Prevent self-deletion
+        if (Auth::id() == $id) {
+            LaravelFlashSessionHelper::setFlashMessage("You cannot delete yourself", 'error');
+            return redirect('users');
+        }
+        
         $user = \App\User::findOrfail($id);
-            $user->delete();
-            LaravelFlashSessionHelper::setFlashMessage("User {$user->name} deleted", 'success');
-
-
+        $userName = $user->name;
+        
+        // Delete the user
+        $user->delete();
+        
+        LaravelFlashSessionHelper::setFlashMessage("User {$userName} deleted successfully", 'success');
+        
+        return redirect('users');
+        
+    } catch (\Exception $e) {
+        \Log::error('Error deleting user: ' . $e->getMessage());
+        LaravelFlashSessionHelper::setFlashMessage("Error deleting user: " . $e->getMessage(), 'error');
         return redirect('users');
     }
-
+}
     /**
      * Assign Role to user.
      *
@@ -280,12 +295,43 @@ class UserController extends Controller
      * @param Request $request
      * @return mixed
      */
-    public function deleteMsg($id, Request $request){
-//        $msg = Ajaxis::BtDeleting('Warning!!','Would you like to remove This?','/users/'. $id . '/delete');
-        $msg = Ajaxis::BtDeleting( trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?','/users/'. $id . '/delete');
-        if($request->ajax())
-        {
+   public function deleteMsg($id, Request $request)
+{
+    try {
+        $user = \App\User::findOrfail($id);
+        
+        // Check if user can be deleted
+        if (Auth::id() == $id) {
+            $msg = Ajaxis::MtWarning(
+                trans('main.Warning') . '!',
+                'You cannot delete yourself!'
+            );
+        } else {
+            // Return the Ajaxis delete confirmation modal
+            $msg = Ajaxis::BtDeleting(
+                trans('main.Warning') . '!!',
+                trans('main.WouldyouliketoremoveThis') . '?',
+                url('/users/' . $id)  // This should be the actual delete route
+            );
+        }
+        
+        if($request->ajax()) {
             return $msg;
         }
+        
+        return $msg;
+        
+    } catch (\Exception $e) {
+        \Log::error('Error in deleteMsg: ' . $e->getMessage());
+        
+        if($request->ajax()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'User not found'
+            ], 404);
+        }
+        
+        return redirect('users')->with('message', 'User not found');
     }
+}
 }

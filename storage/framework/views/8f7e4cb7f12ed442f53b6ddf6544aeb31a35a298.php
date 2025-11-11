@@ -84,7 +84,7 @@
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
                             <?php $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <a href="<?php echo route('task.show', ['task' => $task->id]); ?>" class="list-group-item">
+                            <a href="<?php echo route('task.show', ['id' => $task->id]); ?>" class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
                                         <span class="avatar">

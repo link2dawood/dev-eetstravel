@@ -96,26 +96,27 @@
                             </td>
                             <td>{{tour['external_name']}}</td>
                             <td @click.stop>
-                                <!-- Use your action component here if available, otherwise use inline buttons -->
                                 <?php if(isset($useComponent) && $useComponent): ?>
                                     <?php echo $__env->make('components.action-buttons', ['model' => $tour, 'routePrefix' => 'tour'], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
                                 <?php else: ?>
                                     <div class="btn-list flex-nowrap">
                                         <!-- SHOW BUTTON -->
                                         <a v-if="show" 
-                                           :href="tour.routes.show"
+                                           :href="tour.routes && tour.routes.show ? tour.routes.show : ('/tour/' + tour.id)"
                                            class="btn btn-sm btn-warning" 
-                                           title="View">
+                                           title="View"
+                                           @click.stop>
                                             <i class="ti ti-eye"></i>
                                         </a>
 
                                         <!-- EDIT BUTTON -->
-                                        <a v-if="edit" 
-                                           :href="tour.routes.edit"
-                                           class="btn btn-sm btn-primary" 
-                                           title="Edit">
+                                        <button v-if="edit" 
+                                                type="button"
+                                                class="btn btn-sm btn-primary" 
+                                                title="Edit"
+                                                @click.stop="editTour(tour.id)">
                                             <i class="ti ti-edit"></i>
-                                        </a>
+                                        </button>
 
                                         <!-- DELETE BUTTON -->
                                         <button v-if="destroy"
@@ -123,8 +124,11 @@
                                                 class="btn btn-sm btn-danger delete"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#myModal"
-                                                :data-link="tour.routes.delete ? tour.routes.delete : ('/tour/' + tour.id + '/delete')"
-                                                title="Delete">
+                                                :data-link="tour.routes && tour.routes.delete ? tour.routes.delete : ('/tour/' + tour.id + '/delete')"
+                                                :data-tour-id="tour.id"
+                                                :data-tour-name="tour.name"
+                                                title="Delete"
+                                                @click.stop>
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     </div>
@@ -183,219 +187,249 @@
                     </a>
                 <?php endif; ?>
             </div>
-            <?php else: ?>
-                <div class="box-header">
-                    <h4><?php echo e(trans('main.LatestTours')); ?></h4>
-                </div>
-                <div class="box-body">
-                    <?php echo e(trans('main.Youdonthavepermissions')); ?>
-
-                </div>
-            <?php endif; ?>
+    <?php else: ?>
+        <div class="box-header">
+            <h4><?php echo e(trans('main.LatestTours')); ?></h4>
         </div>
+        <div class="box-body">
+            <?php echo e(trans('main.Youdonthavepermissions')); ?>
+
+        </div>
+    <?php endif; ?>
 </div>
 <!--  END TOUR TABLE  -->
 
-    <script>
-    $(function () {
-        // Global delete handler for modal
-        var deleteUrl = null;
-        var tourToDeleteName = '';
-        var tourToDeleteId = null;
-        var $deleteButton = null;
+<script>
+$(function () {
+    // Global delete handler for modal
+    var deleteUrl = null;
+    var tourToDeleteName = '';
+    var tourToDeleteId = null;
 
-        // Handle delete button click - capture the delete URL
-        $(document).on('click', '.delete', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            $deleteButton = $(this);
-            deleteUrl = $deleteButton.data('link');
-            
-            // Ensure we have a delete URL
-            if (!deleteUrl || deleteUrl.trim() === '') {
-                deleteUrl = '/tour/' + $deleteButton.closest('tr').find('td:eq(0)').text().trim() + '/delete';
-            }
-
-            // Try to get tour name and ID from the row
+    // Handle delete button click - capture the delete URL
+    $(document).on('click', '.delete', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var $deleteButton = $(this);
+        
+        // Get delete URL from data attribute
+        deleteUrl = $deleteButton.attr('data-link') || $deleteButton.data('link');
+        
+        // Get tour name and ID from data attributes
+        tourToDeleteId = $deleteButton.attr('data-tour-id') || $deleteButton.data('tour-id');
+        tourToDeleteName = $deleteButton.attr('data-tour-name') || $deleteButton.data('tour-name');
+        
+        // Fallback: build URL from tour ID if missing
+        if (!deleteUrl || deleteUrl.trim() === '') {
             var $row = $deleteButton.closest('tr');
-            tourToDeleteName = $row.find('td:eq(1)').text() || 'this tour';
-            tourToDeleteId = $row.find('td:eq(0)').text();
+            var fallbackId = $row.find('td:eq(0)').text().trim();
+            if (fallbackId) {
+                deleteUrl = '/tour/' + fallbackId + '/delete';
+                tourToDeleteId = fallbackId;
+            }
+        }
+        
+        // Fallback for tour name from table
+        if (!tourToDeleteName || tourToDeleteName.trim() === '') {
+            var $row = $deleteButton.closest('tr');
+            tourToDeleteName = $row.find('td:eq(1)').text().trim() || 'this tour';
+        }
+        
+        // Update modal content
+        $('#deleteTourName').text(tourToDeleteName + ' (ID: ' + tourToDeleteId + ')');
+    });
 
-            $('#deleteTourName').text(tourToDeleteName + ' (ID: ' + tourToDeleteId + ')');
-        });
+    // Handle confirm delete button
+    $('#confirmDeleteBtn').on('click', function() {
+        if (!deleteUrl || deleteUrl.trim() === '') {
+            alert('Error: No delete URL specified');
+            return;
+        }
 
-        // Handle confirm delete button
-        $('#confirmDeleteBtn').on('click', function() {
-            if (!deleteUrl || deleteUrl.trim() === '') {
-                alert('Error: No delete URL specified');
-                return;
-            }            // Show loading state
-            $(this).prop('disabled', true).text('Deleting...');
+        // Show loading state
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Deleting...');
 
-            $.ajax({
-                url: deleteUrl,
-                method: 'GET', // Changed to GET because your route uses GET method
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    // Close modal
-                    $('#myModal').modal('hide');
-                    
-                    // Show success message
-                    alert('Tour deleted successfully!');
-                    
-                    // Reload the page to refresh the list
+        $.ajax({
+            url: deleteUrl,
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                // Close modal using Bootstrap 5 API
+                var modalEl = document.getElementById('myModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                }
+
+                // Show success message
+                alert('Tour deleted successfully!');
+
+                // Reload the page to refresh the list
+                setTimeout(function() {
                     location.reload();
-                },
-                error: function(xhr) {
-                    // Close modal
-                    $('#myModal').modal('hide');
-                    
-                    // Reset button state
-                    $('#confirmDeleteBtn').prop('disabled', false).text('Delete');
-                    
-                    var errorMsg = 'Error deleting tour!';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    } else if (xhr.responseJSON && xhr.responseJSON.error) {
-                        errorMsg = xhr.responseJSON.error;
-                    } else if (xhr.status === 404) {
-                        errorMsg = 'Tour not found!';
-                    } else if (xhr.status === 403) {
-                        errorMsg = 'You do not have permission to delete this tour!';
-                    }
-                    alert(errorMsg);
-                }
-            });
-        });
-
-        new Vue({
-            el: '#tours',
-
-            data: {
-                tours: null,
-                show: false,
-                edit: false,
-                destroy: false,
-                loading: true,
-                currentPage: 1,
-                perPage: 10
+                }, 500);
             },
-
-            computed: {
-                totalPages: function() {
-                    if (!this.tours) return 0;
-                    return Math.ceil(this.tours.length / this.perPage);
-                },
-                
-                paginatedTours: function() {
-                    if (!this.tours) return [];
-                    const start = (this.currentPage - 1) * this.perPage;
-                    const end = start + this.perPage;
-                    return this.tours.slice(start, end);
-                },
-                
-                visiblePages: function() {
-                    const total = this.totalPages;
-                    const current = this.currentPage;
-                    const pages = [];
-                    
-                    if (total <= 7) {
-                        for (let i = 1; i <= total; i++) {
-                            pages.push(i);
-                        }
-                    } else {
-                        if (current <= 4) {
-                            for (let i = 1; i <= 5; i++) {
-                                pages.push(i);
-                            }
-                            pages.push('...');
-                            pages.push(total);
-                        } else if (current >= total - 3) {
-                            pages.push(1);
-                            pages.push('...');
-                            for (let i = total - 4; i <= total; i++) {
-                                pages.push(i);
-                            }
-                        } else {
-                            pages.push(1);
-                            pages.push('...');
-                            for (let i = current - 1; i <= current + 1; i++) {
-                                pages.push(i);
-                            }
-                            pages.push('...');
-                            pages.push(total);
-                        }
-                    }
-                    
-                    return pages;
-                },
-                
-                startRecord: function() {
-                    if (!this.tours || this.tours.length === 0) return 0;
-                    return (this.currentPage - 1) * this.perPage + 1;
-                },
-                
-                endRecord: function() {
-                    if (!this.tours) return 0;
-                    const end = this.currentPage * this.perPage;
-                    return end > this.tours.length ? this.tours.length : end;
+            error: function(xhr) {
+                // Close modal using Bootstrap 5 API
+                var modalEl = document.getElementById('myModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
                 }
-            },
 
-            created: function () {
-                this.fetchData();
-            },
-
-            methods: {
-                fetchData: function () {
-                    var self = this;
-                    var userId = $('meta[name="user-id"]').attr('content');
-
-                    $.ajax({
-                        url: '/api/v1/dashboard/tours',
-                        method: 'GET',
-                        data: {
-                            'userId': userId
-                        },
-                        dataType: "json",
-                        success: function (data) {
-                            self.tours = data.tours;
-                            self.show = data.show;
-                            self.edit = data.edit;
-                            self.destroy = data.destroy;
-                            self.loading = false;
-                        },
-                        error: function (error) {
-                            console.log(error);
-                            self.loading = false;
-                        }
-                    });
-                },
+                // Reset button state
+                $btn.prop('disabled', false).text('Delete');
                 
-                changePage: function(page) {
-                    if (page < 1 || page > this.totalPages || page === '...') return;
-                    this.currentPage = page;
-                    // Scroll to top of table
-                    document.querySelector('#tours').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                },
-                
-                showPaxFree: function (tour) {
-                    if (tour.pax_free !== '') {
-                        return tour.pax_free
-                    }
-                },
-                
-                showTour: function (tour) {
-                    if (this.show) {
-                        window.location.href = tour.routes.show;
-                    }
+                var errorMsg = 'Error deleting tour!';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                } else if (xhr.status === 404) {
+                    errorMsg = 'Tour not found!';
+                } else if (xhr.status === 403) {
+                    errorMsg = 'You do not have permission to delete this tour!';
                 }
+                alert(errorMsg);
             }
         });
     });
+});
+
+// Vue.js instance
+new Vue({
+    el: '#tours',
+    data: {
+        tours: [],
+        show: false,
+        edit: false,
+        destroy: false,
+        loading: true,
+        currentPage: 1,
+        perPage: 10
+    },
+
+    computed: {
+        totalPages: function() {
+            if (!this.tours) return 0;
+            return Math.ceil(this.tours.length / this.perPage);
+        },
+        
+        paginatedTours: function() {
+            if (!this.tours) return [];
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            return this.tours.slice(start, end);
+        },
+        
+        visiblePages: function() {
+            const total = this.totalPages;
+            const current = this.currentPage;
+            const pages = [];
+            
+            if (total <= 7) {
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                if (current <= 4) {
+                    for (let i = 1; i <= 5; i++) {
+                        pages.push(i);
+                    }
+                    pages.push('...');
+                    pages.push(total);
+                } else if (current >= total - 3) {
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = total - 4; i <= total; i++) {
+                        pages.push(i);
+                    }
+                } else {
+                    pages.push(1);
+                    pages.push('...');
+                    for (let i = current - 1; i <= current + 1; i++) {
+                        pages.push(i);
+                    }
+                    pages.push('...');
+                    pages.push(total);
+                }
+            }
+            
+            return pages;
+        },
+        
+        startRecord: function() {
+            if (!this.tours || this.tours.length === 0) return 0;
+            return (this.currentPage - 1) * this.perPage + 1;
+        },
+        
+        endRecord: function() {
+            if (!this.tours) return 0;
+            const end = this.currentPage * this.perPage;
+            return end > this.tours.length ? this.tours.length : end;
+        }
+    },
+
+    created: function () {
+        this.fetchData();
+    },
+
+    methods: {
+        fetchData: function () {
+            var self = this;
+            var userId = $('meta[name="user-id"]').attr('content');
+
+            $.ajax({
+                url: '/api/v1/dashboard/tours',
+                method: 'GET',
+                data: {
+                    'userId': userId
+                },
+                dataType: "json",
+                success: function (data) {
+                    self.tours = data.tours;
+                    self.show = data.show;
+                    self.edit = data.edit;
+                    self.destroy = data.destroy;
+                    self.loading = false;
+                },
+                error: function (error) {
+                    console.log(error);
+                    self.loading = false;
+                }
+            });
+        },
+        
+        changePage: function(page) {
+            if (page < 1 || page > this.totalPages || page === '...') return;
+            this.currentPage = page;
+            // Scroll to top of table
+            document.querySelector('#tours').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        },
+        
+        showPaxFree: function (tour) {
+            if (tour.pax_free !== '') {
+                return tour.pax_free
+            }
+        },
+        
+        showTour: function (tour) {
+            if (this.show) {
+                var showUrl = tour.routes && tour.routes.show ? tour.routes.show : ('/tour/' + tour.id);
+                window.location.href = showUrl;
+            }
+        },
+        
+        // Edit method similar to Monday.com file
+        editTour: function(tourId) {
+            window.location.href = '/tour/' + tourId + '/edit';
+        }
+    }
+});
 </script>
 
 <style>

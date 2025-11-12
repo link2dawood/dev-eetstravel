@@ -6,21 +6,130 @@ use App\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class AnnouncementController extends Controller
 {
-    // EDIT METHOD - Show edit form
-    public function edit($announcement)
+    /**
+     * Display a listing of announcements
+     */
+    public function index()
     {
         try {
-            // Find announcement - can be ID or Eloquent model
-            if (is_numeric($announcement)) {
-                $announcement = Announcement::findOrFail($announcement);
+            $announcements = Announcement::where('parent_id', null)
+                ->orderBy('created_at', 'desc')
+                ->with(['author'])
+                ->get()
+                ->map(function($announcement) {
+                    // Add sender name
+                    $announcement->sender = $announcement->author ? $announcement->author->name : 'Unknown';
+                    
+                    // Get files using Spatie Media Library
+                    $announcement->files = $announcement->getMedia('announcement_files')->map(function($media) {
+                        return (object) [
+                            'id' => $media->id,
+                            'name' => $media->file_name,
+                            'url' => $media->getUrl(),
+                        ];
+                    });
+                    
+                    return $announcement;
+                });
+            
+            $title = 'Announcements';
+            return view('announcements.index', compact('announcements', 'title'));
+            
+        } catch (\Exception $e) {
+            Log::error('Announcement index error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error loading announcements');
+        }
+    }
+
+    /**
+     * Show the form for creating a new announcement
+     */
+    public function create()
+    {
+        $title = '';
+        $parent_id = request()->get('parent_id', null);
+        return view('announcements.create', compact('title', 'parent_id'));
+    }
+
+    /**
+     * Store a newly created announcement
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'files.*' => 'nullable|file|max:10240' // 10MB max per file
+            ]);
+            
+            $announcement = Announcement::create([
+                'title' => $request->title,
+                'content' => $request->content,
+                'author' => Auth::id(),
+                'parent_id' => $request->parent_id
+            ]);
+            
+            // Handle file uploads
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $announcement->addMedia($file)
+                        ->toMediaCollection('announcement_files');
+                }
+            }
+            
+            Log::info('Announcement created: ' . $announcement->id);
+            
+            return redirect()->route('announcements.index')
+                ->with('success', 'Announcement created successfully');
+                
+        } catch (\Exception $e) {
+            Log::error('Store announcement error: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error creating announcement: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified announcement
+     */
+    public function show($id)
+    {
+        try {
+            $announcement = Announcement::with(['author', 'childs.author'])
+                ->findOrFail($id);
+            
+            return view('announcements.show', compact('announcement'));
+            
+        } catch (\Exception $e) {
+            Log::error('Show announcement error: ' . $e->getMessage());
+            return redirect()->route('announcements.index')
+                ->with('error', 'Announcement not found');
+        }
+    }
+
+    /**
+     * Show the form for editing the announcement
+     */
+    public function edit($id)
+    {
+        try {
+            $announcement = Announcement::findOrFail($id);
+            
+            // Check if user can edit
+            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
+                return redirect()->route('announcements.index')
+                    ->with('error', 'You do not have permission to edit this announcement');
             }
             
             $title = 'Edit Announcement';
             
-            // Get files
+            // Get files using Spatie Media Library
             $files = $announcement->getMedia('announcement_files')->map(function($media) {
                 return (object) [
                     'id' => $media->id,
@@ -33,21 +142,29 @@ class AnnouncementController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Edit announcement error: ' . $e->getMessage());
-            return redirect()->route('announcements.index')->with('error', 'Announcement not found');
+            return redirect()->route('announcements.index')
+                ->with('error', 'Announcement not found');
         }
     }
 
-    // UPDATE METHOD - Save changes
-    public function update($announcement, Request $request)
+    /**
+     * Update the specified announcement
+     */
+    public function update(Request $request, $id)
     {
         try {
-            if (is_numeric($announcement)) {
-                $announcement = Announcement::findOrFail($announcement);
+            $announcement = Announcement::findOrFail($id);
+            
+            // Check if user can update
+            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
+                return redirect()->route('announcements.index')
+                    ->with('error', 'You do not have permission to update this announcement');
             }
             
             $request->validate([
-                'title' => 'required|string',
-                'content' => 'required|string'
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'files.*' => 'nullable|file|max:10240'
             ]);
             
             $announcement->update([
@@ -55,10 +172,11 @@ class AnnouncementController extends Controller
                 'content' => $request->content
             ]);
             
-            // Handle new files
+            // Handle new file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $announcement->addMedia($file)->toMediaCollection('announcement_files');
+                    $announcement->addMedia($file)
+                        ->toMediaCollection('announcement_files');
                 }
             }
             
@@ -69,26 +187,35 @@ class AnnouncementController extends Controller
                 
         } catch (\Exception $e) {
             Log::error('Update announcement error: ' . $e->getMessage());
-            return redirect()->back()->withInput()
+            return redirect()->back()
+                ->withInput()
                 ->with('error', 'Error updating announcement: ' . $e->getMessage());
         }
     }
 
-    // DESTROY METHOD - Delete announcement
-    public function destroy($announcement)
+    /**
+     * Remove the specified announcement
+     */
+    public function destroy($id)
     {
         try {
-            if (is_numeric($announcement)) {
-                $announcement = Announcement::findOrFail($announcement);
+            $announcement = Announcement::findOrFail($id);
+            
+            // Check if user can delete
+            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.delete')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete this announcement'
+                ], 403);
             }
             
-            // Delete media files
+            // Delete all media files
             $announcement->clearMediaCollection('announcement_files');
             
-            // Delete the announcement
+            // Delete the announcement (this will cascade delete children via model)
             $announcement->delete();
             
-            Log::info('Announcement deleted: ' . $announcement->id);
+            Log::info('Announcement deleted: ' . $id);
             
             return response()->json([
                 'success' => true,
@@ -100,69 +227,79 @@ class AnnouncementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error deleting announcement: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    // INDEX METHOD - List announcements
-    public function index()
+    /**
+     * Handle file deletion
+     */
+    public function deleteFile(Request $request)
     {
-        $announcements = Announcement::where('parent_id', null)
-            ->orderBy('created_at', 'desc')
-            ->with('author')
-            ->get()
-            ->map(function($announcement) {
-                $announcement->sender = $announcement->author ? $announcement->author->name : 'Unknown';
-                return $announcement;
-            });
-        
-        $title = 'Announcements';
-        return view('announcements.index', compact('announcements', 'title'));
-    }
-
-    // SHOW METHOD
-    public function show($announcement)
-    {
-        if (is_numeric($announcement)) {
-            $announcement = Announcement::findOrFail($announcement);
+        try {
+            $mediaId = $request->input('file_id');
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+            
+            // Check if user owns the announcement
+            $announcement = Announcement::findOrFail($media->model_id);
+            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+            
+            $media->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'File deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Delete file error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting file'
+            ], 500);
         }
-        return view('announcements.show', compact('announcement'));
     }
 
-    // CREATE METHOD
-    public function create()
-    {
-        return view('announcements.create');
-    }
-
-    // STORE METHOD
-    public function store(Request $request)
+    /**
+     * Handle announcement reply
+     */
+    public function reply(Request $request, $id)
     {
         try {
             $request->validate([
-                'title' => 'required|string',
                 'content' => 'required|string'
             ]);
             
-            $announcement = Announcement::create([
-                'title' => $request->title,
+            $parentAnnouncement = Announcement::findOrFail($id);
+            
+            $reply = Announcement::create([
+                'title' => 'Re: ' . $parentAnnouncement->title,
                 'content' => $request->content,
-                'author' => Auth::id()
+                'author' => Auth::id(),
+                'parent_id' => $id
             ]);
             
+            // Handle file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $announcement->addMedia($file)->toMediaCollection('announcement_files');
+                    $reply->addMedia($file)
+                        ->toMediaCollection('announcement_files');
                 }
             }
             
-            return redirect()->route('announcements.index')
-                ->with('success', 'Announcement created successfully');
+            return redirect()->route('announcements.show', $id)
+                ->with('success', 'Reply posted successfully');
                 
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()
-                ->with('error', 'Error creating announcement: ' . $e->getMessage());
+            Log::error('Reply error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error posting reply');
         }
     }
 }

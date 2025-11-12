@@ -135,8 +135,7 @@
 
 @endsection
 @push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
+<script src="{{ asset('js/bootstrap-tables.js') }}"></script><script>
 $(document).ready(function() {
     let permission = $('#permission').attr('data-permission');
     let classNameStatus = permission ? 'touredit-status' : '';
@@ -194,6 +193,52 @@ $(document).ready(function() {
             $('#monthly-chart-table tbody').html('<tr><td colspan="8" class="text-center">Error loading data</td></tr>');
         });
     }
+
+    // Event delegation for delete buttons - placed outside loadTourData
+    $(document).on('click', '.delete-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); // Stop event from bubbling up
+        e.stopImmediatePropagation(); // Stop all other handlers
+        
+        const button = $(this);
+        const deleteUrl = button.data('url');
+        
+        if (!deleteUrl) {
+            console.error('Delete URL not found');
+            return false;
+        }
+        
+        if (confirm('Are you sure you want to delete this tour?')) {
+            // Disable the button to prevent double clicks
+            button.prop('disabled', true);
+            
+            $.ajax({
+                url: deleteUrl,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        alert('Tour deleted successfully!');
+                        // Reload the table data
+                        loadTourData();
+                    } else {
+                        alert('Error deleting tour');
+                        button.prop('disabled', false);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Delete error:', xhr);
+                    alert('Error deleting tour: ' + (xhr.responseJSON?.message || 'Unknown error'));
+                    button.prop('disabled', false);
+                }
+            });
+        }
+        
+        return false; // Prevent default action
+    });
 
     // Load initial data
     loadTourData();

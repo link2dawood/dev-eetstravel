@@ -12,6 +12,7 @@
         "doctrine/dbal": "^2.13",
         "ezyang/htmlpurifier": "^4.16",
         "google/apiclient": "^2.12",
+        "google/apiclient-services": "*",
         "intervention/image": "^2.7",
         "laravel/framework": "^8.75",
         "laravel/tinker": "^2.5",
@@ -22,7 +23,7 @@
         "pusher/pusher-php-server": "^7.2",
         "skagarwal/google-places-api": "^1.4",
         "spatie/laravel-activitylog": "^3.17",
-        "spatie/laravel-medialibrary": "^9.0",
+        "spatie/laravel-medialibrary": "*",
         "spatie/laravel-permission": "^5.5"
     },
     "require-dev": {

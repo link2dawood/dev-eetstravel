@@ -118,4 +118,4 @@
 
 
                         </div>
-        </div><?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/legend/tour_legend.blade.php ENDPATH**/ ?>
+        </div><?php /**PATH /var/www/html/resources/views/legend/tour_legend.blade.php ENDPATH**/ ?>

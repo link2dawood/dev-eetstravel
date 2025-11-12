@@ -69,4 +69,4 @@
     
 <?php endif; ?>
 
-<?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/component/session-messages.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/html/resources/views/component/session-messages.blade.php ENDPATH**/ ?>

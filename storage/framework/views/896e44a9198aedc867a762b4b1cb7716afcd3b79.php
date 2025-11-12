@@ -386,4 +386,4 @@
         </div>
     </div>
 </aside>
-<?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/scaffold-interface/layouts/tabler-sidebar.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php ENDPATH**/ ?>

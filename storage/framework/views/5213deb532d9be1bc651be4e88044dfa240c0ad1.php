@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title','Tours'); ?>
 
 <?php $__env->startSection('post_styles'); ?>
@@ -707,4 +705,4 @@
     });
 </script>
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/tour/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/tour/index.blade.php ENDPATH**/ ?>

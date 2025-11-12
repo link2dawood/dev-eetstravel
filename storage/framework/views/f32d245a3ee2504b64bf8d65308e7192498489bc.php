@@ -25,4 +25,4 @@
         </div>
     </div>
 </footer>
-<?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/scaffold-interface/layouts/tabler-footer.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-footer.blade.php ENDPATH**/ ?>

@@ -501,8 +501,8 @@ class TourPackageController extends Controller
             return response('/tour_package/'.$tourPackage->id.'/edit');
         }
 
-        if ($request->ajax()) return response(route('tour.show', ['id' => $tourId]));
-        return redirect(route('tour.edit', ['id' => $tourId]));
+        if ($request->ajax()) return response(route('tour.show', ['tour' => $tourId]));
+        return redirect(route('tour.edit', ['tour' => $tourId]));
     }
 
     public function getLastDateForHotel($id){

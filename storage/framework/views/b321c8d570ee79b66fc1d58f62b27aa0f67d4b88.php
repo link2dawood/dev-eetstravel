@@ -151,4 +151,4 @@
     opacity: 0.5;
 }
 </style>
-<?php $__env->stopPush(); ?><?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/scaffold-interface/layouts/tabler-header.blade.php ENDPATH**/ ?>
+<?php $__env->stopPush(); ?><?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-header.blade.php ENDPATH**/ ?>

@@ -4,30 +4,30 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    @auth
-        <meta name="user-id" content="{{ Auth::user()->id }}">
-    @endauth
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <?php if(auth()->guard()->check()): ?>
+        <meta name="user-id" content="<?php echo e(Auth::user()->id); ?>">
+    <?php endif; ?>
 
-    <title>@yield('title', 'TMS - Tour Management System')</title>
+    <title><?php echo $__env->yieldContent('title', 'TMS - Tour Management System'); ?></title>
 
     <!-- CSS files -->
-    <link href="{{ asset('tabler/css/tabler.min.css') }}" rel="stylesheet"/>
-    <link href="{{ asset('tabler/css/tabler-icons.min.css') }}" rel="stylesheet"/>
-    <link rel="stylesheet" href="{{asset('css/jquery.toast.css')}}">
-    <link rel="stylesheet" href="{{asset('css/fileinput.min.css')}}">
-    <link rel="stylesheet" href="{{asset('css/magnific.css')}}">
-    <link href="{{asset('css/select2.min.css')}}" rel="stylesheet"/>
-    <link href="{{asset('css/bootstrap-datetimepicker.min.css')}}" rel="stylesheet"/>
-    <link href="{{asset('css/bootstrap-datepicker.min.css')}}" rel="stylesheet" type="text/css"/>
-    <link href="{{asset('css/responsive-global.css')}}" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('tabler/css/tabler.min.css')); ?>" rel="stylesheet"/>
+    <link href="<?php echo e(asset('tabler/css/tabler-icons.min.css')); ?>" rel="stylesheet"/>
+    <link rel="stylesheet" href="<?php echo e(asset('css/jquery.toast.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/fileinput.min.css')); ?>">
+    <link rel="stylesheet" href="<?php echo e(asset('css/magnific.css')); ?>">
+    <link href="<?php echo e(asset('css/select2.min.css')); ?>" rel="stylesheet"/>
+    <link href="<?php echo e(asset('css/bootstrap-datetimepicker.min.css')); ?>" rel="stylesheet"/>
+    <link href="<?php echo e(asset('css/bootstrap-datepicker.min.css')); ?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('css/responsive-global.css')); ?>" rel="stylesheet" type="text/css"/>
     
     <!-- Modern UI Enhancements -->
-    <link href="{{asset('css/modern-forms.css')}}" rel="stylesheet" type="text/css"/>
-    <link href="{{asset('css/modern-tables.css')}}" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('css/modern-forms.css')); ?>" rel="stylesheet" type="text/css"/>
+    <link href="<?php echo e(asset('css/modern-tables.css')); ?>" rel="stylesheet" type="text/css"/>
 
     <style>
-        @import url('https://rsms.me/inter/inter.css');
+        @import  url('https://rsms.me/inter/inter.css');
         :root {
             --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
         }
@@ -552,19 +552,19 @@
         .fa-times::before { content: "\eb55"; font-family: 'tabler-icons'; } /* ti-x */
     </style>
 
-    @yield('colorpicker-css')
-    @yield('post_styles')
-    @stack('styles')
+    <?php echo $__env->yieldContent('colorpicker-css'); ?>
+    <?php echo $__env->yieldContent('post_styles'); ?>
+    <?php echo $__env->yieldPushContent('styles'); ?>
 
-    <script type="text/javascript" src="{{asset('js/lib/jquery.min.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/lib/moment.js')}}"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/lib/jquery.min.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/lib/moment.js')); ?>"></script>
     <script src="https://jsuites.net/v4/jsuites.js"></script>
     <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
-    <script type="text/javascript" src="{{asset('js/jquery.toast.js')}}"></script>
-    <script src="{{asset('js/vue.js')}}"></script>
-    <script src="{{asset('js/piexif.min.js')}}"></script>
-    <script src="{{asset('js/purify.min.js')}}"></script>
-    <script src="{{asset('js/fileinput.min.js')}}"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/jquery.toast.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/vue.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/piexif.min.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/purify.min.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/fileinput.min.js')); ?>"></script>
 </head>
 <body>
     <audio src="/new_message.mp3" id="chat_message"></audio>
@@ -576,24 +576,24 @@
     </div>
 
     <div class="page">
-        @auth
-            @include('scaffold-interface.layouts.tabler-sidebar')
-        @endauth
+        <?php if(auth()->guard()->check()): ?>
+            <?php echo $__env->make('scaffold-interface.layouts.tabler-sidebar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+        <?php endif; ?>
 
         <div class="page-wrapper">
-            @auth
-                @include('scaffold-interface.layouts.tabler-header')
-            @endauth
+            <?php if(auth()->guard()->check()): ?>
+                <?php echo $__env->make('scaffold-interface.layouts.tabler-header', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+            <?php endif; ?>
 
             <!-- Page body -->
             <div class="page-body">
                 <div class="container-xl">
-                    @include('component.session-messages')
-                    @yield('content')
+                    <?php echo $__env->make('component.session-messages', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+                    <?php echo $__env->yieldContent('content'); ?>
                 </div>
             </div>
 
-            @include('scaffold-interface.layouts.tabler-footer')
+            <?php echo $__env->make('scaffold-interface.layouts.tabler-footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </div>
     </div>
 
@@ -612,7 +612,7 @@
     </div>
 
     <!-- Tabler Core (includes Bootstrap 5) -->
-    <script src="{{ asset('tabler/js/tabler.min.js') }}"></script>
+    <script src="<?php echo e(asset('tabler/js/tabler.min.js')); ?>"></script>
 
     <!-- Ensure Bootstrap global is available -->
     <script>
@@ -646,41 +646,41 @@
     </script>
 
     <!-- Core JS -->
-    <script type="text/javascript" src="{{asset('js/lib/moment-with-locales.js')}}"></script>
-    <script type="text/javascript" src="{{URL::asset('js/select2.min.js') }}"></script>
-    <script> var baseURL = "{{ URL::to('/') }}"</script>
-    <script type="text/javascript" src="{{URL::asset('js/AjaxisBootstrap.js') }}"></script>
-    <script type="text/javascript" src="{{URL::asset('js/scaffold-interface-js/customA.js') }}"></script>
-    <script type="text/javascript" src="{{asset('js/bootstrap-datetimepicker.min.js')}}"></script>
-    <script src="{{asset('js/bootstrap-datepicker.min.js')}}"></script>
-    <script src="{{asset('js/script.js')}}"></script>
-    <script src="{{asset('js/magnific.js')}}"></script>
-    <script src="{{URL::asset('js/google_places.js')}}"></script>
-    <script src="{{URL::asset('js/jquery.scrollTo.min.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/pusher.min.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/jquery.repeater.min.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/bootstrap-tables.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/helper.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/onclick-events.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/notifications.js')}}"></script>
-    <script type="text/javascript" src="{{asset('js/ckeditor/ckeditor.js')}}"></script>
-    <script src="{{asset('js/ckeditor.js')}}"></script>
-    <script src="{{asset('js/icheck.min.js')}}"></script>
-    <script type="text/javascript" src="{{ asset('js/cities.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('js/action-buttons.js') }}"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/lib/moment-with-locales.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(URL::asset('js/select2.min.js')); ?>"></script>
+    <script> var baseURL = "<?php echo e(URL::to('/')); ?>"</script>
+    <script type="text/javascript" src="<?php echo e(URL::asset('js/AjaxisBootstrap.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(URL::asset('js/scaffold-interface-js/customA.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/bootstrap-datetimepicker.min.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/bootstrap-datepicker.min.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/script.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/magnific.js')); ?>"></script>
+    <script src="<?php echo e(URL::asset('js/google_places.js')); ?>"></script>
+    <script src="<?php echo e(URL::asset('js/jquery.scrollTo.min.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/pusher.min.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/jquery.repeater.min.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/bootstrap-tables.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/helper.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/onclick-events.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/notifications.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/ckeditor/ckeditor.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/ckeditor.js')); ?>"></script>
+    <script src="<?php echo e(asset('js/icheck.min.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/cities.js')); ?>"></script>
+    <script type="text/javascript" src="<?php echo e(asset('js/action-buttons.js')); ?>"></script>
 
-    @yield('colorpicker-js')
-    @stack('scripts')
-    @yield('post_scripts')
-    @yield('tour_package_script')
-    @yield('post_scripts_calendar')
+    <?php echo $__env->yieldContent('colorpicker-js'); ?>
+    <?php echo $__env->yieldPushContent('scripts'); ?>
+    <?php echo $__env->yieldContent('post_scripts'); ?>
+    <?php echo $__env->yieldContent('tour_package_script'); ?>
+    <?php echo $__env->yieldContent('post_scripts_calendar'); ?>
 
     <script>
-        @auth
-            var user_email = "{{ Auth::user()->email_login }}";
-        @else
+        <?php if(auth()->guard()->check()): ?>
+            var user_email = "<?php echo e(Auth::user()->email_login); ?>";
+        <?php else: ?>
             var user_email = "";
-        @endauth
+        <?php endif; ?>
 
         const multiSelectWithoutCtrl = ( elemSelector ) => {
             let options = [].slice.call(document.querySelectorAll(`${elemSelector} option`));
@@ -700,3 +700,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH /var/www/html/resources/views/scaffold-interface/layouts/tabler-app.blade.php ENDPATH**/ ?>

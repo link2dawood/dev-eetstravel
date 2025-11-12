@@ -1909,7 +1909,7 @@ $select_office=Offices::where('status',1)->first();
 
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} cloned", 'success');
 
-        return redirect(route('tour.edit', ['id' => $newTour->id]));
+        return redirect(route('tour.edit', ['tour' => $newTour->id]));
     }
     /**
      * clone tour days with services
@@ -2083,6 +2083,11 @@ $select_office=Offices::where('status',1)->first();
 			    'Quotations Tour %s #%s is moved to tours', $tour->name, $tour->id
 		    ));
 	    }
+
+	    if ($request->ajax() || $request->wantsJson()) {
+	        return response()->json(['success' => true, 'message' => 'Tour converted successfully']);
+	    }
+
 	    return redirect(route('tour.show', ['id' => $id]));
     }
 	public function convertToQuotation(Request $request, $id) {
@@ -2095,6 +2100,11 @@ $select_office=Offices::where('status',1)->first();
 			    'Tour Tour %s #%s is moved to Quotation', $tour->name, $tour->id
 		    ));
 	    }
+
+	    if ($request->ajax() || $request->wantsJson()) {
+	        return response()->json(['success' => true, 'message' => 'Quotation converted successfully']);
+	    }
+
 	    return redirect(route('tour.show', ['id' => $id]));
     }
 	

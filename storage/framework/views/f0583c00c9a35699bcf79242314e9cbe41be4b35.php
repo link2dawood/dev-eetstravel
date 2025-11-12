@@ -90,4 +90,4 @@
             <i class="ti ti-copy"></i>
         </button>
     <?php endif; ?>
-</div><?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/component/action_buttons.blade.php ENDPATH**/ ?>
+</div><?php /**PATH /var/www/html/resources/views/component/action_buttons.blade.php ENDPATH**/ ?>

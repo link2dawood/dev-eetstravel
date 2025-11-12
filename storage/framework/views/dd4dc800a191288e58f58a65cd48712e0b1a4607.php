@@ -1,21 +1,15 @@
-{{-- 
-    Guest List Create Page - Tabler Design
-    Component-based architecture with reusable components
-    Fully responsive with modern Tabler styling
---}}
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Create Guest List')
+<?php $__env->startSection('title', 'Create Guest List'); ?>
 
-@section('content')
-    {{-- Page Header --}}
+<?php $__env->startSection('content'); ?>
+    
     <div class="page-header d-print-none mb-3">
         <div class="row g-2 align-items-center">
             <div class="col">
                 <div class="page-pretitle">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('tour.show', ['tour' => $tour->id]) }}">{{ $tour->name }}</a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(url('/home')); ?>">Home</a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo e(route('tour.show', ['tour' => $tour->id])); ?>"><?php echo e($tour->name); ?></a></li>
                             <li class="breadcrumb-item active">Create Guest List</li>
                         </ol>
                     </nav>
@@ -24,70 +18,76 @@
                     <i class="ti ti-users me-2"></i>Create Guest List
                 </h2>
             </div>
-            {{-- Page Actions --}}
+            
             <div class="col-auto ms-auto d-print-none">
-                @include('components.guest-list-actions')
+                <?php echo $__env->make('components.guest-list-actions', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
             </div>
         </div>
     </div>
 
-    {{-- Main Content Card --}}
+    
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
-                <i class="ti ti-file-text me-2"></i>{!! trans('main.GuestList') !!}
+                <i class="ti ti-file-text me-2"></i><?php echo trans('main.GuestList'); ?>
+
             </h3>
         </div>
         <div class="card-body">
             <script>
-                let tourId = {{ $tour->id }};
-                const URLtoGuestList = "{{ route('tour.show', ['tour' => $tour->id, 'tab' => 'room_list']) }}";
+                let tourId = <?php echo e($tour->id); ?>;
+                const URLtoGuestList = "<?php echo e(route('tour.show', ['tour' => $tour->id, 'tab' => 'room_list'])); ?>";
             </script>
 
-            {{-- Guest List Form Component --}}
-            @include('components.guest-list-form')
+            
+            <?php echo $__env->make('components.guest-list-form', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </div>
         <div class="card-footer text-end">
             <button class="btn btn-success roomlist_submit">
-                <i class="ti ti-device-floppy me-1"></i>{!! trans('main.Save') !!}
+                <i class="ti ti-device-floppy me-1"></i><?php echo trans('main.Save'); ?>
+
             </button>
             <a href="javascript:history.back()" class="btn btn-warning">
-                <i class="ti ti-x me-1"></i>{!! trans('main.Cancel') !!}
+                <i class="ti ti-x me-1"></i><?php echo trans('main.Cancel'); ?>
+
             </a>
         </div>
     </div>
-    {{-- Confirmation Modal --}}
+    
     <div class="modal modal-blur fade" id="question_modal" tabindex="-1" aria-labelledby="myQuestionLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="myModalLabel">
-                        <i class="ti ti-alert-triangle me-2"></i>{!! trans('main.Warning') !!}
+                        <i class="ti ti-alert-triangle me-2"></i><?php echo trans('main.Warning'); ?>
+
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>{!! trans('main.WouldyouliketosendGuestList') !!}?</p>
+                    <p><?php echo trans('main.WouldyouliketosendGuestList'); ?>?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" data-bs-dismiss="modal">
-                        <i class="ti ti-x me-1"></i>{!! trans('main.Close') !!}
+                        <i class="ti ti-x me-1"></i><?php echo trans('main.Close'); ?>
+
                     </button>
                     <button type="button" class="btn btn-primary" id="send_agree">
-                        <i class="ti ti-check me-1"></i>{!! trans('main.Agree') !!}
+                        <i class="ti ti-check me-1"></i><?php echo trans('main.Agree'); ?>
+
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Error Modal --}}
+    
     <div class="modal modal-blur fade" tabindex="-1" id="error_send" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="title_modal_error">
-                        <i class="ti ti-alert-triangle me-2"></i>{!! trans('main.Warning') !!}!
+                        <i class="ti ti-alert-triangle me-2"></i><?php echo trans('main.Warning'); ?>!
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -105,13 +105,13 @@
         </div>
     </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('post_scripts')
+<?php $__env->startSection('post_scripts'); ?>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
         const tour_id = $('#tour_date_id').attr('data-tour-id');
-        loadGuestTemplate('0', 'email', '{{ $tour->name }}', '{{ $tour->pax }}', '{{ $tour->city_end }}', 'emailto', 'phone', 'description', '{{ $tour->getStatusName() }}','{{ $tour->getTourDaysSortedByDate()->first()->date }}','{{ $tour->price_for_one }}', 'menu', '{{ $tour->id }}' );
+        loadGuestTemplate('0', 'email', '<?php echo e($tour->name); ?>', '<?php echo e($tour->pax); ?>', '<?php echo e($tour->city_end); ?>', 'emailto', 'phone', 'description', '<?php echo e($tour->getStatusName()); ?>','<?php echo e($tour->getTourDaysSortedByDate()->first()->date); ?>','<?php echo e($tour->price_for_one); ?>', 'menu', '<?php echo e($tour->id); ?>' );
 
         function loadGuestTemplate(service_id, email, name, pax, address, emailto, phone, description, status, time_from, price_for_one, menu, tour_id) {
             var selected = '';
@@ -213,6 +213,8 @@
         }
     });
 </script>
-<script type="text/javascript" src="{{ asset('js/ckeditor/ckeditor.js')}}"></script>
-<script type="text/javascript" src="{{ asset('js/roomlist.js')}}"></script>
-@endsection
+<script type="text/javascript" src="<?php echo e(asset('js/ckeditor/ckeditor.js')); ?>"></script>
+<script type="text/javascript" src="<?php echo e(asset('js/roomlist.js')); ?>"></script>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('scaffold-interface.layouts.tabler-app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/guest_list/create.blade.php ENDPATH**/ ?>

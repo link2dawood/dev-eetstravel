@@ -35,4 +35,4 @@
         <li class="footer"><a href="#"><?php echo trans('main.Youdonthavenotifications'); ?></a></li>
     <?php endif; ?>
 
-</ul><?php /**PATH D:\xampp\htdocs\dev-eetstravel\resources\views/component/list-notification-task.blade.php ENDPATH**/ ?>
+</ul><?php /**PATH /var/www/html/resources/views/component/list-notification-task.blade.php ENDPATH**/ ?>

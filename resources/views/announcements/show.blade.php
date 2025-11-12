@@ -19,7 +19,44 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @include('announcements.show_main', ['announcement' => $announcement])
+                    <div class="chat">
+                        <div class="item">
+                            <div class="chat-details">
+                                <span class="chat-author">
+                                    by <b>{{ optional(\App\User::find($announcement->author))->name ?? 'Unknown' }}</b>
+                                </span>
+                                <span class="chat-date">
+                                    <i>{{ $announcement->created_at }}</i>
+                                </span>
+                            </div>
+
+                            <div class="chat-content">
+                                {!! $announcement->content !!}
+                            </div>
+
+                            {{-- Remove or comment out the attachments section --}}
+                            {{-- 
+                            <div class="chat-attachments">
+                                <table class="table">
+                                    <tbody>
+                                        // Attachments code removed
+                                    </tbody>
+                                </table>
+                            </div>
+                            --}}
+
+                            <div class="announcement-actions">
+                                {{-- Optional actions go here --}}
+                            </div>
+
+                            @php
+                                $childs = $announcement->childs()->get();
+                            @endphp
+                            @if($childs && $childs->isNotEmpty())
+                                @include('announcements.childs', ['childs' => $childs, 'nesting' => 1])
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

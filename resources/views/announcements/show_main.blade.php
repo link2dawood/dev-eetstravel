@@ -23,7 +23,7 @@
                         <div class="item">
                             <div class="chat-details">
                                 <span class="chat-author">
-                                    by <b>{{ \App\User::find($announcement->author)->name ?? 'Unknown' }}</b>
+                                    by <b>{{ $announcement->author->name ?? 'Unknown' }}</b>
                                 </span>
                                 <span class="chat-date">
                                     <i>{{ $announcement->created_at }}</i>
@@ -34,27 +34,39 @@
                                 {!! $announcement->content !!}
                             </div>
 
+                            {{-- Only show attachments if media table exists --}}
+                            @php
+                                $attachments = collect();
+                                try {
+                                    if (Schema::hasTable('media')) {
+                                        $attachments = $announcement->getMedia('announcement_files');
+                                    }
+                                } catch (\Exception $e) {
+                                    // Media table doesn't exist, skip attachments
+                                }
+                            @endphp
+
+                            @if($attachments->isNotEmpty())
                             <div class="chat-attachments">
+                                <h5>Attachments:</h5>
                                 <table class="table">
                                     <tbody>
-                                        @php $attachments = $announcement->getMedia('announcement_files'); @endphp
-                                        @if($attachments && $attachments->isNotEmpty())
-                                            @foreach($attachments as $attachment)
-                                                <tr class="del-container">
-                                                    <td class="td_link_attach">
-                                                        <div class="td_link_attach__name">
-                                                            <a class="name_attach" href="{{ $attachment->getUrl() }}" target="_blank">
-                                                                <span class="glyphicon glyphicon-paperclip"></span>
-                                                                {{ $attachment->file_name }}
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @endif
+                                        @foreach($attachments as $attachment)
+                                            <tr class="del-container">
+                                                <td class="td_link_attach">
+                                                    <div class="td_link_attach__name">
+                                                        <a class="name_attach" href="{{ $attachment->getUrl() }}" target="_blank">
+                                                            <span class="glyphicon glyphicon-paperclip"></span>
+                                                            {{ $attachment->file_name }}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
+                            @endif
 
                             <div class="announcement-actions">
                                 {{-- Optional actions go here --}}

@@ -107,6 +107,86 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>$(document).ready(function() { initializeBootstrapTable('events-table'); });</script>
+<script>
+    function filterTable(tableId, searchValue) {
+        const table = document.getElementById(tableId);
+        const tr = table.getElementsByTagName('tr');
+        const filter = searchValue.toUpperCase();
+        
+        for (let i = 1; i < tr.length; i++) {
+            let txtValue = tr[i].textContent || tr[i].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = '';
+            } else {
+                tr[i].style.display = 'none';
+            }
+        }
+    }
+    
+    function sortTable(n, tableId) {
+        const table = document.getElementById(tableId);
+        let switching = true;
+        let dir = 'asc';
+        let switchcount = 0;
+        
+        while (switching) {
+            switching = false;
+            const rows = table.rows;
+            
+            for (let i = 1; i < (rows.length - 1); i++) {
+                let shouldSwitch = false;
+                const x = rows[i].getElementsByTagName('TD')[n];
+                const y = rows[i + 1].getElementsByTagName('TD')[n];
+                
+                if (dir == 'asc') {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == 'desc') {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == 'asc') {
+                    dir = 'desc';
+                    switching = true;
+                }
+            }
+        }
+    }
+    
+    function exportTableToCSV(tableId, filename) {
+        const table = document.getElementById(tableId);
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll('td, th');
+            
+            for (let j = 0; j < cols.length - 1; j++) { // Exclude last column (Actions)
+                row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+            }
+            
+            csv.push(row.join(','));
+        }
+        
+        const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+        const downloadLink = document.createElement('a');
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+</script>
 @endpush

@@ -499,13 +499,41 @@ Route::group(['middleware'=> 'web'],function(){
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
+// User Management Routes
 Route::group(['middleware' => ['web', 'auth']], function () {
-    Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg');
-    Route::delete('users/{id}', 'ScaffoldInterface\UserController@destroy')->name('users.destroy');
-    Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')->name('user.remove_role');
-    Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole');
-    Route::post('users/addPermission', 'ScaffoldInterface\UserController@addPermission');
-    Route::get('users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission');
+    // IMPORTANT: The order matters! More specific routes should come BEFORE generic ones
+    
+    // Delete confirmation modal (GET)
+    Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
+        ->name('users.deleteMsg');
+    
+    // Actual delete (DELETE) - make sure this is accessible
+    Route::delete('users/{id}', 'ScaffoldInterface\UserController@destroy')
+        ->name('users.destroy');
+    
+    // User role/permission management
+    Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')
+        ->name('user.remove_role');
+    Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole')
+        ->name('users.addRole');
+    Route::post('users/addPermission', 'ScaffoldInterface\UserController@addPermission')
+        ->name('users.addPermission');
+    Route::get('users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
+        ->name('users.revokePermission');
+});
+
+// DEBUGGING: Temporarily add this route to test if DELETE works at all
+Route::group(['middleware' => ['web', 'auth']], function () {
+    // Test route - accepts both POST and DELETE
+    Route::match(['post', 'delete'], 'users/test-delete/{id}', function($id) {
+        \Log::info('Test delete route hit for user: ' . $id);
+        \Log::info('Request method: ' . request()->method());
+        return response()->json([
+            'success' => true,
+            'method' => request()->method(),
+            'id' => $id
+        ]);
+    });
 });
 
 // Or use resource route

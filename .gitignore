@@ -34,3 +34,4 @@ auth.json
 .env
 .env.snappymail.example
 /vendor
+/storage/framework/views/*

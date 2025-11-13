@@ -253,16 +253,29 @@
 @endsection
 
 @section('content')
-<div class="container-xl">
-    @include('layouts.title', [
-        'title' => 'Guest List',
-        'sub_title' => 'Create New Guest List',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Guest Lists', 'icon' => 'users', 'route' => route('guestlist.index')],
-            ['title' => 'Create', 'icon' => 'plus', 'route' => null]
-        ]
-    ])
+    {{-- Page Header --}}
+    <div class="page-header d-print-none mb-3">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('tour.show', ['tour' => $tour->id]) }}">{{ $tour->name }}</a></li>
+                            <li class="breadcrumb-item active">Create Guest List</li>
+                        </ol>
+                    </nav>
+                </div>
+                <h2 class="page-title">
+                    <i class="ti ti-users me-2"></i>Create Guest List
+                </h2>
+            </div>
+            {{-- Page Actions --}}
+            <div class="col-auto ms-auto d-print-none">
+                @include('components.guest-list-actions')
+            </div>
+        </div>
+    </div>
 
     <section class="content">
         <div class="box">
@@ -415,7 +428,6 @@
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @section('post_scripts')
@@ -460,16 +472,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    });
+        
+        // Show/hide send button based on name input
+        $('#guest_list_name').on('input', function() {
+            if($(this).val() != '') {
+                $('#roomlist_send').removeClass('hidden');
+            } else {
+                $('#roomlist_send').addClass('hidden');
+            }
+        });
+        
+        // Select all hotels checkbox
+        $("#checkboxallhotels").on('change', function() {
+            if($(this).is(':checked')) {
+                $("#hotelselect > option").prop("selected", "selected");
+                $("#hotelselect").trigger("change");
+            } else {
+                $("#hotelselect > option").removeAttr("selected");
+                $("#hotelselect").trigger("change");
+            }
+        });
+        
+        // Form submission
+        $('.roomlist_submit').on('click', function(e) {
+            e.preventDefault();
+            if($("#hotelselect").val() && $('#guest_list_name').val()) {
+                $('#roomlist_form').submit();
+            } else {
+                $('#error_send').find('.error_send_message').html('Please fill all required fields!');
+                $('#error_send').find('#title_modal_error').html('Alert!');
 
-    // Select all hotels
-    $("#checkboxallhotels").on('change', function() {
-        if($(this).is(':checked')) {
-            $("#hotelselect > option").prop("selected", true);
-            $("#hotelselect").trigger("change");
-        } else {
-            $("#hotelselect > option").prop("selected", false);
-            $("#hotelselect").trigger("change");
+                // Show modal using jQuery and Bootstrap
+                var errorModalEl = document.getElementById('error_send');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const errorModal = new bootstrap.Modal(errorModalEl);
+                    errorModal.show();
+                } else {
+                    // Fallback to jQuery modal
+                    $('#error_send').modal('show');
+                }
+            }
+        });
+
+        // Initialize Bootstrap modals
+        var questionModal = document.getElementById('question_modal');
+        if (questionModal) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                new bootstrap.Modal(questionModal);
+            }
         }
     });
 

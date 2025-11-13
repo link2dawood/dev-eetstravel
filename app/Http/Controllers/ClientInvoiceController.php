@@ -229,7 +229,7 @@ class ClientInvoiceController extends Controller
             $i += 1;
         }
         }
-        return view('accounting.index');
+        return redirect()->route('accounting.index');
     }
     public function validateTransaction(Request $request)
     {
@@ -353,7 +353,7 @@ class ClientInvoiceController extends Controller
 				$i += 1;
 			}
         }
-        return view('accounting.index');
+        return redirect()->route('accounting.index');
     }
     public function DeleteMsg($id, Request $request)
     {

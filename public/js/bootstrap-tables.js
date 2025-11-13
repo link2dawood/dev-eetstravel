@@ -313,3 +313,41 @@ function filterTableWithHighlight(tableId, searchValue) {
         }
     });
 }
+
+// Initialize single table - alias function for compatibility
+function initializeBootstrapTable(tableId) {
+    const table = $(`#${tableId}`);
+
+    if (table.length === 0) {
+        return;
+    }
+
+    // Add responsive wrapper if not present
+    if (!table.parent().hasClass('table-responsive')) {
+        table.wrap('<div class="table-responsive"></div>');
+    }
+
+    // Add Bootstrap table classes if not present
+    if (!table.hasClass('table-striped')) {
+        table.addClass('table-striped');
+    }
+    if (!table.hasClass('table-bordered')) {
+        table.addClass('table-bordered');
+    }
+    if (!table.hasClass('table-hover')) {
+        table.addClass('table-hover');
+    }
+
+    // Add sortable functionality to table headers
+    addSortingToTable(table);
+
+    // Handle empty state
+    handleEmptyTables();
+}
+
+// Sorting function for individual tables
+function sortTable(columnIndex, tableId) {
+    const table = $(`#${tableId}`);
+    const header = table.find('thead th').eq(columnIndex);
+    sortTableByColumn(table, columnIndex, header);
+}

@@ -27,7 +27,8 @@
       "Bash(mkdir:*)",
       "Bash(xargs sed:*)",
       "WebFetch(domain:monday.com)",
-      "Bash(mysql:*)"
+      "Bash(mysql:*)",
+      "WebFetch(domain:dev.eetstravel.com)"
     ],
     "deny": [],
     "ask": []

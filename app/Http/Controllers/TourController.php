@@ -1909,7 +1909,7 @@ $select_office=Offices::where('status',1)->first();
 
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} cloned", 'success');
 
-        return redirect(route('tour.edit', ['id' => $newTour->id]));
+        return redirect(route('tour.edit', ['tour' => $newTour->id]));
     }
     /**
      * clone tour days with services
@@ -2073,55 +2073,40 @@ $select_office=Offices::where('status',1)->first();
         }
     }
 
-    // In your TourController.php
+    public function convertToTour(Request $request, $id) {
+    	$tour = Tour::find($id);
+    	if ($tour && $tour->is_quotation) {
+    		$tour->is_quotation = false;
+			$tour->status = 4;
+    		$tour->update();
+		    LaravelFlashSessionHelper::setFlashMessage(sprintf(
+			    'Quotations Tour %s #%s is moved to tours', $tour->name, $tour->id
+		    ));
+	    }
 
-public function convertToTour($id)
-{
-    try {
-        $tour = Tour::findOrFail($id);
-        
-        // Update the is_quotation field
-        $tour->is_quotation = 0; // 0 = Tour, 1 = Quotation
-        $tour->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Successfully converted to Tour'
-        ]);
-        
-    } catch (\Exception $e) {
-        \Log::error('Convert to Tour Error: ' . $e->getMessage());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred while converting: ' . $e->getMessage()
-        ], 500);
-    }
-}
+	    if ($request->ajax() || $request->wantsJson()) {
+	        return response()->json(['success' => true, 'message' => 'Tour converted successfully']);
+	    }
 
-public function convertToQuotation($id)
-{
-    try {
-        $tour = Tour::findOrFail($id);
-        
-        // Update the is_quotation field
-        $tour->is_quotation = 1; // 0 = Tour, 1 = Quotation
-        $tour->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Successfully converted to Quotation'
-        ]);
-        
-    } catch (\Exception $e) {
-        \Log::error('Convert to Quotation Error: ' . $e->getMessage());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred while converting: ' . $e->getMessage()
-        ], 500);
+	    return redirect(route('tour.show', ['id' => $id]));
     }
-}
+	public function convertToQuotation(Request $request, $id) {
+    	$tour = Tour::find($id);
+    	if ($tour) {
+    		$tour->is_quotation = true;
+			$tour->status = 1;
+    		$tour->update();
+		    LaravelFlashSessionHelper::setFlashMessage(sprintf(
+			    'Tour Tour %s #%s is moved to Quotation', $tour->name, $tour->id
+		    ));
+	    }
+
+	    if ($request->ajax() || $request->wantsJson()) {
+	        return response()->json(['success' => true, 'message' => 'Quotation converted successfully']);
+	    }
+
+	    return redirect(route('tour.show', ['id' => $id]));
+    }
 	
 	
 public function quotation_data(Request $request)

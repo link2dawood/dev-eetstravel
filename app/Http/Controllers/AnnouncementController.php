@@ -6,8 +6,7 @@ use App\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\Facades\Schema; // <-- **** ADD THIS LINE ****
 class AnnouncementController extends Controller
 {
     /**
@@ -116,20 +115,28 @@ class AnnouncementController extends Controller
     /**
      * Show the form for editing the announcement
      */
-    public function edit($id)
-    {
-        try {
-            $announcement = Announcement::findOrFail($id);
-            
-            // Check if user can edit
-            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
-                return redirect()->route('announcements.index')
-                    ->with('error', 'You do not have permission to edit this announcement');
-            }
-            
-            $title = 'Edit Announcement';
-            
-            // Get files using Spatie Media Library
+public function edit($id)
+{
+    try {
+        \Log::info('Edit announcement called with ID: ' . $id);
+        
+        $announcement = Announcement::with('author')->findOrFail($id);
+        
+        \Log::info('Announcement found: ' . $announcement->id);
+        
+        // Check if user can edit
+        if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
+            \Log::warning('User ' . Auth::id() . ' denied edit permission for announcement ' . $id);
+            return redirect()->route('announcements.index')
+                ->with('error', 'You do not have permission to edit this announcement');
+        }
+        
+        $title = 'Edit Announcement';
+        $announcement->author_name = $announcement->author ? $announcement->author->name : 'Unknown';
+
+        $files = [];
+        // *** FIX: Check if media table exists before querying ***
+        if (Schema::hasTable('media')) {
             $files = $announcement->getMedia('announcement_files')->map(function($media) {
                 return (object) [
                     'id' => $media->id,
@@ -137,15 +144,22 @@ class AnnouncementController extends Controller
                     'url' => $media->getUrl(),
                 ];
             })->toArray();
-            
-            return view('announcements.edit', compact('announcement', 'title', 'files'));
-            
-        } catch (\Exception $e) {
-            Log::error('Edit announcement error: ' . $e->getMessage());
-            return redirect()->route('announcements.index')
-                ->with('error', 'Announcement not found');
         }
+        
+        \Log::info('Rendering edit view for announcement: ' . $announcement->id);
+        
+        return view('announcements.edit', compact('announcement', 'title', 'files'));
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        \Log::error('Announcement not found: ' . $id);
+        return redirect()->route('announcements.index')
+            ->with('error', 'Announcement not found');
+    } catch (\Exception $e) {
+        \Log::error('Edit announcement error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+        return redirect()->route('announcements.index')
+            ->with('error', 'Error: ' . $e->getMessage());
     }
+}
 
     /**
      * Update the specified announcement
@@ -179,6 +193,19 @@ class AnnouncementController extends Controller
                         ->toMediaCollection('announcement_files');
                 }
             }
+
+            // Handle file deletions
+            if ($request->has('deleted_files')) {
+                $deleted_ids = explode(',', $request->input('deleted_files'));
+                if (count($deleted_ids) > 0) {
+                    $mediaItems = $announcement->getMedia('announcement_files');
+                    foreach ($mediaItems as $media) {
+                        if (in_array($media->id, $deleted_ids)) {
+                            $media->delete();
+                        }
+                    }
+                }
+            }
             
             Log::info('Announcement updated: ' . $announcement->id);
             
@@ -196,7 +223,7 @@ class AnnouncementController extends Controller
     /**
      * Remove the specified announcement
      */
-    public function destroy($id)
+   public function destroy($id)
     {
         try {
             $announcement = Announcement::findOrFail($id);
@@ -209,8 +236,10 @@ class AnnouncementController extends Controller
                 ], 403);
             }
             
-            // Delete all media files
-            $announcement->clearMediaCollection('announcement_files');
+            // *** FIX: Check if media table exists before deleting ***
+            if (Schema::hasTable('media')) {
+                $announcement->clearMediaCollection('announcement_files');
+            }
             
             // Delete the announcement (this will cascade delete children via model)
             $announcement->delete();
@@ -227,7 +256,7 @@ class AnnouncementController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting announcement: ' . $e->getMessage()
+                'message' => 'Error deleting announcement: ' . $e->getMessage() // Show the real error
             ], 500);
         }
     }
@@ -237,6 +266,7 @@ class AnnouncementController extends Controller
      */
     public function deleteFile(Request $request)
     {
+        // This is an AJAX endpoint
         try {
             $mediaId = $request->input('file_id');
             $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);

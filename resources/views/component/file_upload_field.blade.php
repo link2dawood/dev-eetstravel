@@ -1,4 +1,4 @@
-<input id="attach" type="file" name="attach[]" multiple=true>
+<input id="attach" type="file" name="attach[]" multiple>
 <div id="err-container"></div>
 <script type="text/javascript">
 	$(document).on('ready', function(){
@@ -7,152 +7,210 @@
 		let showPreview = $('#showPreviewBlock').attr('data-info');
 		showPreview = showPreview == true ? false : true;
 
+		// Initialize fileinput
 		$("#attach").fileinput({
 			uploadUrl: url,
-			uploadExtraData: () => {
+			uploadExtraData: function() {
 				let obj = {};
-                let sr  = [];
+				let sr  = [];
 				obj._token = "{{csrf_token()}}";
-				$(targetForm).find('input:text').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
+				
+				// Collect all form inputs
+				$(targetForm).find('input:text, input[type=number], input:password, input:hidden, input[type=date]').each(function(){
+					if ($(this).attr('name') && $(this).attr('id') !== 'attach') {
+						obj[$(this).attr('name')] = $(this).val();
+					}
 				});
-                $(targetForm).find('input[type=number]').each(function(){
-                    if (!$(this).attr('name')) return;
-                    obj[$(this).attr('name')] = $(this).val();
-                });
-				$(targetForm).find('input:password').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
-				});
-				$(targetForm).find('input:hidden').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
-				});
+				
 				$(targetForm).find('select').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
+					if ($(this).attr('name')) {
+						obj[$(this).attr('name')] = $(this).val();
+					}
 				});
+				
 				$(targetForm).find('textarea').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
+					if ($(this).attr('name')) {
+						obj[$(this).attr('name')] = $(this).val();
+					}
 				});
-				$(targetForm).find('input[type=date]').each(function(){
-					if (!$(this).attr('name')) return;
-					obj[$(this).attr('name')] = $(this).val();
+				
+				$(targetForm).find('input:checkbox:checked').each(function(){
+					if ($(this).attr('name')) {
+						if (!obj[$(this).attr('name')]) {
+							obj[$(this).attr('name')] = [];
+						}
+						obj[$(this).attr('name')].push($(this).val());
+					}
 				});
-                $(targetForm).find('input:checkbox').each(function(){
-                	if (!$(this).attr('name')) return;
-                    if($(this).is(":checked")) {
-                        sr.push($(this).val());
-                        obj[$(this).attr('name')] = sr;
-                    }
-                });
-                
-                $(targetForm).find('#imgInp').each(function () {
-                    if (!$(this).attr('name')) return;
-
-                    let files = $(this).prop('files');
-                    let name = $(this).attr('name');
-
-                    if(files){
-                        for (let j = 0; j < files.length; j++){
-//                            fd.append(name, files[j]);
-                            obj[$(this).attr('name')] = files[j];
-                        }
-                    }
-                });                
-                
-                // for ( instance in CKEDITOR.instances )  CKEDITOR.instances.content.setData('');
-
-//                console.log(obj);
-                return obj;
+				
+				$(targetForm).find('input:radio:checked').each(function(){
+					if ($(this).attr('name')) {
+						obj[$(this).attr('name')] = $(this).val();
+					}
+				});
+				
+				return obj;
 			},
 			showUpload: false,
-            showPreview: showPreview,
+			showPreview: showPreview,
 			uploadAsync: false,
-            initialCaption : false,
-            elErrorContainer: false,
+			initialCaption: false,
+			required: false,
+			minFileCount: 0,
+			validateInitialCount: false,
+			overwriteInitial: false,
+			maxFileSize: 10240, // 10MB
+			allowedFileExtensions: null, // Allow all file types
+			elErrorContainer: '#err-container',
+			msgPlaceholder: "Select files...",
+			previewFileIcon: '<i class="glyphicon glyphicon-file"></i>',
 			fileActionSettings: {
 				showUpload: false,
-                showZoom: true,
-                showDrag: true,
-                removeTitle: '',
-                uploadTitle: '',
-                zoomTitle: '',
-                dragTitle: '',
-                dragSettings: {},
-                indicatorNewTitle: '',
-                indicatorSuccessTitle: '',
-                indicatorErrorTitle: '',
-                indicatorLoadingTitle: ''
+				showZoom: true,
+				showDrag: true,
+				showRemove: true,
+				removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
+				removeClass: 'btn btn-sm btn-danger',
+				zoomIcon: '<i class="glyphicon glyphicon-zoom-in"></i>',
+				zoomClass: 'btn btn-sm btn-primary',
 			}
 		}).on('filebatchuploaderror', function(event, data, msg){
+			console.error('Upload error:', data);
 			let err = data.jqXHR.responseJSON;
-            $('.validation-error').remove();
-            $('.has-error').removeClass('has-error');
-            for(let key in err){
-                let targetInput = $("[name=" + key + "]");
-                let par = $(targetInput).closest('.form-group');
-                $(par).append("<p class='alert alert-danger validation-error'>" + err[key] + "</p>");
-                $(par).addClass('has-error');
-            }
+			
+			$('.validation-error').remove();
+			$('.has-error').removeClass('has-error');
+			
+			if (err && typeof err === 'object') {
+				for(let key in err){
+					let targetInput = $("[name='" + key + "']");
+					let par = $(targetInput).closest('.form-group');
+					$(par).append("<p class='alert alert-danger validation-error'>" + err[key] + "</p>");
+					$(par).addClass('has-error');
+				}
+			} else {
+				$('#err-container').html('<div class="alert alert-danger">Upload failed. Please try again.</div>');
+			}
+		}).on('filebatchuploadcomplete', function(event, files, extra) {
+			console.log('Upload complete');
+		}).on('fileclear', function(event) {
+			$('#err-container').html('');
 		});
 		
+		// Handle form submission
 		$(targetForm).on('submit', function(event){ 
 			event.preventDefault();
-			$('#attach').fileinput('upload');
-            
+			
+			// Clear previous errors
+			$('.validation-error').remove();
+			$('.has-error').removeClass('has-error');
+			$('#err-container').html('');
+			
+			// Check if files are selected
+			let filesCount = 0;
+			try {
+				filesCount = $('#attach').fileinput('getFilesCount');
+			} catch(e) {
+				filesCount = $('#attach')[0].files.length;
+			}
+			
+			if (filesCount === 0) {
+				// No files - submit via normal AJAX
+				console.log('Submitting without files');
+				submitFormWithoutFiles();
+			} else {
+				// Has files - use fileinput upload
+				console.log('Submitting with files');
+				$('#attach').fileinput('upload');
+			}
 		});
 		
+		// Function to submit form without files
+		function submitFormWithoutFiles() {
+			let formData = new FormData(targetForm[0]);
+			
+			// Remove file input from form data to avoid issues
+			formData.delete('attach[]');
+			
+			$.ajax({
+				url: url,
+				method: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function(res) {
+					handleSuccessResponse(res);
+				},
+				error: function(xhr) {
+					console.error('Submit error:', xhr);
+					handleErrorResponse(xhr);
+				}
+			});
+		}
+		
+		// Handle success response
+		function handleSuccessResponse(res) {
+			if(res.comments){
+				$(document).find('#show_comments').html(res.content);
+				$(document).find('#form_comment #content').val('');
+				$('#attach').fileinput('clear');
+				$(document).find('#author_name').css({'display': 'none'});
+				$(document).find('#name').html('');
+				$(document).find('#parent_comment').val($('#id_comment').val());
+			}
+			else if (res.announcement) {
+				$(document).find('#show_comments').html(res.content);
+				$(document).find('#content').val('');
+				$('#attach').fileinput('clear');
+				$(document).find('#author_name').css({'display': 'none'});
+				$(document).find('#name').html('');
+				$(document).find('#parent_comment').val($('#id_comment').val());
+			}
+			else if(res.range_data){
+				$('.block-error-driver').text('').append('<span>'+res.error_message+'</span>').show();
+			}
+			else if(res.transfer_fail){
+				$('.block-error-driver').text('').append('<span>'+res.error_message_transfer+'</span>').show();
+			}
+			else if(res.hotelContacts){
+				$('.block-error').text('').append('<span>'+res.fullNameErrorValidate+'</span>').show();
+			}
+			else {
+				if(res.error_buses === true){
+					$('.block-error-driver').text('').append('<span>'+res.message_buses+'</span>').show();
+				} else if(res.route){
+					window.location.replace(res.route); 
+				} else if(res.success){
+					// Handle generic success
+					if(res.redirect){
+						window.location.href = res.redirect;
+					} else {
+						location.reload();
+					}
+				}
+			}
+		}
+		
+		// Handle error response
+		function handleErrorResponse(xhr) {
+			let err = xhr.responseJSON;
+			if (err && typeof err === 'object') {
+				for(let key in err){
+					let errorMsg = Array.isArray(err[key]) ? err[key][0] : err[key];
+					let targetInput = $("[name='" + key + "']");
+					let par = $(targetInput).closest('.form-group');
+					$(par).append("<p class='alert alert-danger validation-error'>" + errorMsg + "</p>");
+					$(par).addClass('has-error');
+				}
+			} else {
+				$('#err-container').html('<div class="alert alert-danger">An error occurred. Please check your input and try again.</div>');
+			}
+		}
+		
+		// Handle file upload success
 		$('#attach').on('filebatchuploadsuccess', function(event, data, previewId, index){
-//    		let res = JSON.parse(data.response);
-    		let res = data.response;
-            if(res.comments){
-                $(document).find('#show_comments').html(res.content);
-                // Clear form input, after added comment
-                $(document).find('#form_comment #content').val('');
-                $(document).find('#attach').fileinput('clear');
-
-                $(document).find('#author_name').css({'display': 'none'});
-                $(document).find('#name').html('');
-                $(document).find('#parent_comment').attr('value', '');
-                $(document).find('#parent_comment').attr('value', $('#id_comment').val());
-            }
-            else if (res.announcement) {
-            	$(document).find('#show_comments').html(res.content);
-            	$(document).find('#content').val('');
-                $(document).find('#attach').fileinput('clear');
-
-                $(document).find('#author_name').css({'display': 'none'});
-                $(document).find('#name').html('');
-                $(document).find('#parent_comment').attr('value', $('#id_comment').val());
-            }
-            else if(res.range_data){
-                $('.block-error-driver').text('');
-                $('.block-error-driver').append('<span>'+res.error_message+'</span>');
-                $('.block-error-driver').css({'display': 'block'});
-            }
-            else if(res.transfer_fail){
-                $('.block-error-driver').text('');
-                $('.block-error-driver').append('<span>'+res.error_message_transfer+'</span>');
-                $('.block-error-driver').css({'display': 'block'});
-            }
-            else if(res.hotelContacts){
-                $('.block-error').text('');
-                $('.block-error').append('<span>'+res.fullNameErrorValidate+'</span>');
-                $('.block-error').css({'display': 'block'});
-            }
-            else{
-    		    if(res.error_buses === true){
-                    $('.block-error-driver').text('');
-                    $('.block-error-driver').append('<span>'+res.message_buses+'</span>');
-                    $('.block-error-driver').css({'display': 'block'});
-                }else{
-                    window.location.replace(res.route); 
-//                    window.location.replace(res);
-                }
-            }
-		})
-	})
+			let res = data.response;
+			handleSuccessResponse(res);
+		});
+	});
 </script>

@@ -66,6 +66,7 @@ class TourController extends Controller
     use FileTrait;
     use ExportTrait;
     use HelperTrait;
+    
     /**
      * tour repository
      */

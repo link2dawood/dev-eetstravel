@@ -615,8 +615,39 @@
         </div>
     </div>
 
-    <!-- Tabler Core -->
+    <!-- Tabler Core (includes Bootstrap 5) -->
     <script src="{{ asset('tabler/js/tabler.min.js') }}"></script>
+
+    <!-- Ensure Bootstrap global is available -->
+    <script>
+        // Tabler includes Bootstrap 5, expose it globally if not already
+        if (typeof bootstrap === 'undefined' && typeof window.bootstrap !== 'undefined') {
+            window.bootstrap = window.bootstrap;
+        }
+        // Create bootstrap namespace if needed
+        if (typeof bootstrap === 'undefined') {
+            window.bootstrap = {
+                Modal: function(element, options) {
+                    this.element = element;
+                    this.options = options || {};
+
+                    this.show = function() {
+                        $(element).modal('show');
+                    };
+
+                    this.hide = function() {
+                        $(element).modal('hide');
+                    };
+
+                    this.toggle = function() {
+                        $(element).modal('toggle');
+                    };
+
+                    return this;
+                }
+            };
+        }
+    </script>
 
     <!-- Core JS -->
     <script type="text/javascript" src="{{asset('js/lib/moment-with-locales.js')}}"></script>

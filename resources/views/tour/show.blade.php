@@ -69,6 +69,12 @@
 @endsection
 
 @section('content')
+@php
+    $tourDayLookup = collect($tourDates ?? [])->mapWithKeys(function ($tourDay) {
+        $dateKey = \Carbon\Carbon::parse($tourDay->date)->format('Y-m-d');
+        return [$dateKey => $tourDay->id];
+    });
+@endphp
 <div class="container-xl">
     {{-- Page Header --}}
     <div class="page-header d-print-none">
@@ -501,8 +507,11 @@
                             });
                         @endphp
 
+                        @php
+                            $tourDayId = $tourDayLookup[$dateString] ?? null;
+                        @endphp
                         {{-- Day Card --}}
-                        <div class="card mb-4" data-day="{{ $dayNumber }}" data-date="{{ $dateString }}">
+                        <div class="card mb-4" data-day="{{ $dayNumber }}" data-date="{{ $dateString }}" @if($tourDayId) data-tour-day-id="{{ $tourDayId }}" @endif>
                             <div class="card-header bg-light">
                                 <div class="row align-items-center">
                                     <div class="col">
@@ -511,12 +520,25 @@
                                         </h4>
                                     </div>
                                     <div class="col-auto">
-                                        <button class="btn btn-success btn-sm me-1" onclick="addDescription({{ $dayNumber }}, '{{ $dateString }}')">
-                                            <i class="ti ti-plus"></i> Add description
-                                        </button>
-                                        <button class="btn btn-primary btn-sm" onclick="addService({{ $dayNumber }}, '{{ $dateString }}')">
-                                            <i class="ti ti-download"></i> Add Service
-                                        </button>
+                                        @if($tourDayId)
+                                            <button type="button" class="btn btn-success btn-sm me-1 add-description-package">
+                                                <i class="ti ti-plus"></i> Add description
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-primary btn-sm add-service-quick"
+                                                    data-tourdayid="{{ $tourDayId }}"
+                                                    data-link="{{ route('tour_package.store') }}"
+                                                    data-tour_id="{{ $tour->id }}"
+                                                    data-date="{{ $dateString }}"
+                                                    data-departure_date="{{ $tour->departure_date }}"
+                                                    data-retirement_date="{{ $tour->retirement_date }}">
+                                                <i class="ti ti-download"></i> Add Service
+                                            </button>
+                                        @else
+                                            <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                                <i class="ti ti-alert-triangle"></i> {{ __('No tour day for this date') }}
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -640,9 +662,18 @@
                                     <div class="text-center text-muted py-4">
                                         <i class="ti ti-inbox fs-1"></i>
                                         <p class="mt-2">No services added for this day</p>
-                                        <button class="btn btn-sm btn-primary" onclick="addService({{ $dayNumber }}, '{{ $dateString }}')">
-                                            <i class="ti ti-plus me-1"></i>Add First Service
-                                        </button>
+                                        @if($tourDayId)
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary add-service-quick"
+                                                    data-tourdayid="{{ $tourDayId }}"
+                                                    data-link="{{ route('tour_package.store') }}"
+                                                    data-tour_id="{{ $tour->id }}"
+                                                    data-date="{{ $dateString }}"
+                                                    data-departure_date="{{ $tour->departure_date }}"
+                                                    data-retirement_date="{{ $tour->retirement_date }}">
+                                                <i class="ti ti-plus me-1"></i>Add First Service
+                                            </button>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -965,6 +996,7 @@
 {{-- Hidden Data --}}
 <span id="tour_date_id" data-tour-id="{{ $tour->id }}" hidden></span>
 <span id="tour_dates" data-departure_date="{{ $tour->departure_date }}" data-retirement_date="{{ $tour->retirement_date }}" hidden></span>
+<input type="hidden" id="default_reference_id" value="{{ $tour->id }}">
 
 {{-- Service Modal --}}
 <div class="modal modal-blur fade" id="service-modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -975,20 +1007,31 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <table id="search-table" class="table card-table table-vcenter table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Address') !!}</th>
-                            <th>{!! trans('main.Country') !!}</th>
-                            <th>{!! trans('main.City') !!}</th>
-                            <th>{!! trans('main.Phone') !!}</th>
-                            <th>{!! trans('main.ContactName') !!}</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="mb-3">
+                    <label for="service-select" class="form-label">{{ trans('main.Servicetype') }}</label>
+                    <select id="service-select" class="form-select">
+                        <option value="All" selected>{!! trans('main.All') !!}</option>
+                        @foreach($options as $option)
+                            <option value="{{ $option }}">{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table id="search-table" class="table card-table table-vcenter table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{!! trans('main.Name') !!}</th>
+                                <th>{!! trans('main.Address') !!}</th>
+                                <th>{!! trans('main.Country') !!}</th>
+                                <th>{!! trans('main.City') !!}</th>
+                                <th>{!! trans('main.Phone') !!}</th>
+                                <th>{!! trans('main.ContactName') !!}</th>
+                                <th>{!! trans('main.Actions') !!}</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -1062,16 +1105,27 @@
 <script src="{{ asset('js/attachments.js') }}"></script>
 
 <script>
-$(document).ready(function() {
-    // Tab persistence
-    var activeTab = localStorage.getItem('tourActiveTab') || 'frontsheet-tab';
-    $('.nav-tabs a[href="#' + activeTab + '"]').tab('show');
-    
-    $('.nav-tabs a').on('shown.bs.tab', function(e) {
-        var tabId = $(e.target).attr('href').substring(1);
-        localStorage.setItem('tourActiveTab', tabId);
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    const tabStorageKey = 'tourActiveTab';
+    const storedTab = localStorage.getItem(tabStorageKey);
+    if (storedTab) {
+        const trigger = document.querySelector('.nav-tabs a[href="#' + storedTab + '"]');
+        if (trigger) {
+            bootstrap.Tab.getOrCreateInstance(trigger).show();
+        }
+    }
 
+    document.querySelectorAll('.nav-tabs a[data-bs-toggle="tab"]').forEach(function (triggerEl) {
+        triggerEl.addEventListener('shown.bs.tab', function (event) {
+            const href = event.target.getAttribute('href') || '';
+            if (href.startsWith('#')) {
+                localStorage.setItem(tabStorageKey, href.substring(1));
+            }
+        });
+    });
+});
+
+$(function() {
     // Office Selection
     $('.select-office-btn').on('click', function() {
         let officeId = $('.selectedOffice').val();

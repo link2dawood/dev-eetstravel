@@ -216,31 +216,30 @@ let addService = {
     },
     bindEvents: () => {
         $('body').on('click', '.add-service-quick', function(){
-            $('#service-modal').modal();
-            $('#service-modal').on('shown.bs.modal', function(){
-                let target = $(this).find('div.dataTables_filter input');
-                $(target).focus();
-            });
-
-            if ($(this).data('tour_transfer')) {
-                addService.tourTransfer = true;
-                $('#service-select').val('Bus Company').trigger('change').change();
-                $('.modal-title').text('Add Bus Company');
-              //  globalSearch.setOnlyTransferServiceEnabled();
-            } else {
-                $('#service-select').val('All').trigger('change').change();
-                $('.modal-title').text('Add service');
-               // globalSearch.setAllServicesEnabled();
-               // globalSearch.setTransferDisable();
-                addService.tourTransfer = '';
-            }
-
             addService.tourDayId = $(this).data('tourdayid');
             addService.route = $(this).data('link');
-        });
-        $('body').one('click', '.add-service-quick', function(e){
-            globalSearch.run('add-service-column');
+            addService.tour_id = $(this).data('tour_id') || $('#default_reference_id').val();
+            addService.tourTransfer = $(this).data('tour_transfer') ? 'true' : '';
 
+            const modalEl = document.getElementById('service-modal');
+            if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modalInstance.show();
+            } else {
+                $('#service-modal').modal('show');
+            }
+
+            const typeFilter = document.getElementById('service-type-filter');
+            const searchInput = document.getElementById('service-catalog-search');
+            if (typeFilter) {
+                typeFilter.value = 'all';
+                typeFilter.dispatchEvent(new Event('change'));
+            }
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+                searchInput.focus();
+            }
         });
         $('body').on('click', '.add-service-button', function(e){
             e.preventDefault();

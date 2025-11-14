@@ -89,13 +89,30 @@ class AppController extends Controller
             ->select('announcements.*', 'users.name as sender')
             ->where('announcements.parent_id', null)->orderBy('announcements.created_at', 'desc')->limit(5)->get();
 
+        // ==========================================
+        // == START OF FIX ==========================
+        // ==========================================
+        
+        // Replace the old button-generating logic with the new component.
+        // This ensures the dashboard buttons are identical to the main page buttons.
         foreach ($announcements as $announcement) {
-            $routes['show'] = route('announcements.show', ['announcement' => $announcement->id]);
-            $routes['edit'] = route('announcements.edit', ['announcement' => $announcement->id]);
-            $routes['delete_msg'] = "/announcement/$announcement->id/delete_msg";
-            $announcement->routes = $routes;
-            $announcement->action_buttons = $this->generateActionButtons($announcement, $routes);
+            // This 'try' block prevents errors if the view file is missing
+            try {
+                $announcement->action_buttons = view('component.action_buttons', [
+                    'item' => $announcement,
+                    'routePrefix' => 'announcements',
+                    'model' => $announcement // Pass 'model' as well, as the component might use it
+                ])->render();
+            } catch (\Exception $e) {
+                // Fallback or error logging if the component fails
+                \Log::error('Error rendering action_buttons component in dashboard: ' . $e->getMessage());
+                $announcement->action_buttons = 'Error: Buttons could not be rendered. A';
+            }
         }
+        // ==========================================
+        // == END OF FIX ============================
+        // ==========================================
+
 
         // Get tasks data - split by status flags
         $todoTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
@@ -141,6 +158,9 @@ class AppController extends Controller
             }
             $task->tour_link_show = $task->tourLinkShow();
             $task->data_update_link = route('task.update', ['id' => $task->id]);
+            
+            // NOTE: This task loop still uses the old `generateActionButtons` method.
+            $routes = []; // Reset routes array
             $routes['show'] = route('task.show', ['id' => $task->id]);
             $routes['edit'] = route('task.edit', ['id' => $task->id]);
             $routes['delete_msg'] = "/task/$task->id/deleteMsg";
@@ -148,9 +168,6 @@ class AppController extends Controller
             $task->action_buttons = $this->generateActionButtons($task, $routes);
         }
 
-        // ==================================
-        // == THIS IS THE FIX YOU MISSED ==
-        // ==================================
         // Get users with their tour counts
         $tourUsers = \App\User::withCount('tours')
             ->having('tours_count', '>', 0)
@@ -159,9 +176,6 @@ class AppController extends Controller
             ->map(function($user) {
                 return ['name' => $user->name, 'count' => $user->tours_count];
             });
-        // ==================================
-        // == END OF FIX ==
-        // ==================================
 
         return view('scaffold-interface.dashboard.dashboard',
             [
@@ -174,7 +188,7 @@ class AppController extends Controller
                 'completedTasks' => $completedTasks,
                 'abortedTasks' => $abortedTasks,
                 'statuses' => $taskStatuses,
-                'tourUsers' => $tourUsers // <-- AND ADDING IT HERE
+                'tourUsers' => $tourUsers
             ]);
     }
 
@@ -496,14 +510,14 @@ class AppController extends Controller
 
     public function getTasksBlock()
     {
-		    $user = Auth::user();
+            $user = Auth::user();
 
         // To-Do Tasks (not completed and not aborted)
         $todoTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
-                      ->where('is_aborted', false);
+                        ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
             ->take(10)

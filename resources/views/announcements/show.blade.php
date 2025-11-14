@@ -16,24 +16,14 @@
             <div class="box-header with-border">
                 <h3 class="box-title">{{ $announcement->title }}</h3>
                 <div class="box-tools pull-right">
-                    <!-- FIXED: Use direct anchor tags with proper styling -->
+                    
+                    {{-- ================================== --}}
+                    {{-- == FIX: Only showing the Back button as requested == --}}
+                    {{-- ================================== --}}
                     <a href="{{ route('announcements.index') }}" class="btn btn-default btn-sm" style="cursor: pointer;">
                         <i class="fa fa-arrow-left"></i> Back
                     </a>
                     
-                    @if(Auth::user()->can('announcements.edit'))
-                        <a href="{{ route('announcements.edit', $announcement->id) }}" class="btn btn-warning btn-sm" style="cursor: pointer; text-decoration: none;">
-                            <i class="fa fa-edit"></i> Edit
-                        </a>
-                    @endif
-
-                    @if(Auth::user()->can('announcements.destroy'))
-                        <button type="button" class="btn btn-danger btn-sm delete-announcement-btn" 
-                                data-url="{{ route('announcements.destroy', $announcement->id) }}"
-                                style="cursor: pointer;">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
-                    @endif
                 </div>
             </div>
             
@@ -133,110 +123,7 @@
     </section>
 @endsection
 
-@push('scripts')
-<script>
-$(document).ready(function() {
-    // FIXED: Edit button click handler
-    $('a[href*="/edit"]').on('click', function(e) {
-        // Allow normal link navigation
-        // Don't prevent default - let the link work
-        console.log('Edit link clicked:', $(this).attr('href'));
-    });
-
-    // Delete announcement handler
-    $('.delete-announcement-btn').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const button = $(this);
-        const deleteUrl = button.data('url');
-        
-        console.log('Delete URL:', deleteUrl);
-        
-        if (confirm('Are you sure you want to delete this announcement?')) {
-            button.prop('disabled', true);
-            button.html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
-            
-            $.ajax({
-                url: deleteUrl,
-                type: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    console.log('Delete response:', response);
-                    if (response.success) {
-                        alert('Announcement deleted successfully!');
-                        window.location.href = '{{ route("announcements.index") }}';
-                    } else {
-                        alert('Error: ' + (response.message || 'Unknown error'));
-                        button.prop('disabled', false);
-                        button.html('<i class="fa fa-trash"></i> Delete');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Delete error:', xhr);
-                    const errorMsg = xhr.responseJSON?.message || xhr.statusText || 'Unknown error';
-                    alert('Error deleting announcement: ' + errorMsg);
-                    button.prop('disabled', false);
-                    button.html('<i class="fa fa-trash"></i> Delete');
-                }
-            });
-        }
-    });
-});
-</script>
-@endpush
-
-@push('styles')
-<style>
-.panel {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 1px 1px rgba(0,0,0,.05);
-}
-
-.panel-heading {
-    padding: 10px 15px;
-    border-bottom: 1px solid #ddd;
-    background-color: #f5f5f5;
-    border-radius: 3px 3px 0 0;
-}
-
-.panel-title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.panel-body {
-    padding: 15px;
-}
-
-.info-box p {
-    margin: 5px 0;
-}
-
-.info-box strong {
-    display: inline-block;
-    min-width: 100px;
-}
-
-/* Ensure buttons are clickable */
-.btn {
-    cursor: pointer !important;
-    display: inline-block;
-    text-decoration: none !important;
-}
-
-.btn-warning, .btn-default, .btn-danger {
-    transition: all 0.3s ease;
-}
-
-.btn:hover {
-    opacity: 0.9;
-}
-</style>
-@endpush
+{{-- ================================== --}}
+{{-- == FIX: REMOVED ALL PUSHED SCRIPTS AND STYLES == --}}
+{{-- The old broken scripts were removed --}}
+{{-- ================================== --}}

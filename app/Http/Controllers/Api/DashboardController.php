@@ -150,8 +150,8 @@ class DashboardController
             $task['task_type'] = Task::$taskTypes[$task->task_type];
             $task['tour_link_show'] = $task->tourLinkShow();
             $task['data_update_link'] = route('task.update', ['id' => $task->id]);
-            $routes['show'] = route('task.show', ['task' => $task->id]);
-            $routes['edit'] = route('task.edit', ['task' => $task->id]);
+            $routes['show'] = route('task.show', ['id' => $task->id]);
+            $routes['edit'] = route('task.edit', ['id' => $task->id]);
             $routes['delete_msg'] = "/task/$task->id/deleteMsg";
             $task['routes'] = $routes;
 

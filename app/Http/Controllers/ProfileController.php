@@ -41,8 +41,8 @@ class ProfileController extends Controller
 
     public function getButtonForTasks($id, $task)
     {
-        $url = array('show'       => route('task.show', ['task' => $id, 'tab' => 'history-tasks-tab']),
-            'edit'       => route('task.edit', ['task' => $id,'tab' => 'history-tasks-tab']),
+        $url = array('show'       => route('task.show', ['id' => $id, 'tab' => 'history-tasks-tab']),
+            'edit'       => route('task.edit', ['id' => $id,'tab' => 'history-tasks-tab']),
             'delete_msg' => "/task/{$id}/deleteMsg/history-tasks-tab");
 
         return DatatablesHelperController::getActionButton($url, false, $task);
@@ -98,7 +98,7 @@ class ProfileController extends Controller
             }
 
             // Get status
-            $link = route('task.update', ['task' => $task->id]);
+            $link = route('task.update', ['id' => $task->id]);
             $taskStatus = Status::query()->where('type', 'task')->where('id', $task->status)->select('name')->first();
             $task->status_display = "<span class='task-data' data-link-update='{$link}' data-task-id='{$task->id}'>{$taskStatus->name}</span>";
         }
@@ -163,7 +163,7 @@ class ProfileController extends Controller
             }
 
             // Get status
-            $link = route('task.update', ['task' => $task->id]);
+            $link = route('task.update', ['id' => $task->id]);
             $taskStatus = Status::query()->where('type', 'task')->where('id', $task->status)->select('name')->first();
             $task->status_name = "<span class='task-data' data-link-update='{$link}' data-task-id='{$task->id}'>{$taskStatus->name}</span>";
         }

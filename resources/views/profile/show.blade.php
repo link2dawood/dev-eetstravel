@@ -180,24 +180,33 @@
                                             </div>
                                         </div>
 										--}}
-										{{--
                                         <div class="form-group">
                                             <label for="email_login" class="col-sm-2 control-label">{{trans('main.EmailLogin')}}</label>
                                             <div class="col-sm-10">
-                                                <input type="text" name="email_login"
-                                                       value="{{ $errors != null && count($errors) > 0 ? old('email_login') : $user->email_login }}"
-                                                       class="form-control" id="email_login" placeholder="Email Login">
+                                                <input type="email"
+                                                       name="email_login"
+                                                       value="{{ old('email_login', $user->email_login) }}"
+                                                       class="form-control"
+                                                       id="email_login"
+                                                       placeholder="user@example.com">
+                                                <small class="help-block text-muted">
+                                                    {{ __('This login is used to connect your SnappyMail inbox.') }}
+                                                </small>
                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <label for="email_password" class="col-sm-2 control-label">{{trans('main.Email')}}
-                                                Password</label>
+                                            <label for="email_password" class="col-sm-2 control-label">{{trans('main.Email')}} {{trans('main.Password')}}</label>
                                             <div class="col-sm-10">
-                                                <input type="password" name="email_password"
-                                                       class="form-control" id="email_password"
-                                                       placeholder="Email Password">
+                                                <input type="password"
+                                                       name="email_password"
+                                                       class="form-control"
+                                                       id="email_password"
+                                                       placeholder="{{ __('Enter new SnappyMail password') }}">
+                                                <small class="help-block text-muted">
+                                                    {{ __('Leave blank to keep the existing password.') }}
+                                                </small>
                                             </div>
-                                        </div>--}}
+                                        </div>
                                         {{-- <div class="form-group">
                                             <label for="password" class="col-sm-2 control-label">{{trans('main.Password')}}</label>
 

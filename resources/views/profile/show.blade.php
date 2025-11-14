@@ -1,50 +1,68 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Show')
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Profile', 'sub_title' => $user->name,
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Show', 'route' => null]]])
-    {{-- modal for service table --}}
-    <section class="content">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="nav-tabs-custom">
-                    <ul class="nav nav-tabs" role='tablist'>
-                        <li role='presentation' class="active">
-                            <a href="#info_profile" aria-controls='info_profile' role='tab' data-toggle='tab'>
-                                {{trans('main.Info')}}
-                            </a>
-                        </li>
-                        <li role='presentation'>
-                            <a href="#timeline" aria-controls='timeline' role='tab' data-toggle='tab'>History</a>
-                        </li>
-                        @if(Auth::user()->can('task.index'))
-                            <li role='presentation'>
-                                <a href="#history_tasks_tab" aria-controls='history_tasks_tab' role='tab'
-                                   data-toggle='tab' id="history-tasks-tab">
-                                    {{trans('main.Tasks')}}
-                                </a>
-                            </li>
-                        @endif
-                        @if(Auth::user()->can('tour.index'))
-                            <li role='presentation'>
-                                <a href="#history_tours_tab" aria-controls='history_tours_tab' role='tab'
-                                   data-toggle='tab' id="history-tours-tab">
-                                    {{trans('main.Tours')}}
-                                </a>
-                            </li>
-                        @endif
-                        <li role='presentation'>
-                            <a href="#notifications" aria-controls='notifications_tab' role='tab' data-toggle='tab' id="notifications-tab" >
-                                {{trans('main.Notifications')}}
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane fade in active" id="info_profile">
-                            <div class="block_info_profile" style="overflow: hidden; display: block">
+@include('layouts.title', [
+    'title' => 'Profile',
+    'sub_title' => $user->name,
+    'breadcrumbs' => [
+        ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
+        ['title' => 'Profile', 'route' => null]
+    ]
+])
+
+<div class="container-xl">
+    <div class="page-header d-print-none">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">{{ trans('main.Userprofile') }}</div>
+                <h2 class="page-title"><i class="ti ti-user-circle me-2"></i>{{ $user->name }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ url('profile/edit') }}" class="btn btn-primary">
+                    <i class="ti ti-edit me-1"></i>{{ trans('main.Edit') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" href="#info_profile" role="tab" data-bs-toggle="tab">
+                        <i class="ti ti-address-card me-1"></i>{{ trans('main.Info') }}
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#timeline" role="tab" data-bs-toggle="tab">
+                        <i class="ti ti-history me-1"></i>{{ trans('main.History') }}
+                    </a>
+                </li>
+                @if(Auth::user()->can('task.index'))
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#history_tasks_tab" role="tab" data-bs-toggle="tab" id="history-tasks-tab">
+                            <i class="ti ti-checklist me-1"></i>{{ trans('main.Tasks') }}
+                        </a>
+                    </li>
+                @endif
+                @if(Auth::user()->can('tour.index'))
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#history_tours_tab" role="tab" data-bs-toggle="tab" id="history-tours-tab">
+                            <i class="ti ti-plane me-1"></i>{{ trans('main.Tours') }}
+                        </a>
+                    </li>
+                @endif
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="#notifications" role="tab" data-bs-toggle="tab" id="notifications-tab">
+                        <i class="ti ti-bell me-1"></i>{{ trans('main.Notifications') }}
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                        <div class="tab-pane fade show active" id="info_profile">
+                            <div class="block_info_profile row" style="overflow: hidden; display: block">
                                 <div class="col-lg-4 col-md-4">
                                     <!-- Profile Image -->
                                     <div class="box box-primary without-border">
@@ -269,7 +287,7 @@
                             @include('component.list_tours_for_profile', ['userName' => $user->name, 'userId' => $user->id, 'tours' => $tours])
                         </div>
 
-                        <div class="tab-pane fade in" id="timeline">
+                        <div class="tab-pane fade" id="timeline">
                             <ul class="timeline timeline-inverse">
                                 @foreach($activities as $activity)
                                     <li class="time-label">
@@ -304,7 +322,8 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 @endsection
 
 @section('post_scripts')

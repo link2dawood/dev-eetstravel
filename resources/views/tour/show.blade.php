@@ -1105,7 +1105,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const tabStorageKey = 'tourActiveTab';
     const storedTab = localStorage.getItem(tabStorageKey);
-    if (storedTab) {
+    if (storedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
         const trigger = document.querySelector('.nav-tabs a[href="#' + storedTab + '"]');
         if (trigger) {
             bootstrap.Tab.getOrCreateInstance(trigger).show();

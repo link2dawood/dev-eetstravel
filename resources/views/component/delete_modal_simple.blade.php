@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmBtn = modalEl.querySelector('[data-delete-modal-confirm]');
     const defaultMessage = messageEl ? messageEl.textContent.trim() : 'Do you really want to delete this record?';
     let deleteUrl = null;
+    let deleteMethod = 'GET';
 
     document.body.addEventListener('click', function (event) {
         const trigger = event.target.closest('.delete');
@@ -51,11 +52,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         event.preventDefault();
+        event.stopImmediatePropagation();
         const link = trigger.getAttribute('data-link');
         if (!link) {
             return;
         }
         deleteUrl = link;
+        deleteMethod = (trigger.getAttribute('data-delete-method') || 'GET').toUpperCase();
 
         if (messageEl) {
             const row = trigger.closest('tr');
@@ -74,12 +77,40 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!deleteUrl) {
                 return;
             }
-            window.location.href = deleteUrl;
+            if (deleteMethod === 'GET') {
+                window.location.href = deleteUrl;
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = deleteUrl;
+            form.style.display = 'none';
+
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            }
+
+            if (deleteMethod !== 'POST') {
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = deleteMethod;
+                form.appendChild(methodInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
         });
     }
 
     modalEl.addEventListener('hidden.bs.modal', function () {
         deleteUrl = null;
+        deleteMethod = 'GET';
         if (messageEl) {
             messageEl.textContent = defaultMessage;
         }

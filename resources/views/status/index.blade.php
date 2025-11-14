@@ -47,15 +47,14 @@
                             @forelse($status as $statusItem)
                             <tr>
                                 <td>{{ $statusItem->id }}</td>
-                                <td>{{ $statusItem->name ?? '' }}</td>
+                                <td data-delete-label>{{ $statusItem->name ?? '' }}</td>
                                 <td>{{ $statusItem->status_type ?? '' }}</td>
                                 <td>{{ $statusItem->sort_order ?? '' }}</td>
-                                <td>
-                                    {!! \App\Http\Controllers\DatatablesHelperController::getActionButton([
-                                        'show' => route('status.show', ['status' => $statusItem->id]),
-                                        'edit' => route('status.edit', ['status' => $statusItem->id]),
-                                        'delete_msg' => "/status/{$statusItem->id}/deleteMsg"
-                                    ], false, $statusItem) !!}
+                                <td class="text-end">
+                                    @include('component.action_buttons', [
+                                        'item' => $statusItem,
+                                        'routePrefix' => 'status'
+                                    ])
                                 </td>
                             </tr>
                             @empty
@@ -80,3 +79,5 @@ $(document).ready(function() {
 });
 </script>
 @endpush
+
+@include('component.delete_modal_simple')

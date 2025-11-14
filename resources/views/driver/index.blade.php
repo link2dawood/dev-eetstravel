@@ -53,7 +53,7 @@
                         @forelse($drivers as $driver)
                         <tr>
                             <td><span class="text-muted">#{{ $driver->id }}</span></td>
-                            <td><span class="fw-bold">{{ $driver->name ?? '—' }}</span></td>
+                            <td data-delete-label><span class="fw-bold">{{ $driver->name ?? '—' }}</span></td>
                             <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $driver->phone ?? '—' }}</span></td>
                             <td class="d-none d-md-table-cell"><span class="text-muted">{{ $driver->email ?? '—' }}</span></td>
                             <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $driver->transfer_name ?? '—' }}</span></td>
@@ -95,3 +95,5 @@
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>$(document).ready(function() { initializeBootstrapTable('driver-table'); });</script>
 @endpush
+
+@include('component.delete_modal_simple')

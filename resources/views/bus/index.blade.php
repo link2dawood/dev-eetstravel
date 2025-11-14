@@ -2,38 +2,6 @@
 @section('title', 'Buses')
 
 @section('content')
-<!-- Delete Confirmation Modal -->
-<div class="modal modal-blur fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            <div class="modal-status bg-danger"></div>
-            <div class="modal-body text-center py-4">
-                <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                <h3>Are you sure?</h3>
-                <div class="text-muted" id="delete-message">Do you really want to delete this record?</div>
-            </div>
-            <div class="modal-footer">
-                <div class="w-100">
-                    <div class="row">
-                        <div class="col">
-                            <button type="button" class="btn w-100" data-bs-dismiss="modal">
-                                Cancel
-                            </button>
-                        </div>
-                        <div class="col">
-                            <form id="deleteForm" method="GET" style="display: inline;">
-                                <button type="submit" class="btn btn-danger w-100">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <div class="container-xl">
     <div class="page-header d-print-none">
         <div class="row g-2 align-items-center">
@@ -85,7 +53,7 @@
                         @forelse($buses as $bus)
                         <tr>
                             <td><span class="text-muted">#{{ $bus->id }}</span></td>
-                            <td><span class="fw-bold">{{ $bus->license_plate ?? '—' }}</span></td>
+                            <td data-delete-label><span class="fw-bold">{{ $bus->license_plate ?? '—' }}</span></td>
                             <td class="d-none d-md-table-cell"><span class="text-muted">{{ $bus->transfer_name ?? '—' }}</span></td>
                             <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $bus->seats ?? '—' }}</span></td>
                             <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $bus->type ?? '—' }}</span></td>
@@ -128,26 +96,8 @@
 <script>
 $(document).ready(function() {
     initializeBootstrapTable('bus-table');
-
-    // Handle delete button click
-    $('.delete').on('click', function(e) {
-        e.preventDefault();
-        var link = $(this).data('link') || '';
-
-        if (link.indexOf('deleteMsg') !== -1) {
-            // Fetch confirmation message HTML (if controller returns it)
-            $.get(link, function(response) {
-                $('#delete-message').html(response);
-                var deleteUrl = link.replace('deleteMsg', 'delete');
-                $('#deleteForm').attr('action', deleteUrl);
-            });
-        } else {
-            $('#deleteForm').attr('action', link);
-        }
-
-        var myModal = new bootstrap.Modal(document.getElementById('myModal'));
-        myModal.show();
-    });
 });
 </script>
 @endpush
+
+@include('component.delete_modal_simple')

@@ -71,9 +71,9 @@ class OfferController extends Controller
 
 		// Process the data to match what was in the DataTables response
 		$processedOffers = [];
-		foreach($offers as $offer) {
-			$package = TourPackage::find($offer->hotelOffer->package_id ?? null);
-			$tour = Tour::find($offer->hotelOffer->tour_id ?? null);
+        foreach($offers as $offer) {
+            $package = TourPackage::find($offer->hotelOffer->package_id ?? null);
+            $tour = Tour::find($offer->hotelOffer->tour_id ?? null);
 			$city = null;
 
 			if($package && $package->service()) {
@@ -85,7 +85,7 @@ class OfferController extends Controller
 				$stay_date = Carbon::parse($package->time_from)->toDateString();
 			}
 
-			$processedOffers[] = (object)[
+            $processedOffers[] = (object)[
 				'id' => $offer->id,
 				'hotel_name' => $package->name ?? '',
 				'city_name' => $city->name ?? '',
@@ -98,6 +98,7 @@ class OfferController extends Controller
 				'SIN' => '', // Room type data - would need more processing
 				'DOU' => '',
 				'TRI' => '',
+                'tour' => $tour,
 			];
 		}
 
@@ -147,7 +148,7 @@ class OfferController extends Controller
 				$stay_date = Carbon::parse($package->time_from)->toDateString();
 			}
 
-			$processedBookings[] = (object)[
+            $processedBookings[] = (object)[
 				'id' => $package->id,
 				'hotel_name' => $package->name ?? '',
 				'city_name' => $city->name ?? '',
@@ -156,6 +157,7 @@ class OfferController extends Controller
 				'status_name' => $package->getStatusName() ?? '',
 				'cancel_policy' => $package->latestHotelOffer->cancellation_policiy ?? 'N/A',
 				'payment_policy' => $package->latestHotelOffer->payment_policiy ?? 'N/A',
+                'model' => $package,
 			];
 		}
 

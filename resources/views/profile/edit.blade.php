@@ -71,6 +71,27 @@
 					<small class="form-text text-muted">Only fill this if you want to change your password</small>
 				</div>
 
+                <div class="form-group">
+                    <label for="email_login">{{ trans('main.EmailLogin') }} (SnappyMail)</label>
+                    <input type="email"
+                           name="email_login"
+                           id="email_login"
+                           value="{{ old('email_login', $user->email_login) }}"
+                           class="form-control"
+                           placeholder="user@example.com">
+                    <small class="form-text text-muted">This login is used to connect the user’s SnappyMail inbox.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email_password">{{ trans('main.Email') }} {{ trans('main.Password') }} (SnappyMail)</label>
+                    <input type="password"
+                           name="email_password"
+                           id="email_password"
+                           class="form-control"
+                           placeholder="Enter new SnappyMail password">
+                    <small class="form-text text-muted">Leave blank to keep the existing SnappyMail password.</small>
+                </div>
+
 				<div class="form-group">
 					<label for="">{{trans('main.Education')}}</label>
 					<input type="text" name="education" value="{{ $errors != null && count($errors) > 0 ? old('education') : $user->education }}" class="form-control" placeholder="Education">

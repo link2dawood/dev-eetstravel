@@ -1331,6 +1331,26 @@ function showLandingPageModal() {
     }
 }
 
+function exportCity() {
+    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");
+}
+
+function exportExcel() {
+    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");
+}
+
+function exportNumber() {
+    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");
+}
+
+function exportItinerary() {
+    export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");
+}
+
+function printAll() {
+    window.print();
+}
+
 // Export function
 function export_to(url) {
     window.open(url, '_blank');

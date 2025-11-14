@@ -1,3 +1,10 @@
+if (typeof window.globalSearch === 'undefined') {
+    window.globalSearch = {
+        run: function () {},
+        prepareOptions: function () {},
+        bindEvents: function () {}
+    };
+}
 
 let addService = {
     run: () => {

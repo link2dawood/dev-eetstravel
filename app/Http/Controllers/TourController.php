@@ -123,8 +123,8 @@ class TourController extends Controller
 
     public function getButtonForTasks($id, $tour, $task)
     {
-        $url = array('show'        => route('task.show', ['task' => $id]),
-             'edit'        => route('task.edit', ['task' => $id]),
+        $url = array('show'        => route('task.show', ['id' => $id]),
+             'edit'        => route('task.edit', ['id' => $id]),
              'delete_msg' => "/task/{$id}/deleteMsg/{$tour}");
 
         return DatatablesHelperController::getActionButton($url, false, $task);

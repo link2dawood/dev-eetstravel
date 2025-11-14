@@ -17,7 +17,7 @@
                                 <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
                             </a>
                             @if(Auth::user()->can('task.edit'))
-                            <a href="{!! route('task.edit', ['task' => $task->id]) !!}">
+                            <a href="{!! route('task.edit', ['id' => $task->id]) !!}">
                                 <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
                             </a>
                             @endif

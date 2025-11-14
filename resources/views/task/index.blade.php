@@ -553,7 +553,7 @@
                                 <td colspan="10" class="text-muted small">+ Add task</td>
                             </tr>
                             @forelse($tasks->where('status.is_completed', '!=', true)->where('status.is_aborted', '!=', true) as $task)
-                            <tr class="clickable-row" onclick="window.location.href='{{ route('task.show', ['task' => $task->id]) }}'">
+                            <tr class="clickable-row" onclick="window.location.href='{{ route('task.show', ['id' => $task->id]) }}'">
                                 <td onclick="event.stopPropagation();">
                                     <input type="checkbox" class="form-check-input">
                                 </td>
@@ -642,7 +642,7 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['task' => $task->id]) }}" title="Edit">
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
                                             <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -703,7 +703,7 @@
                         </thead>
                         <tbody>
                             @forelse($tasks->where('status.is_completed', true) as $task)
-                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['task' => $task->id]) }}'">
+                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['id' => $task->id]) }}'">
                                 <td onclick="event.stopPropagation();">
                                     <input type="checkbox" class="form-check-input" checked>
                                 </td>
@@ -762,7 +762,7 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['task' => $task->id]) }}" title="Edit">
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
                                             <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -822,7 +822,7 @@
                         </thead>
                         <tbody>
                             @forelse($tasks->where('status.is_aborted', true) as $task)
-                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['task' => $task->id]) }}'">
+                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['id' => $task->id]) }}'">
                                 <td onclick="event.stopPropagation();">
                                     <input type="checkbox" class="form-check-input">
                                 </td>
@@ -881,7 +881,7 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['task' => $task->id]) }}" title="Edit">
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
                                             <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -935,7 +935,7 @@
                         </thead>
                         <tbody>
                             @forelse($tasks->where('status.is_completed', true) as $task)
-                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['task' => $task->id]) }}'">
+                            <tr class="clickable-row completed-row" onclick="window.location.href='{{ route('task.show', ['id' => $task->id]) }}'">
                                 <td onclick="event.stopPropagation();">
                                     <input type="checkbox" class="form-check-input" checked>
                                 </td>
@@ -959,7 +959,7 @@
                                 <td><span class="text-muted">-</span></td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['task' => $task->id]) }}" title="Edit">
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
                                             <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -1000,7 +1000,7 @@
                     </div>
                     <div class="kanban-cards">
                         @foreach($tasks->where('status_id', $status->id) as $task)
-                        <div class="kanban-card" onclick="window.location.href='{{ route('task.show', ['task' => $task->id]) }}'">
+                        <div class="kanban-card" onclick="window.location.href='{{ route('task.show', ['id' => $task->id]) }}'">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="kanban-card-title">{{ $task->content }}</div>
                                 @if($task->priority)

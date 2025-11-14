@@ -218,7 +218,7 @@ class TaskController extends Controller
     {
         $title = 'Edit - task';
         if ($request->ajax()) {
-            return route('task.edit', ['task' => $id]);
+            return route('task.edit', ['id' => $id]);
         }
 
         $task = Task::leftJoin('tours', 'tours.id', '=', 'tasks.tour')

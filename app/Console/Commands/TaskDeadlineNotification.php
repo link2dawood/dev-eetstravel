@@ -80,7 +80,7 @@ class TaskDeadlineNotification extends Command
                     foreach ($users_id as $user_id){
                         foreach ($task->assigned_users as $assigned_user){
                             if($assigned_user->id == $user_id){
-                                $url = route('task.show', ['task' => $task->id]);
+                                $url = route('task.show', ['id' => $task->id]);
                                 $parsingURL = parse_url($url);
                                 $uri = $parsingURL['path'];
 

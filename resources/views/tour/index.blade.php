@@ -110,12 +110,6 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#client-tours-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-user me-1"></i>Requested
-                        <span class="badge bg-yellow-lt ms-1">{{ $clientTours->total() }}</span>
-                    </a>
-                </li>
-                <li class="nav-item" role="presentation">
                     <a href="#monthly-chart-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
                         <i class="ti ti-chart-line me-1"></i>Monthly
                         <span class="badge bg-green-lt ms-1">{{ $monthlyChartTours->total() + $cancelledChartTours->total() }}</span>
@@ -255,19 +249,13 @@
                     @endif
                 </div>
 
-                {{-- Tab 2: Requested Tours --}}
-                <div class="tab-pane fade" id="client-tours-tab" role="tabpanel">
-                   {{-- (Your code for other tabs is fine) --}}
-                   ...
-                </div>
-
-                {{-- Tab 3: Monthly Chart --}}
+                {{-- Tab 2: Monthly Chart --}}
                 <div class="tab-pane fade" id="monthly-chart-tab" role="tabpanel">
                    {{-- (Your code for other tabs is fine) --}}
                    ...
                 </div>
 
-                {{-- Tab 4: Archived Tours --}}
+                {{-- Tab 3: Archived Tours --}}
                 <div class="tab-pane fade" id="archived-tours-tab" role="tabpanel">
                    {{-- (Your code for other tabs is fine) --}}
                    ...

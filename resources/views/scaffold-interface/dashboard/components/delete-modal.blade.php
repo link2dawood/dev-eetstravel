@@ -1,5 +1,4 @@
-<!-- Delete Confirmation Modal -->
-<div class="modal modal-blur fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal modal-blur fade" id="myTourModal" tabindex="-1" role="dialog" aria-hidden="true"> {{-- <-- ID CHANGED --}}
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
         <div class="modal-content">
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -19,7 +18,7 @@
                             </button>
                         </div>
                         <div class="col">
-                            <button type="button" id="confirmDeleteBtn" class="btn btn-danger w-100">
+                            <button type="button" id="confirmTourDeleteBtn" class="btn btn-danger w-100"> {{-- <-- ID CHANGED --}}
                                 Delete
                             </button>
                         </div>
@@ -34,7 +33,7 @@
 <script>
 $(document).ready(function() {
     let deleteUrl = null;
-    let tourModal = new bootstrap.Modal(document.getElementById('myModal'), {
+    let tourModal = new bootstrap.Modal(document.getElementById('myTourModal'), { {{-- <-- ID CHANGED --}}
         backdrop: 'static',
         keyboard: false
     });
@@ -50,19 +49,17 @@ $(document).ready(function() {
             return;
         }
 
-        // Get tour name and ID from the row
         var $row = $(this).closest('tr');
         var tourName = $row.find('td:eq(1)').text() || 'Unknown Tour';
         var tourId = $row.find('td:eq(0)').text() || '';
         
         $('#tour-name-display').text('Tour: ' + tourName + (tourId ? ' (ID: ' + tourId + ')' : ''));
         
-        // Show modal
         tourModal.show();
     });
 
     // Handle confirm delete button
-    $('#confirmDeleteBtn').on('click', function() {
+    $('#confirmTourDeleteBtn').on('click', function() { {{-- <-- ID CHANGED --}}
         if (!deleteUrl) {
             alert('Error: No delete URL specified');
             return;
@@ -71,7 +68,6 @@ $(document).ready(function() {
         var $btn = $(this);
         var originalText = $btn.html();
         
-        // Show loading state
         $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
 
         $.ajax({
@@ -81,25 +77,16 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                // Close modal
                 tourModal.hide();
-                
-                // Show success message
                 var successMsg = response.message || 'Tour deleted successfully!';
                 alert(successMsg);
-                
-                // Reload the page to refresh the list
                 setTimeout(function() {
                     location.reload();
                 }, 500);
             },
             error: function(xhr) {
-                // Reset button state
                 $btn.prop('disabled', false).html(originalText);
-                
-                // Close modal
                 tourModal.hide();
-                
                 var errorMsg = 'Error deleting tour!';
                 
                 if (xhr.responseJSON) {
@@ -124,9 +111,9 @@ $(document).ready(function() {
     });
 
     // Reset form when modal is hidden
-    document.getElementById('myModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('myTourModal').addEventListener('hidden.bs.modal', function() { {{-- <-- ID CHANGED --}}
         deleteUrl = null;
-        $('#confirmDeleteBtn').prop('disabled', false).html('Delete');
+        $('#confirmTourDeleteBtn').prop('disabled', false).html('Delete'); {{-- <-- ID CHANGED --}}
     });
 });
 </script>

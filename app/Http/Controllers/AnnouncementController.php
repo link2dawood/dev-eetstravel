@@ -6,7 +6,8 @@ use App\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema; // <-- **** ADD THIS LINE ****
+use Illuminate\Support\Facades\Schema;
+
 class AnnouncementController extends Controller
 {
     /**
@@ -20,10 +21,8 @@ class AnnouncementController extends Controller
                 ->with(['author'])
                 ->get()
                 ->map(function($announcement) {
-                    // Add sender name
                     $announcement->sender = $announcement->author ? $announcement->author->name : 'Unknown';
                     
-                    // Get files using Spatie Media Library
                     $announcement->files = $announcement->getMedia('announcement_files')->map(function($media) {
                         return (object) [
                             'id' => $media->id,
@@ -73,7 +72,6 @@ class AnnouncementController extends Controller
                 'parent_id' => $request->parent_id
             ]);
             
-            // Handle file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
                     $announcement->addMedia($file)
@@ -96,12 +94,15 @@ class AnnouncementController extends Controller
 
     /**
      * Display the specified announcement
+     *
+     * == FIX: Changed $id to $announcement (matches route parameter) ==
      */
-    public function show($id)
+    public function show($announcement) // <-- CHANGED
     {
         try {
+            // Find the model using the passed ID
             $announcement = Announcement::with(['author', 'childs.author'])
-                ->findOrFail($id);
+                ->findOrFail($announcement); // <-- CHANGED
             
             return view('announcements.show', compact('announcement'));
             
@@ -114,62 +115,65 @@ class AnnouncementController extends Controller
 
     /**
      * Show the form for editing the announcement
+     *
+     * == FIX: Changed $id to $announcement (matches route parameter) ==
      */
-public function edit($id)
-{
-    try {
-        \Log::info('Edit announcement called with ID: ' . $id);
-        
-        $announcement = Announcement::with('author')->findOrFail($id);
-        
-        \Log::info('Announcement found: ' . $announcement->id);
-        
-        // Check if user can edit
-        if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
-            \Log::warning('User ' . Auth::id() . ' denied edit permission for announcement ' . $id);
-            return redirect()->route('announcements.index')
-                ->with('error', 'You do not have permission to edit this announcement');
-        }
-        
-        $title = 'Edit Announcement';
-        $announcement->author_name = $announcement->author ? $announcement->author->name : 'Unknown';
+    public function edit($announcement) // <-- CHANGED
+    {
+        try {
+            \Log::info('Edit announcement called with ID: ' . $announcement);
+            
+            // Find the model using the passed ID
+            $announcement = Announcement::with('author')->findOrFail($announcement); // <-- CHANGED
+            
+            \Log::info('Announcement found: ' . $announcement->id);
+            
+            if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
+                \Log::warning('User ' . Auth::id() . ' denied edit permission for announcement ' . $announcement->id);
+                return redirect()->route('announcements.index')
+                    ->with('error', 'You do not have permission to edit this announcement');
+            }
+            
+            $title = 'Edit Announcement';
+            $announcement->author_name = $announcement->author ? $announcement->author->name : 'Unknown';
 
-        $files = [];
-        // *** FIX: Check if media table exists before querying ***
-        if (Schema::hasTable('media')) {
-            $files = $announcement->getMedia('announcement_files')->map(function($media) {
-                return (object) [
-                    'id' => $media->id,
-                    'name' => $media->file_name,
-                    'url' => $media->getUrl(),
-                ];
-            })->toArray();
+            $files = [];
+            if (Schema::hasTable('media')) {
+                $files = $announcement->getMedia('announcement_files')->map(function($media) {
+                    return (object) [
+                        'id' => $media->id,
+                        'name' => $media->file_name,
+                        'url' => $media->getUrl(),
+                    ];
+                })->toArray();
+            }
+            
+            \Log::info('Rendering edit view for announcement: ' . $announcement->id);
+            
+            return view('announcements.edit', compact('announcement', 'title', 'files'));
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Announcement not found: ' . $announcement); // <-- CHANGED
+            return redirect()->route('announcements.index')
+                ->with('error', 'Announcement not found');
+        } catch (\Exception $e) {
+            \Log::error('Edit announcement error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            return redirect()->route('announcements.index')
+                ->with('error', 'Error: ' . $e->getMessage());
         }
-        
-        \Log::info('Rendering edit view for announcement: ' . $announcement->id);
-        
-        return view('announcements.edit', compact('announcement', 'title', 'files'));
-        
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        \Log::error('Announcement not found: ' . $id);
-        return redirect()->route('announcements.index')
-            ->with('error', 'Announcement not found');
-    } catch (\Exception $e) {
-        \Log::error('Edit announcement error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-        return redirect()->route('announcements.index')
-            ->with('error', 'Error: ' . $e->getMessage());
     }
-}
 
     /**
      * Update the specified announcement
+     *
+     * == FIX: Changed $id to $announcement (matches route parameter) ==
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $announcement) // <-- CHANGED
     {
         try {
-            $announcement = Announcement::findOrFail($id);
+            // Find the model using the passed ID
+            $announcement = Announcement::findOrFail($announcement); // <-- CHANGED
             
-            // Check if user can update
             if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
                 return redirect()->route('announcements.index')
                     ->with('error', 'You do not have permission to update this announcement');
@@ -186,7 +190,6 @@ public function edit($id)
                 'content' => $request->content
             ]);
             
-            // Handle new file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
                     $announcement->addMedia($file)
@@ -194,7 +197,6 @@ public function edit($id)
                 }
             }
 
-            // Handle file deletions
             if ($request->has('deleted_files')) {
                 $deleted_ids = explode(',', $request->input('deleted_files'));
                 if (count($deleted_ids) > 0) {
@@ -222,42 +224,40 @@ public function edit($id)
 
     /**
      * Remove the specified announcement
+     *
+     * == FIX: Changed $id to $announcement (matches route parameter) ==
+     * == FIX: Changed JSON return to a Redirect ==
      */
-   public function destroy($id)
+    public function destroy($announcement) // <-- CHANGED
     {
         try {
-            $announcement = Announcement::findOrFail($id);
+            // Find the model using the passed ID
+            $announcement = Announcement::findOrFail($announcement); // <-- CHANGED
             
-            // Check if user can delete
             if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.delete')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to delete this announcement'
-                ], 403);
+                // == FIX: Return a redirect with an error ==
+                return redirect()->route('announcements.index')
+                    ->with('error', 'You do not have permission to delete this announcement');
             }
             
-            // *** FIX: Check if media table exists before deleting ***
             if (Schema::hasTable('media')) {
                 $announcement->clearMediaCollection('announcement_files');
             }
             
-            // Delete the announcement (this will cascade delete children via model)
             $announcement->delete();
             
-            Log::info('Announcement deleted: ' . $id);
+            Log::info('Announcement deleted: ' . $announcement->id); // <-- CHANGED
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Announcement deleted successfully'
-            ]);
+            // == FIX: Return a redirect with success ==
+            return redirect()->route('announcements.index')
+                ->with('success', 'Announcement deleted successfully');
             
         } catch (\Exception $e) {
             Log::error('Delete announcement error: ' . $e->getMessage());
             
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting announcement: ' . $e->getMessage() // Show the real error
-            ], 500);
+            // == FIX: Return a redirect with an error ==
+            return redirect()->route('announcements.index')
+                ->with('error', 'Error deleting announcement: ' . $e->getMessage());
         }
     }
 
@@ -266,12 +266,10 @@ public function edit($id)
      */
     public function deleteFile(Request $request)
     {
-        // This is an AJAX endpoint
         try {
             $mediaId = $request->input('file_id');
             $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
             
-            // Check if user owns the announcement
             $announcement = Announcement::findOrFail($media->model_id);
             if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.edit')) {
                 return response()->json([
@@ -299,7 +297,7 @@ public function edit($id)
     /**
      * Handle announcement reply
      */
-    public function reply(Request $request, $id)
+    public function reply(Request $request, $id) // This can stay as $id since it's a custom route
     {
         try {
             $request->validate([
@@ -315,7 +313,6 @@ public function edit($id)
                 'parent_id' => $id
             ]);
             
-            // Handle file uploads
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
                     $reply->addMedia($file)

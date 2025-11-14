@@ -48,6 +48,7 @@ use URL;
 use View;
 use App\Helper\ExportTrait;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use App\Helper\HelperTrait;
 use App\Repository\Contracts\TourRepository;
 use App\Repository\Contracts\TaskRepository;
@@ -988,7 +989,8 @@ public function store(StoreTourRequest $request)
             $status->name = 'Unknown Status';
         }
         $files = $this->parseAttach($tour);
-        $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
+        $tourPackagesData = $this->prepareTourPackages($tour, $request);
+        $tourDates = $tourPackagesData['tourDates'];
 
         $listIdServices = array();
         //$this->services = array("Event","Guide","Hotel","Restaurant","Transfer");
@@ -1088,6 +1090,13 @@ $select_office=Offices::where('status',1)->first();
             ];
         }
 
+        $packagesCollection = $this->collectTourPackages($tour);
+        $serviceDays = $this->buildServiceDays($tour, $packagesCollection, $tourDates);
+        $tourDayLookup = collect($serviceDays)->mapWithKeys(function ($day) {
+            return [$day['date_key'] => $day['tour_day_id']];
+        });
+        $serviceCatalog = $this->buildServiceCatalog();
+
         return view('tour.show', [
 			'select_office'=>$select_office,
 			'offices'=>$offices,
@@ -1105,10 +1114,148 @@ $select_office=Offices::where('status',1)->first();
             'quotation' => $quotation,
             'comparison'  => $comparison,
             'invoicesData' => $invoicesData,
-            'billingData' => $billingData
+            'billingData' => $billingData,
+            'serviceDays' => $serviceDays,
+            'serviceCatalog' => $serviceCatalog,
+            'tourDayLookup' => $tourDayLookup
         ]);
     }
 
+
+    protected function collectTourPackages($tour)
+    {
+        if (method_exists($tour, 'tourPackages')) {
+            return $tour->tourPackages;
+        }
+
+        if (method_exists($tour, 'packages')) {
+            return $tour->packages;
+        }
+
+        if (isset($tour->packages)) {
+            return collect($tour->packages);
+        }
+
+        return collect();
+    }
+
+    protected function buildServiceDays(Tour $tour, $packages, $tourDates)
+    {
+        if (empty($tour->departure_date) || empty($tour->retirement_date)) {
+            return [];
+        }
+
+        $start = Carbon::parse($tour->departure_date);
+        $end = Carbon::parse($tour->retirement_date);
+
+        if ($start->gt($end)) {
+            return [];
+        }
+
+        $period = new CarbonPeriod($start, '1 day', $end);
+        $tourDayMap = collect($tourDates)->keyBy(function ($tourDay) {
+            return Carbon::parse($tourDay->date)->format('Y-m-d');
+        });
+
+        $packageCollection = collect($packages);
+
+        $dayNumber = 1;
+        $days = [];
+
+        foreach ($period as $date) {
+            $dateKey = $date->format('Y-m-d');
+            $dayPackages = $packageCollection->filter(function ($package) use ($dateKey) {
+                if (!isset($package->start_date)) {
+                    return false;
+                }
+
+                return Carbon::parse($package->start_date)->format('Y-m-d') === $dateKey;
+            })->values();
+
+            $days[] = [
+                'day_number' => $dayNumber++,
+                'date' => $date->copy(),
+                'date_key' => $dateKey,
+                'day_name' => $date->format('l'),
+                'tour_day_id' => optional($tourDayMap->get($dateKey))->id,
+                'packages' => $dayPackages,
+            ];
+        }
+
+        return $days;
+    }
+
+    protected function buildServiceCatalog()
+    {
+        $supplierSearch = app(SupplierSearchController::class);
+        $rawServices = collect($supplierSearch->getCollection([], null, null, null, null));
+
+        $formatted = $rawServices->map(function ($service) {
+            return $this->formatServiceRecord($service);
+        })->filter(function ($service) {
+            return !empty($service);
+        })->unique(function ($service) {
+            return $service['type'] . '-' . $service['id'];
+        });
+
+        $transferRecords = Transfer::select('id', 'name', 'address_first', 'address_second', 'country', 'city', 'work_phone', 'contact_name', 'contact_phone')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($transfer) {
+                return [
+                    'id' => $transfer->id,
+                    'type' => 'transfer',
+                    'type_label' => 'Transfer',
+                    'name' => $transfer->name,
+                    'address' => $this->resolveServiceField($transfer, ['address_first', 'address_second', 'address']),
+                    'city' => $this->resolveServiceField($transfer, ['city']),
+                    'country' => $this->resolveServiceField($transfer, ['country']),
+                    'phone' => $this->resolveServiceField($transfer, ['work_phone', 'contact_phone']),
+                    'contact' => $this->resolveServiceField($transfer, ['contact_name']),
+                ];
+            });
+
+        return $formatted->merge($transferRecords)->sortBy('name')->values();
+    }
+
+    protected function formatServiceRecord($service)
+    {
+        if (!$service || !isset($service->id)) {
+            return null;
+        }
+
+        $typeLabel = class_basename($service);
+        $type = strtolower($typeLabel);
+
+        $name = $this->resolveServiceField($service, ['name', 'title', 'company_name']);
+
+        return [
+            'id' => $service->id,
+            'type' => $type,
+            'type_label' => $typeLabel,
+            'name' => $name,
+            'address' => $this->resolveServiceField($service, ['address_first', 'address_second', 'address']),
+            'city' => $this->resolveServiceField($service, ['city', 'city_name']),
+            'country' => $this->resolveServiceField($service, ['country', 'country_name']),
+            'phone' => $this->resolveServiceField($service, ['work_phone', 'phone', 'contact_phone']),
+            'contact' => $this->resolveServiceField($service, ['contact_name', 'contactperson', 'contact']),
+        ];
+    }
+
+    protected function resolveServiceField($service, array $fields)
+    {
+        foreach ($fields as $field) {
+            if (is_object($service) && isset($service->{$field}) && $service->{$field} !== null && $service->{$field} !== '') {
+                return $service->{$field};
+            }
+
+            if (is_array($service) && array_key_exists($field, $service) && $service[$field] !== null && $service[$field] !== '') {
+                return $service[$field];
+            }
+        }
+
+        return '';
+    }
 
     public function prepareTourPackages($tour, Request $request)
     {

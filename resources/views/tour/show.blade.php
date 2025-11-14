@@ -70,10 +70,7 @@
 
 @section('content')
 @php
-    $tourDayLookup = collect($tourDates ?? [])->mapWithKeys(function ($tourDay) {
-        $dateKey = \Carbon\Carbon::parse($tourDay->date)->format('Y-m-d');
-        return [$dateKey => $tourDay->id];
-    });
+    $tourDayLookup = collect($tourDayLookup ?? []);
 @endphp
 <div class="container-xl">
     {{-- Page Header --}}
@@ -303,6 +300,7 @@
                 </h3>
                 
                 @if(!empty($quotation) && isset($quotation->id))
+                    @if(!empty($serviceDays))
                     {{-- Summary Information --}}
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -360,22 +358,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @php
-                                    // Generate date range from tour departure to retirement
-                                    $startDate = \Carbon\Carbon::parse($tour->departure_date);
-                                    $endDate = \Carbon\Carbon::parse($tour->retirement_date);
-                                    $currentDate = $startDate->copy();
-                                    $dateArray = [];
-                                    
-                                    while ($currentDate->lte($endDate)) {
-                                        $dateArray[] = $currentDate->format('Y-m-d');
-                                        $currentDate->addDay();
-                                    }
-                                @endphp
-
-                                @foreach($dateArray as $date)
+                                @foreach($serviceDays as $day)
                                     <tr>
-                                        <td>{{ $date }}</td>
+                                        <td>{{ $day['date_key'] }}</td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -422,6 +407,11 @@
                             </div>
                         </div>
                     </div>
+                    @else
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> {{ __('No service schedule is available for this tour yet.') }}
+                        </div>
+                    @endif
                 @else
                     <div class="alert alert-info">
                         <i class="ti ti-info-circle"></i> No quotation data available for front sheet. Please create a quotation first.
@@ -476,64 +466,35 @@
 
                 {{-- Service Days --}}
                 <div id="service-days-container">
-                    @php
-                        $startDate = \Carbon\Carbon::parse($tour->departure_date);
-                        $endDate = \Carbon\Carbon::parse($tour->retirement_date);
-                        $dayNumber = 1;
-                        $currentDate = $startDate->copy();
-                        
-                        // Get all tour packages for this tour
-                        $packages = collect();
-                        if (method_exists($tour, 'tourPackages')) {
-                            $packages = $tour->tourPackages;
-                        } elseif (method_exists($tour, 'packages')) {
-                            $packages = $tour->packages;
-                        } elseif (isset($tour->packages)) {
-                            $packages = collect($tour->packages);
-                        }
+                    @if(!empty($serviceDays))
+                        @foreach($serviceDays as $day)
+                            @php
+                                $tourDayId = $day['tour_day_id'];
+                                $dayPackages = $day['packages'];
                     @endphp
-
-                    @while($currentDate->lte($endDate))
-                        @php
-                            $dayName = $currentDate->format('l');
-                            $dateString = $currentDate->format('Y-m-d');
-                            
-                            // Get packages for this specific date
-                            $dayPackages = $packages->filter(function($package) use ($dateString) {
-                                $packageDate = isset($package->start_date) 
-                                    ? \Carbon\Carbon::parse($package->start_date)->format('Y-m-d')
-                                    : null;
-                                return $packageDate === $dateString;
-                            });
-                        @endphp
-
-                        @php
-                            $tourDayId = $tourDayLookup[$dateString] ?? null;
-                        @endphp
-                        {{-- Day Card --}}
-                        <div class="card mb-4" data-day="{{ $dayNumber }}" data-date="{{ $dateString }}" @if($tourDayId) data-tour-day-id="{{ $tourDayId }}" @endif>
+                        <div class="card mb-4" data-day="{{ $day['day_number'] }}" data-date="{{ $day['date_key'] }}" @if($tourDayId) data-tour-day-id="{{ $tourDayId }}" @endif>
                             <div class="card-header bg-light">
                                 <div class="row align-items-center">
                                     <div class="col">
                                         <h4 class="card-title mb-0">
-                                            Day {{ $dayNumber }} - {{ $currentDate->format('F d, Y') }} ({{ $dayName }})
+                                            Day {{ $day['day_number'] }} - {{ $day['date']->format('F d, Y') }} ({{ $day['day_name'] }})
                                         </h4>
                                     </div>
                                     <div class="col-auto">
                                         @if($tourDayId)
                                             <button type="button" class="btn btn-success btn-sm me-1 add-description-package">
-                                                <i class="ti ti-plus"></i> Add description
-                                            </button>
+                                            <i class="ti ti-plus"></i> Add description
+                                        </button>
                                             <button type="button"
                                                     class="btn btn-primary btn-sm add-service-quick"
                                                     data-tourdayid="{{ $tourDayId }}"
                                                     data-link="{{ route('tour_package.store') }}"
                                                     data-tour_id="{{ $tour->id }}"
-                                                    data-date="{{ $dateString }}"
+                                                    data-date="{{ $day['date_key'] }}"
                                                     data-departure_date="{{ $tour->departure_date }}"
                                                     data-retirement_date="{{ $tour->retirement_date }}">
-                                                <i class="ti ti-download"></i> Add Service
-                                            </button>
+                                            <i class="ti ti-download"></i> Add Service
+                                        </button>
                                         @else
                                             <button type="button" class="btn btn-secondary btn-sm" disabled>
                                                 <i class="ti ti-alert-triangle"></i> {{ __('No tour day for this date') }}
@@ -668,22 +629,22 @@
                                                     data-tourdayid="{{ $tourDayId }}"
                                                     data-link="{{ route('tour_package.store') }}"
                                                     data-tour_id="{{ $tour->id }}"
-                                                    data-date="{{ $dateString }}"
+                                                    data-date="{{ $day['date_key'] }}"
                                                     data-departure_date="{{ $tour->departure_date }}"
                                                     data-retirement_date="{{ $tour->retirement_date }}">
-                                                <i class="ti ti-plus me-1"></i>Add First Service
-                                            </button>
+                                            <i class="ti ti-plus me-1"></i>Add First Service
+                                        </button>
                                         @endif
                                     </div>
                                 @endif
                             </div>
                         </div>
-
-                        @php
-                            $currentDate->addDay();
-                            $dayNumber++;
-                        @endphp
-                    @endwhile
+                        @endforeach
+                    @else
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i> {{ __('No service days are configured for this tour yet.') }}
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Comments Section --}}
@@ -1007,30 +968,67 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="service-select" class="form-label">{{ trans('main.Servicetype') }}</label>
-                    <select id="service-select" class="form-select">
-                        <option value="All" selected>{!! trans('main.All') !!}</option>
-                        @foreach($options as $option)
-                            <option value="{{ $option }}">{{ $option }}</option>
-                        @endforeach
-                    </select>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="service-type-filter" class="form-label">{{ trans('main.Servicetype') }}</label>
+                        <select id="service-type-filter" class="form-select">
+                            <option value="all" selected>{!! trans('main.All') !!}</option>
+                            @foreach($options as $option)
+                                <option value="{{ strtolower($option) }}">{{ $option }}</option>
+                            @endforeach
+                            <option value="transfer">{{ trans('main.Transfer') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label for="service-catalog-search" class="form-label">{{ trans('main.Search') }}</label>
+                        <input type="text" id="service-catalog-search" class="form-control" placeholder="{{ __('Search by name, city or country') }}">
+                    </div>
                 </div>
                 <div class="table-responsive">
-                    <table id="search-table" class="table card-table table-vcenter table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>{!! trans('main.Name') !!}</th>
-                                <th>{!! trans('main.Address') !!}</th>
-                                <th>{!! trans('main.Country') !!}</th>
-                                <th>{!! trans('main.City') !!}</th>
-                                <th>{!! trans('main.Phone') !!}</th>
-                                <th>{!! trans('main.ContactName') !!}</th>
+                    <table id="service-catalog-table" class="table card-table table-vcenter table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>{!! trans('main.Name') !!}</th>
+                            <th>{!! trans('main.Address') !!}</th>
+                            <th>{!! trans('main.Country') !!}</th>
+                            <th>{!! trans('main.City') !!}</th>
+                            <th>{!! trans('main.Phone') !!}</th>
+                            <th>{!! trans('main.ContactName') !!}</th>
                                 <th>{!! trans('main.Actions') !!}</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            @forelse($serviceCatalog as $service)
+                                <tr data-type="{{ $service['type'] }}" data-search="{{ strtolower(trim($service['name'].' '.$service['city'].' '.$service['country'].' '.$service['type_label'])) }}">
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ $service['name'] }}</span>
+                                            <small class="text-muted text-uppercase">{{ $service['type_label'] }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ $service['address'] }}</td>
+                                    <td>{{ $service['country'] }}</td>
+                                    <td>{{ $service['city'] }}</td>
+                                    <td>{{ $service['phone'] }}</td>
+                                    <td>{{ $service['contact'] }}</td>
+                                    <td>
+                                        <button type="button"
+                                                class="btn btn-success btn-sm add-service-button"
+                                                data-link="{{ route('tour_package.store') }}"
+                                                data-service_type="{{ $service['type'] }}"
+                                                data-service_id="{{ $service['id'] }}"
+                                                data-service_name="{{ $service['name'] }}">
+                                            {{ trans('main.Add') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">{{ __('No services available') }}</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                </table>
                 </div>
             </div>
         </div>
@@ -1099,7 +1097,6 @@
 
 @section('post_scripts')
 <script src="{{ asset('js/tour-interactions.js') }}"></script>
-<script src="{{ asset('js/supplier-search.js') }}"></script>
 <script src="{{ asset('js/tour.js') }}"></script>
 <script src="{{ asset('js/comment.js') }}"></script>
 <script src="{{ asset('js/attachments.js') }}"></script>
@@ -1123,6 +1120,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    const catalogTable = document.getElementById('service-catalog-table');
+    if (catalogTable) {
+        const rows = Array.from(catalogTable.querySelectorAll('tbody tr'));
+        const typeFilter = document.getElementById('service-type-filter');
+        const searchInput = document.getElementById('service-catalog-search');
+
+        const applyServiceFilters = () => {
+            const typeValue = (typeFilter && typeFilter.value ? typeFilter.value : 'all').toLowerCase();
+            const term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+
+            rows.forEach(function (row) {
+                const rowType = (row.getAttribute('data-type') || '').toLowerCase();
+                const haystack = (row.getAttribute('data-search') || '').toLowerCase();
+                const matchesType = typeValue === 'all' || rowType === typeValue;
+                const matchesSearch = !term || haystack.indexOf(term) !== -1;
+                row.style.display = matchesType && matchesSearch ? '' : 'none';
+            });
+        };
+
+        if (typeFilter) {
+            typeFilter.addEventListener('change', applyServiceFilters);
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyServiceFilters);
+        }
+    }
 });
 
 $(function() {

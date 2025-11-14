@@ -24,7 +24,7 @@
                 <tr data-href="{{ route('announcements.show', ['announcement' => $announcement->id]) }}">
                     
                     <td class="clickable-cell">{{ $announcement->id }}</td>
-                    <td class="clickable-cell"><span style="font-size: 14px;font-weight: bold;">{{ $announcement->title }}</span></td>
+                    <td class="clickable-cell" data-delete-label><span style="font-size: 14px;font-weight: bold;">{{ $announcement->title }}</span></td>
                     <td class="clickable-cell">{{ \Illuminate\Support\Str::limit($announcement->content, 50) }}</td>
                     <td class="clickable-cell">{{ $announcement->created_at->format('Y-m-d') }}</td>
                     <td class="clickable-cell">{{ $announcement->sender }}</td>
@@ -115,3 +115,5 @@ document.addEventListener('DOMContentLoaded', function() {
 {{-- ================================== --}}
 {{-- == END OF JAVASCRIPT FIX == --}}
 {{-- ================================== --}}
+
+@include('component.delete_modal_simple')

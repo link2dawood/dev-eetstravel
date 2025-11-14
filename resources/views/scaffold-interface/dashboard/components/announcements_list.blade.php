@@ -65,23 +65,41 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handler for clickable cells
-    document.querySelectorAll('#announcement-table .clickable-cell').forEach(function(cell) {
-        cell.addEventListener('click', function(e) {
-            const href = this.closest('tr').dataset.href;
+    // Use event delegation on the table for better performance and to handle dynamically added content
+    const table = document.getElementById('announcement-table');
+    if (!table) return;
+
+    // Handle clicks on the table
+    table.addEventListener('click', function(e) {
+        // Check if click is on a button, link, or inside an action cell
+        const clickedElement = e.target;
+        // Find the closest link or button (this handles SVG clicks inside buttons/links)
+        const isButton = clickedElement.closest('a, button');
+        const actionCell = clickedElement.closest('td:not(.clickable-cell)');
+        const clickableCell = clickedElement.closest('.clickable-cell');
+        
+        // If clicking on action buttons/links, let them handle normally (don't interfere)
+        if (isButton && actionCell) {
+            // Do nothing - let the link/button handle the click naturally
+            return;
+        }
+        
+        // If clicking on action cell (but not on buttons), stop propagation
+        if (actionCell && !isButton) {
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+        
+        // If clicking on clickable cell (but not on buttons/links), navigate to show page
+        if (clickableCell && !isButton) {
+            e.preventDefault();
+            const row = clickableCell.closest('tr');
+            const href = row ? row.dataset.href : null;
             if (href) {
                 window.location.href = href;
             }
-        });
-    });
-
-    // Handler for the action cell (to stop row click)
-    document.querySelectorAll('#announcement-table td:not(.clickable-cell)').forEach(function(cell) {
-        cell.addEventListener('click', function(e) {
-            // This stops the click from "bubbling up" to the <tr>
-            // and triggering the clickable row.
-            e.stopPropagation();
-        });
+        }
     });
 });
 </script>

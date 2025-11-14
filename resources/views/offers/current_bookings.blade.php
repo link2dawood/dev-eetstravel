@@ -63,10 +63,14 @@
                                     </div>
                                 </td>
                                 <td onclick="event.stopPropagation();">
-                                    @include('component.action_buttons', [
-                                        'item' => $booking,
-                                        'routePrefix' => 'tour'
-                                    ])
+                                    @if(!empty($booking->model))
+                                        @include('component.action_buttons', [
+                                            'item' => $booking->model,
+                                            'routePrefix' => 'tour_package'
+                                        ])
+                                    @else
+                                        <span class="text-muted small">No booking record linked</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -80,6 +84,7 @@
             </div>
         </div>
     </section>
+    @include('scaffold-interface.dashboard.components.delete-modal')
 @endsection
 
 @push('styles')
@@ -180,16 +185,7 @@
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Initialize Bootstrap table
     initializeBootstrapTable('current-bookings-table');
-    
-    // Delete button click handler
-    $(document).on('click', '.delete-action', function(e) {
-        e.preventDefault();
-        var link = $(this).data('link');
-        $(this).attr('data-link', link);
-        $(this).trigger('click');
-    });
 });
 </script>
 @endpush

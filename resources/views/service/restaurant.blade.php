@@ -23,6 +23,10 @@
     height: 20px;
 }
 
+.action-btn.view svg {
+    stroke: #0ca678;
+}
+
 .action-btn.edit svg {
     stroke: #f59e0b;
 }
@@ -33,6 +37,10 @@
 
 .action-btn:hover {
     transform: scale(1.15);
+}
+
+.action-btn.view:hover {
+    background-color: rgba(12, 166, 120, 0.12);
 }
 
 .action-btn.edit:hover {
@@ -96,7 +104,13 @@
                                     'data-name' => $service->name]) !!}</td>
                         <td>
                             <div class="action-buttons">
-                                <a href="{{ route('service.edit', $service->id) }}" class="action-btn edit" title="Edit">
+                                <a href="{{ route('restaurant.show', ['restaurant' => $service->id]) }}" class="action-btn view" title="View">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </a>
+                                <a href="{{ route('restaurant.edit', ['restaurant' => $service->id]) }}" class="action-btn edit" title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                         <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -104,7 +118,11 @@
                                         <path d="M16 5l3 3" />
                                     </svg>
                                 </a>
-                                <a href="#" onclick="confirmServiceDelete(event, '{{ route('service.destroy', $service->id) }}')" class="action-btn delete" title="Delete">
+                                <button type="button"
+                                        class="action-btn delete"
+                                        title="Delete"
+                                        data-delete-url="{{ url('/restaurant/'.$service->id) }}"
+                                        onclick="confirmServiceDelete(event, this.dataset.deleteUrl)">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                         <path d="M4 7l16 0" />
@@ -113,7 +131,7 @@
                                         <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                                         <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
                                     </svg>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -131,7 +149,9 @@
 function confirmServiceDelete(event, deleteUrl) {
     event.preventDefault();
     event.stopPropagation();
-    
+
+    if (!deleteUrl) return;
+
     if (confirm("Are you sure you want to delete this service?")) {
         const form = document.createElement('form');
         form.action = deleteUrl;

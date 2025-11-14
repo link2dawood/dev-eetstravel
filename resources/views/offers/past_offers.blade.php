@@ -78,6 +78,7 @@
         </div>
     </div>
 </section>
+@include('scaffold-interface.dashboard.components.delete-modal')
 @endsection
 
 @push('scripts')

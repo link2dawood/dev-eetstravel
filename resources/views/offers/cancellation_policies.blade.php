@@ -56,10 +56,14 @@
                                 <td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
                                 <td>{{ $offer->tour_name }}</td>
                                 <td onclick="event.stopPropagation();">
-                                    @include('component.action_buttons', [
-                                        'item' => (object)['id' => $offer->tour_id ?? 0],
-                                        'routePrefix' => 'tour'
-                                    ])
+                                    @if(!empty($offer->tour))
+                                        @include('component.action_buttons', [
+                                            'item' => $offer->tour,
+                                            'routePrefix' => 'tour'
+                                        ])
+                                    @else
+                                        <span class="text-muted small">No tour linked</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -154,6 +158,8 @@
             </form>
         </div>
     </div>
+
+    @include('scaffold-interface.dashboard.components.delete-modal')
 @endsection
 
 @push('scripts')

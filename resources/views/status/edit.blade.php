@@ -20,7 +20,7 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!! url("status")!!}/{!!$status->id!!}/update'>
+                <form method="POST" action="{{ route('status.update', ['status' => $status->id]) }}">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -31,37 +31,38 @@
                             </div>
                         </div>
                     </div>
-                    <input type='hidden' name='_token' value='{{Session::token()}}'>
+                    @csrf
+                    @method('PUT')
                     <div class="tab-content">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label >{!!trans('main.Name')!!}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $status->name}}{{ old('name') }}" name="name" class="form-control">
+                                    <input type="text" value="{{ old('name', $status->name) }}" name="name" class="form-control">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="type">{!!trans('main.Ratetype')!!}</label>
                                     <select name="type" id="type_status" class="form-control" onchange="colorView($(this))">
                                         @foreach($status_types as $status_type)
-                                            <option value="{{ $status_type->type }}" {{ $errors != null && count($errors) > 0 ? old('type') == $status_type->type ? 'selected' : '' : $status->type == $status_type->type ? 'selected' : '' }}>{{ $status_type->name }}</option>
+                                            <option value="{{ $status_type->type }}" {{ old('type', $status->type) == $status_type->type ? 'selected' : '' }}>{{ $status_type->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
                                 <div class="form-group">
                                     <label>{!!trans('main.Sortorder')!!}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $status->sort_order}}{{ old('sort_order') }}" name="sort_order" class="form-control">
+                                    <input type="text" value="{{ old('sort_order', $status->sort_order) }}" name="sort_order" class="form-control">
                                 </div>
 
                                 <div class="form-group color_view" style="display: none">
                                     <label>{!!trans('main.Color')!!}</label>
                                     <div id="cp2" class="input-group colorpicker-component">
-                                        <input type="text" id="color_field" name="color" class="form-control">
+                                        <input type="text" id="color_field" name="color" class="form-control" value="{{ old('color', $status->color) }}">
                                         <span  class="input-group-addon"><i id="block_color_field_bg"></i></span>
                                     </div>
                                 </div>
-                                <span id="color_status" style="display: none" data-attr="{{ $status->color }}"></span>
+                                <span id="color_status" style="display: none" data-attr="{{ old('color', $status->color) }}"></span>
                             </div>
                             <div class="col-md-8">
                                 <div class="tour-packages"></div>

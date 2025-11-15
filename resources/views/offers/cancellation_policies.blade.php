@@ -2,10 +2,10 @@
 @section('title','Index')
 @section('content')
     @include('layouts.title',
-           ['title' => 'Cancellation Polices', 'sub_title' => 'Policies Offer List',
+           ['title' => 'Cancellation Policies', 'sub_title' => 'Policies List',
            'breadcrumbs' => [
            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Currencies', 'icon' => null, 'route' => null]]])
+           ['title' => 'Cancellation Policies', 'icon' => null, 'route' => null]]])
     <section class="content">
         <div class="box box-primary">
             <div class="box-body">
@@ -21,8 +21,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 1200px;'>
                         <thead>
                             <tr>
                                 <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="fa fa-sort"></i></th>
@@ -207,28 +207,27 @@
         });
     }
 
-    setTimeout(function () {
-        $('.tour_dropdown').on('change', function(){
-            let offer_date = $('#offer_date').val();
-            let option_date = $('#option_date').val();
-            dropdown_ajax($(this).val(), offer_date, option_date);
-        });
+    // Attach event handlers directly - no setTimeout delay needed
+    $('.tour_dropdown').on('change', function(){
+        let offer_date = $('#offer_date').val();
+        let option_date = $('#option_date').val();
+        dropdown_ajax($(this).val(), offer_date, option_date);
+    });
 
-        $('.change-tour-button').show();
-        $('.change-tour-button').on('click', function(){
-            let id = $(this).data('id');
-            let tour_id = $(this).data('tour');
-            let offer_date = $(this).data('offer_date');
-            let option_date = $(this).data('option_date');
+    $('.change-tour-button').show();
+    $('.change-tour-button').on('click', function(){
+        let id = $(this).data('id');
+        let tour_id = $(this).data('tour');
+        let offer_date = $(this).data('offer_date');
+        let option_date = $(this).data('option_date');
 
-            $('#offer_date').val(offer_date);
-            $('#option_date').val(option_date);
+        $('#offer_date').val(offer_date);
+        $('#option_date').val(option_date);
 
-            dropdown_ajax(tour_id, offer_date, option_date);
-            $('#tour_id').val(tour_id).trigger('change');
+        dropdown_ajax(tour_id, offer_date, option_date);
+        $('#tour_id').val(tour_id).trigger('change');
 
-            $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
-        });
-    }, 3000);
+        $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
+    });
 </script>
 @endpush

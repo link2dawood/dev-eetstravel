@@ -5,7 +5,7 @@
        ['title' => 'Past Offers', 'sub_title' => 'Offer List',
        'breadcrumbs' => [
        ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-       ['title' => 'Currencies', 'icon' => null, 'route' => null]]])
+       ['title' => 'Past Offers', 'icon' => null, 'route' => null]]])
 <section class="content">
     <div class="box box-primary">
         <div class="box-body">
@@ -23,8 +23,8 @@
                     </div>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table id="past-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%; table-layout: fixed'>
+            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table id="past-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 900px;'>
                     <thead>
                         <tr>
                             {{-- Note: These client-side sort functions will only sort the 10 visible records --}}

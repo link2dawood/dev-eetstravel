@@ -1,57 +1,3 @@
-<style>
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-}
-
-.action-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.action-btn.view svg {
-    stroke: #0ca678;
-}
-
-.action-btn.edit svg {
-    stroke: #f59e0b;
-}
-
-.action-btn.delete svg {
-    stroke: #ef4444;
-}
-
-.action-btn:hover {
-    transform: scale(1.15);
-}
-
-.action-btn.view:hover {
-    background-color: rgba(12, 166, 120, 0.12);
-}
-
-.action-btn.edit:hover {
-    background-color: rgba(245, 158, 11, 0.12);
-}
-
-.action-btn.delete:hover {
-    background-color: rgba(239, 68, 68, 0.12);
-}
-</style>
-
 <div class="box box-primary">
     <div class="box-body">
         <section class="content">
@@ -103,34 +49,9 @@
                                     'data-type' => $filterType,
                                     'data-id' => $service->id,
                                     'data-name' => $service->name]) !!}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{{ route('guide.show', ['guide' => $service->id]) }}" class="action-btn view" title="View">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
-                                        <circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </a>
-                                <a href="{{ route('guide.edit', ['guide' => $service->id]) }}" class="action-btn edit" title="Edit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M7 7h-1a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/>
-                                        <path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97l-8.415 8.385v3h3l8.385-8.415z"/>
-                                        <path d="M16 5l3 3"/>
-                                    </svg>
-                                </a>
-                                <button type="button"
-                                        class="action-btn delete"
-                                        title="Delete"
-                                        data-delete-url="{{ url('/guide/'.$service->id) }}"
-                                        onclick="confirmServiceDelete(event, this.dataset.deleteUrl)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M4 7l16 0"/>
-                                        <path d="M10 11l0 6"/>
-                                        <path d="M14 11l0 6"/>
-                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/>
-                                        <path d="M9 7v-1a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/>
-                                    </svg>
-                                </button>
+                        <td data-delete-label>
+                            <div class="btn-list justify-content-center flex-nowrap">
+                                @include('component.action_buttons', ['item' => $service, 'routePrefix' => 'guide'])
                             </div>
                         </td>
                     </tr>
@@ -145,36 +66,4 @@
     </div>
 </div>
 
-<script>
-function confirmServiceDelete(event, deleteUrl) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (!deleteUrl) return;
-
-    if (confirm("Are you sure you want to delete this service?")) {
-        const form = document.createElement('form');
-        form.action = deleteUrl;
-        form.method = 'POST';
-        form.style.display = 'none';
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken.getAttribute('content');
-            form.appendChild(csrfInput);
-        }
-
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
+@include('component.delete_modal_simple')

@@ -2,10 +2,10 @@
 @section('title','Index')
 @section('content')
     @include('layouts.title',
-        ['title' => 'Current Bookings', 'sub_title' => 'Offer List',
+        ['title' => 'Current Bookings', 'sub_title' => 'Booking List',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Currencies', 'icon' => null, 'route' => null]
+            ['title' => 'Current Bookings', 'icon' => null, 'route' => null]
         ]])
     <section class="content">
         <div class="box box-primary">
@@ -22,8 +22,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="current-bookings-table" class="table table-striped table-bordered table-hover bootstrap-table" style="background:#fff; width: 100%;">
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="current-bookings-table" class="table table-striped table-bordered table-hover bootstrap-table" style="background:#fff; width: 100%; min-width: 1000px;">
                         <thead>
                             <tr>
                                 <th onclick="sortTable(0, 'current-bookings-table')" style="width: 60px;">ID <i class="fa fa-sort"></i></th>

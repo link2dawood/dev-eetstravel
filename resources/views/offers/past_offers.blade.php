@@ -18,7 +18,7 @@
                     </div>
                     <div class="col-md-6 text-right">
                         <button class="btn btn-success btn-sm" onclick="exportTableToCSV('past-offers-table', 'past_offers_export.csv')">
-                            <i class="fa fa-download"></i> Export CSV
+                            <i class="ti ti-download"></i> Export CSV
                         </button>
                     </div>
                 </div>
@@ -28,14 +28,14 @@
                     <thead>
                         <tr>
                             {{-- Note: These client-side sort functions will only sort the 10 visible records --}}
-                            <th onclick="sortTable(0, 'past-offers-table')">ID <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(1, 'past-offers-table')">{!!trans('Tour Name')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(2, 'past-offers-table')">{!!trans('City')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(3, 'past-offers-table')">{!!trans('Status')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(4, 'past-offers-table')">{!!trans('Departure Date')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(5, 'past-offers-table')">{!!trans('Return Date')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(6, 'past-offers-table')">{!!trans('PAX')!!} <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(7, 'past-offers-table')">{!!trans('Created At')!!} <i class="fa fa-sort"></i></th>
+                            <th onclick="sortTable(0, 'past-offers-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(1, 'past-offers-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(2, 'past-offers-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(3, 'past-offers-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(4, 'past-offers-table')">{!!trans('Departure Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(5, 'past-offers-table')">{!!trans('Return Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(6, 'past-offers-table')">{!!trans('PAX')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(7, 'past-offers-table')">{!!trans('Created At')!!} <i class="ti ti-arrows-sort"></i></th>
                             <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
                         </tr>
                     </thead>

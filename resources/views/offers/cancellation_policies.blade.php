@@ -16,7 +16,7 @@
                         </div>
                         <div class="col-md-6 text-right">
                             <button class="btn btn-success btn-sm" onclick="exportTableToCSV('cancellation-policies-table', 'cancellation_policies_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
+                                <i class="ti ti-download"></i> Export CSV
                             </button>
                         </div>
                     </div>
@@ -25,18 +25,18 @@
                     <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 1200px;'>
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
                                 <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
                             </tr>
                         </thead>
@@ -133,7 +133,7 @@
                         </div>
                         <div class="form-group">
                             <div class="btn btn-default btn-file">
-                                <i class="fa fa-paperclip"></i> {!! trans('main.Attachment') !!}
+                                <i class="ti ti-paperclip"></i> {!! trans('main.Attachment') !!}
                                 <input type="file" name="attachment[]" multiple="" name="file" id="file">
                             </div>
                             <div id="file_name"></div>
@@ -150,9 +150,9 @@
                     </div>
                     <div class="box-footer">
                         <div class="pull-right">
-                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="fa fa-file-code-o"></i> {!! trans('main.Send') !!}</button>
+                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="ti ti-file-code"></i> {!! trans('main.Send') !!}</button>
                         </div>
-                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="fa fa-times"></i> {!! trans('main.Discard') !!}</button>
+                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="ti ti-x"></i> {!! trans('main.Discard') !!}</button>
                     </div>
                 </div>
             </form>

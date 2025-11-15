@@ -17,7 +17,7 @@
                         </div>
                         <div class="col-md-6 text-right">
                             <button class="btn btn-success btn-sm" onclick="exportTableToCSV('current-bookings-table', 'current_bookings_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
+                                <i class="ti ti-download"></i> Export CSV
                             </button>
                         </div>
                     </div>
@@ -26,17 +26,17 @@
                     <table id="current-bookings-table" class="table table-striped table-bordered table-hover bootstrap-table" style="background:#fff; width: 100%; min-width: 1000px;">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0, 'current-bookings-table')" style="width: 60px;">ID <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(6, 'current-bookings-table')" style="width: 60px;">SIN <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(7, 'current-bookings-table')" style="width: 60px;">DOU <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(8, 'current-bookings-table')" style="width: 60px;">TRI <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(9, 'current-bookings-table')" style="width: 150px;">{!! trans('Cancellation Policy') !!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(10, 'current-bookings-table')" style="width: 200px;">{!! trans('Payments Made') !!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(0, 'current-bookings-table')" style="width: 60px;">ID <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(6, 'current-bookings-table')" style="width: 60px;">SIN <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(7, 'current-bookings-table')" style="width: 60px;">DOU <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(8, 'current-bookings-table')" style="width: 60px;">TRI <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(9, 'current-bookings-table')" style="width: 150px;">{!! trans('Cancellation Policy') !!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(10, 'current-bookings-table')" style="width: 200px;">{!! trans('Payments Made') !!} <i class="ti ti-arrows-sort"></i></th>
                                 <th class="actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
                             </tr>
                         </thead>

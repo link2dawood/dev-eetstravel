@@ -5,7 +5,7 @@
         ['title' => 'Current Offers', 'sub_title' => 'Offer List',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Currencies', 'icon' => null, 'route' => null]
+            ['title' => 'Current Offers', 'icon' => null, 'route' => null]
         ]])
     <section class="content">
         <div class="box box-primary">
@@ -17,23 +17,23 @@
                         </div>
                         <div class="col-md-6 text-right">
                             <button class="btn btn-success btn-sm" onclick="exportTableToCSV('current-offers-table', 'current_offers_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
+                                <i class="ti ti-download"></i> Export CSV
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="current-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 98%; table-layout: fixed'>
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="current-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 900px;'>
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0, 'current-offers-table')">ID <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(1, 'current-offers-table')">{!!trans('Tour Name')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(2, 'current-offers-table')">{!!trans('City')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(3, 'current-offers-table')">{!!trans('Status')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(4, 'current-offers-table')">{!!trans('Departure Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(5, 'current-offers-table')">{!!trans('Return Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(6, 'current-offers-table')">{!!trans('PAX')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(7, 'current-offers-table')">{!!trans('Created At')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(0, 'current-offers-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(1, 'current-offers-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(2, 'current-offers-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(3, 'current-offers-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(4, 'current-offers-table')">{!!trans('Departure Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(5, 'current-offers-table')">{!!trans('Return Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(6, 'current-offers-table')">{!!trans('PAX')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(7, 'current-offers-table')">{!!trans('Created At')!!} <i class="ti ti-arrows-sort"></i></th>
                                 <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
                             </tr>
                         </thead>
@@ -116,24 +116,23 @@ $(document).ready(function () {
         });
     }
 
-    setTimeout(function () {
-        $('.tour_dropdown').on('change', function(){
-            dropdown_ajax($(this).val(), $('#offer_date').val(), $('#option_date').val());
-        });
+    // Attach event handlers directly - no setTimeout delay needed
+    $('.tour_dropdown').on('change', function(){
+        dropdown_ajax($(this).val(), $('#offer_date').val(), $('#option_date').val());
+    });
 
-        $('.change-tour-button').show().on('click', function(){ 
-            let id = $(this).data('id');
-            let tour_id = $(this).data('tour');
-            let offer_date = $(this).data('offer_date');
-            let option_date = $(this).data('option_date');
+    $('.change-tour-button').show().on('click', function(){ 
+        let id = $(this).data('id');
+        let tour_id = $(this).data('tour');
+        let offer_date = $(this).data('offer_date');
+        let option_date = $(this).data('option_date');
 
-            dropdown_ajax(tour_id, offer_date, option_date);
-            $('#offer_date').val(offer_date);
-            $('#option_date').val(option_date);
-            $('#tour_id').trigger('change');
-            $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
-        });
-    }, 5000);
+        dropdown_ajax(tour_id, offer_date, option_date);
+        $('#offer_date').val(offer_date);
+        $('#option_date').val(option_date);
+        $('#tour_id').trigger('change');
+        $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
+    });
 
     
 });

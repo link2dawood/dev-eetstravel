@@ -239,31 +239,45 @@ let addService = {
             // Handle both Bootstrap 4 (jQuery) and Bootstrap 5 (vanilla JS) APIs
             const modalEl = document.getElementById('service-modal');
             if (modalEl) {
-                // Try Bootstrap 5 API first
-                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                let modalShown = false;
+                
+                // Try Bootstrap 5 API first (with more defensive checks)
+                if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
                     try {
-                        // Check if getOrCreateInstance exists (Bootstrap 5.1+)
-                        if (typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                        // Check if getOrCreateInstance exists and is actually a function (Bootstrap 5.1+)
+                        if (bootstrap.Modal.getOrCreateInstance && 
+                            typeof bootstrap.Modal.getOrCreateInstance === 'function') {
                             const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
-                            modalInstance.show();
-                        } else if (typeof bootstrap.Modal.getInstance === 'function') {
-                            // Bootstrap 5.0 fallback
+                            if (modalInstance && typeof modalInstance.show === 'function') {
+                                modalInstance.show();
+                                modalShown = true;
+                            }
+                        } 
+                        // Check if getInstance exists (Bootstrap 5.0)
+                        else if (bootstrap.Modal.getInstance && 
+                                 typeof bootstrap.Modal.getInstance === 'function') {
                             let modalInstance = bootstrap.Modal.getInstance(modalEl);
-                            if (!modalInstance) {
+                            if (!modalInstance && typeof bootstrap.Modal === 'function') {
                                 modalInstance = new bootstrap.Modal(modalEl);
                             }
-                            modalInstance.show();
-                        } else {
-                            // Fallback to jQuery/Bootstrap 4
-                            $('#service-modal').modal('show');
+                            if (modalInstance && typeof modalInstance.show === 'function') {
+                                modalInstance.show();
+                                modalShown = true;
+                            }
                         }
                     } catch (e) {
                         console.warn('Bootstrap 5 modal API failed, falling back to jQuery:', e);
-                        $('#service-modal').modal('show');
+                        modalShown = false;
                     }
-                } else {
-                    // Fallback to jQuery/Bootstrap 4
-                    $('#service-modal').modal('show');
+                }
+                
+                // Fallback to jQuery/Bootstrap 4 if Bootstrap 5 didn't work
+                if (!modalShown) {
+                    try {
+                        $('#service-modal').modal('show');
+                    } catch (e) {
+                        console.error('Failed to show modal with both Bootstrap 5 and jQuery:', e);
+                    }
                 }
             }
 

@@ -1117,10 +1117,34 @@
 document.addEventListener('DOMContentLoaded', function () {
     const tabStorageKey = 'tourActiveTab';
     const storedTab = localStorage.getItem(tabStorageKey);
-    if (storedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+    if (storedTab && typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Tab) {
         const trigger = document.querySelector('.nav-tabs a[href="#' + storedTab + '"]');
         if (trigger) {
-            bootstrap.Tab.getOrCreateInstance(trigger).show();
+            // Root cause fix: Bootstrap Tab compatibility - handle both Bootstrap 4 and 5
+            try {
+                if (bootstrap.Tab.getOrCreateInstance && typeof bootstrap.Tab.getOrCreateInstance === 'function') {
+                    // Bootstrap 5.1+
+                    const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
+                    if (tabInstance && typeof tabInstance.show === 'function') {
+                        tabInstance.show();
+                    }
+                } else if (bootstrap.Tab.getInstance && typeof bootstrap.Tab.getInstance === 'function') {
+                    // Bootstrap 5.0
+                    let tabInstance = bootstrap.Tab.getInstance(trigger);
+                    if (!tabInstance && typeof bootstrap.Tab === 'function') {
+                        tabInstance = new bootstrap.Tab(trigger);
+                    }
+                    if (tabInstance && typeof tabInstance.show === 'function') {
+                        tabInstance.show();
+                    }
+                } else {
+                    // Fallback to jQuery/Bootstrap 4
+                    $(trigger).tab('show');
+                }
+            } catch (e) {
+                console.warn('Bootstrap Tab API failed, falling back to jQuery:', e);
+                $(trigger).tab('show');
+            }
         }
     }
 

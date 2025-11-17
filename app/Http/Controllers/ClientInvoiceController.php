@@ -86,8 +86,7 @@ class ClientInvoiceController extends Controller
             }
             $invoice->Status = $result;
 
-            // Action buttons
-            $invoice->action_buttons = $this->getButton($invoice->id, false, $tour, $perm);
+            // Action buttons will be generated in the view using the action_buttons component
 
             return $invoice;
         });

@@ -11,7 +11,7 @@
         ],
     ])
     <section class="content">
-		<form method='post' action="{{route('accounts.update', ['account' => $transactions->id])}}" enctype="multipart/form-data">
+		<form method='post' action="{{route('accounts.update', ['id' => $transactions->id])}}" enctype="multipart/form-data">
 		<div class="margin_button">
                 <a href="javascript:history.back()">
                     <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>

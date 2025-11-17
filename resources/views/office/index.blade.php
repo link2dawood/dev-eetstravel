@@ -45,14 +45,21 @@
                 @foreach($officesData as $office)
                     <tr>
                         <td>{{ $office->id }}</td>
-                        <td>{{ $office->office_name }}</td>
+                        <td data-delete-label>{{ $office->office_name }}</td>
                         <td>{{ $office->office_address }}</td>
                         <td>{{ $office->bank_name }}</td>
                         <td>{{ $office->account_no }}</td>
                         <td>{{ $office->swift_code }}</td>
                         <td>{{ $office->tel }}</td>
                         <td>{{ $office->fax }}</td>
-                        <td>{!! $office->action_buttons !!}</td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                @include('component.action_buttons', [
+                                    'item' => $office,
+                                    'routePrefix' => 'office'
+                                ])
+                            </div>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -64,3 +71,5 @@
 </section>
 
 @endsection
+
+@include('component.delete_modal_simple')

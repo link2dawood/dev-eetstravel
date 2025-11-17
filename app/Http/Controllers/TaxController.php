@@ -94,11 +94,8 @@ class TaxController extends Controller
         $perm['destroy'] = Auth::user()->can($permission_destroy);
         $perm['clone'] = Auth::user()->can('accounting.create');
 
-        // Add action buttons to each tax
-        $taxesData = $taxes->map(function ($tax) use ($perm) {
-            $tax->action_buttons = $this->getShowButton($tax->id, false, $tax, $perm);
-            return $tax;
-        });
+        // Action buttons will be generated in the view using the action_buttons component
+        $taxesData = $taxes;
 
         return view('taxes.index', compact('taxesData'));
     }

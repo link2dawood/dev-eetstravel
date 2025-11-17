@@ -123,8 +123,7 @@ class  InvoicesController extends Controller
                 $invoices_tours->status = $result;
             }
 
-            // Action buttons
-            $invoices_tours->action_buttons = $this->getButton($invoices_tours->id, false, $invoices_tours, $perm);
+            // Action buttons will be generated in the view using the action_buttons component
 
             return $invoices_tours;
         });

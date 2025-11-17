@@ -27,9 +27,16 @@
                     @foreach($taxesData as $tax)
                         <tr>
                             <td>{{ $tax->id }}</td>
-                            <td>{{ $tax->name }}</td>
+                            <td data-delete-label>{{ $tax->name }}</td>
                             <td>{{ $tax->value }}</td>
-                            <td>{!! $tax->action_buttons !!}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    @include('component.action_buttons', [
+                                        'item' => $tax,
+                                        'routePrefix' => 'taxes'
+                                    ])
+                                </div>
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -47,6 +54,8 @@
 
     </section>
 @endsection
+
+@include('component.delete_modal_simple')
 
 @push('scripts')
 

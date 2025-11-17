@@ -134,13 +134,29 @@
                         <tbody>
                         @forelse($servicesData as $service)
                             <tr>
-                                <td>{{ $service->nameService ?? $service->name }}</td>
+                                <td data-delete-label>{{ $service->nameService ?? $service->name }}</td>
                                 <td>{{ $service->address_first ?? '' }}</td>
                                 <td>{{ $service->country ?? '' }}</td>
                                 <td>{{ $service->city ?? '' }}</td>
                                 <td>{{ $service->work_phone ?? '' }}</td>
                                 <td>{{ $service->contact_name ?? '' }}</td>
-                                <td>{!! $service->action_buttons !!}</td>
+                                <td>
+                                    @if(isset($service->can_show) && $service->can_show)
+                                        <a class='btn btn-primary btn-sm' hidden data-id="{{ $service->id }}" data-type="{{ class_basename(get_class($service)) }}" data-service_name="{{ $service->nameService ?? $service->name }}" id='service-property' href='{{ $service->show_link ?? '#' }}' data-link="{{ $service->show_link ?? '#' }}"><i class='fa fa-info-circle'></i></a>
+                                    @endif
+                                    @if(isset($service->service_type))
+                                        @php
+                                            $routePrefix = $service->service_type;
+                                            if ($routePrefix === 'transfer') $routePrefix = 'bus';
+                                        @endphp
+                                        <div class="btn-list flex-nowrap">
+                                            @include('component.action_buttons', [
+                                                'item' => $service,
+                                                'routePrefix' => $routePrefix
+                                            ])
+                                        </div>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -154,6 +170,8 @@
 
 
 @endsection
+
+@include('component.delete_modal_simple')
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

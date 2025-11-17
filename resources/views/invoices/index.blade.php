@@ -57,7 +57,7 @@
 					@forelse($invoicesData as $invoice)
 						<tr>
 							<td>{{ $invoice->id }}</td>
-							<td>{{ $invoice->invoice_no }}</td>
+							<td data-delete-label>{{ $invoice->invoice_no }}</td>
 							<td>{{ $invoice->dueDate }}</td>
 							<td>{{ $invoice->receivedDate }}</td>
 							<td>{{ $invoice->tour }}</td>
@@ -65,7 +65,14 @@
 							<td>{{ $invoice->officeName }}</td>
 							<td>{{ $invoice->total_amount }}</td>
 							<td>{{ $invoice->status }}</td>
-							<td>{!! $invoice->action_buttons !!}</td>
+							<td>
+								<div class="btn-list flex-nowrap">
+									@include('component.action_buttons', [
+										'item' => $invoice,
+										'routePrefix' => 'invoices'
+									])
+								</div>
+							</td>
 						</tr>
 					@empty
 						<tr>
@@ -80,6 +87,8 @@
 </section>
 
 @endsection
+
+@include('component.delete_modal_simple')
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>

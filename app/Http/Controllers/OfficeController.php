@@ -69,11 +69,8 @@ class OfficeController extends Controller {
         $perm['destroy'] = Auth::user()->can($permission_destroy);
         $perm['clone'] = Auth::user()->can('office.create');
 
-        // Add action buttons to each office
-        $officesData = $offices->map(function ($office) use ($perm) {
-            $office->action_buttons = $this->getButton($office->id, false, $office, $perm);
-            return $office;
-        });
+        // Action buttons will be generated in the view using the action_buttons component
+        $officesData = $offices;
 
         return view('office.index',compact('offices', 'officesData'));
     }

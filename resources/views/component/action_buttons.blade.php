@@ -52,6 +52,34 @@
                 } catch (Exception $e) {
                     $delete_route = "/tour_package/{$entity->id}/delete";
                 }
+            } elseif ($prefix === 'transfer') {
+                $show_route = route('transfer.show', ['transfer' => $entity->id]);
+                $edit_route = route('transfer.edit', ['transfer' => $entity->id]);
+                $delete_route = route('transfer.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'bus') {
+                try {
+                    $show_route = route('bus.show', ['bus' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/bus/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('bus.edit', ['bus' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/bus/{$entity->id}/edit";
+                }
+                $delete_route = route('bus.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'driver') {
+                try {
+                    $show_route = route('driver.show', ['driver' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/driver/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('driver.edit', ['driver' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/driver/{$entity->id}/edit";
+                }
+                $delete_route = route('driver.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'notifications') {
                 $show_route = $entity->link ?? null;
                 $edit_route = null;
@@ -99,6 +127,9 @@
         'notifications' => 'GET',
         'tour' => 'GET',
         'tour_package' => 'GET',
+        'transfer' => 'GET',
+        'bus' => 'GET',
+        'driver' => 'GET',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp

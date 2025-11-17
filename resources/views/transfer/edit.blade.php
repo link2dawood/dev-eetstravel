@@ -25,9 +25,8 @@
     </div>
 
     {{-- Form Card --}}
-    <form method="POST" action="{{ route('transfer.update', ['transfer' => $transfer->id]) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url('transfer/' . $transfer->id . '/update') }}" enctype="multipart/form-data">
         @csrf
-        @method('PUT')
         
         <div class="row">
             <div class="col-lg-8">

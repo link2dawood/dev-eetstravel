@@ -197,19 +197,16 @@ class ExportController extends Controller
      */
     public function exportExcelCsv($service, $data, $exp)
     {
-        return Excel::create("{$service}", function ($excel) use ($data) {
-            $excel->sheet('Service', function ($sheet) use ($data) {
-                // $sheet->row(1, function($row) use ($sheet){
-
-                // // call cell manipulation methods
-                // $sheet->getColumnDimension($row)->setAutoSize(true);
-
-                // });
-
-
-                $sheet->fromArray($data);
-            });
-        })->export($exp);
+        $export = new class($data) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $data;
+            public function __construct($data) {
+                $this->data = $data;
+            }
+            public function array(): array {
+                return $this->data;
+            }
+        };
+        return Excel::download($export, "{$service}.{$exp}");
     }
 
     /**

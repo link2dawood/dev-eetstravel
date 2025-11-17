@@ -30,16 +30,38 @@ trait ExportTrait{
 	public function prepareExport($tour, string $export,  $request = null ){
         $this->request =$request;
         $excelName = str_replace(" ","_",$tour->name);
-        return Excel::create('Tour_'.$excelName, function($excel) use($tour){
-              	$excel->sheet('Tour Information', function($sheet) use($tour){
-                	$sheet->loadView('export.export', ['tour' => $tour]);
-            	});
-            	$excel->sheet('Services Information', function($sheet) use($tour){
-               		$tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $tour->id)->sortBy('date');
-
-               		$sheet->loadView('export.package', ['tourDates' => $tourDates]);
-               	});
-            })->export($export);
+        
+        // For Laravel Excel v3.x, we need to use export classes
+        // Create a simple export class on the fly
+        $tourExport = new class($tour) implements \Maatwebsite\Excel\Concerns\WithMultipleSheets {
+            protected $tour;
+            
+            public function __construct($tour) {
+                $this->tour = $tour;
+            }
+            
+            public function sheets(): array {
+                return [
+                    new class($this->tour) implements \Maatwebsite\Excel\Concerns\FromView {
+                        protected $tour;
+                        public function __construct($tour) { $this->tour = $tour; }
+                        public function view(): \Illuminate\Contracts\View\View {
+                            return view('export.export', ['tour' => $this->tour]);
+                        }
+                    },
+                    new class($this->tour) implements \Maatwebsite\Excel\Concerns\FromView {
+                        protected $tour;
+                        public function __construct($tour) { $this->tour = $tour; }
+                        public function view(): \Illuminate\Contracts\View\View {
+                            $tourDates = \App\TourDay::get(['id', 'date', 'tour'])->where('tour', $this->tour->id)->sortBy('date');
+                            return view('export.package', ['tourDates' => $tourDates]);
+                        }
+                    },
+                ];
+            }
+        };
+        
+        return Excel::download($tourExport, 'Tour_'.$excelName.'.'.$export);
 	}
     /**
      * export tour or services to csv
@@ -51,17 +73,25 @@ trait ExportTrait{
         $this->request =$request;
         $excelName = str_replace(" ","_",$tour->name);
         if ($type == 'tour') {
-            return Excel::create('Tour_'.$excelName, function($excel) use($tour){
-                    $excel->sheet('Tour Informations', function($sheet) use($tour){
-                        $sheet->loadView('export.export', ['tour' => $tour]);
-                    });
-            })->export('csv');
-        } else return Excel::create('Services_'.$excelName, function($excel) use($tour){
-                        $excel->sheet('Services Informations', function($sheet) use($tour){
-                            $tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $tour->id)->sortBy('date');
-                            $sheet->loadView('export.package', ['tourDates' => $tourDates,'tour' =>  $tour]);
-                        });
-            })->export('csv');
+            $export = new class($tour) implements \Maatwebsite\Excel\Concerns\FromView {
+                protected $tour;
+                public function __construct($tour) { $this->tour = $tour; }
+                public function view(): \Illuminate\Contracts\View\View {
+                    return view('export.export', ['tour' => $this->tour]);
+                }
+            };
+            return Excel::download($export, 'Tour_'.$excelName.'.csv', \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            $export = new class($tour) implements \Maatwebsite\Excel\Concerns\FromView {
+                protected $tour;
+                public function __construct($tour) { $this->tour = $tour; }
+                public function view(): \Illuminate\Contracts\View\View {
+                    $tourDates = \App\TourDay::get(['id', 'date', 'tour'])->where('tour', $this->tour->id)->sortBy('date');
+                    return view('export.package', ['tourDates' => $tourDates, 'tour' => $this->tour]);
+                }
+            };
+            return Excel::download($export, 'Services_'.$excelName.'.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
     }
     public function exportPdfVoucher($tour, $data, $request)
     {

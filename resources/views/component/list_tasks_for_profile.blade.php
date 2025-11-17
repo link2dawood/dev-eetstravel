@@ -14,14 +14,32 @@
             </thead>
             <tbody>
                 @foreach($tasks as $task)
-                    <tr style="{{ $task->priority ? 'background: #ffbbb2;' : '' }}">
+                    <tr style="{{ $task->priority ? 'background: #ffbbb2;' : '' }}" 
+                        data-href="{{ route('task.show', ['id' => $task->id]) }}" 
+                        class="clickable-row-task">
+
                         <td>{{ $task->id }}</td>
                         <td data-delete-label>{{ $task->content }}</td>
                         <td>{{ $task->dead_line }}</td>
                         <td class="click_tour_in_task">{!! $task->tour_link !!}</td>
                         <td class="status">{!! $task->status_display !!}</td>
                         <td class="priority">{{ $task->priority_text }}</td>
-                        <td>{!! $task->action_buttons !!}</td>
+                        
+                        {{-- ================================== --}}
+                        {{-- == START OF ACTION BUTTONS FIX == --}}
+                        {{-- ================================== --}}
+                        {{-- This stops the row-click from breaking the buttons --}}
+                        <td class="action-cell" onclick="event.stopPropagation();">
+                            {{-- This includes the modern buttons --}}
+                            @include('component.action_buttons', [
+                                'item' => $task,
+                                'routePrefix' => 'task'
+                            ])
+                        </td>
+                        {{-- ================================== --}}
+                        {{-- == END OF ACTION BUTTONS FIX == --}}
+                        {{-- ================================== --}}
+                        
                     </tr>
                 @endforeach
                 @if(empty($tasks))
@@ -34,3 +52,24 @@
     </div>
 </div>
 
+{{-- This script makes your rows clickable without breaking the buttons --}}
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.clickable-row-task').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            // Check if the click was on a button, link, or inside the action cell
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.action-cell')) {
+                return; // Do nothing, let the button work
+            }
+            
+            // Otherwise, navigate to the "show" page
+            const href = this.dataset.href;
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
+});
+</script>
+@endpush

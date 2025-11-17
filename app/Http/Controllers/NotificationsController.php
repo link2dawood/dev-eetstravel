@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Amranidev\Ajaxis\Ajaxis;
 use App\Notification;
 use App\NotificationUser;
 use Auth;
@@ -23,7 +22,6 @@ class NotificationsController extends Controller
             if($relation->isEmpty()){
                 Notification::query()->where('id', $id_notification)->delete();
             }
-
         }else{
             return response()->json(false);
         }
@@ -47,7 +45,6 @@ class NotificationsController extends Controller
         return response()->json(true);
     }
 
-
     public function deleteAllNotifications(){
         $user = Auth::user();
 
@@ -67,7 +64,6 @@ class NotificationsController extends Controller
 
         return response()->json(true);
     }
-
 
     public function getNotifications(Request $request){
         $notifications = Auth::user()->notifications->sortByDesc('created_at');
@@ -99,7 +95,7 @@ class NotificationsController extends Controller
             $formattedNotification = [
                 'id' => $notification->id,
                 'content' => $notification->content,
-                'action_buttons' => $this->getButtonForNotifications($notification->id, $notification->link, $notification),
+                'action_buttons' => $this->getButtonForNotifications($notification),
                 'link' => $notification->link,
                 'created_at' => $notification->created_at ? $notification->created_at->format('Y-m-d H:i:s') : '',
             ];
@@ -127,31 +123,63 @@ class NotificationsController extends Controller
     /**
      * Generate action buttons for notifications
      */
-    private function getButtonForNotifications($id, $link, $notification)
+    private function getButtonForNotifications($notification)
     {
-        $url = array(
-            'show' => $link,
-            'delete_msg' => '/notifications/'.$id.'/deleteMsg'
-        );
-
-        return \App\Http\Controllers\DatatablesHelperController::getActionButton($url, false, $notification);
+        return view('component.action-button', [
+            'model' => $notification,
+            'item' => $notification,
+            'routePrefix' => 'notifications'
+        ])->render();
     }
 
-
-    public function DeleteMsg($id, Request $request)
+    /**
+     * This method is no longer needed, but keeping for backward compatibility
+     * The deleteMsg route can be removed from web.php
+     */
+    public function deleteMsg($id, Request $request)
     {
-//        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/notifications/' . $id . '/delete');
-        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/notifications/' . $id . '/delete');
-
-        if ($request->ajax()) {
-            return $msg;
-        }
+        // Redirect to destroy method
+        return $this->destroy($id);
     }
 
-
+    /**
+     * Delete notification
+     */
     public function destroy($id)
     {
-        Notification::query()->where('id', $id)->delete();
-        return URL::to('profile');
+        try {
+            $user = Auth::user();
+            $notification = Notification::findOrFail($id);
+            
+            // Detach from current user
+            $user->notifications()->detach($id);
+            
+            // Check if notification has no more users attached
+            $relation = NotificationUser::where('notification_id', $id)->count();
+            if ($relation == 0) {
+                $notification->delete();
+            }
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => trans('main.DeletedSuccessfully') ?? 'Deleted successfully'
+                ]);
+            }
+            
+            return redirect()->back()->with('success', trans('main.DeletedSuccessfully') ?? 'Deleted successfully');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deleting notification: ' . $e->getMessage());
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Error deleting notification'
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Error deleting notification');
+        }
     }
 }

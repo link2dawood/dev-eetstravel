@@ -36,6 +36,10 @@
                 $show_route = route('task.show', ['id' => $entity->id]);
                 $edit_route = route('task.edit', ['id' => $entity->id]);
                 $delete_route = route('task.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'notifications') {
+                $show_route = $entity->link ?? null;
+                $edit_route = null;
+                $delete_route = route('notifications.destroy', ['id' => $entity->id]);
             } else {
                 try { $show_route = route($prefix . '.show', [$prefix => $entity->id]); } 
                 catch (Exception $e) { $show_route = "/{$prefix}/{$entity->id}/show"; }
@@ -65,12 +69,19 @@
         $canEdit = (bool) $edit_route;
         $canDelete = (bool) $delete_route;
     }
+    if ($prefix === 'notifications') {
+        $canShow = false;
+        $canEdit = false;
+        $canDelete = true;
+    }
+    
     $canClone = ($prefix === 'tour') && Auth::check() && Auth::user()->can('tour.create');
 
     $deleteMethodOverrides = [
         'announcements' => 'DELETE',
         'users' => 'DELETE',
-        'notifications' => 'DELETE',
+        'notifications' => 'GET',
+        'tour' => 'GET', // Add this line
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp
@@ -93,21 +104,17 @@
     @endif
 
     @if($canDelete)
-        {{-- ================================== --}}
-        {{-- == START OF DELETE BUTTON FIX == --}}
-        {{-- ================================== --}}
-        <button type="button" 
-                class="btn btn-sm btn-danger delete" {{-- Class changed to 'delete' to match your script --}}
-                data-link="{{ $delete_route }}" {{-- Attribute changed to 'data-link' to match your script --}}
-                data-delete-method="{{ $delete_method }}"
-                title="{{ trans('main.Delete') ?? 'Delete' }}">
+        <a href="javascript:void(0);" 
+           class="btn btn-sm btn-danger action-delete-btn"
+           data-delete-url="{{ $delete_route }}"
+           data-delete-method="{{ $delete_method }}"
+           data-entity-name="{{ $entity->content ?? $entity->name ?? 'item' }}"
+           onclick="confirmDelete(this); return false;"
+           title="{{ trans('main.Delete') ?? 'Delete' }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
             </svg>
-        </button>
-        {{-- ================================== --}}
-        {{-- == END OF DELETE BUTTON FIX == --}}
-        {{-- ================================== --}}
+        </a>
     @endif
 
     @if($canClone)
@@ -124,7 +131,112 @@
     @endif
 </div>
 
-{{-- ================================== --}}
-{{-- == FIX: REMOVED THE ENTIRE @once BLOCK == --}}
-{{-- This was creating the conflicting modal and script --}}
-{{-- ================================== --}}
+@once
+@push('scripts')
+<script>
+// Simple confirm and delete function
+function confirmDelete(element) {
+    const deleteUrl = element.dataset.deleteUrl;
+    const entityName = element.dataset.entityName || 'this item';
+    const deleteMethod = element.dataset.deleteMethod || 'GET';
+    
+    console.log('=== DELETE DEBUG ===');
+    console.log('Delete URL:', deleteUrl);
+    console.log('Entity Name:', entityName);
+    console.log('Method:', deleteMethod);
+    
+    if (confirm(`Are you sure you want to delete "${entityName}"?`)) {
+        console.log('User confirmed, processing delete...');
+        
+        if (deleteMethod === 'GET') {
+            // For GET method, just navigate
+            window.location.href = deleteUrl;
+        } else {
+            // For other methods, use fetch
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            fetch(deleteUrl, {
+                method: deleteMethod,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error deleting item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting item. Please try again.');
+            });
+        }
+    } else {
+        console.log('User cancelled');
+    }
+}
+
+// Universal delete handler for action buttons (backup method)
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        const deleteBtn = e.target.closest('.action-delete-btn');
+        if (!deleteBtn || deleteBtn.hasAttribute('onclick')) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const deleteUrl = deleteBtn.dataset.deleteUrl;
+        const deleteMethod = deleteBtn.dataset.deleteMethod || 'GET';
+        const entityName = deleteBtn.dataset.entityName || 'this item';
+
+        if (!confirm(`Are you sure you want to delete "${entityName}"?`)) {
+            return;
+        }
+
+        deleteBtn.style.opacity = '0.6';
+        deleteBtn.style.pointerEvents = 'none';
+
+        if (deleteMethod === 'GET') {
+            window.location.href = deleteUrl;
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        fetch(deleteUrl, {
+            method: deleteMethod,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting item. Please try again.');
+            deleteBtn.style.opacity = '1';
+            deleteBtn.style.pointerEvents = 'auto';
+        });
+    });
+});
+</script>
+@endpush
+@endonce

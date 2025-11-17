@@ -235,12 +235,36 @@ let addService = {
             addService.tour_id = $(this).data('tour_id') || $('#default_reference_id').val();
             addService.tourTransfer = $(this).data('tour_transfer') ? 'true' : '';
 
+            // Root cause fix: Bootstrap modal compatibility
+            // Handle both Bootstrap 4 (jQuery) and Bootstrap 5 (vanilla JS) APIs
             const modalEl = document.getElementById('service-modal');
-            if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
-                modalInstance.show();
-            } else {
-                $('#service-modal').modal('show');
+            if (modalEl) {
+                // Try Bootstrap 5 API first
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    try {
+                        // Check if getOrCreateInstance exists (Bootstrap 5.1+)
+                        if (typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                            modalInstance.show();
+                        } else if (typeof bootstrap.Modal.getInstance === 'function') {
+                            // Bootstrap 5.0 fallback
+                            let modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (!modalInstance) {
+                                modalInstance = new bootstrap.Modal(modalEl);
+                            }
+                            modalInstance.show();
+                        } else {
+                            // Fallback to jQuery/Bootstrap 4
+                            $('#service-modal').modal('show');
+                        }
+                    } catch (e) {
+                        console.warn('Bootstrap 5 modal API failed, falling back to jQuery:', e);
+                        $('#service-modal').modal('show');
+                    }
+                } else {
+                    // Fallback to jQuery/Bootstrap 4
+                    $('#service-modal').modal('show');
+                }
             }
 
             const typeFilter = document.getElementById('service-type-filter');

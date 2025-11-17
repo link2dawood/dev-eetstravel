@@ -600,7 +600,7 @@
                                                 
                                                 @if(isset($package->description) && $package->description)
                                                     <div class="mt-3">
-                                                        <div class="description-content" id="desc-{{ $package->id }}">
+                                                        <div class="description-content" id="desc-{{ $package->id }}" data-full-description="{{ htmlspecialchars($package->description, ENT_QUOTES, 'UTF-8') }}">
                                                             {!! nl2br(e(Str::limit($package->description, 500))) !!}
                                                         </div>
                                                         @if(strlen($package->description) > 500)
@@ -1391,6 +1391,211 @@ $(document).ready(function() {
     if (scrollPos) {
         $(window).scrollTop(parseInt(scrollPos));
     }
+    
+    // Root cause fix: Initialize CKEditor for all textareas that need it
+    // This ensures CKEditor works throughout the project
+    if (typeof CKEDITOR !== 'undefined') {
+        // Initialize CKEditor for all textareas with class 'ckeditor' or id containing 'editor'
+        $('textarea.ckeditor, textarea[id*="editor"], textarea[id*="description"], textarea[id*="content"]').each(function() {
+            const textareaId = $(this).attr('id');
+            if (textareaId && !CKEDITOR.instances[textareaId]) {
+                try {
+                    CKEDITOR.replace(textareaId, {
+                        height: 200,
+                        toolbar: [
+                            ['Bold', 'Italic', 'Underline', 'Strike'],
+                            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+                            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+                            ['Link', 'Unlink'],
+                            ['Image', 'Table'],
+                            ['Source'],
+                            ['Maximize']
+                        ]
+                    });
+                } catch (e) {
+                    console.warn('Failed to initialize CKEditor for:', textareaId, e);
+                }
+            }
+        });
+        
+        // Also check for dynamically added textareas
+        $(document).on('DOMNodeInserted', function(e) {
+            if ($(e.target).is('textarea') || $(e.target).find('textarea').length > 0) {
+                $(e.target).find('textarea, textarea').each(function() {
+                    const textareaId = $(this).attr('id');
+                    if (textareaId && !CKEDITOR.instances[textareaId] && 
+                        ($(this).hasClass('ckeditor') || textareaId.includes('editor') || 
+                         textareaId.includes('description') || textareaId.includes('content'))) {
+                        try {
+                            CKEDITOR.replace(textareaId);
+                        } catch (err) {
+                            console.warn('Failed to initialize CKEditor for dynamic textarea:', textareaId, err);
+                        }
+                    }
+                });
+            }
+        });
+    } else {
+        console.warn('CKEditor is not loaded. Please ensure ckeditor.js is included in the page.');
+    }
 });
+
+// Root cause fix: Add missing JavaScript functions for service actions
+// These functions were being called via onclick but were not defined
+
+/**
+ * Toggle description visibility (show full/truncated)
+ * Root cause fix: Store full description in data attribute when rendering
+ */
+function toggleDescription(packageId) {
+    const descElement = document.getElementById('desc-' + packageId);
+    if (!descElement) {
+        console.warn('Description element not found for package:', packageId);
+        return;
+    }
+    
+    // Get the full description from data attribute (set during server-side rendering)
+    let fullDescription = descElement.getAttribute('data-full-description');
+    const readmoreLink = descElement.nextElementSibling;
+    
+    if (!fullDescription) {
+        // First time - fetch full description via AJAX
+        fetch('/tour_package/' + packageId + '/api')
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch description');
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.description) {
+                    fullDescription = data.description;
+                    descElement.setAttribute('data-full-description', fullDescription);
+                    // Format and display full description
+                    const formatted = fullDescription.replace(/\n/g, '<br>');
+                    descElement.innerHTML = formatted;
+                    if (readmoreLink) {
+                        readmoreLink.innerHTML = '<small>readless</small>';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching description:', error);
+            });
+        return;
+    }
+    
+    // Decode HTML entities from data attribute
+    const tempDiv = document.createElement('div');
+    tempDiv.textContent = fullDescription;
+    const decodedFullDescription = tempDiv.innerHTML;
+    
+    // Check if currently showing full or truncated
+    const isShowingFull = readmoreLink && readmoreLink.innerHTML.includes('readless');
+    
+    if (isShowingFull) {
+        // Switch to truncated view
+        const truncatedText = decodedFullDescription.substring(0, 500);
+        descElement.innerHTML = truncatedText + (decodedFullDescription.length > 500 ? '...' : '');
+        if (readmoreLink) {
+            readmoreLink.innerHTML = '<small>readmore</small>';
+        }
+    } else {
+        // Switch to full view - format with nl2br
+        const formattedDescription = decodedFullDescription.replace(/\n/g, '<br>');
+        descElement.innerHTML = formattedDescription;
+        if (readmoreLink) {
+            readmoreLink.innerHTML = '<small>readless</small>';
+        }
+    }
+}
+
+/**
+ * Edit service/package
+ */
+function editService(packageId) {
+    if (!packageId) {
+        console.error('Package ID is required');
+        return;
+    }
+    
+    // Navigate to edit page
+    const editUrl = '/tour_package/' + packageId + '/edit';
+    window.location.href = editUrl;
+}
+
+/**
+ * Delete service/package with confirmation
+ */
+function deleteService(packageId) {
+    if (!packageId) {
+        console.error('Package ID is required');
+        return;
+    }
+    
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to delete this service?')) {
+        // Use AJAX to get delete confirmation message
+        fetch('/tour_package/' + packageId + '/deleteMsg')
+            .then(response => response.text())
+            .then(html => {
+                // Create a temporary div to parse the HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Extract the delete URL from the HTML
+                const deleteLink = tempDiv.querySelector('a[href*="/delete"]');
+                if (deleteLink) {
+                    const deleteUrl = deleteLink.getAttribute('href');
+                    // Perform the delete
+                    fetch(deleteUrl, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Reload the page to show updated services
+                            window.location.reload();
+                        } else {
+                            alert('Error deleting service. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting service:', error);
+                        alert('Error deleting service. Please try again.');
+                    });
+                } else {
+                    // Fallback: direct delete
+                    const deleteUrl = '/tour_package/' + packageId + '/delete';
+                    fetch(deleteUrl, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Error deleting service. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting service:', error);
+                        alert('Error deleting service. Please try again.');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error getting delete confirmation:', error);
+                // Fallback: direct delete with confirmation
+                if (confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
+                    const deleteUrl = '/tour_package/' + packageId + '/delete';
+                    window.location.href = deleteUrl;
+                }
+            });
+    }
+}
 </script>
 @endsection

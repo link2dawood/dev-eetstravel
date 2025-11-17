@@ -603,7 +603,16 @@ class TourPackageController extends Controller
             $serviceType = $oldInput['type'];
         } elseif ($type = $request->query->get('serviceType')) {
             $serviceType = array_search($type, $this->serviceTypes);
+            // Root cause fix: array_search returns false if not found, ensure we have a valid key
+            if ($serviceType === false || $serviceType === '') {
+                $serviceType = 0;
+            }
         } else {
+            $serviceType = 0;
+        }
+        
+        // Root cause fix: Ensure serviceType is a valid integer key
+        if (!is_numeric($serviceType) || !isset($this->serviceTypes[$serviceType])) {
             $serviceType = 0;
         }
 
@@ -629,18 +638,33 @@ class TourPackageController extends Controller
 
         $serviceTypes = $this->serviceTypes;
 
-        (TourService::$serviceTypes[$tourPackage->type] === 'hotel') ?
+        // Root cause fix: Check if array keys exist before accessing to prevent "Undefined array key" errors
+        $packageType = $tourPackage->type ?? null;
+        $packageServiceType = (isset($packageType) && isset(TourService::$serviceTypes[$packageType])) 
+            ? TourService::$serviceTypes[$packageType] 
+            : null;
+
+        ($packageServiceType === 'hotel') ?
             $statuses = Status::query()->where('type', 'hotel')->orderBy('sort_order')->get() :
             $statuses = Status::query()->where('type', 'service_in_tour')->orderBy('sort_order')->get();
 
-        if (TourService::$serviceTypes[$tourPackage->type] === 'transfer') $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'bus')->get();
+        if ($packageServiceType === 'transfer') {
+            $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'bus')->get();
+        }
 
         $currencies = Currencies::all();
         $service = TourService::getService($serviceType);
         $services = $service ? $service->getItems(['serviceType' => $serviceType, 'search' => $search]) : collect();
-        $filterType = $this->serviceTypes[$serviceType];
-        $selectedServiceName = $this->serviceTypes[$tourPackage->type];
-        $selectedService = TourService::getService(TourService::$serviceTypes[$tourPackage->type]);
+        
+        // Root cause fix: Check if serviceType key exists before accessing
+        $filterType = (isset($this->serviceTypes[$serviceType])) ? $this->serviceTypes[$serviceType] : null;
+        
+        // Root cause fix: Check if package type key exists before accessing
+        $selectedServiceName = (isset($packageType) && isset($this->serviceTypes[$packageType])) 
+            ? $this->serviceTypes[$packageType] 
+            : null;
+        
+        $selectedService = ($packageServiceType) ? TourService::getService($packageServiceType) : null;
 
         $service = null;
         if ($selectedService) {
@@ -653,8 +677,13 @@ class TourPackageController extends Controller
         }
 
 		$serviceName = '';
-        if ($service) {
-            if ($this->serviceTypes[$tourPackage->type]== 'flight') { // Flight
+        if ($service && $selectedServiceName) {
+            // Root cause fix: Check if package type key exists before accessing
+            $packageTypeName = (isset($packageType) && isset($this->serviceTypes[$packageType])) 
+                ? $this->serviceTypes[$packageType] 
+                : null;
+            
+            if ($packageTypeName === 'flight') { // Flight
                 $serviceName = $selectedServiceName . ' - '. $service->date_from;
             } else {
                 $serviceName = $selectedServiceName . ' - '. $service->name;
@@ -709,7 +738,8 @@ class TourPackageController extends Controller
         $drivers = null;
         $buses = null;
 		
-        if (TourService::$serviceTypes[$tourPackage->type] == 'transfer') {
+        // Root cause fix: Check if package type key exists before accessing
+        if ($packageServiceType === 'transfer') {
             $serviceItem = Transfer::findOrFail( $tourPackage->reference );
             $drivers = Driver::query()->where('transfer_id', $serviceItem->id)->get();
             $buses = Bus::query()->where('transfer_id', $serviceItem->id)->get();

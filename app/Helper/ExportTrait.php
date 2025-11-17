@@ -117,30 +117,32 @@ trait ExportTrait{
 	 public function exportVoucherdoc($tour, $data, $request)
     {
 		 $office=Offices::where('status',1)->first();
-		$office=Offices::where('status',1)->first();
         $issued_time = Carbon::now()->format('Y-m-d');
         $tourDays = TourDay::where('tour', $tour->id)->get()->sortBy('date');
         $checkedExcludeVch = [];
 
         $exclude_cvh = $request->get('exclude_vch', []);
 
-
+        // Filter transfers by vch flag
+        if ($tour->transfers && is_iterable($tour->transfers)) {
             foreach ($tour->transfers as $id => $transfer){
-                if ($package->vch == 0) {
+                if (isset($transfer->vch) && $transfer->vch == 0) {
                     unset($tour->transfers[$id]);
                 }
             }
+        }
 
-            foreach ($tourDays as $tourDate) {
-
-                if ($request->pdf_type == 'voucher') $tourDate->packages = $tourDate->packages->where('description_package', null);
-                foreach ($tourDate->packages as $id => $package) {
-                    if ($package->vch == 0) {
-                        unset($tourDate->packages[$id]);
-                    }
-                }
-
+        // Filter packages by vch flag
+        foreach ($tourDays as $tourDate) {
+            if ($request->doc_type == 'voucher' || $request->pdf_type == 'voucher') {
+                $tourDate->packages = $tourDate->packages->where('description_package', null);
             }
+            foreach ($tourDate->packages as $id => $package) {
+                if (isset($package->vch) && $package->vch == 0) {
+                    unset($tourDate->packages[$id]);
+                }
+            }
+        }
         
         
         if ($request->input('exclude_vch')) $checkedExcludeVch = $request->input('exclude_vch');

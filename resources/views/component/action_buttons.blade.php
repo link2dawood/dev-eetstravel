@@ -36,6 +36,22 @@
                 $show_route = route('task.show', ['id' => $entity->id]);
                 $edit_route = route('task.edit', ['id' => $entity->id]);
                 $delete_route = route('task.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'tour_package') {
+                try {
+                    $show_route = route('tour_package.show', ['tour_package' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/tour_package/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('tour_package.edit', ['tour_package' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/tour_package/{$entity->id}/edit";
+                }
+                try {
+                    $delete_route = route('tour_package.destroy', ['id' => $entity->id]);
+                } catch (Exception $e) {
+                    $delete_route = "/tour_package/{$entity->id}/delete";
+                }
             } elseif ($prefix === 'notifications') {
                 $show_route = $entity->link ?? null;
                 $edit_route = null;
@@ -81,7 +97,8 @@
         'announcements' => 'DELETE',
         'users' => 'DELETE',
         'notifications' => 'GET',
-        'tour' => 'GET', // Add this line
+        'tour' => 'GET',
+        'tour_package' => 'GET',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp

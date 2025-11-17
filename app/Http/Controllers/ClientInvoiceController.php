@@ -47,8 +47,52 @@ class ClientInvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function index()
+    {
+        $clientInvoices = ClientInvoices::with(['client'])->orderBy('date', 'desc')->get();
 
+        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'] ?? 'accounting.edit';
+        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'] ?? 'accounting.destroy';
+        $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'] ?? 'accounting.show';
 
+        $perm = [];
+        $perm['show'] = Auth::user()->can($permission_show);
+        $perm['edit'] = Auth::user()->can($permission_edit);
+        $perm['destroy'] = Auth::user()->can($permission_destroy);
+
+        // Process each invoice to add computed fields
+        $accountingData = $clientInvoices->map(function ($invoice) use ($perm) {
+            // Tour name
+            $tour = Tour::find($invoice->tour_id);
+            $invoice->tourName = $tour->name ?? '';
+
+            // Client name
+            $client = Client::find($invoice->client_id);
+            $invoice->clientName = $client->name ?? '';
+
+            // Status calculation
+            $transaction = Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Client");
+            $sum_amount = $transaction->sum("amount");
+            $amount = $invoice->amount_receiveable ?? 0;
+            $remaining_amount = $amount - $sum_amount;
+
+            if ($sum_amount == $amount) {
+                $result = "Paid";
+            } elseif ($sum_amount == 0) {
+                $result = "They Owe " . $amount;
+            } else {
+                $result = "They Owe " . $remaining_amount;
+            }
+            $invoice->Status = $result;
+
+            // Action buttons
+            $invoice->action_buttons = $this->getButton($invoice->id, false, $tour, $perm);
+
+            return $invoice;
+        });
+
+        return view('accounting.index', compact('accountingData'));
+    }
     
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {

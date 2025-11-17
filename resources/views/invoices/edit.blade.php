@@ -46,7 +46,7 @@
         }
     </style>
     <section class="content">
-        <form method='POST' action='{{route('invoice.update', ['invoice' => $invoices->id])}}' enctype="multipart/form-data">
+        <form method='POST' action='{{route('invoice.update', ['id' => $invoices->id])}}' enctype="multipart/form-data">
             <div class="box box-secondry">
                 <div class="box box-body ">
 

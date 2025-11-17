@@ -1161,31 +1161,44 @@ $select_office=Offices::where('status',1)->first();
         }
 
         $period = new CarbonPeriod($start, '1 day', $end);
+        
+        // Create a map of TourDay by date for quick lookup
         $tourDayMap = collect($tourDates)->keyBy(function ($tourDay) {
             return Carbon::parse($tourDay->date)->format('Y-m-d');
         });
 
-        $packageCollection = collect($packages);
+        // Create a map of packages by TourDay date
+        // Packages are linked to TourDays through many-to-many relationship
+        $packagesByDate = [];
+        foreach ($tourDates as $tourDay) {
+            $dateKey = Carbon::parse($tourDay->date)->format('Y-m-d');
+            if (!isset($packagesByDate[$dateKey])) {
+                $packagesByDate[$dateKey] = collect();
+            }
+            // Add packages from this TourDay
+            if ($tourDay->packages && $tourDay->packages->count() > 0) {
+                foreach ($tourDay->packages as $package) {
+                    $packagesByDate[$dateKey]->push($package);
+                }
+            }
+        }
 
         $dayNumber = 1;
         $days = [];
 
         foreach ($period as $date) {
             $dateKey = $date->format('Y-m-d');
-            $dayPackages = $packageCollection->filter(function ($package) use ($dateKey) {
-                if (!isset($package->start_date)) {
-                    return false;
-                }
-
-                return Carbon::parse($package->start_date)->format('Y-m-d') === $dateKey;
-            })->values();
+            $tourDay = $tourDayMap->get($dateKey);
+            
+            // Get packages for this date from the packagesByDate map
+            $dayPackages = isset($packagesByDate[$dateKey]) ? $packagesByDate[$dateKey] : collect();
 
             $days[] = [
                 'day_number' => $dayNumber++,
                 'date' => $date->copy(),
                 'date_key' => $dateKey,
                 'day_name' => $date->format('l'),
-                'tour_day_id' => optional($tourDayMap->get($dateKey))->id,
+                'tour_day_id' => $tourDay ? $tourDay->id : null,
                 'packages' => $dayPackages,
             ];
         }

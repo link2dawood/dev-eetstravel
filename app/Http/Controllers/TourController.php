@@ -1419,9 +1419,14 @@ $select_office=Offices::where('status',1)->first();
      * @param  string $export document type
      * @return \Illuminate\Http\Response
      */
-    public function export(int $id, string $export, string $type = null, Request $request )
+    public function export(int $id, string $export, string $type = null, Request $request = null)
     {
         $tour = Tour::findOrFail($id);
+        
+        // Get request if not provided (for backward compatibility)
+        if ($request === null) {
+            $request = request();
+        }
 
         // dd($tour);
         if ($export == 'csv') {

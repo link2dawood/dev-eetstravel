@@ -97,22 +97,19 @@ class TourController extends Controller
         $this->middleware('auth', ['except' => 'landingPage']);
     }
 
-    /**
-     * get action buttons
-     * @param  $id tour id
-     * @return mixed
-     */
-    public function getButton($id, $isQuotation = false, $tour, array $perm)
-    {
-        $url = array('show'        => route('tour.show', ['tour' => $id]),
-                     'edit'        => route('tour.edit', ['tour' => $id]),
-                     'delete_msg' => "/tour/{$id}/deleteMsg",
-                     'id'          => $id);
-
-        return DatatablesHelperController::getActionButtonTours($url, $isQuotation, $perm);
-//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
-    }
-    
+   /**
+ * get action buttons
+ * @param  $id tour id
+ * @return mixed
+ */
+public function getButton($id, $isQuotation = false, $tour, array $perm)
+{
+    return view('component.action-button', [
+        'model' => $tour,
+        'item' => $tour,
+        'routePrefix' => 'tour'
+    ])->render();
+}
     public function getQuotationButton($id, $isQuotation = false, $tour)
     {
         $url = array('show'        => route('tour.show', ['tour' => $id]),
@@ -1826,67 +1823,97 @@ $select_office=Offices::where('status',1)->first();
     }
 
     /**
-     * Delete confirmation message by Ajaxis.
-     *
-     * @link     https://github.com/amranidev/ajaxis
-     * @param    \Illuminate\Http\Request $request
-     * @return  String
-     */
-    public function DeleteMsg($id, Request $request , $tab = null )
-    {
-        $tab_url = ($tab) ? '/'. $tab : '';
-
-//        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/tour/' . $id . '/delete'. $tab_url);
-        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/tour/' . $id . '/delete'. $tab_url);
-
-        if ($request->ajax()) {
-            return $msg;
-        }
+ * Delete confirmation message - simplified approach
+ *
+ * @param int $id
+ * @param Request $request
+ * @param string|null $tab
+ * @return String
+ */
+public function DeleteMsg($id, Request $request, $tab = null)
+{
+    // Simply redirect to destroy method or return confirmation data
+    if ($request->ajax()) {
+        return response()->json([
+            'message' => trans('main.WouldyouliketoremoveThis') . '?',
+            'delete_url' => $tab ? route('tour_tab.destroy', ['id' => $id, 'tab' => $tab]) : route('tour.destroy', ['id' => $id])
+        ]);
     }
+    
+    // For non-ajax, redirect to confirmation or back
+    return redirect()->back()->with('warning', trans('main.WouldyouliketoremoveThis'));
+}
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param    int $id
-     * @return  \Illuminate\Http\Response
-     */
-    public function destroy($id, $tab = null)
-    {
+/**
+ * Remove the specified resource from storage.
+ *
+ * @param int $id
+ * @param string|null $tab
+ * @return \Illuminate\Http\Response
+ */
+public function destroy($id, $tab = null)
+{
+    try {
         $tour = Tour::findOrfail($id);
 
         if($tour){
             if ($tour->users) {
                 foreach ($tour->users as $user) {
-                    $notification = Notification::query()->create(['content' => "Tour {$tour->name} deleted",
-                        'link' => null]);
+                    $notification = Notification::query()->create([
+                        'content' => "Tour {$tour->name} deleted",
+                        'link' => null
+                    ]);
                     $user->notifications()->attach($notification);
                 }
             }
         }
 
-
         $this->removeFile($tour);
         $tour->delete();
+        
         BusDay::query()->where('tour_id', $id)->delete();
         TransferToDrivers::query()->where('tour_id', $id)->delete();
         TransferToBuses::query()->where('tour_id', $id)->delete();
         Comment::query()->where('reference_type', Comment::$services['tour'])->where('reference_id', $id)->delete();
         Quotation::query()->where('tour_id', $id)->delete();
-		ClientInvoices::query()->where('tour_id', $id)->delete();
-		InvoicesTours::query()->where('invoices_tours_id', $id)->delete();
-		//InvoicesTours::query()->find( $id)->delete();
+        ClientInvoices::query()->where('tour_id', $id)->delete();
+        InvoicesTours::query()->where('invoices_tours_id', $id)->delete();
+        
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} deleted", 'success');
 
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true, 
+                'message' => trans('main.DeletedSuccessfully') ?? 'Deleted successfully'
+            ]);
+        }
+
         if(URL::previous() == route('quotation.index')){
-            return URL::to('quotation');
+            return redirect()->to('quotation');
         }
+        
         if($tab){
-            return URL::to('profile?tab=history-tours-tab');
+            return redirect()->to('profile?tab=history-tours-tab');
         }
 
-        return URL::to('tour');
+        return redirect()->to('tour');
+        
+    } catch (\Exception $e) {
+        \Log::error('Error deleting tour: ' . $e->getMessage());
+        
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error deleting tour'
+            ], 500);
+        }
+        
+        return redirect()->back()->with('error', 'Error deleting tour');
     }
+}
 
+
+       
     /**
      * Remove the specified resource from storage.
      *

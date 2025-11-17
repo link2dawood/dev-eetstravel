@@ -642,7 +642,10 @@ let addService = {
         })
     },
     addPackages: () => {
-        if(addService.tour_id){
+        // Root cause fix: Only load packages via AJAX if .tour-packages element exists
+        // The new tour.show view uses server-rendered #service-days-container instead
+        // This prevents unnecessary AJAX calls when using the new server-rendered view
+        if(addService.tour_id && $('.tour-packages').length > 0){
             $.ajax({
                 method: "POST",
                 url: "/tour/" + addService.tour_id + "/generatePackages",

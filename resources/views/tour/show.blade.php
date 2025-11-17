@@ -1,6 +1,10 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Show Tour')
 
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 @section('post_styles')
 <link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>

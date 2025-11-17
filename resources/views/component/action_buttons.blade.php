@@ -80,6 +80,78 @@
                     $edit_route = "/driver/{$entity->id}/edit";
                 }
                 $delete_route = route('driver.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'status') {
+                try {
+                    $show_route = route('status.show', ['status' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/status/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('status.edit', ['status' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/status/{$entity->id}/edit";
+                }
+                $delete_route = route('status.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'room_types') {
+                try {
+                    $show_route = route('room_types.show', ['room_types' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/room_types/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('room_types.edit', ['room_types' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/room_types/{$entity->id}/edit";
+                }
+                $delete_route = route('room_types.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'rate') {
+                try {
+                    $show_route = route('rate.show', ['rate' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/rate/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('rate.edit', ['rate' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/rate/{$entity->id}/edit";
+                }
+                $delete_route = route('rate.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'currency_rate') {
+                try {
+                    $show_route = route('currency_rate.show', ['currency_rate' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/currency_rate/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('currency_rate.edit', ['currency_rate' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/currency_rate/{$entity->id}/edit";
+                }
+                $delete_route = route('currency_rate.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'currencies') {
+                try {
+                    $show_route = route('currencies.show', ['currencies' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/currencies/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('currencies.edit', ['currencies' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/currencies/{$entity->id}/edit";
+                }
+                $delete_route = route('currencies.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'criteria') {
+                try {
+                    $show_route = route('criteria.show', ['criterion' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/criteria/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('criteria.edit', ['criterion' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/criteria/{$entity->id}/edit";
+                }
+                $delete_route = route('criteria.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'notifications') {
                 $show_route = $entity->link ?? null;
                 $edit_route = null;
@@ -130,6 +202,12 @@
         'transfer' => 'GET',
         'bus' => 'GET',
         'driver' => 'GET',
+        'status' => 'GET',
+        'room_types' => 'GET',
+        'rate' => 'GET',
+        'currency_rate' => 'GET',
+        'currencies' => 'GET',
+        'criteria' => 'GET',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp

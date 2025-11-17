@@ -74,7 +74,7 @@ class DatatablesHelperController extends Controller
         }
 
         // clone button for tour
-        if ($perm['clone'] && isset($url['id'])){
+        if (isset($perm['clone']) && $perm['clone'] && isset($url['id'])){
             $action .= "<button class='btn btn-success btn-sm clone-tour-button' data-bs-toggle='modal' data-bs-target='#tour-clone-modal' data-id='{$url['id']}'>" .
             "<i class='ti ti-copy'></i></button>";
             $btnCnt++;

@@ -581,7 +581,7 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #0073ea;"></div>
                     <h3 class="monday-group-title">To-Do</h3>
-                    <span class="monday-group-count">{{ $todoTasks->total() ?? count($todoTasks ?? []) }}</span>
+                    <span class="monday-group-count">{{ $todoTasks && method_exists($todoTasks, 'total') ? $todoTasks->total() : count($todoTasks ?? []) }}</span>
                 </div>
 
                 <div class="monday-group-content" id="group-todo">
@@ -704,7 +704,7 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #00c875;"></div>
                     <h3 class="monday-group-title">Completed</h3>
-                    <span class="monday-group-count">{{ $completedTasks->total() ?? count($completedTasks ?? []) }}</span>
+                    <span class="monday-group-count">{{ $completedTasks && method_exists($completedTasks, 'total') ? $completedTasks->total() : count($completedTasks ?? []) }}</span>
                 </div>
 
                 <div class="monday-group-content" id="group-completed" style="display: none;">
@@ -798,7 +798,7 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #e2445c;"></div>
                     <h3 class="monday-group-title">Aborted</h3>
-                    <span class="monday-group-count">{{ $abortedTasks->total() ?? count($abortedTasks ?? []) }}</span>
+                    <span class="monday-group-count">{{ $abortedTasks && method_exists($abortedTasks, 'total') ? $abortedTasks->total() : count($abortedTasks ?? []) }}</span>
                 </div>
 
                 <div class="monday-group-content" id="group-aborted" style="display: none;">

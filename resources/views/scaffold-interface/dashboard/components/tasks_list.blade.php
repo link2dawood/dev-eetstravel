@@ -623,8 +623,12 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     @php
-                                        $statusColor = $task->status ? ($task->status->color ?? '#fdab3d') : '#fdab3d';
-                                        $statusName = $task->status ? $task->status->name : 'Pending';
+                                        $statusColor = '#fdab3d';
+                                        $statusName = 'Pending';
+                                        if ($task->status && is_object($task->status)) {
+                                            $statusColor = $task->status->color ?? '#fdab3d';
+                                            $statusName = $task->status->name ?? 'Pending';
+                                        }
                                     @endphp
                                     <div class="monday-status monday-status-clickable" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};" onclick="openStatusPicker({{ $task->id }}, this)">
                                         <span>{{ $statusName }}</span>
@@ -655,7 +659,15 @@
                                     @endif
                                 </td>
                                 <td class="monday-table-cell">
-                                    <span class="text-muted">{{ $task->epic ? $task->epic->name : '-' }}</span>
+                                    <span class="text-muted">
+                                        @if($task->epic && is_object($task->epic))
+                                            {{ $task->epic->name }}
+                                        @elseif($task->epic && is_string($task->epic))
+                                            {{ $task->epic }}
+                                        @else
+                                            -
+                                        @endif
+                                    </span>
                                 </td>
                                 <td class="monday-table-cell text-center">
                                     <span class="monday-sp monday-editable" data-field="story_points" data-task-id="{{ $task->id }}" onclick="editInline(this)">{{ $task->story_points ?? 0 }}</span>
@@ -743,8 +755,12 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     @php
-                                        $statusColor = $task->status ? ($task->status->color ?? '#00c875') : '#00c875';
-                                        $statusName = $task->status ? $task->status->name : 'Completed';
+                                        $statusColor = '#00c875';
+                                        $statusName = 'Completed';
+                                        if ($task->status && is_object($task->status)) {
+                                            $statusColor = $task->status->color ?? '#00c875';
+                                            $statusName = $task->status->name ?? 'Completed';
+                                        }
                                     @endphp
                                     <div class="monday-status" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</div>
                                 </td>
@@ -834,8 +850,12 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     @php
-                                        $statusColor = $task->status ? ($task->status->color ?? '#e2445c') : '#e2445c';
-                                        $statusName = $task->status ? $task->status->name : 'Aborted';
+                                        $statusColor = '#e2445c';
+                                        $statusName = 'Aborted';
+                                        if ($task->status && is_object($task->status)) {
+                                            $statusColor = $task->status->color ?? '#e2445c';
+                                            $statusName = $task->status->name ?? 'Aborted';
+                                        }
                                     @endphp
                                     <div class="monday-status" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</div>
                                 </td>

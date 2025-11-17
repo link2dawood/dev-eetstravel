@@ -1808,17 +1808,12 @@ $select_office=Offices::where('status',1)->first();
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour_model->name} edited", 'success');
 
         if($request->get('calendar_edit') == 1){
-            $data = ['route' => url('home')];
+            return redirect()->to('home');
         }else if($request->get('tab')){
-            $data = ['route' => url('profile?'.$request->get('tab'))];
+            return redirect()->to('profile?'.$request->get('tab'));
         }else{
-            $data = ['route' => route('tour.show', [ 'id' => $tour ])];
+            return redirect()->route('tour.show', [ 'id' => $tour ]);
         }
-		
-
-//        return response()->json(json_encode($data));
-		return redirect()->route('tour.show', [ 'id' => $tour ]);
-        return response()->json($data);
 		
     }
 

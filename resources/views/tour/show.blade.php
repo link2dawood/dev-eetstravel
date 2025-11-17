@@ -115,13 +115,13 @@
                         </button>
                         <div class="dropdown-menu">
                             <h6 class="dropdown-header">Export Tour</h6>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}"); return false;'>
                                 <i class="ti ti-file-spreadsheet me-2"></i>CSV - Tour
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}"); return false;'>
                                 <i class="ti ti-file-spreadsheet me-2"></i>CSV - Service
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}"); return false;'>
                                 <i class="ti ti-file-excel me-2"></i>Excel
                             </a>
                         </div>
@@ -148,13 +148,13 @@
                             <i class="ti ti-route me-1"></i>{!! trans('main.Itinerary') !!}
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}"); return false;'>
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}"); return false;'>
                                 <i class="ti ti-file-code me-2"></i>HTML
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}"); return false;'>
                                 <i class="ti ti-file-type-doc me-2"></i>DOC
                             </a>
                         </div>

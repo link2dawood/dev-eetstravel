@@ -556,12 +556,24 @@ class ClientInvoiceController extends Controller
     {
 
         $excelName = str_replace(" ", "_", $tour->name);
-        return Excel::create('Invoice' . $excelName, function ($excel) use ($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items) {
-            $excel->sheet('Tour Information', function ($sheet) use ($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items) {
-
-                $sheet->loadView('export.accounting.billingExcel', compact('tour', 'office', 'client', 'transactions', 'tourDates', 'quotation', 'calculations', 'tourdays', 'invoice_items'));
-            });
-        })->export($export);
+        $exportClass = new class($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items) implements \Maatwebsite\Excel\Concerns\FromView {
+            protected $tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items;
+            public function __construct($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items) {
+                $this->tour = $tour;
+                $this->office = $office;
+                $this->client = $client;
+                $this->transactions = $transactions;
+                $this->tourDates = $tourDates;
+                $this->quotation = $quotation;
+                $this->calculations = $calculations;
+                $this->tourdays = $tourdays;
+                $this->invoice_items = $invoice_items;
+            }
+            public function view(): \Illuminate\Contracts\View\View {
+                return view('export.accounting.billingExcel', compact('tour', 'office', 'client', 'transactions', 'tourDates', 'quotation', 'calculations', 'tourdays', 'invoice_items'));
+            }
+        };
+        return Excel::download($exportClass, 'Invoice' . $excelName . '.' . $export);
     }
 
     public function getPaymentView(Request $request){

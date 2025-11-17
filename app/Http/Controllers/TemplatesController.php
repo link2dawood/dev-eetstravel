@@ -175,7 +175,8 @@ class TemplatesController extends Controller
             $templateItem->name = ucfirst($templateItem->name);
         }
 
-        $service = (object) ["id" => $template, "name" => $this->serviceTypes[$template]];
+        $serviceName = $this->serviceTypes[$template] ?? 'Unknown Service';
+        $service = (object) ["id" => $template, "name" => $serviceName];
 
         return view('templates.show', compact('title', 'templates', 'service', 'header', 'footer'));
     }

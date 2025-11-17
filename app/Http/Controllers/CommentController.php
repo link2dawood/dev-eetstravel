@@ -34,10 +34,7 @@ class CommentController extends Controller
             ->where('parent', null)
             ->get();
 
-        // Add action buttons to each comment
-        $commentsData->each(function ($comment) {
-            $comment->action_buttons = $this->getActionButtons($comment->id, $comment);
-        });
+        // Action buttons will be generated in the view using the action_buttons component
 
         return view('comments.index', compact('title', 'commentsData'));
     }

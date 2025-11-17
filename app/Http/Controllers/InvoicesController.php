@@ -268,9 +268,10 @@ class  InvoicesController extends Controller
     {
         $this->validate($request, [
             'office_id'     => 'required',
-            'tour_id'     => 'required',
+            'tour_id'     => 'required|array|min:1',
+            'tour_id.*'   => 'required|exists:tours,id',
             'invoice_no'    =>  'required',
-            'total_amount'    => 'required',
+            'total_amount'    => 'required|numeric|min:0',
 
         ]);
     }

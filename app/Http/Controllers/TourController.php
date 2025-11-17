@@ -793,12 +793,12 @@ public function store(StoreTourRequest $request)
     $dateRange = $this->findDateRange($data);
     if (!$dateRange) return back();
 
-    if($request->assigned_user == 'null' && !$request->is_quotation){
-        $requestData = $request;
-        $requestData['assigned_user'] = '';
-        $this->validate($requestData, [
-            'assigned_user' => 'required'
-        ]);
+    // Validate assigned users
+    if (!$request->is_quotation) {
+        $assignedUsers = $request->assigned_user;
+        if (empty($assignedUsers) || (is_array($assignedUsers) && count($assignedUsers) == 0) || $assignedUsers == 'null') {
+            return back()->withErrors(['assigned_user' => 'At least one assigned user is required.'])->withInput();
+        }
     }
 
     $request = CitiesHelper::setCityBegin($request);
@@ -886,7 +886,12 @@ public function store(StoreTourRequest $request)
 
         // Handle assigned users
         if ($request->assigned_user) {
-            $a_users = explode(',',$request->assigned_user);
+            // Handle both array and comma-separated string formats
+            if (is_array($request->assigned_user)) {
+                $a_users = $request->assigned_user;
+            } else {
+                $a_users = explode(',', $request->assigned_user);
+            }
             $tour->users()->sync($a_users);
 
             foreach ($a_users as $user) {
@@ -918,16 +923,29 @@ public function store(StoreTourRequest $request)
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
 
         if($request->get('modal_create_tour') == 1) {
-            $data = ['route' => url('home')];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['route' => url('home')]);
+            }
+            return redirect()->to('home');
         } else {
-            $data = ['route' => route('tour.show', ['tour' => $tour->id])];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['route' => route('tour.show', ['tour' => $tour->id])]);
+            }
+            return redirect()->route('tour.show', ['tour' => $tour->id]);
         }
-
-        return response()->json($data);
         
     } catch (\Exception $e) {
         DB::rollback();
-        return response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500);
+        \Log::error('Tour creation error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+            'request_data' => $request->except(['password', '_token'])
+        ]);
+        
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500);
+        }
+        
+        return back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput();
     }
 }
 
@@ -1071,18 +1089,11 @@ $select_office=Offices::where('status',1)->first();
             $office = \App\Offices::find($transaction->office_id);
             $tour_obj = \App\Tour::find($transaction->tour_id);
 
-            // Calculate total amount for this tour
-            $transactions_cust = \App\ClientInvoices::where("tour_id", $transaction->tour_id)->get();
-            $total = 0;
-            foreach ($transactions_cust as $transaction_cust) {
-                $total = $transaction_cust->total_amount + $total;
-            }
-
             $billingData[] = [
                 'id' => $transaction->id,
-                'office_name' => $office->office_name ?? '',
-                'tour_name' => $tour_obj->name ?? '',
-                'total_amount' => $total,
+                'office_name' => $office ? $office->office_name : '',
+                'tour_name' => $tour_obj ? $tour_obj->name : '',
+                'total_amount' => $transaction->total_amount ?? 0,
                 'date' => $transaction->created_at ?? $transaction->date ?? now()
             ];
         }

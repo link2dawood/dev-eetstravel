@@ -28,10 +28,17 @@
                     @foreach($commentsData as $comment)
                         <tr>
                             <td>{{ $comment->id }}</td>
-                            <td>{{ $comment->content }}</td>
+                            <td data-delete-label>{{ $comment->content }}</td>
                             <td>{{ $comment->created_at }}</td>
                             <td>{{ $comment->sender }}</td>
-                            <td>{!! $comment->action_buttons !!}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    @include('component.action_buttons', [
+                                        'item' => $comment,
+                                        'routePrefix' => 'comment'
+                                    ])
+                                </div>
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -41,3 +48,5 @@
 
     </section>
 @endsection
+
+@include('component.delete_modal_simple')

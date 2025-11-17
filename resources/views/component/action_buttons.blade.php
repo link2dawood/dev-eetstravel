@@ -156,6 +156,18 @@
                 $show_route = $entity->link ?? null;
                 $edit_route = null;
                 $delete_route = route('notifications.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'comment') {
+                try {
+                    $show_route = route('comment.show', ['comment' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/comment/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('comment.edit', ['comment' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/comment/{$entity->id}/edit";
+                }
+                $delete_route = "/comment/{$entity->id}/delete_msg";
             } else {
                 try { $show_route = route($prefix . '.show', [$prefix => $entity->id]); } 
                 catch (Exception $e) { $show_route = "/{$prefix}/{$entity->id}/show"; }
@@ -208,6 +220,7 @@
         'currency_rate' => 'GET',
         'currencies' => 'GET',
         'criteria' => 'GET',
+        'comment' => 'GET',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp

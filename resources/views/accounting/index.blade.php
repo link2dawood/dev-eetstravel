@@ -55,12 +55,19 @@
                         <tr>
                             <td>{{ $transaction->id }}</td>
                             <td>{{ $transaction->date }}</td>
-                            <td>{{ $transaction->invoice_no }}</td>
+                            <td data-delete-label>{{ $transaction->invoice_no }}</td>
                             <td>{{ $transaction->tourName }}</td>
                             <td>{{ $transaction->clientName }}</td>
                             <td>{{ $transaction->amount_receiveable }}</td>
                             <td>{{ $transaction->Status }}</td>
-                            <td>{!! $transaction->action_buttons !!}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    @include('component.action_buttons', [
+                                        'item' => $transaction,
+                                        'routePrefix' => 'accounting'
+                                    ])
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -74,6 +81,8 @@
     </div>
 </section>
 @endsection
+
+@include('component.delete_modal_simple')
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>

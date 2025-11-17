@@ -168,6 +168,66 @@
                     $edit_route = "/comment/{$entity->id}/edit";
                 }
                 $delete_route = "/comment/{$entity->id}/delete_msg";
+            } elseif ($prefix === 'clients') {
+                try {
+                    $show_route = route('clients.show', ['client' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/clients/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('clients.edit', ['client' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/clients/{$entity->id}/edit";
+                }
+                $delete_route = route('client.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'office') {
+                try {
+                    $show_route = route('office.show', ['office' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/office/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('office.edit', ['office' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/office/{$entity->id}/edit";
+                }
+                $delete_route = route('office.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'invoices') {
+                try {
+                    $show_route = route('invoices.show', ['invoice' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/invoices/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('invoices.edit', ['invoice' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/invoices/{$entity->id}/edit";
+                }
+                $delete_route = route('invoices.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'taxes') {
+                try {
+                    $show_route = route('taxes.show', ['tax' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/taxes/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('taxes.edit', ['tax' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/taxes/{$entity->id}/edit";
+                }
+                $delete_route = "/taxes/{$entity->id}/deleteMsg";
+            } elseif ($prefix === 'accounting') {
+                try {
+                    $show_route = route('accounting.show', ['accounting' => $entity->id]);
+                } catch (Exception $e) {
+                    $show_route = "/accounting/{$entity->id}";
+                }
+                try {
+                    $edit_route = route('accounting.edit', ['accounting' => $entity->id]);
+                } catch (Exception $e) {
+                    $edit_route = "/accounting/{$entity->id}/edit";
+                }
+                $delete_route = route('accounts.destroy', ['id' => $entity->id]);
             } else {
                 try { $show_route = route($prefix . '.show', [$prefix => $entity->id]); } 
                 catch (Exception $e) { $show_route = "/{$prefix}/{$entity->id}/show"; }
@@ -221,6 +281,11 @@
         'currencies' => 'GET',
         'criteria' => 'GET',
         'comment' => 'GET',
+        'clients' => 'GET',
+        'office' => 'GET',
+        'invoices' => 'GET',
+        'taxes' => 'GET',
+        'accounting' => 'GET',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
 @endphp

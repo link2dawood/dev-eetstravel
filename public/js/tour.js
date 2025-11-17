@@ -12,8 +12,15 @@ let addService = {
         addService.bindEvents();
         addService.clickMainHotel();
 
+        // Root cause fix: Only call addPackages if we're NOT using server-rendered services
+        // Server-rendered view uses #service-days-container, AJAX view uses .tour-packages
+        // This prevents unnecessary AJAX calls when using the new server-rendered view
         if($('#change_service_with_edit').attr('data-info') !== 'change_edit_service'){
-            addService.addPackages();
+            // Only load via AJAX if .tour-packages exists (old AJAX-based view)
+            // If #service-days-container exists, services are already server-rendered
+            if($('.tour-packages').length > 0 && $('#service-days-container').length === 0){
+                addService.addPackages();
+            }
         }
     },
     addOrder: () => {

@@ -320,7 +320,8 @@ class QuotationController extends Controller {
 	public function prepareExport($quotation, string $export, $tour  ,$calculations,$listRoomsHotel,$request = null){
         $this->request =$request;
         $excelName = str_replace(" ","_",$quotation->name);
-        $export = new class($quotation, $calculations, $listRoomsHotel) implements \Maatwebsite\Excel\Concerns\FromView {
+        $exportFormat = $export; // Store the original export format (xlsx, csv, etc.)
+        $exportClass = new class($quotation, $calculations, $listRoomsHotel) implements \Maatwebsite\Excel\Concerns\FromView {
             protected $quotation, $calculations, $listRoomsHotel;
             public function __construct($quotation, $calculations, $listRoomsHotel) {
                 $this->quotation = $quotation;
@@ -331,6 +332,6 @@ class QuotationController extends Controller {
                 return view('quotation.excel', compact('quotation', 'calculations', 'listRoomsHotel'));
             }
         };
-        return Excel::download($export, 'Quotation_'.$excelName.'.'.$export);
+        return Excel::download($exportClass, 'Quotation_'.$excelName.'.'.$exportFormat);
 	}
 }

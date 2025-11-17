@@ -59,6 +59,7 @@ class ClientInvoiceController extends Controller
         $perm['show'] = Auth::user()->can($permission_show);
         $perm['edit'] = Auth::user()->can($permission_edit);
         $perm['destroy'] = Auth::user()->can($permission_destroy);
+        $perm['clone'] = Auth::user()->can('accounting.create') ?? false;
 
         // Process each invoice to add computed fields
         $accountingData = $clientInvoices->map(function ($invoice) use ($perm) {

@@ -1098,8 +1098,9 @@ $select_office=Offices::where('status',1)->first();
             ];
         }
 
-        $packagesCollection = $this->collectTourPackages($tour);
-        $serviceDays = $this->buildServiceDays($tour, $packagesCollection, $tourDates);
+        // Packages are linked to Tour through TourDays (Tour -> TourDays -> Packages)
+        // We use packages from $tourDates which are already loaded via with('packages')
+        $serviceDays = $this->buildServiceDays($tour, $tourDates);
         $tourDayLookup = collect($serviceDays)->mapWithKeys(function ($day) {
             return [$day['date_key'] => $day['tour_day_id']];
         });
@@ -1130,24 +1131,18 @@ $select_office=Offices::where('status',1)->first();
     }
 
 
-    protected function collectTourPackages($tour)
-    {
-        if (method_exists($tour, 'tourPackages')) {
-            return $tour->tourPackages;
-        }
-
-        if (method_exists($tour, 'packages')) {
-            return $tour->packages;
-        }
-
-        if (isset($tour->packages)) {
-            return collect($tour->packages);
-        }
-
-        return collect();
-    }
-
-    protected function buildServiceDays(Tour $tour, $packages, $tourDates)
+    /**
+     * Build service days structure from tour dates and their packages
+     * 
+     * Root cause: Packages are NOT directly related to Tour.
+     * They are linked through TourDays (Tour -> TourDays -> Packages via many-to-many).
+     * Therefore, we use packages from $tourDates which are already loaded correctly.
+     * 
+     * @param Tour $tour
+     * @param Collection $tourDates TourDays with packages already loaded
+     * @return array
+     */
+    protected function buildServiceDays(Tour $tour, $tourDates)
     {
         if (empty($tour->departure_date) || empty($tour->retirement_date)) {
             return [];

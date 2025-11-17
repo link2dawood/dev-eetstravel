@@ -20,7 +20,7 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!!url("tour")!!}' enctype="multipart/form-data">
+                <form method='POST' action='{!!url("tour")!!}' enctype="multipart/form-data" id="tour-create-form">
 
                     <div class="row">
                         <div class="col-md-12">
@@ -96,7 +96,7 @@
 														{{ $user->name }}
 														
 													</label>
-														<input class = "user_checkboxes" type="checkbox" name="assigned_user" id="user_{{ $user->id }}" value="{{ $user->id }}">
+														<input class = "user_checkboxes" type="checkbox" name="assigned_user[]" id="user_{{ $user->id }}" value="{{ $user->id }}">
 													
 													
 												</td>
@@ -266,20 +266,8 @@
 
   checkboxes.forEach(function (checkbox) {
     checkbox.addEventListener("click", function () {
-      if (this.checked) {
-        // Add the selected row to your list
-        var input = $('<input class="user_checkboxes" type="checkbox" name="assigned_user" id="user_' + this.value + '" value="' + this.value + '" checked>');
-        $('#user_' + this.value).remove();
-        input.appendTo($('#user_data_' + this.value));
-        console.log("Selected User ID: " + this.value);
-      } else {
-        // Remove the deselected row from your list
-        var input = $('<input class="user_checkboxes" type="checkbox" name="assigned_user" id="user_' + this.value + '" value="' + this.value + '">');
-        $('#user_' + this.value).remove();
-        input.appendTo($('#user_data_' + this.value));
-        $('#user_check' + this.value).remove();
-        console.log("Deselected User ID: " + this.value);
-      }
+      // No need to recreate checkboxes, just update checked state
+      console.log("User ID " + this.value + " is now " + (this.checked ? "selected" : "deselected"));
     });
   });
 }
@@ -291,6 +279,21 @@ handleCheckboxes();
 setInterval(function () {
   handleCheckboxes();
 }, 500); // Adjust the interval time as needed
+
+// Handle form submission
+$(document).ready(function() {
+    $('#tour-create-form').on('submit', function(e) {
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        
+        // Disable submit button to prevent double submission
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+        
+        // If form is submitted normally (not AJAX), let it proceed
+        // The server will handle the response appropriately
+    });
+});
 
 function addChildFields() {
     var count = document.getElementById('child_count').value;

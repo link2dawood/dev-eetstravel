@@ -44,7 +44,7 @@
                             @forelse($processedBookings as $booking)
                             <tr>
                                 <td>{{ $booking->id }}</td>
-                                <td>{{ $booking->tour_name }}</td>
+                                <td data-delete-label>{{ $booking->tour_name }}</td>
                                 <td>{{ $booking->hotel_name }}</td>
                                 <td>{{ $booking->city_name }}</td>
                                 <td>{{ $booking->status_name }}</td>
@@ -84,7 +84,7 @@
             </div>
         </div>
     </section>
-    @include('scaffold-interface.dashboard.components.delete-modal')
+    @include('component.delete_modal_simple')
 @endsection
 
 @push('styles')

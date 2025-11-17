@@ -91,7 +91,7 @@ class ClientInvoiceController extends Controller
         $options = array("Event", "Restaurant", "Bus");
         return view('accounting.service_transaction.create', compact('offices', 'tourName', 'clients', 'hotels', 'options', 'events', 'buses', 'restaurants'));
     }
-    public function create(Request $request)
+    public function create(Request $request, $tour_id = null)
     {
 
         $tour = Tour::all()->first();

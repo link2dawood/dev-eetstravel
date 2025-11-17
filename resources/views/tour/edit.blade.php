@@ -359,7 +359,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label" for="attach">{!!trans('main.Files')!!}</label>
-                                    @component('component.file_upload_field')@endcomponent
+                                    @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
                                 </div>
 
                                 <div class="mb-3">

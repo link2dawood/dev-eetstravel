@@ -174,7 +174,7 @@
 
                             <div class="col-12 mb-3">
                                 <label class="form-label">{!!trans('main.Files')!!}</label>
-                                @component('component.file_upload_field')@endcomponent
+                                @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
                             </div>
 
                             <div class="col-12">

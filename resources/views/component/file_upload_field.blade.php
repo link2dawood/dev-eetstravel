@@ -1,14 +1,19 @@
-<input id="attach" type="file" name="attach[]" multiple>
+@php
+    $enableAjaxUploads = $enableAjaxUploads ?? true;
+@endphp
+<input id="attach" type="file" name="attach[]" multiple data-enable-ajax="{{ $enableAjaxUploads ? '1' : '0' }}">
 <div id="err-container"></div>
 <script type="text/javascript">
 	$(document).on('ready', function(){
-		let targetForm = $('#attach').closest('form');
+		let fileInput = $('#attach');
+		let targetForm = fileInput.closest('form');
 		let url = $(targetForm).attr('action');
 		let showPreview = $('#showPreviewBlock').attr('data-info');
 		showPreview = showPreview == true ? false : true;
+		let enableAjaxUploads = fileInput.data('enable-ajax') !== 0 && fileInput.data('enable-ajax') !== '0';
 
 		// Initialize fileinput
-		$("#attach").fileinput({
+		fileInput.fileinput({
 			uploadUrl: url,
 			uploadExtraData: function() {
 				let obj = {};
@@ -97,6 +102,10 @@
 			$('#err-container').html('');
 		});
 		
+		if (!enableAjaxUploads) {
+			return;
+		}
+		
 		// Handle form submission
 		$(targetForm).on('submit', function(event){ 
 			event.preventDefault();
@@ -109,9 +118,9 @@
 			// Check if files are selected
 			let filesCount = 0;
 			try {
-				filesCount = $('#attach').fileinput('getFilesCount');
+				filesCount = fileInput.fileinput('getFilesCount');
 			} catch(e) {
-				filesCount = $('#attach')[0].files.length;
+				filesCount = fileInput[0].files.length;
 			}
 			
 			if (filesCount === 0) {
@@ -121,7 +130,7 @@
 			} else {
 				// Has files - use fileinput upload
 				console.log('Submitting with files');
-				$('#attach').fileinput('upload');
+				fileInput.fileinput('upload');
 			}
 		});
 		
@@ -153,7 +162,7 @@
 			if(res.comments){
 				$(document).find('#show_comments').html(res.content);
 				$(document).find('#form_comment #content').val('');
-				$('#attach').fileinput('clear');
+				fileInput.fileinput('clear');
 				$(document).find('#author_name').css({'display': 'none'});
 				$(document).find('#name').html('');
 				$(document).find('#parent_comment').val($('#id_comment').val());
@@ -161,7 +170,7 @@
 			else if (res.announcement) {
 				$(document).find('#show_comments').html(res.content);
 				$(document).find('#content').val('');
-				$('#attach').fileinput('clear');
+				fileInput.fileinput('clear');
 				$(document).find('#author_name').css({'display': 'none'});
 				$(document).find('#name').html('');
 				$(document).find('#parent_comment').val($('#id_comment').val());
@@ -208,7 +217,7 @@
 		}
 		
 		// Handle file upload success
-		$('#attach').on('filebatchuploadsuccess', function(event, data, previewId, index){
+		fileInput.on('filebatchuploadsuccess', function(event, data, previewId, index){
 			let res = data.response;
 			handleSuccessResponse(res);
 		});

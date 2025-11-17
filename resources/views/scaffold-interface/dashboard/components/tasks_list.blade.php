@@ -1,3 +1,234 @@
+<div class="card card-xl">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <h3 class="card-title mb-0">
+                <i class="ti ti-checklist me-2"></i>{{ __('My Tasks') }}
+            </h3>
+            <p class="text-muted mb-0">{{ __('Track and manage your latest assignments') }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            @can('task.create')
+                <a href="{{ route('task.create') }}" class="btn btn-primary btn-sm">
+                    <i class="ti ti-plus me-1"></i>{{ __('New Task') }}
+                </a>
+            @endcan
+            <a href="{{ route('task.index') }}" class="btn btn-outline-secondary btn-sm">
+                {{ __('View All') }}
+            </a>
+        </div>
+    </div>
+    @php
+        $taskGroups = [
+            'todo' => ['label' => __('To-Do'), 'items' => $todoTasks],
+            'completed' => ['label' => __('Completed'), 'items' => $completedTasks],
+            'aborted' => ['label' => __('Aborted'), 'items' => $abortedTasks],
+        ];
+    @endphp
+    <div class="card-header border-top">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            @foreach($taskGroups as $key => $group)
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {{ $loop->first ? 'active' : '' }}"
+                       data-bs-toggle="tab"
+                       href="#dashboard-task-{{ $key }}"
+                       role="tab">
+                        {{ $group['label'] }}
+                        <span class="badge bg-secondary ms-2">{{ $group['items']->count() }}</span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            @foreach($taskGroups as $key => $group)
+                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                     id="dashboard-task-{{ $key }}"
+                     role="tabpanel">
+                    @if($group['items']->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th style="width:70px;">ID</th>
+                                        <th>{{ __('Task') }}</th>
+                                        <th>{{ __('Tour') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($group['items'] as $task)
+                                        @php
+                                            $deadline = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line)->format('Y-m-d') : '—';
+                                            $priorityLabel = $task->priority ? __('High') : __('Normal');
+                                            $assignees = ($task->assigned_users && $task->assigned_users->count())
+                                                ? $task->assigned_users->pluck('name')->join(', ')
+                                                : ($task->assignedTo->name ?? '—');
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">#{{ $task->id }}</td>
+                                            <td data-delete-label>
+                                                <div class="fw-semibold">{{ \Illuminate\Support\Str::limit($task->content, 120) }}</div>
+                                                @if($task->task_type)
+                                                    <small class="text-muted">{{ $task->task_type }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($task->tour)
+                                                    <a href="{{ route('tour.show', ['tour' => $task->tour->id]) }}" class="text-reset text-decoration-none">
+                                                        {{ $task->tour->name }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-azure-lt">{{ $task->status->name ?? __('Unknown') }}</span>
+                                            </td>
+                                            <td>{{ $deadline }}</td>
+                                            <td>
+                                                <span class="badge {{ $task->priority ? 'bg-red-lt' : 'bg-green-lt' }}">
+                                                    {{ $priorityLabel }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $assignees }}</td>
+                                            <td class="text-end">
+                                                @include('component.action_buttons', ['item' => $task, 'routePrefix' => 'task'])
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="py-5 text-center text-muted">
+                            <i class="ti ti-inbox me-2"></i>{{ __('No tasks in this list') }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+@include('component.delete_modal_simple')
+<div class="card card-xl">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <h3 class="card-title mb-0">
+                <i class="ti ti-checklist me-2"></i>{{ __('My Tasks') }}
+            </h3>
+            <p class="text-muted mb-0">{{ __('Track and manage your latest assignments') }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            @can('task.create')
+                <a href="{{ route('task.create') }}" class="btn btn-primary btn-sm">
+                    <i class="ti ti-plus me-1"></i>{{ __('New Task') }}
+                </a>
+            @endcan
+            <a href="{{ route('task.index') }}" class="btn btn-outline-secondary btn-sm">
+                {{ __('View All') }}
+            </a>
+        </div>
+    </div>
+    @php
+        $taskGroups = [
+            'todo' => ['label' => __('To-Do'), 'items' => $todoTasks],
+            'completed' => ['label' => __('Completed'), 'items' => $completedTasks],
+            'aborted' => ['label' => __('Aborted'), 'items' => $abortedTasks],
+        ];
+    @endphp
+    <div class="card-header border-top">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            @foreach($taskGroups as $key => $group)
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {{ $loop->first ? 'active' : '' }}"
+                       data-bs-toggle="tab"
+                       href="#dashboard-task-{{ $key }}"
+                       role="tab">
+                        {{ $group['label'] }}
+                        <span class="badge bg-secondary ms-2">{{ $group['items']->count() }}</span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            @foreach($taskGroups as $key => $group)
+                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                     id="dashboard-task-{{ $key }}"
+                     role="tabpanel">
+                    @if($group['items']->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table card-table table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th style="width:70px;">ID</th>
+                                        <th>{{ __('Task') }}</th>
+                                        <th>{{ __('Tour') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Deadline') }}</th>
+                                        <th>{{ __('Priority') }}</th>
+                                        <th>{{ __('Assignees') }}</th>
+                                        <th class="text-end" style="width:140px;">{{ __('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($group['items'] as $task)
+                                        @php
+                                            $deadline = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line)->format('Y-m-d') : '—';
+                                            $priorityLabel = $task->priority ? __('High') : __('Normal');
+                                            $assignees = ($task->assigned_users && $task->assigned_users->count())
+                                                ? $task->assigned_users->pluck('name')->join(', ')
+                                                : ($task->assignedTo->name ?? '—');
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">#{{ $task->id }}</td>
+                                            <td data-delete-label>
+                                                <div class="fw-semibold">{{ \Illuminate\Support\Str::limit($task->content, 120) }}</div>
+                                                @if($task->task_type)
+                                                    <small class="text-muted">{{ $task->task_type }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($task->tour)
+                                                    <a href="{{ route('tour.show', ['tour' => $task->tour->id]) }}" class="text-reset text-decoration-none">
+                                                        {{ $task->tour->name }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-azure-lt">{{ $task->status->name ?? __('Unknown') }}</span>
+                                            </td>
+                                            <td>{{ $deadline }}</td>
+                                            <td>
+                                                     									<span class="badge {{ $task->priority ? 'bg-red-lt' : 'bg-green-lt' }}">
+                                                    {{ $priorityLabel }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $assignees }}</td>
+                                            <td class="text-end">
+                                                @include('component.action_buttons', ['item' => $task, 'routePrefix' => 'task'])
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="py-5 text-center text-muted">
+                            <i class="ti ti-inbox me-2"></i>{{ __('No tasks in this list') }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+@include('component.delete_modal_simple')
 <!DOCTYPE html>
 <html lang="en">
 <head>

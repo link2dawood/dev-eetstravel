@@ -16,7 +16,7 @@
                 @foreach($tasks as $task)
                     <tr style="{{ $task->priority ? 'background: #ffbbb2;' : '' }}">
                         <td>{{ $task->id }}</td>
-                        <td>{{ $task->content }}</td>
+                        <td data-delete-label>{{ $task->content }}</td>
                         <td>{{ $task->dead_line }}</td>
                         <td class="click_tour_in_task">{!! $task->tour_link !!}</td>
                         <td class="status">{!! $task->status_display !!}</td>

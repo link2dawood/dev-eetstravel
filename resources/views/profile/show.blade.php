@@ -275,6 +275,8 @@
         </div>
     </div>
 </div>
+
+@include('component.delete_modal_simple')
 @endsection
 
 @section('post_scripts')

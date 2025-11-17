@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    // Get CSRF token from meta tag (used for non-GET delete methods)
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+
     const modal = new bootstrap.Modal(modalEl);
     const messageEl = modalEl.querySelector('[data-delete-modal-message]');
     const confirmBtn = modalEl.querySelector('[data-delete-modal-confirm]');

@@ -161,8 +161,9 @@ class  InvoicesController extends Controller
         $offices = Offices::all();
         $tours = Tour::all();
         $clients = Client::all();
+        $tour_id = $request->input('tour_id', null);
        
-        return view('invoices.create', compact('offices', 'tours', 'clients'));
+        return view('invoices.create', compact('offices', 'tours', 'clients', 'tour_id'));
     }
     public function store(Request $request)
     {

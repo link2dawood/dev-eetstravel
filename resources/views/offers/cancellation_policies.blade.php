@@ -44,7 +44,7 @@
                             @forelse($processedOffers as $offer)
                             <tr>
                                 <td>{{ $offer->id }}</td>
-                                <td>{{ $offer->cancel_policy }}</td>
+                                <td data-delete-label>{{ $offer->cancel_policy }}</td>
                                 <td>{{ $offer->hotel_name }}</td>
                                 <td>{{ $offer->city_name }}</td>
                                 <td>{{ $offer->status }}</td>
@@ -159,7 +159,7 @@
         </div>
     </div>
 
-    @include('scaffold-interface.dashboard.components.delete-modal')
+    @include('component.delete_modal_simple')
 @endsection
 
 @push('scripts')

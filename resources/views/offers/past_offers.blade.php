@@ -43,7 +43,7 @@
                         @forelse($tours as $tour)
                         <tr>
                             <td>{{ $tour->id }}</td>
-                            <td>{{ $tour->name }}</td>
+                            <td data-delete-label>{{ $tour->name }}</td>
                             <td>{{ $tour->city ? $tour->city->name : '' }}</td>
                             <td>
                                 <span class="badge badge-primary" style="background-color: {{ $tour->getStatusColor() }}">
@@ -78,7 +78,7 @@
         </div>
     </div>
 </section>
-@include('scaffold-interface.dashboard.components.delete-modal')
+@include('component.delete_modal_simple')
 @endsection
 
 @push('scripts')

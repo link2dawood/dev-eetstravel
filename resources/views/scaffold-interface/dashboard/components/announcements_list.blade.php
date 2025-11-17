@@ -21,16 +21,37 @@
             </thead>
             <tbody>
             @foreach($announcements as $announcement)
-                <tr data-href="{{ route('announcements.show', ['announcement' => $announcement->id]) }}">
-                    
-                    <td class="clickable-cell">{{ $announcement->id }}</td>
-                    <td class="clickable-cell" data-delete-label><span style="font-size: 14px;font-weight: bold;">{{ $announcement->title }}</span></td>
-                    <td class="clickable-cell">{{ \Illuminate\Support\Str::limit($announcement->content, 50) }}</td>
-                    <td class="clickable-cell">{{ $announcement->created_at->format('Y-m-d') }}</td>
-                    <td class="clickable-cell">{{ $announcement->sender }}</td>
-                    
+                @php
+                    $showRoute = route('announcements.show', ['announcement' => $announcement->id]);
+                @endphp
+                <tr>
                     <td>
-                        {!! $announcement->action_buttons !!}
+                        <a href="{{ $showRoute }}" class="text-reset text-decoration-none d-block">
+                            {{ $announcement->id }}
+                        </a>
+                    </td>
+                    <td data-delete-label>
+                        <a href="{{ $showRoute }}" class="text-reset text-decoration-none d-block fw-semibold">
+                            {{ $announcement->title }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ $showRoute }}" class="text-reset text-decoration-none d-block">
+                            {{ \Illuminate\Support\Str::limit($announcement->content, 50) }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ $showRoute }}" class="text-reset text-decoration-none d-block">
+                            {{ $announcement->created_at->format('Y-m-d') }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ $showRoute }}" class="text-reset text-decoration-none d-block">
+                            {{ $announcement->sender }}
+                        </a>
+                    </td>
+                    <td>
+                        @include('component.action_buttons', ['item' => $announcement, 'routePrefix' => 'announcements'])
                     </td>
                 </tr>
             @endforeach
@@ -58,62 +79,5 @@
         </div>
     @endif
 </div>
-
-{{-- ================================== --}}
-{{-- == START OF JAVASCRIPT FIX == --}}
-{{-- ================================== --}}
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Use event delegation on the table for better performance and to handle dynamically added content
-    const table = document.getElementById('announcement-table');
-    if (!table) return;
-
-    // Handle clicks on the table
-    table.addEventListener('click', function(e) {
-        // Check if click is on a button, link, or inside an action cell
-        const clickedElement = e.target;
-        // Find the closest link or button (this handles SVG clicks inside buttons/links)
-        const isButton = clickedElement.closest('a, button');
-        const actionCell = clickedElement.closest('td:not(.clickable-cell)');
-        const clickableCell = clickedElement.closest('.clickable-cell');
-        
-        // If clicking on action buttons/links, let them handle normally (don't interfere)
-        if (isButton && actionCell) {
-            // Do nothing - let the link/button handle the click naturally
-            return;
-        }
-        
-        // If clicking on action cell (but not on buttons), stop propagation
-        if (actionCell && !isButton) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-        
-        // If clicking on clickable cell (but not on buttons/links), navigate to show page
-        if (clickableCell && !isButton) {
-            e.preventDefault();
-            const row = clickableCell.closest('tr');
-            const href = row ? row.dataset.href : null;
-            if (href) {
-                window.location.href = href;
-            }
-        }
-    });
-});
-</script>
-<style>
-    #announcement-table .clickable-cell {
-        cursor: pointer;
-    }
-    #announcement-table tr:hover .clickable-cell {
-        background-color: #f8f9fa; 
-    }
-</style>
-@endpush
-{{-- ================================== --}}
-{{-- == END OF JAVASCRIPT FIX == --}}
-{{-- ================================== --}}
 
 @include('component.delete_modal_simple')

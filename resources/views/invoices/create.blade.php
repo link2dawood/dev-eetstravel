@@ -450,7 +450,7 @@
                 <div class="form-group">
                     <label>Attachments</label>
                     <div class="file-upload-wrapper">
-                        @component('component.file_upload_field')
+                        @component('component.file_upload_field', ['enableAjaxUploads' => false])
                         @endcomponent
                     </div>
                 </div>

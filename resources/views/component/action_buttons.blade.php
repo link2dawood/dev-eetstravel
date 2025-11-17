@@ -32,6 +32,10 @@
                 $show_route = route('announcements.show', ['announcement' => $entity->id]);
                 $edit_route = route('announcements.edit', ['announcement' => $entity->id]);
                 $delete_route = route('announcements.destroy', ['announcement' => $entity->id]);
+            } elseif ($prefix === 'task') {
+                $show_route = route('task.show', ['id' => $entity->id]);
+                $edit_route = route('task.edit', ['id' => $entity->id]);
+                $delete_route = route('task.destroy', ['id' => $entity->id]);
             } else {
                 try { $show_route = route($prefix . '.show', [$prefix => $entity->id]); } 
                 catch (Exception $e) { $show_route = "/{$prefix}/{$entity->id}/show"; }

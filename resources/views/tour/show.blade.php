@@ -133,10 +133,10 @@
                             <i class="ti ti-file-invoice me-1"></i>{!! trans('main.Voucher') !!}
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}"); return false;'>
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
-                            <a class="dropdown-item" href="#" onclick='export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}");'>
+                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}"); return false;'>
                                 <i class="ti ti-file-type-doc me-2"></i>DOC
                             </a>
                         </div>
@@ -862,7 +862,11 @@
             {{-- Invoices Tab --}}
             <div role="tabpanel" class="tab-pane" id="invoices-tab">
                 <h3 class="mb-4"><i class="ti ti-file-invoice me-2"></i>Invoices</h3>
-                {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class, 'btn btn-success mb-3') !!}
+                @if(Auth::user()->can('invoices.create'))
+                    <a href="{{ route('invoices.create', ['tour_id' => $tour->id]) }}" class="btn btn-success mb-3">
+                        <i class="ti ti-plus me-1"></i>New Invoice
+                    </a>
+                @endif
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
@@ -912,7 +916,11 @@
             {{-- Billing Tab --}}
             <div role="tabpanel" class="tab-pane" id="billing-tab">
                 <h3 class="mb-4"><i class="ti ti-cash me-2"></i>Billing</h3>
-                {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class, 'btn btn-success mb-3') !!}
+                @if(Auth::user()->can('accounting.create'))
+                    <a href="{{ route('accounting.create', ['tour_id' => $tour->id]) }}" class="btn btn-success mb-3">
+                        <i class="ti ti-plus me-1"></i>New Billing
+                    </a>
+                @endif
                 
                 <table class="table card-table table-vcenter table-striped">
                     <thead>
@@ -1332,19 +1340,23 @@ function showLandingPageModal() {
 }
 
 function exportCity() {
-    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}");
+    const url = "{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}";
+    export_to(url);
 }
 
 function exportExcel() {
-    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}");
+    const url = "{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}";
+    export_to(url);
 }
 
 function exportNumber() {
-    export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}");
+    const url = "{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}";
+    export_to(url);
 }
 
 function exportItinerary() {
-    export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}");
+    const url = "{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}";
+    export_to(url);
 }
 
 function printAll() {
@@ -1353,7 +1365,16 @@ function printAll() {
 
 // Export function
 function export_to(url) {
-    window.open(url, '_blank');
+    if (!url) {
+        console.error('Export URL is empty');
+        return;
+    }
+    try {
+        window.open(url, '_blank');
+    } catch (e) {
+        console.error('Error opening export URL:', e);
+        alert('Error opening export. Please check the console for details.');
+    }
 }
 
 // Scroll position persistence

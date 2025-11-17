@@ -12,7 +12,7 @@
                 @foreach($notifications as $notification)
                     <tr>
                         <td>{{ $notification->id }}</td>
-                        <td>{{ $notification->content }}</td>
+                        <td data-delete-label>{{ $notification->content }}</td>
                         <td>{!! $notification->action_buttons !!}</td>
                     </tr>
                 @endforeach

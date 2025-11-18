@@ -653,11 +653,14 @@ class TourPackageController extends Controller
         }
 
         $currencies = Currencies::all();
-        $service = TourService::getService($serviceType);
-        $services = $service ? $service->getItems(['serviceType' => $serviceType, 'search' => $search]) : collect();
+        
+        // Root cause fix: Ensure serviceType is valid before using it
+        $validServiceType = (is_numeric($serviceType) && isset($this->serviceTypes[$serviceType])) ? $serviceType : 0;
+        $service = TourService::getService($validServiceType);
+        $services = $service ? $service->getItems(['serviceType' => $validServiceType, 'search' => $search]) : collect();
         
         // Root cause fix: Check if serviceType key exists before accessing
-        $filterType = (isset($this->serviceTypes[$serviceType])) ? $this->serviceTypes[$serviceType] : null;
+        $filterType = (isset($this->serviceTypes[$validServiceType])) ? $this->serviceTypes[$validServiceType] : 'hotel';
         
         // Root cause fix: Check if package type key exists before accessing
         $selectedServiceName = (isset($packageType) && isset($this->serviceTypes[$packageType])) 
@@ -753,6 +756,7 @@ class TourPackageController extends Controller
                 ->first();
         }
 
+        // Root cause fix: Pass safe packageServiceType to view to prevent undefined array key errors
         return view(
             'tour_package.edit',
             compact(
@@ -771,7 +775,8 @@ class TourPackageController extends Controller
                 'drivers',
                 'buses',
                 'selected_drivers',
-                'selected_bus'
+                'selected_bus',
+                'packageServiceType' // Add this safe variable for the view
             )
         );
     }

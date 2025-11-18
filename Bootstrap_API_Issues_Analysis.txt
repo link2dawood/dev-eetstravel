@@ -1,0 +1,354 @@
+================================================================================
+BOOTSTRAP API COMPATIBILITY ISSUES - COMPREHENSIVE ANALYSIS
+================================================================================
+Generated: 2025-01-XX
+Purpose: Identify all files with Bootstrap API calls that need defensive checks
+         to prevent "getOrCreateInstance is not a function" errors
+
+================================================================================
+ISSUE SUMMARY
+================================================================================
+Problem: Bootstrap 5 API methods (getOrCreateInstance, getInstance, new bootstrap.*)
+         are being called without proper defensive checks, causing errors when:
+         1. Bootstrap version doesn't support the method
+         2. Bootstrap is partially loaded
+         3. Bootstrap 4 is being used (uses jQuery instead)
+
+Solution Required: Add defensive checks before calling Bootstrap APIs:
+                   - Check if bootstrap object exists
+                   - Check if specific method exists
+                   - Provide fallback to jQuery/Bootstrap 4 when needed
+
+================================================================================
+FILES REQUIRING FIXES
+================================================================================
+
+1. public/js/tour.js
+   Status: PARTIALLY FIXED (needs verification)
+   Issues Found:
+   - Line 245-282: bootstrap.Modal.getOrCreateInstance() - HAS DEFENSIVE CHECKS
+   - Line 250: bootstrap.Modal.getOrCreateInstance() - Protected with try-catch
+   - Line 259: bootstrap.Modal.getInstance() - Protected with fallback
+   - Line 261: new bootstrap.Modal() - Protected with checks
+   Action Required: VERIFY the fix is working correctly, ensure all paths tested
+
+2. resources/views/tour/show.blade.php
+   Status: PARTIALLY FIXED (needs verification)
+   Issues Found:
+   - Line 1125-1147: bootstrap.Tab.getOrCreateInstance() - HAS DEFENSIVE CHECKS
+   - Line 1127: bootstrap.Tab.getOrCreateInstance() - Protected with try-catch
+   - Line 1133: bootstrap.Tab.getInstance() - Protected with fallback
+   - Line 1135: new bootstrap.Tab() - Protected with checks
+   Action Required: VERIFY the fix is working correctly
+
+3. resources/views/component/delete_modal_simple.blade.php
+   Status: NEEDS FIX
+   Issues Found:
+   - Line 45: new bootstrap.Modal(modalEl) - NO DEFENSIVE CHECKS
+   Risk: Will fail if bootstrap.Modal is not available
+   Action Required: Add defensive checks and jQuery fallback
+
+4. resources/views/tour/index.blade.php
+   Status: NEEDS FIX
+   Issues Found:
+   - Line 334: new bootstrap.Modal(document.getElementById('myModal'), {...}) - NO DEFENSIVE CHECKS
+   - Line 421: new bootstrap.Tooltip(tooltipTriggerEl) - NO DEFENSIVE CHECKS
+   - Line 432: new bootstrap.Modal(document.getElementById('tour-clone-modal')) - NO DEFENSIVE CHECKS
+   Risk: Will fail if bootstrap.Modal or bootstrap.Tooltip are not available
+   Action Required: Add defensive checks and jQuery fallback for all three instances
+
+5. resources/views/scaffold-interface/dashboard/components/delete-modal.blade.php
+   Status: NEEDS FIX
+   Issues Found:
+   - Line 36: new bootstrap.Modal(document.getElementById('myTourModal'), {...}) - NO DEFENSIVE CHECKS
+   Risk: Will fail if bootstrap.Modal is not available
+   Action Required: Add defensive checks and jQuery fallback
+
+6. resources/views/guest_list/create.blade.php
+   Status: PARTIALLY FIXED (needs improvement)
+   Issues Found:
+   - Line 507-509: new bootstrap.Modal(errorModalEl) - HAS BASIC CHECK but needs improvement
+   - Line 520-522: new bootstrap.Modal(questionModal) - HAS BASIC CHECK but needs improvement
+   - Line 533: new bootstrap.Modal(document.getElementById('error_send')) - NO DEFENSIVE CHECKS
+   Risk: Line 533 will fail if bootstrap.Modal is not available
+   Action Required: 
+     - Improve checks on lines 507-509 and 520-522
+     - Add defensive checks to line 533
+     - Add proper error handling and jQuery fallback
+
+================================================================================
+DETAILED ISSUE BREAKDOWN BY FILE
+================================================================================
+
+FILE 1: public/js/tour.js
+----------------------------------------
+Location: Line 245-282
+Current Code Pattern:
+  if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+      try {
+          if (bootstrap.Modal.getOrCreateInstance && 
+              typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+              const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+              ...
+          }
+      } catch (e) {
+          // Fallback to jQuery
+      }
+  }
+
+Status: ✅ FIXED (has proper defensive checks)
+Verification Needed: Test with Bootstrap 4, Bootstrap 5.0, and Bootstrap 5.1+
+
+
+FILE 2: resources/views/tour/show.blade.php
+----------------------------------------
+Location: Line 1125-1147
+Current Code Pattern:
+  if (storedTab && typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Tab) {
+      try {
+          if (bootstrap.Tab.getOrCreateInstance && 
+              typeof bootstrap.Tab.getOrCreateInstance === 'function') {
+              const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
+              ...
+          }
+      } catch (e) {
+          // Fallback to jQuery
+      }
+  }
+
+Status: ✅ FIXED (has proper defensive checks)
+Verification Needed: Test with Bootstrap 4, Bootstrap 5.0, and Bootstrap 5.1+
+
+
+FILE 3: resources/views/component/delete_modal_simple.blade.php
+----------------------------------------
+Location: Line 45
+Current Code:
+  const modal = new bootstrap.Modal(modalEl);
+
+Issue: No defensive checks before calling new bootstrap.Modal()
+Risk Level: HIGH - This is a shared component used across many pages
+
+Required Fix:
+  let modal = null;
+  if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+      try {
+          if (typeof bootstrap.Modal === 'function') {
+              modal = new bootstrap.Modal(modalEl);
+          } else if (bootstrap.Modal.getOrCreateInstance && 
+                     typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+              modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+          } else if (bootstrap.Modal.getInstance && 
+                     typeof bootstrap.Modal.getInstance === 'function') {
+              modal = bootstrap.Modal.getInstance(modalEl);
+              if (!modal) {
+                  modal = new bootstrap.Modal(modalEl);
+              }
+          }
+      } catch (e) {
+          console.warn('Bootstrap Modal API failed, falling back to jQuery:', e);
+      }
+  }
+  
+  // Fallback to jQuery/Bootstrap 4
+  if (!modal) {
+      $(modalEl).modal('show'); // Use jQuery modal instead
+      // Note: For jQuery, we'll need to handle modal instance differently
+  }
+
+
+FILE 4: resources/views/tour/index.blade.php
+----------------------------------------
+Location 1: Line 334
+Current Code:
+  let tourModal = new bootstrap.Modal(document.getElementById('myModal'), {
+      backdrop: 'static',
+      keyboard: false
+  });
+
+Issue: No defensive checks
+Required Fix: Add defensive checks similar to FILE 3
+
+Location 2: Line 421
+Current Code:
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+
+Issue: No defensive checks
+Required Fix:
+  if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Tooltip) {
+      try {
+          if (typeof bootstrap.Tooltip === 'function') {
+              return new bootstrap.Tooltip(tooltipTriggerEl);
+          }
+      } catch (e) {
+          console.warn('Bootstrap Tooltip failed:', e);
+      }
+  }
+  // Fallback: Return null or use jQuery tooltip if available
+
+Location 3: Line 432
+Current Code:
+  var cloneModal = new bootstrap.Modal(document.getElementById('tour-clone-modal'));
+  cloneModal.show();
+
+Issue: No defensive checks
+Required Fix: Add defensive checks similar to FILE 3
+
+
+FILE 5: resources/views/scaffold-interface/dashboard/components/delete-modal.blade.php
+----------------------------------------
+Location: Line 36
+Current Code:
+  let tourModal = new bootstrap.Modal(document.getElementById('myTourModal'), {
+      backdrop: 'static',
+      keyboard: false
+  });
+
+Issue: No defensive checks
+Risk Level: HIGH - This is a shared dashboard component
+
+Required Fix: Add defensive checks similar to FILE 3
+
+
+FILE 6: resources/views/guest_list/create.blade.php
+----------------------------------------
+Location 1: Line 507-509
+Current Code:
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      const errorModal = new bootstrap.Modal(errorModalEl);
+      errorModal.show();
+  } else {
+      // Fallback to jQuery modal
+  }
+
+Status: ⚠️ PARTIAL - Has basic check but needs improvement
+Issue: Doesn't check if bootstrap.Modal is a function before calling new
+Required Fix: Add check for typeof bootstrap.Modal === 'function'
+
+Location 2: Line 520-522
+Current Code:
+  if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      new bootstrap.Modal(questionModal);
+  }
+
+Status: ⚠️ PARTIAL - Has basic check but needs improvement
+Issue: Doesn't check if bootstrap.Modal is a function before calling new
+Required Fix: Add check for typeof bootstrap.Modal === 'function'
+
+Location 3: Line 533
+Current Code:
+  const errorModal = new bootstrap.Modal(document.getElementById('error_send'));
+  $('#error_send').find('.error_send_message').text('Please fill all required fields (Guest List Name and Hotels)');
+  errorModal.show();
+
+Issue: NO DEFENSIVE CHECKS - Will fail if bootstrap.Modal is not available
+Risk Level: HIGH - This is in an event handler that will crash if Bootstrap fails
+
+Required Fix: Add comprehensive defensive checks similar to FILE 3
+
+
+================================================================================
+ADDITIONAL FILES TO CHECK (Potential Issues)
+================================================================================
+
+The following files may contain Bootstrap API calls but need manual verification:
+
+- public/js/onclick-events.js (check for any Bootstrap API usage)
+- public/js/comment.js (check for any Bootstrap API usage)
+- public/js/notifications.js (check for any Bootstrap API usage)
+- public/js/tour-interactions.js (check for any Bootstrap API usage)
+- public/js/tour-validation.js (check for any Bootstrap API usage)
+- Any other .blade.php files in resources/views that might use modals/tooltips
+
+================================================================================
+RECOMMENDED FIX PATTERN
+================================================================================
+
+For all files, use this defensive pattern:
+
+// Pattern for Modal
+function createBootstrapModal(modalEl, options = {}) {
+    let modal = null;
+    
+    if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+        try {
+            // Try Bootstrap 5.1+ getOrCreateInstance
+            if (bootstrap.Modal.getOrCreateInstance && 
+                typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            }
+            // Try Bootstrap 5.0 getInstance
+            else if (bootstrap.Modal.getInstance && 
+                     typeof bootstrap.Modal.getInstance === 'function') {
+                modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal && typeof bootstrap.Modal === 'function') {
+                    modal = new bootstrap.Modal(modalEl, options);
+                }
+            }
+            // Try direct constructor
+            else if (typeof bootstrap.Modal === 'function') {
+                modal = new bootstrap.Modal(modalEl, options);
+            }
+        } catch (e) {
+            console.warn('Bootstrap Modal API failed, falling back to jQuery:', e);
+        }
+    }
+    
+    // Fallback to jQuery/Bootstrap 4
+    if (!modal) {
+        return {
+            show: function() { $(modalEl).modal('show'); },
+            hide: function() { $(modalEl).modal('hide'); },
+            dispose: function() { $(modalEl).modal('dispose'); }
+        };
+    }
+    
+    return modal;
+}
+
+// Pattern for Tooltip
+function createBootstrapTooltip(element, options = {}) {
+    if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Tooltip) {
+        try {
+            if (typeof bootstrap.Tooltip === 'function') {
+                return new bootstrap.Tooltip(element, options);
+            }
+        } catch (e) {
+            console.warn('Bootstrap Tooltip failed:', e);
+        }
+    }
+    // Fallback: Return null or use jQuery tooltip
+    return null;
+}
+
+================================================================================
+PRIORITY FIX ORDER
+================================================================================
+
+HIGH PRIORITY (Shared Components - affects many pages):
+1. resources/views/component/delete_modal_simple.blade.php
+2. resources/views/scaffold-interface/dashboard/components/delete-modal.blade.php
+
+MEDIUM PRIORITY (Frequently used pages):
+3. resources/views/tour/index.blade.php
+4. resources/views/guest_list/create.blade.php (especially line 533)
+
+LOW PRIORITY (Already fixed, needs verification):
+5. public/js/tour.js (verify fix works)
+6. resources/views/tour/show.blade.php (verify fix works)
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+After fixing each file, test with:
+□ Bootstrap 4 (jQuery-based modals)
+□ Bootstrap 5.0 (has getInstance but not getOrCreateInstance)
+□ Bootstrap 5.1+ (has getOrCreateInstance)
+□ Partial Bootstrap load (bootstrap object exists but methods missing)
+□ No Bootstrap (should fallback to jQuery gracefully)
+
+================================================================================
+END OF ANALYSIS
+================================================================================
+

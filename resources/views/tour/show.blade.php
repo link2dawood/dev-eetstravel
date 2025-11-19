@@ -1012,7 +1012,45 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- DataTables will populate this via AJAX --}}
+                            @forelse($serviceCatalog ?? [] as $service)
+                                <tr data-service-type="{{ $service['type'] }}" data-service-name="{{ strtolower($service['name']) }}" data-service-city="{{ strtolower($service['city'] ?? '') }}" data-service-country="{{ strtolower($service['country'] ?? '') }}">
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ $service['name'] }}</span>
+                                            @if(isset($service['type_label']))
+                                                <small class="text-muted text-uppercase">{{ $service['type_label'] }}</small>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>{{ $service['address'] ?? '' }}</td>
+                                    <td>{{ $service['country'] ?? '' }}</td>
+                                    <td>{{ $service['city'] ?? '' }}</td>
+                                    <td>{{ $service['phone'] ?? '' }}</td>
+                                    <td>{{ $service['contact'] ?? '' }}</td>
+                                    <td>
+                                        @php
+                                            $type = $service['type'];
+                                            $id = $service['id'];
+                                            $name = $service['name'];
+                                            $preLoader = ($type == 'hotel' || $type == 'transfer') ? '' : 'pre-loader-func';
+                                        @endphp
+                                        <button class="btn btn-success btn-sm add-service-button {{ $preLoader }}" 
+                                                data-link="{{ route('tour_package.store') }}" 
+                                                data-service_type="{{ $type }}" 
+                                                data-service_id="{{ $id }}" 
+                                                data-service_name="{{ $name }}">
+                                            {!! trans('main.Add') !!}
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="ti ti-inbox fs-1"></i>
+                                        <p class="mt-2">{!! __('No services available') !!}</p>
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -1131,184 +1169,83 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Initialize DataTables for service catalog modal
-    let serviceCatalogTable = null;
-    
-    // Use centralized DataTables loader (defined in datatables_cdn.blade.php)
-    // If not available, fallback to local implementation
-    if (typeof window.loadDataTables === 'undefined') {
-        window.loadDataTables = function() {
-            return new Promise(function(resolve, reject) {
-                if (typeof $.fn.DataTable !== 'undefined' && 
-                    typeof $.fn.dataTable !== 'undefined' && 
-                    typeof $.fn.dataTable.Api !== 'undefined') {
-                    resolve();
-                    return;
-                }
-                
-                const scripts = window.DATATABLES_CDN ? window.DATATABLES_CDN.scripts : [
-                    'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js',
-                    'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js',
-                    'https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js',
-                    'https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
-                ];
-                
-                function loadScript(index) {
-                    if (index >= scripts.length) {
-                        setTimeout(function() {
-                            if (typeof $.fn.DataTable !== 'undefined') {
-                                resolve();
-                            } else {
-                                reject(new Error('DataTables failed to initialize'));
-                            }
-                        }, 100);
-                        return;
-                    }
-                    
-                    const script = document.createElement('script');
-                    script.src = scripts[index];
-                    script.onload = function() {
-                        loadScript(index + 1);
-                    };
-                    script.onerror = function() {
-                        reject(new Error('Failed to load DataTables from ' + scripts[index]));
-                    };
-                    document.head.appendChild(script);
-                }
-                
-                loadScript(0);
-            });
-        };
+    // Client-side filtering for service catalog (server-side rendered data)
+    // Root fix: Load data directly from controller, filter on client side
+    function filterServices() {
+        const serviceType = $('#service-type-filter').val();
+        const searchValue = $('#service-catalog-search').val().toLowerCase();
+        const rows = $('#service-catalog-table tbody tr');
+        let visibleCount = 0;
+        
+        rows.each(function() {
+            const $row = $(this);
+            const rowServiceType = $row.data('service-type');
+            const rowServiceName = $row.data('service-name') || '';
+            const rowServiceCity = $row.data('service-city') || '';
+            const rowServiceCountry = $row.data('service-country') || '';
+            
+            // Filter by service type
+            let typeMatch = true;
+            if (serviceType && serviceType !== 'all') {
+                typeMatch = rowServiceType === serviceType || rowServiceType === 'transfer';
+            }
+            
+            // Filter by search term (name, city, or country)
+            let searchMatch = true;
+            if (searchValue) {
+                searchMatch = rowServiceName.includes(searchValue) ||
+                             rowServiceCity.includes(searchValue) ||
+                             rowServiceCountry.includes(searchValue);
+            }
+            
+            // Show or hide row
+            if (typeMatch && searchMatch) {
+                $row.show();
+                visibleCount++;
+            } else {
+                $row.hide();
+            }
+        });
+        
+        // Show/hide "no results" message
+        if (visibleCount === 0 && rows.length > 0) {
+            if ($('#no-services-message').length === 0) {
+                $('#service-catalog-table tbody').append(
+                    '<tr id="no-services-message"><td colspan="7" class="text-center text-muted py-4"><i class="ti ti-inbox fs-1"></i><p class="mt-2">{!! __('No services match your search criteria') !!}</p></td></tr>'
+                );
+            }
+        } else {
+            $('#no-services-message').remove();
+        }
     }
     
-    // Initialize DataTables when modal is shown
-    // Support both Bootstrap 4 and Bootstrap 5 modal events
+    // Initialize filters when modal is shown
     $('#service-modal').on('shown.bs.modal shown.modal', function() {
-        // Ensure DataTables is loaded before using it
-        loadDataTables().then(function() {
-            // Check if DataTable is already initialized
-            if (typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#service-catalog-table')) {
-                serviceCatalogTable = $('#service-catalog-table').DataTable();
-                serviceCatalogTable.draw();
-                return;
-            }
-
-        serviceCatalogTable = $('#service-catalog-table').DataTable({
-            responsive: true,
-            dom: "<'row'<'col-md-6'l><'col-md-6'f>>" +
-                 "<'row'<'col-12'tr>>" +
-                 "<'row'<'col-md-6'i><'col-md-6'p>>",
-            processing: true,
-            serverSide: true,
-            pageLength: 25,
-            order: [],
-            ajax: {
-                url: "/supplier_show",
-                type: "GET",
-                data: function(d) {
-                    d.actionColumn = 'add-service-column';
-                    let serviceType = $('#service-type-filter').val();
-                    if (serviceType === 'all' || !serviceType) {
-                        d.service = 'Service'; // 'Service' means all services in the endpoint
-                    } else {
-                        // Capitalize first letter and handle special cases
-                        serviceType = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
-                        if (serviceType === 'Cruise') serviceType = 'Cruises';
-                        d.service = serviceType;
-                    }
-                    d.searchname = $('#service-catalog-search').val() || '';
-                    // DataTables server-side parameters
-                    d.draw = d.draw;
-                    d.start = d.start;
-                    d.length = d.length;
-                },
-                error: function(xhr, error, thrown) {
-                    console.error('DataTables AJAX Error:', error, thrown);
-                    console.error('Response:', xhr.responseText);
-                    alert('Error loading services. Please try again or refresh the page.');
-                }
-            },
-            columns: [
-                {
-                    data: 'nameService',
-                    name: 'nameService',
-                    render: function(data, type, row) {
-                        if (type === 'display') {
-                            const parts = data ? data.split(' (') : ['', ''];
-                            const name = parts[0] || '';
-                            const typeLabel = parts[1] ? parts[1].replace(')', '') : '';
-                            return '<div class="d-flex flex-column">' +
-                                   '<span class="fw-bold">' + name + '</span>' +
-                                   (typeLabel ? '<small class="text-muted text-uppercase">' + typeLabel + '</small>' : '') +
-                                   '</div>';
-                        }
-                        return data;
-                    }
-                },
-                {data: 'address_first', name: 'address_first'},
-                {data: 'country', name: 'country'},
-                {data: 'city', name: 'city'},
-                {data: 'work_phone', name: 'work_phone'},
-                {data: 'contact_name', name: 'contact_name'},
-                {data: 'add-service-column', name: 'add-service-column', sortable: false, orderable: false}
-            ],
-            initComplete: function(settings, json) {
-                // Update Bootstrap 5 classes
-                setTimeout(function() {
-                    $('.dataTables_wrapper .row').addClass('g-2');
-                    $('.dataTables_length').addClass('text-start');
-                    $('.dataTables_filter').addClass('text-md-end');
-                    $('.dataTables_info').addClass('text-start');
-                    $('.dataTables_paginate').addClass('text-md-end');
-                }, 50);
-                
-                // Log initialization for debugging
-                console.log('Service catalog DataTable initialized', json);
-            },
-            drawCallback: function(settings) {
-                // Log if no data is found
-                const api = this.api();
-                const data = api.rows({page: 'current'}).data();
-                if (data.length === 0) {
-                    console.warn('No services found. Check filters and search criteria.');
-                }
-            }
+        // Reset filters
+        $('#service-type-filter').val('all');
+        $('#service-catalog-search').val('');
+        filterServices();
+        
+        // Connect service type filter
+        $('#service-type-filter').off('change.serviceFilter').on('change.serviceFilter', function() {
+            filterServices();
         });
-
-            // Hide default DataTables search
-            $('#service-catalog-table_filter').css('display', 'none');
-
-            // Connect service type filter to DataTables
-            $('#service-type-filter').on('change', function() {
-                if (serviceCatalogTable) {
-                    serviceCatalogTable.ajax.reload();
-                }
-            });
-
-            // Connect search input to DataTables with debounce
-            let searchTimeout;
-            $('#service-catalog-search').on('keyup', function() {
-                clearTimeout(searchTimeout);
-                const searchValue = $(this).val();
-                searchTimeout = setTimeout(function() {
-                    if (serviceCatalogTable) {
-                        serviceCatalogTable.ajax.reload();
-                    }
-                }, 500); // 500ms debounce
-            });
-        }).catch(function(error) {
-            console.error('Failed to load DataTables:', error);
-            alert('Error loading DataTables. Please refresh the page and try again.');
+        
+        // Connect search input with debounce
+        let searchTimeout;
+        $('#service-catalog-search').off('keyup.serviceFilter').on('keyup.serviceFilter', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                filterServices();
+            }, 300); // 300ms debounce
         });
     });
-
-    // Destroy DataTable when modal is hidden to free memory
-    // Support both Bootstrap 4 and Bootstrap 5 modal events
+    
+    // Reset filters when modal is hidden
     $('#service-modal').on('hidden.bs.modal hidden.modal', function() {
-        if (serviceCatalogTable && typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#service-catalog-table')) {
-            serviceCatalogTable.destroy();
-            serviceCatalogTable = null;
-        }
+        $('#service-type-filter').val('all');
+        $('#service-catalog-search').val('');
+        filterServices();
     });
 });
 

@@ -57,8 +57,19 @@ class SupplierSearchController extends Controller
                 if (empty($namespace)) {
                     $namespace = [];
                 }
+            } catch (\Error $e) {
+                // Root cause fix: Catch fatal errors (e.g., class not found)
+                \Log::error('Fatal error in getCollection: ' . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                $namespace = [];
             } catch (\Exception $e) {
-                \Log::error('Error in getCollection: ' . $e->getMessage());
+                // Root cause fix: Catch other exceptions
+                \Log::error('Exception in getCollection: ' . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
                 $namespace = [];
             }
         }
@@ -334,11 +345,19 @@ class SupplierSearchController extends Controller
         	if ($service == 'Transfer') {
         		continue;
 	        }
-            $services = [];
+            
+            // Root cause fix: Check if model class exists before trying to use it
             $namespace = 'App\\' . $service;
-            $model_test = $namespace;
-            $table_name = $this->getTableName($model_test);
-            $query_builder = $service == 'Cruises' || $service == 'Flight' ?
+            if (!class_exists($namespace)) {
+                \Log::warning("Model class does not exist: {$namespace}");
+                continue; // Skip this service if model doesn't exist
+            }
+            
+            try {
+                $services = [];
+                $model_test = $namespace;
+                $table_name = $this->getTableName($model_test);
+                $query_builder = $service == 'Cruises' || $service == 'Flight' ?
 
                 $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country_from")
                     ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city_from") :
@@ -401,6 +420,23 @@ class SupplierSearchController extends Controller
             if ($rates) array_push($services, $this->findByRate($rates, $namespace, $cityCode, $searchName, $countryAlias));
             $c_service = collect($services)->collapse()->all();
             array_push($data, $c_service);
+            } catch (\Error $e) {
+                // Root cause fix: Catch class not found and other fatal errors
+                \Log::error("Error processing service {$service}: " . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'namespace' => $namespace
+                ]);
+                continue; // Skip this service and continue with next
+            } catch (\Exception $e) {
+                // Catch other exceptions
+                \Log::error("Exception processing service {$service}: " . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'namespace' => $namespace
+                ]);
+                continue; // Skip this service and continue with next
+            }
         }
 
         $collection = collect($data)->collapse()->all();

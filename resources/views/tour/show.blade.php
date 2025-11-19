@@ -6,9 +6,8 @@
 @endphp
 
 @section('post_styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+{{-- Centralized DataTables CDN --}}
+@include('component.datatables_cdn')
 <link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>
     /* Toggle Switch */
@@ -1135,54 +1134,51 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize DataTables for service catalog modal
     let serviceCatalogTable = null;
     
-    // Load DataTables if not already loaded (sequential loading to ensure proper order)
-    function loadDataTables() {
-        return new Promise(function(resolve, reject) {
-            // Check if DataTables is already loaded
-            if (typeof $.fn.DataTable !== 'undefined' && 
-                typeof $.fn.dataTable !== 'undefined' && 
-                typeof $.fn.dataTable.Api !== 'undefined') {
-                resolve();
-                return;
-            }
-            
-            // Load DataTables scripts sequentially (order matters!)
-            const scripts = [
-                'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js',
-                'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js',
-                'https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js',
-                'https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
-            ];
-            
-            // Load scripts one by one to ensure proper initialization order
-            function loadScript(index) {
-                if (index >= scripts.length) {
-                    // All scripts loaded, wait a bit for initialization
-                    setTimeout(function() {
-                        if (typeof $.fn.DataTable !== 'undefined') {
-                            resolve();
-                        } else {
-                            reject(new Error('DataTables failed to initialize'));
-                        }
-                    }, 100);
+    // Use centralized DataTables loader (defined in datatables_cdn.blade.php)
+    // If not available, fallback to local implementation
+    if (typeof window.loadDataTables === 'undefined') {
+        window.loadDataTables = function() {
+            return new Promise(function(resolve, reject) {
+                if (typeof $.fn.DataTable !== 'undefined' && 
+                    typeof $.fn.dataTable !== 'undefined' && 
+                    typeof $.fn.dataTable.Api !== 'undefined') {
+                    resolve();
                     return;
                 }
                 
-                const script = document.createElement('script');
-                script.src = scripts[index];
-                script.onload = function() {
-                    // Load next script only after current one is loaded
-                    loadScript(index + 1);
-                };
-                script.onerror = function() {
-                    reject(new Error('Failed to load DataTables from ' + scripts[index]));
-                };
-                document.head.appendChild(script);
-            }
-            
-            // Start loading from first script
-            loadScript(0);
-        });
+                const scripts = window.DATATABLES_CDN ? window.DATATABLES_CDN.scripts : [
+                    'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js',
+                    'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js',
+                    'https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js',
+                    'https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
+                ];
+                
+                function loadScript(index) {
+                    if (index >= scripts.length) {
+                        setTimeout(function() {
+                            if (typeof $.fn.DataTable !== 'undefined') {
+                                resolve();
+                            } else {
+                                reject(new Error('DataTables failed to initialize'));
+                            }
+                        }, 100);
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+                    script.src = scripts[index];
+                    script.onload = function() {
+                        loadScript(index + 1);
+                    };
+                    script.onerror = function() {
+                        reject(new Error('Failed to load DataTables from ' + scripts[index]));
+                    };
+                    document.head.appendChild(script);
+                }
+                
+                loadScript(0);
+            });
+        };
     }
     
     // Initialize DataTables when modal is shown

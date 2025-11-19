@@ -973,13 +973,13 @@
 
 {{-- Service Modal --}}
 <div class="modal modal-blur fade" id="service-modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">{!! trans('main.Addservice') !!}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label for="service-type-filter" class="form-label">{{ trans('main.Servicetype') }}</label>
@@ -996,51 +996,23 @@
                         <input type="text" id="service-catalog-search" class="form-control" placeholder="{{ __('Search by name, city or country') }}">
                     </div>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
                     <table id="service-catalog-table" class="table card-table table-vcenter table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Address') !!}</th>
-                            <th>{!! trans('main.Country') !!}</th>
-                            <th>{!! trans('main.City') !!}</th>
-                            <th>{!! trans('main.Phone') !!}</th>
-                            <th>{!! trans('main.ContactName') !!}</th>
+                        <thead>
+                            <tr>
+                                <th>{!! trans('main.Name') !!}</th>
+                                <th>{!! trans('main.Address') !!}</th>
+                                <th>{!! trans('main.Country') !!}</th>
+                                <th>{!! trans('main.City') !!}</th>
+                                <th>{!! trans('main.Phone') !!}</th>
+                                <th>{!! trans('main.ContactName') !!}</th>
                                 <th>{!! trans('main.Actions') !!}</th>
-                        </tr>
-                    </thead>
+                            </tr>
+                        </thead>
                         <tbody>
-                            @forelse($serviceCatalog as $service)
-                                <tr data-type="{{ $service['type'] }}" data-search="{{ strtolower(trim($service['name'].' '.$service['city'].' '.$service['country'].' '.$service['type_label'])) }}">
-                                    <td>
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-bold">{{ $service['name'] }}</span>
-                                            <small class="text-muted text-uppercase">{{ $service['type_label'] }}</small>
-                                        </div>
-                                    </td>
-                                    <td>{{ $service['address'] }}</td>
-                                    <td>{{ $service['country'] }}</td>
-                                    <td>{{ $service['city'] }}</td>
-                                    <td>{{ $service['phone'] }}</td>
-                                    <td>{{ $service['contact'] }}</td>
-                                    <td>
-                                        <button type="button"
-                                                class="btn btn-success btn-sm add-service-button"
-                                                data-link="{{ route('tour_package.store') }}"
-                                                data-service_type="{{ $service['type'] }}"
-                                                data-service_id="{{ $service['id'] }}"
-                                                data-service_name="{{ $service['name'] }}">
-                                            {{ trans('main.Add') }}
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted">{{ __('No services available') }}</td>
-                                </tr>
-                            @endforelse
+                            {{-- DataTables will populate this via AJAX --}}
                         </tbody>
-                </table>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1157,33 +1129,108 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    const catalogTable = document.getElementById('service-catalog-table');
-    if (catalogTable) {
-        const rows = Array.from(catalogTable.querySelectorAll('tbody tr'));
-        const typeFilter = document.getElementById('service-type-filter');
-        const searchInput = document.getElementById('service-catalog-search');
-
-        const applyServiceFilters = () => {
-            const typeValue = (typeFilter && typeFilter.value ? typeFilter.value : 'all').toLowerCase();
-            const term = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
-
-            rows.forEach(function (row) {
-                const rowType = (row.getAttribute('data-type') || '').toLowerCase();
-                const haystack = (row.getAttribute('data-search') || '').toLowerCase();
-                const matchesType = typeValue === 'all' || rowType === typeValue;
-                const matchesSearch = !term || haystack.indexOf(term) !== -1;
-                row.style.display = matchesType && matchesSearch ? '' : 'none';
-            });
-        };
-
-        if (typeFilter) {
-            typeFilter.addEventListener('change', applyServiceFilters);
+    // Initialize DataTables for service catalog modal
+    let serviceCatalogTable = null;
+    
+    // Initialize DataTables when modal is shown
+    $('#service-modal').on('shown.bs.modal', function() {
+        if ($.fn.DataTable.isDataTable('#service-catalog-table')) {
+            serviceCatalogTable = $('#service-catalog-table').DataTable();
+            serviceCatalogTable.draw();
+            return;
         }
 
-        if (searchInput) {
-            searchInput.addEventListener('input', applyServiceFilters);
+        serviceCatalogTable = $('#service-catalog-table').DataTable({
+            responsive: true,
+            dom: "<'row'<'col-md-6'l><'col-md-6'f>>" +
+                 "<'row'<'col-12'tr>>" +
+                 "<'row'<'col-md-6'i><'col-md-6'p>>",
+            processing: true,
+            serverSide: true,
+            pageLength: 25,
+            order: [],
+            ajax: {
+                url: "/supplier_show",
+                data: function(d) {
+                    d.actionColumn = 'add-service-column';
+                    let serviceType = $('#service-type-filter').val();
+                    if (serviceType === 'all' || !serviceType) {
+                        d.service = 'Service'; // 'Service' means all services
+                    } else {
+                        // Capitalize first letter and handle special cases
+                        serviceType = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+                        if (serviceType === 'Cruise') serviceType = 'Cruises';
+                        d.service = serviceType;
+                    }
+                    d.searchname = $('#service-catalog-search').val() || '';
+                }
+            },
+            columns: [
+                {
+                    data: 'nameService',
+                    name: 'nameService',
+                    render: function(data, type, row) {
+                        if (type === 'display') {
+                            const parts = data ? data.split(' (') : ['', ''];
+                            const name = parts[0] || '';
+                            const typeLabel = parts[1] ? parts[1].replace(')', '') : '';
+                            return '<div class="d-flex flex-column">' +
+                                   '<span class="fw-bold">' + name + '</span>' +
+                                   (typeLabel ? '<small class="text-muted text-uppercase">' + typeLabel + '</small>' : '') +
+                                   '</div>';
+                        }
+                        return data;
+                    }
+                },
+                {data: 'address_first', name: 'address_first'},
+                {data: 'country', name: 'country'},
+                {data: 'city', name: 'city'},
+                {data: 'work_phone', name: 'work_phone'},
+                {data: 'contact_name', name: 'contact_name'},
+                {data: 'add-service-column', name: 'add-service-column', sortable: false, orderable: false}
+            ],
+            initComplete: function(settings, json) {
+                // Update Bootstrap 5 classes
+                setTimeout(function() {
+                    $('.dataTables_wrapper .row').addClass('g-2');
+                    $('.dataTables_length').addClass('text-start');
+                    $('.dataTables_filter').addClass('text-md-end');
+                    $('.dataTables_info').addClass('text-start');
+                    $('.dataTables_paginate').addClass('text-md-end');
+                }, 50);
+            }
+        });
+
+        // Hide default DataTables search
+        $('#service-catalog-table_filter').css('display', 'none');
+
+        // Connect service type filter to DataTables
+        $('#service-type-filter').on('change', function() {
+            if (serviceCatalogTable) {
+                serviceCatalogTable.ajax.reload();
+            }
+        });
+
+        // Connect search input to DataTables with debounce
+        let searchTimeout;
+        $('#service-catalog-search').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            const searchValue = $(this).val();
+            searchTimeout = setTimeout(function() {
+                if (serviceCatalogTable) {
+                    serviceCatalogTable.ajax.reload();
+                }
+            }, 500); // 500ms debounce
+        });
+    });
+
+    // Destroy DataTable when modal is hidden to free memory
+    $('#service-modal').on('hidden.bs.modal', function() {
+        if (serviceCatalogTable && $.fn.DataTable.isDataTable('#service-catalog-table')) {
+            serviceCatalogTable.destroy();
+            serviceCatalogTable = null;
         }
-    }
+    });
 });
 
 $(function() {

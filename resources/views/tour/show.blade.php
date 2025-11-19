@@ -982,18 +982,18 @@
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label for="service-type-filter" class="form-label">{{ trans('main.Servicetype') }}</label>
+                        <label for="service-type-filter" class="form-label">{!! trans('main.Servicetype') !!}</label>
                         <select id="service-type-filter" class="form-select">
                             <option value="all" selected>{!! trans('main.All') !!}</option>
                             @foreach($options as $option)
                                 <option value="{{ strtolower($option) }}">{{ $option }}</option>
                             @endforeach
-                            <option value="transfer">{{ trans('main.Transfer') }}</option>
+                            <option value="transfer">{!! trans('main.Transfer') !!}</option>
                         </select>
                     </div>
                     <div class="col-md-8">
-                        <label for="service-catalog-search" class="form-label">{{ trans('main.Search') }}</label>
-                        <input type="text" id="service-catalog-search" class="form-control" placeholder="{{ __('Search by name, city or country') }}">
+                        <label for="service-catalog-search" class="form-label">{!! trans('main.Search') !!}</label>
+                        <input type="text" id="service-catalog-search" class="form-control" placeholder="{!! __('Search by name, city or country') !!}">
                     </div>
                 </div>
                 <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
@@ -1133,7 +1133,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let serviceCatalogTable = null;
     
     // Initialize DataTables when modal is shown
-    $('#service-modal').on('shown.bs.modal', function() {
+    // Support both Bootstrap 4 and Bootstrap 5 modal events
+    $('#service-modal').on('shown.bs.modal shown.modal', function() {
         if ($.fn.DataTable.isDataTable('#service-catalog-table')) {
             serviceCatalogTable = $('#service-catalog-table').DataTable();
             serviceCatalogTable.draw();
@@ -1151,11 +1152,12 @@ document.addEventListener('DOMContentLoaded', function () {
             order: [],
             ajax: {
                 url: "/supplier_show",
+                type: "GET",
                 data: function(d) {
                     d.actionColumn = 'add-service-column';
                     let serviceType = $('#service-type-filter').val();
                     if (serviceType === 'all' || !serviceType) {
-                        d.service = 'Service'; // 'Service' means all services
+                        d.service = 'Service'; // 'Service' means all services in the endpoint
                     } else {
                         // Capitalize first letter and handle special cases
                         serviceType = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
@@ -1163,6 +1165,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         d.service = serviceType;
                     }
                     d.searchname = $('#service-catalog-search').val() || '';
+                    // DataTables server-side parameters
+                    d.draw = d.draw;
+                    d.start = d.start;
+                    d.length = d.length;
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables AJAX Error:', error, thrown);
+                    console.error('Response:', xhr.responseText);
+                    alert('Error loading services. Please try again or refresh the page.');
                 }
             },
             columns: [
@@ -1198,6 +1209,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     $('.dataTables_info').addClass('text-start');
                     $('.dataTables_paginate').addClass('text-md-end');
                 }, 50);
+                
+                // Log initialization for debugging
+                console.log('Service catalog DataTable initialized', json);
+            },
+            drawCallback: function(settings) {
+                // Log if no data is found
+                const api = this.api();
+                const data = api.rows({page: 'current'}).data();
+                if (data.length === 0) {
+                    console.warn('No services found. Check filters and search criteria.');
+                }
             }
         });
 
@@ -1225,7 +1247,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Destroy DataTable when modal is hidden to free memory
-    $('#service-modal').on('hidden.bs.modal', function() {
+    // Support both Bootstrap 4 and Bootstrap 5 modal events
+    $('#service-modal').on('hidden.bs.modal hidden.modal', function() {
         if (serviceCatalogTable && $.fn.DataTable.isDataTable('#service-catalog-table')) {
             serviceCatalogTable.destroy();
             serviceCatalogTable = null;

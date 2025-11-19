@@ -3,8 +3,8 @@
 
 @section('post_styles')
 <!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+{{-- Centralized DataTables CDN --}}
+@include('component.datatables_cdn')
 <style>
     /* DataTables responsive styling for Tabler */
     .table-responsive {
@@ -343,11 +343,7 @@
 @endsection
 
 @push('scripts')
-<!-- DataTables JavaScript -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+{{-- DataTables scripts loaded via centralized loader (window.loadDataTables) --}}
 
 <script type="text/javascript">
     $(document).ready(function() {

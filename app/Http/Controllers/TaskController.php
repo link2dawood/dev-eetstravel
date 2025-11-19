@@ -329,61 +329,20 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-  /**
- * Remove the specified resource from storage.
- * Handles both regular DELETE requests and legacy GET requests
- */
-/**
- * Remove the specified resource from storage.
- * Handles both regular DELETE requests and legacy GET requests
- */
-public function destroy($id, $tab = null)
-{
-    try {
+    public function destroy($id, $tab = null)
+    {
         $task = Task::findOrFail($id);
-        $taskContent = $task->content;
-        
-        // Delete associated comments
-        Comment::query()
-            ->where('reference_type', Comment::$services['task'])
-            ->where('reference_id', $id)
-            ->delete();
-        
-        // Delete the task
         $task->delete();
+        Comment::query()->where('reference_type', Comment::$services['task'])->where('reference_id', $id)->delete();
 
-        LaravelFlashSessionHelper::setFlashMessage("Task {$taskContent} deleted", 'success');
+        LaravelFlashSessionHelper::setFlashMessage("Task {$task->content} deleted", 'success');
 
-        // Check if this is an AJAX/Fetch request (for Monday.com style page)
-        if (request()->ajax() || request()->expectsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-            return response()->json([
-                'success' => true,
-                'message' => 'Task deleted successfully.'
-            ]);
-        }
-
-        // For regular browser requests (legacy GET requests), redirect
-        if ($tab) {
-            return redirect()->route('profile', ['tab' => $tab]);
-        }
-        
-        return redirect()->route('task.index');
-
-    } catch (\Exception $e) {
-        \Log::error('Task deletion error: ' . $e->getMessage());
-        
-        // Error handling for AJAX
-        if (request()->ajax() || request()->expectsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting task: ' . $e->getMessage()
-            ], 500);
-        }
-
-        LaravelFlashSessionHelper::setFlashMessage("Error deleting task: " . $e->getMessage(), 'error');
-        return redirect()->back();
+        // ✅ Return JSON for AJAX/Fetch requests
+        return response()->json([
+            'success' => true,
+            'message' => 'Task deleted successfully.'
+        ]);
     }
-}
 
     public function validateTask(Request $request)
     {

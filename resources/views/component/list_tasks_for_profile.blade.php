@@ -14,9 +14,16 @@
             </thead>
             <tbody>
                 @foreach($tasks as $task)
+                    {{-- ================================== --}}
+                    {{-- == START OF CLICKABLE ROW FIX == --}}
+                    {{-- ================================== --}}
+                    {{-- This makes the row clickable but ignores the action cell --}}
                     <tr style="{{ $task->priority ? 'background: #ffbbb2;' : '' }}" 
                         data-href="{{ route('task.show', ['id' => $task->id]) }}" 
                         class="clickable-row-task">
+                    {{-- ================================== --}}
+                    {{-- == END OF CLICKABLE ROW FIX == --}}
+                    {{-- ================================== --}}
 
                         <td>{{ $task->id }}</td>
                         <td data-delete-label>{{ $task->content }}</td>
@@ -29,8 +36,8 @@
                         {{-- == START OF ACTION BUTTONS FIX == --}}
                         {{-- ================================== --}}
                         {{-- This stops the row-click from breaking the buttons --}}
-                        <td class="action-cell" onclick="event.stopPropagation();">
-                            {{-- This includes the modern buttons --}}
+                        <td onclick="event.stopPropagation();">
+                            {{-- This includes the modern buttons from your main task page --}}
                             @include('component.action_buttons', [
                                 'item' => $task,
                                 'routePrefix' => 'task'
@@ -52,10 +59,20 @@
     </div>
 </div>
 
-{{-- This script makes your rows clickable without breaking the buttons --}}
+{{-- ================================== --}}
+{{-- == START OF MODAL FIX == --}}
+{{-- You must include the delete modal on this page --}}
+{{-- ================================== --}}
+@include('scaffold-interface.dashboard.components.delete-modal')
+{{-- ================================== --}}
+{{-- == END OF MODAL FIX == --}}
+{{-- ================================== --}}
+
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // This script makes your rows clickable without breaking the buttons
     document.querySelectorAll('.clickable-row-task').forEach(function(row) {
         row.addEventListener('click', function(e) {
             // Check if the click was on a button, link, or inside the action cell

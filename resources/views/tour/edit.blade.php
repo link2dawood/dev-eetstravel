@@ -181,41 +181,41 @@
                             {{-- Left Column --}}
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label required" for="name">{!!trans('main.Name')!!}</label>
+                                    <label class="form-label" for="name">{!!trans('main.Name')!!}</label>
                                     <input id="name" name="name" type="text" class="form-control"
-                                           value="{!!old('name', $tour->name)!!}" required>
+                                           value="{!!old('name', $tour->name)!!}">
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label" for="external_name">{!!trans('main.ExternalName')!!}</label>
-                                    <input id="external_name" name="external_name" type="text" disabled
+                                    <input id="external_name" name="external_name" type="text"
                                            class="form-control" value="{!!$tour->external_name!!}">
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label required" for="departure_date">{!!trans('main.DepDate')!!}</label>
+                                    <label class="form-label" for="departure_date">{!!trans('main.DepDate')!!}</label>
                                     <div class="input-icon">
                                         <span class="input-icon-addon">
                                             <i class="ti ti-calendar"></i>
                                         </span>
                                         {!! Form::text('departure_date', old('departure_date', $tour->departure_date), ['class' => 'form-control datepicker',
-                                         'id' => 'departure_date', 'placeholder' => 'Select date', 'required' => true]) !!}
+                                         'id' => 'departure_date', 'placeholder' => 'Select date']) !!}
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label required" for="retirement_date">{!!trans('main.RetDate')!!}</label>
+                                    <label class="form-label" for="retirement_date">{!!trans('main.RetDate')!!}</label>
                                     <div class="input-icon">
                                         <span class="input-icon-addon">
                                             <i class="ti ti-calendar"></i>
                                         </span>
                                         {!! Form::text('retirement_date', old('retirement_date', $tour->retirement_date), ['class' => 'form-control datepicker',
-                                         'id' => 'retirement_date', 'placeholder' => 'Select date', 'required' => true]) !!}
+                                         'id' => 'retirement_date', 'placeholder' => 'Select date']) !!}
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label required">{!! trans('main.AssignedUser') !!}</label>
+                                    <label class="form-label">{!! trans('main.AssignedUser') !!}</label>
                                     <div class="card card-sm">
                                         <div class="card-body" style="max-height:250px; overflow-y:auto;">
                                             <div class="row g-2">
@@ -253,7 +253,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label required" for="status">{!!trans('main.Status')!!}</label>
+                                    <label class="form-label" for="status">{!!trans('main.Status')!!}</label>
                                     <select name="status" id="status" class="form-select">
                                         @foreach($statuses as $status)
                                             <option value="{{ $status->id }}"
@@ -276,9 +276,9 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="child_count">Number of Children</label>
                                     @if(empty($tour->childrens))
-                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', 0) }}" min="0">
+                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', 0) }}">
                                     @else
-                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', count($tour->childrens)) }}" min="0">
+                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', count($tour->childrens)) }}">
                                     @endif
                                 </div>
 
@@ -292,7 +292,7 @@
                                             <div class="row g-2">
                                                 <div class="col-md-6">
                                                     <label class="form-label" for="age_{{$i}}">Age of Child {{$i}}</label>
-                                                    <input type="number" id="age_{{$i}}" name="ages[]" class="form-control" min="0" value="{{ old('ages.'.$loop->index, $chd->age) }}">
+                                                    <input type="number" id="age_{{$i}}" name="ages[]" class="form-control" value="{{ old('ages.'.$loop->index, $chd->age) }}">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label" for="price_{{$i}}">Price</label>
@@ -435,11 +435,11 @@ function addChildFields() {
                 <div class="row g-2">
                     <div class="col-md-6">
                         <label class="form-label" for="age_${i}">Age of Child ${i}</label>
-                        <input type="number" id="age_${i}" name="ages[]" class="form-control" min="0" required>
+                        <input type="number" id="age_${i}" name="ages[]" class="form-control" value="">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="price_${i}">Price</label>
-                        <input type="number" id="price_${i}" name="prices[]" class="form-control" step="0.01" required>
+                        <input type="number" id="price_${i}" name="prices[]" class="form-control" step="0.01" value="">
                     </div>
                 </div>
             </div>

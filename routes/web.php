@@ -326,41 +326,23 @@ Route::group(['middleware'=> 'web'],function(){
     // We remove Route::resource('task', ...) to define routes manually and avoid conflicts
 
     // Standard task routes
-    // PUT THESE FIRST - More specific routes
-Route::get('task', '\App\Http\Controllers\TaskController@index')->name('task.index');
-Route::get('task/create', '\App\Http\Controllers\TaskController@create')->name('task.create');
-Route::post('task', '\App\Http\Controllers\TaskController@store')->name('task.store');
+    Route::get('task', '\App\Http\Controllers\TaskController@index')->name('task.index');
+    Route::get('task/create', '\App\Http\Controllers\TaskController@create')->name('task.create');
+    Route::post('task', '\App\Http\Controllers\TaskController@store')->name('task.store'); // For NEW tasks
+    Route::get('task/{id}', '\App\Http\Controllers\TaskController@show')->name('task.show');
+    Route::get('task/{id}/edit', '\App\Http\Controllers\TaskController@edit')->name('task.edit');
 
-// Delete routes (before show)
-Route::get('task/{id}/delete', '\App\Http\Controllers\TaskController@destroy')
-    ->where('id', '[0-9]+')
-    ->name('task.destroy');
-    
-Route::get('task/{id}/deleteMsg', '\App\Http\Controllers\TaskController@DeleteMsg')
-    ->where('id', '[0-9]+')
-    ->name('task.deleteMsg');
+    // This is the custom route your edit form uses. We give it the correct name.
+    Route::post('task/{id}/update','\App\Http\Controllers\TaskController@update')->name('task.update'); 
 
-// Other specific routes
-Route::get('task/{id}/edit', '\App\Http\Controllers\TaskController@edit')
-    ->where('id', '[0-9]+')
-    ->name('task.edit');
-    
-Route::post('task/{id}/update', '\App\Http\Controllers\TaskController@update')
-    ->where('id', '[0-9]+')
-    ->name('task.update');
-    
-Route::post('task/{id}/update-field', '\App\Http\Controllers\TaskController@updateField')
-    ->where('id', '[0-9]+');
-    
-Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask')
-    ->where('id', '[0-9]+');
-
-// Show route (last)
-Route::get('task/{id}', '\App\Http\Controllers\TaskController@show')
-    ->where('id', '[0-9]+')
-    ->name('task.show');
-
-Route::get('/task/statuses/list', 'TaskController@statusesList');
+    // Your other custom task routes
+    Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
+    Route::get('task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
+    Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
+    Route::get('task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
+    Route::get('task/{id}/deleteMsg/{tab}','\App\Http\Controllers\TaskController@DeleteMsg');
+    Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
+    Route::get('/task/statuses/list', 'TaskController@statusesList');
     
     // -----------------------------------------------------------------
     // END OF TASK ROUTES

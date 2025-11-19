@@ -1135,16 +1135,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize DataTables for service catalog modal
     let serviceCatalogTable = null;
     
-    // Load DataTables if not already loaded
+    // Load DataTables if not already loaded (sequential loading to ensure proper order)
     function loadDataTables() {
         return new Promise(function(resolve, reject) {
             // Check if DataTables is already loaded
-            if (typeof $.fn.DataTable !== 'undefined') {
+            if (typeof $.fn.DataTable !== 'undefined' && 
+                typeof $.fn.dataTable !== 'undefined' && 
+                typeof $.fn.dataTable.Api !== 'undefined') {
                 resolve();
                 return;
             }
             
-            // Load DataTables scripts
+            // Load DataTables scripts sequentially (order matters!)
             const scripts = [
                 'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js',
                 'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js',
@@ -1152,21 +1154,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 'https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
             ];
             
-            let loaded = 0;
-            scripts.forEach(function(src) {
+            // Load scripts one by one to ensure proper initialization order
+            function loadScript(index) {
+                if (index >= scripts.length) {
+                    // All scripts loaded, wait a bit for initialization
+                    setTimeout(function() {
+                        if (typeof $.fn.DataTable !== 'undefined') {
+                            resolve();
+                        } else {
+                            reject(new Error('DataTables failed to initialize'));
+                        }
+                    }, 100);
+                    return;
+                }
+                
                 const script = document.createElement('script');
-                script.src = src;
+                script.src = scripts[index];
                 script.onload = function() {
-                    loaded++;
-                    if (loaded === scripts.length) {
-                        resolve();
-                    }
+                    // Load next script only after current one is loaded
+                    loadScript(index + 1);
                 };
                 script.onerror = function() {
-                    reject(new Error('Failed to load DataTables from ' + src));
+                    reject(new Error('Failed to load DataTables from ' + scripts[index]));
                 };
                 document.head.appendChild(script);
-            });
+            }
+            
+            // Start loading from first script
+            loadScript(0);
         });
     }
     

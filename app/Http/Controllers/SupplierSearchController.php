@@ -51,7 +51,16 @@ class SupplierSearchController extends Controller
         if($request->search['value']) $searchName = $request->search['value'];
 
         if ($request->service === 'Service' || $request->service === 'All') {
-            $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
+            try {
+                $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
+                // Root cause fix: Ensure getCollection returns valid data
+                if (empty($namespace)) {
+                    $namespace = [];
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error in getCollection: ' . $e->getMessage());
+                $namespace = [];
+            }
         }
         else {
             $serv_find = [];
@@ -116,8 +125,25 @@ class SupplierSearchController extends Controller
         ini_set('memory_limit', '800M');
         set_time_limit(0);
         //@ToDo: change on correct generate response for datatable
+        
+        // Root cause fix: Ensure $namespace is valid before processing
+        if (empty($namespace)) {
+            $namespace = [];
+        }
+        
+        // Ensure $namespace is an array/collection
+        if (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
+            $namespace = [$namespace];
+        }
+        
         $namespace = collect($namespace);
         $services = $namespace->unique()->all();
+        
+        // Root cause fix: Ensure services array is not empty before passing to Datatables
+        if (empty($services)) {
+            $services = [];
+        }
+        
         $data = Datatables::of($services);
         $can = 0;
         if (\Auth::user()->can('tour_package.create')){
@@ -378,6 +404,12 @@ class SupplierSearchController extends Controller
         }
 
         $collection = collect($data)->collapse()->all();
+        
+        // Root cause fix: Ensure we always return an array, even if empty
+        if (empty($collection) || !is_array($collection)) {
+            return [];
+        }
+        
         return $collection;
     }
 

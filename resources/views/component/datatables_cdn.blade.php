@@ -10,8 +10,9 @@
 <link rel="stylesheet" href="{{ $cdnBase }}/{{ $datatablesVersion }}/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="{{ $cdnBase }}/responsive/{{ $responsiveVersion }}/css/responsive.bootstrap5.min.css">
 
-{{-- DataTables JavaScript Configuration (available globally) --}}
-@once
+{{-- DataTables JavaScript Configuration (available globally) - Pushed to scripts stack --}}
+@once('datatables-cdn-script')
+@push('scripts')
 <script>
     // Centralized DataTables CDN URLs
     window.DATATABLES_CDN = {

@@ -1246,13 +1246,9 @@ document.addEventListener('DOMContentLoaded', function () {
             filterServices();
         });
         
-        // Connect search input with debounce
-        let searchTimeout;
-        $('#service-catalog-search').off('keyup.serviceFilter').on('keyup.serviceFilter', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
-                filterServices();
-            }, 300); // 300ms debounce
+        // Connect search input - live search (no debounce)
+        $('#service-catalog-search').off('input.serviceFilter keyup.serviceFilter paste.serviceFilter').on('input.serviceFilter keyup.serviceFilter paste.serviceFilter', function() {
+            filterServices();
         });
         
         // Ensure Add buttons are visible and clickable

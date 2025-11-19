@@ -288,8 +288,9 @@ class TourPackageController extends Controller
 
     public function store(Request $request)
     {
+		// Root fix: Handle case where no TourPackage records exist
 		$latestId = TourPackage::withTrashed()->latest()->pluck('id')->first();
-		$latestId = $latestId +1;
+		$latestId = ($latestId ?? 0) + 1;
 		$latestId = Crypt::encryptString($latestId );
 		
 		
@@ -309,6 +310,14 @@ class TourPackageController extends Controller
 
         // validate Transfer dates
         if (strtolower($request->serviceType) == 'transfer') {
+            // Root fix: Validate transfer-specific required fields
+            if (!$request->tourDayId && !$dep_date_transfer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tour Day ID or departure date is required for transfers'
+                ], 422);
+            }
+            
             // validate buses
             $res_bus_validate = $this->busDayHelper->validateBuses($bus_id,
                 $dep_date_transfer,
@@ -383,14 +392,60 @@ class TourPackageController extends Controller
 
         $serviceType = $request->serviceType; // we should to connect with tourday or tour(transfer)
         if (strtolower($serviceType) == 'transfer') {
-			$tourDay = TourDay::query()->get()->where('id', $request->tourDayId)->first();
-            $tourDay_ = $tourDay;
-            $tourId = $request->tourId;
+            // Root fix: Handle transfers with or without tourDayId
+            if ($request->tourDayId) {
+                $tourDay = TourDay::query()->get()->where('id', $request->tourDayId)->first();
+                if ($tourDay) {
+                    $tourDay_ = $tourDay;
+                    $tourId = $request->tourId ?? $tourDay->tour;
+                } else {
+                    $tourDay_ = null;
+                    $tourId = $request->tourId;
+                }
+            } else {
+                $tourDay_ = null;
+                $tourId = $request->tourId;
+            }
+            
+            // Root fix: Validate tourId for transfers
+            if (!$tourId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tour ID is required'
+                ], 422);
+            }
+            
             $tour = Tour::findOrFail($tourId);
+            
+            // Root fix: Validate dep_date_transfer for transfers
+            if (!$dep_date_transfer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Departure date is required for transfers'
+                ], 422);
+            }
+            
             $tourPackage->time_from = $dep_date_transfer.' '.$defaultTransfer['time_from'];
         }
         else {
+            // Root fix: Validate tourDayId before accessing properties
+            if (!$request->tourDayId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tour Day ID is required'
+                ], 422);
+            }
+            
             $tourDay = TourDay::query()->get()->where('id', $request->tourDayId)->first();
+            
+            // Root fix: Validate tourDay exists
+            if (!$tourDay) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tour Day not found'
+                ], 404);
+            }
+            
             $tourDay_ = $tourDay;
             $tourId = $tourDay->tour;
             $tour = $this->tourRepository->byId($tourId);
@@ -435,7 +490,16 @@ class TourPackageController extends Controller
         $tourPackage->driver_id = $request->get('driver_id', null);
         $tourPackage->save();
 
-        if (strtolower($serviceType) != 'transfr') {
+        // Root fix: Fixed typo 'transfr' -> 'transfer' and validate tourDay exists
+        if (strtolower($serviceType) != 'transfer') {
+            // Root fix: Validate tourDay exists before assigning
+            if (!$tourDay) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tour Day is required for this service type'
+                ], 422);
+            }
+            
             $tourPackage->assignTourDay($tourDay);
             if(strtolower($request->serviceType) == 'hotel') {
                 $this->createHotelPackages($tourPackage, $tourDay->tour, $request->tourDayIdRetirement);
@@ -1630,7 +1694,8 @@ class TourPackageController extends Controller
     }
 
     public function validateTourPackage($request){
-        $this->validate($request, [
+        // Root fix: Add tourDayId validation for non-transfer services
+        $rules = [
             // 'name' => 'required',
             // 'description' => 'required',
             'serviceId' => 'required',
@@ -1638,7 +1703,14 @@ class TourPackageController extends Controller
             // 'pax'   => 'required|numeric',
             // 'pax_free'   => 'required|numeric',
             // 'total_amount' => 'required'
-        ]);
+        ];
+        
+        // tourDayId is required unless it's a transfer with dep_date_transfer
+        if (strtolower($request->serviceType ?? '') != 'transfer' || !$request->dep_date_transfer) {
+            $rules['tourDayId'] = 'required';
+        }
+        
+        $this->validate($request, $rules);
     }
 	public function fellowconfHotel($id){
 		$tour_packages = TourPackage::query()->where('id', $id)->orWhere('parent_id', $id)->get();

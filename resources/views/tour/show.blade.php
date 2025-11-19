@@ -1013,33 +1013,38 @@
                         </thead>
                         <tbody>
                             @forelse($serviceCatalog ?? [] as $service)
-                                <tr data-service-type="{{ $service['type'] }}" data-service-name="{{ strtolower($service['name']) }}" data-service-city="{{ strtolower($service['city'] ?? '') }}" data-service-country="{{ strtolower($service['country'] ?? '') }}">
+                                @php
+                                    $type = $service['type'] ?? '';
+                                    $id = $service['id'] ?? '';
+                                    $name = $service['name'] ?? '';
+                                    $city = $service['city'] ?? '';
+                                    $country = $service['country'] ?? '';
+                                    $preLoader = ($type == 'hotel' || $type == 'transfer') ? '' : 'pre-loader-func';
+                                @endphp
+                                <tr data-service-type="{{ $type }}" 
+                                    data-service-name="{{ strtolower($name) }}" 
+                                    data-service-city="{{ strtolower($city) }}" 
+                                    data-service-country="{{ strtolower($country) }}">
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold">{{ $service['name'] }}</span>
-                                            @if(isset($service['type_label']))
+                                            <span class="fw-bold">{{ $name }}</span>
+                                            @if(isset($service['type_label']) && $service['type_label'])
                                                 <small class="text-muted text-uppercase">{{ $service['type_label'] }}</small>
                                             @endif
                                         </div>
                                     </td>
                                     <td>{{ $service['address'] ?? '' }}</td>
-                                    <td>{{ $service['country'] ?? '' }}</td>
-                                    <td>{{ $service['city'] ?? '' }}</td>
+                                    <td>{{ $country }}</td>
+                                    <td>{{ $city }}</td>
                                     <td>{{ $service['phone'] ?? '' }}</td>
                                     <td>{{ $service['contact'] ?? '' }}</td>
                                     <td>
-                                        @php
-                                            $type = $service['type'];
-                                            $id = $service['id'];
-                                            $name = $service['name'];
-                                            $preLoader = ($type == 'hotel' || $type == 'transfer') ? '' : 'pre-loader-func';
-                                        @endphp
                                         <button class="btn btn-success btn-sm add-service-button {{ $preLoader }}" 
                                                 data-link="{{ route('tour_package.store') }}" 
                                                 data-service_type="{{ $type }}" 
                                                 data-service_id="{{ $id }}" 
-                                                data-service_name="{{ $name }}">
-                                            {!! trans('main.Add') !!}
+                                                data-service_name="{{ htmlspecialchars($name, ENT_QUOTES, 'UTF-8') }}">
+                                            <i class="ti ti-plus me-1"></i>{!! trans('main.Add') !!}
                                         </button>
                                     </td>
                                 </tr>
@@ -1048,6 +1053,9 @@
                                     <td colspan="7" class="text-center text-muted py-4">
                                         <i class="ti ti-inbox fs-1"></i>
                                         <p class="mt-2">{!! __('No services available') !!}</p>
+                                        @if(config('app.debug'))
+                                            <small class="text-muted">Debug: serviceCatalog is empty or not loaded</small>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse
@@ -1173,21 +1181,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Root fix: Load data directly from controller, filter on client side
     function filterServices() {
         const serviceType = $('#service-type-filter').val();
-        const searchValue = $('#service-catalog-search').val().toLowerCase();
-        const rows = $('#service-catalog-table tbody tr');
+        const searchValue = ($('#service-catalog-search').val() || '').toLowerCase().trim();
+        const rows = $('#service-catalog-table tbody tr').not('#no-services-message');
         let visibleCount = 0;
         
         rows.each(function() {
             const $row = $(this);
-            const rowServiceType = $row.data('service-type');
-            const rowServiceName = $row.data('service-name') || '';
-            const rowServiceCity = $row.data('service-city') || '';
-            const rowServiceCountry = $row.data('service-country') || '';
+            
+            // Root fix: Ensure all values are strings before calling includes()
+            const rowServiceType = String($row.data('service-type') || '').toLowerCase();
+            const rowServiceName = String($row.data('service-name') || '').toLowerCase();
+            const rowServiceCity = String($row.data('service-city') || '').toLowerCase();
+            const rowServiceCountry = String($row.data('service-country') || '').toLowerCase();
             
             // Filter by service type
             let typeMatch = true;
             if (serviceType && serviceType !== 'all') {
-                typeMatch = rowServiceType === serviceType || rowServiceType === 'transfer';
+                const filterType = serviceType.toLowerCase();
+                // Handle special case: 'transfer' in data might be 'transfer' or 'bus company'
+                typeMatch = rowServiceType === filterType || 
+                           (filterType === 'transfer' && rowServiceType === 'transfer');
             }
             
             // Filter by search term (name, city, or country)
@@ -1208,22 +1221,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         
         // Show/hide "no results" message
+        $('#no-services-message').remove();
         if (visibleCount === 0 && rows.length > 0) {
-            if ($('#no-services-message').length === 0) {
-                $('#service-catalog-table tbody').append(
-                    '<tr id="no-services-message"><td colspan="7" class="text-center text-muted py-4"><i class="ti ti-inbox fs-1"></i><p class="mt-2">{!! __('No services match your search criteria') !!}</p></td></tr>'
-                );
-            }
-        } else {
-            $('#no-services-message').remove();
+            $('#service-catalog-table tbody').append(
+                '<tr id="no-services-message"><td colspan="7" class="text-center text-muted py-4"><i class="ti ti-inbox fs-1"></i><p class="mt-2">{!! __('No services match your search criteria') !!}</p></td></tr>'
+            );
         }
     }
     
     // Initialize filters when modal is shown
     $('#service-modal').on('shown.bs.modal shown.modal', function() {
+        // Show all rows initially
+        $('#service-catalog-table tbody tr').not('#no-services-message').show();
+        
         // Reset filters
         $('#service-type-filter').val('all');
         $('#service-catalog-search').val('');
+        
+        // Initial filter (shows all)
         filterServices();
         
         // Connect service type filter
@@ -1239,13 +1254,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 filterServices();
             }, 300); // 300ms debounce
         });
+        
+        // Ensure Add buttons are visible and clickable
+        $('.add-service-button').css({
+            'display': 'inline-block',
+            'visibility': 'visible',
+            'opacity': '1'
+        }).show();
     });
     
     // Reset filters when modal is hidden
     $('#service-modal').on('hidden.bs.modal hidden.modal', function() {
         $('#service-type-filter').val('all');
         $('#service-catalog-search').val('');
-        filterServices();
+        // Show all rows when modal closes
+        $('#service-catalog-table tbody tr').not('#no-services-message').show();
+        $('#no-services-message').remove();
     });
 });
 

@@ -6,6 +6,9 @@
 @endphp
 
 @section('post_styles')
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 <link rel="stylesheet" href="{{ asset('css/tour-shopify.css') }}">
 <style>
     /* Toggle Switch */
@@ -1132,14 +1135,52 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize DataTables for service catalog modal
     let serviceCatalogTable = null;
     
+    // Load DataTables if not already loaded
+    function loadDataTables() {
+        return new Promise(function(resolve, reject) {
+            // Check if DataTables is already loaded
+            if (typeof $.fn.DataTable !== 'undefined') {
+                resolve();
+                return;
+            }
+            
+            // Load DataTables scripts
+            const scripts = [
+                'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js',
+                'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js',
+                'https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js',
+                'https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
+            ];
+            
+            let loaded = 0;
+            scripts.forEach(function(src) {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = function() {
+                    loaded++;
+                    if (loaded === scripts.length) {
+                        resolve();
+                    }
+                };
+                script.onerror = function() {
+                    reject(new Error('Failed to load DataTables from ' + src));
+                };
+                document.head.appendChild(script);
+            });
+        });
+    }
+    
     // Initialize DataTables when modal is shown
     // Support both Bootstrap 4 and Bootstrap 5 modal events
     $('#service-modal').on('shown.bs.modal shown.modal', function() {
-        if ($.fn.DataTable.isDataTable('#service-catalog-table')) {
-            serviceCatalogTable = $('#service-catalog-table').DataTable();
-            serviceCatalogTable.draw();
-            return;
-        }
+        // Ensure DataTables is loaded before using it
+        loadDataTables().then(function() {
+            // Check if DataTable is already initialized
+            if (typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#service-catalog-table')) {
+                serviceCatalogTable = $('#service-catalog-table').DataTable();
+                serviceCatalogTable.draw();
+                return;
+            }
 
         serviceCatalogTable = $('#service-catalog-table').DataTable({
             responsive: true,
@@ -1223,33 +1264,37 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Hide default DataTables search
-        $('#service-catalog-table_filter').css('display', 'none');
+            // Hide default DataTables search
+            $('#service-catalog-table_filter').css('display', 'none');
 
-        // Connect service type filter to DataTables
-        $('#service-type-filter').on('change', function() {
-            if (serviceCatalogTable) {
-                serviceCatalogTable.ajax.reload();
-            }
-        });
-
-        // Connect search input to DataTables with debounce
-        let searchTimeout;
-        $('#service-catalog-search').on('keyup', function() {
-            clearTimeout(searchTimeout);
-            const searchValue = $(this).val();
-            searchTimeout = setTimeout(function() {
+            // Connect service type filter to DataTables
+            $('#service-type-filter').on('change', function() {
                 if (serviceCatalogTable) {
                     serviceCatalogTable.ajax.reload();
                 }
-            }, 500); // 500ms debounce
+            });
+
+            // Connect search input to DataTables with debounce
+            let searchTimeout;
+            $('#service-catalog-search').on('keyup', function() {
+                clearTimeout(searchTimeout);
+                const searchValue = $(this).val();
+                searchTimeout = setTimeout(function() {
+                    if (serviceCatalogTable) {
+                        serviceCatalogTable.ajax.reload();
+                    }
+                }, 500); // 500ms debounce
+            });
+        }).catch(function(error) {
+            console.error('Failed to load DataTables:', error);
+            alert('Error loading DataTables. Please refresh the page and try again.');
         });
     });
 
     // Destroy DataTable when modal is hidden to free memory
     // Support both Bootstrap 4 and Bootstrap 5 modal events
     $('#service-modal').on('hidden.bs.modal hidden.modal', function() {
-        if (serviceCatalogTable && $.fn.DataTable.isDataTable('#service-catalog-table')) {
+        if (serviceCatalogTable && typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#service-catalog-table')) {
             serviceCatalogTable.destroy();
             serviceCatalogTable = null;
         }

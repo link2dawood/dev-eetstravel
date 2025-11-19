@@ -37,7 +37,7 @@
         }
 
         .wrapper {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -220,8 +220,8 @@
         }
 
         .monday-table-cell-task {
-            min-width: 300px;
-            max-width: 500px;
+            min-width: 200px;
+            max-width: 400px;
         }
 
         .monday-task-content {
@@ -275,18 +275,18 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-width: 100px;
-            gap: 6px;
+            min-width: 85px;
+            gap: 4px;
         }
 
         .monday-status-clickable {
-            min-width: 120px;
+            min-width: 95px;
             font-weight: 600;
             user-select: none;
         }
@@ -304,13 +304,13 @@
         }
 
         .monday-avatar {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: white;
             border: 2px solid white;
@@ -333,11 +333,11 @@
         .monday-date {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             color: var(--monday-text-secondary);
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
             transition: all 0.2s ease;
         }
@@ -363,7 +363,7 @@
         }
 
         .monday-action-btn {
-            padding: 6px;
+            padding: 5px;
             border-radius: 6px;
             background: white;
             border: 1px solid #d1d5db;
@@ -372,8 +372,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
         }
 
         .monday-action-btn:hover {
@@ -381,8 +381,8 @@
         }
 
         .monday-action-btn svg {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
 
         .monday-action-btn.edit {
@@ -409,18 +409,18 @@
 
         .monday-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
         }
 
         .monday-epic {
             display: inline-flex;
             align-items: center;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
         }
 
@@ -428,13 +428,13 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 8px;
+            padding: 3px 6px;
             background: #e6f7ff;
             color: #0073ea;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            min-width: 40px;
+            min-width: 35px;
             cursor: pointer;
         }
 
@@ -573,6 +573,7 @@
                 </div>
             </div>
 
+            <!-- TO-DO GROUP -->
             <div class="monday-group" data-group="todo">
                 <div class="monday-group-header" onclick="toggleGroup('todo')">
                     <svg class="monday-group-collapse-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
@@ -581,57 +582,41 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #0073ea;"></div>
                     <h3 class="monday-group-title">To-Do</h3>
-                    <span class="monday-group-count">{{ $todoTasks && method_exists($todoTasks, 'total') ? $todoTasks->total() : count($todoTasks ?? []) }}</span>
+                    <span class="monday-group-count">60</span>
                 </div>
 
                 <div class="monday-group-content" id="group-todo">
                     <table class="monday-table">
                         <thead class="monday-table-header">
                             <tr>
-                                <th style="width: 40%">TASK</th>
-                                <th style="width: 150px">PERSON</th>
-                                <th style="width: 120px">STATUS</th>
-                                <th style="width: 130px">DEADLINE</th>
+                                <th style="width: 35%">TASK</th>
+                                <th style="width: 110px">PERSON</th>
+                                <th style="width: 100px">STATUS</th>
+                                <th style="width: 110px">DEADLINE</th>
                                 <th style="width: 80px">PRIORITY</th>
-                                <th style="width: 100px">EPIC</th>
-                                <th style="width: 80px">SP</th>
-                                <th style="width: 80px" class="text-center">ACTIONS</th>
+                                <th style="width: 90px">EPIC</th>
+                                <th style="width: 50px">SP</th>
+                                <th style="width: 100px" class="text-center">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($todoTasks ?? [] as $task)
-                            <tr class="monday-table-row" data-task-id="{{ $task->id }}">
+                            <tr class="monday-table-row" data-task-id="1">
                                 <td class="monday-table-cell-task">
                                     <div class="monday-task-content">
-                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" @if($task->priority) fill="currentColor" @else stroke-width="2" stroke="currentColor" fill="none" style="opacity: 0.3;" @endif onclick="togglePriority({{ $task->id }}, event)">
+                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" onclick="togglePriority(1, event)">
                                             <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
                                         </svg>
-                                        <span class="monday-task-text monday-editable" data-field="content" data-task-id="{{ $task->id }}" onclick="editInline(this)">{{ $task->content }}</span>
+                                        <span class="monday-task-text monday-editable" data-field="content" data-task-id="1" onclick="editInline(this)">hello this is meeee</span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
-                                        @foreach($task->assigned_users ?? [] as $user)
-                                            @php
-                                                $initials = strtoupper(substr($user->name, 0, 1) . (strpos($user->name, ' ') !== false ? substr($user->name, strpos($user->name, ' ') + 1, 1) : ''));
-                                                $colors = ['#a3e635', '#1f2937', '#d946ef', '#0073ea', '#00c875'];
-                                                $color = $colors[array_rand($colors)];
-                                            @endphp
-                                            <div class="monday-avatar" style="background-color: {{ $color }};">{{ $initials }}</div>
-                                        @endforeach
+                                        <div class="monday-avatar" style="background-color: #0073ea;">ZA</div>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $statusColor = '#fdab3d';
-                                        $statusName = 'Pending';
-                                        if ($task->status && is_object($task->status)) {
-                                            $statusColor = $task->status->color ?? '#fdab3d';
-                                            $statusName = $task->status->name ?? 'Pending';
-                                        }
-                                    @endphp
-                                    <div class="monday-status monday-status-clickable" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};" onclick="openStatusPicker({{ $task->id }}, this)">
-                                        <span>{{ $statusName }}</span>
+                                    <div class="monday-status monday-status-clickable" style="background-color: #fdab3d20; color: #fdab3d;" onclick="openStatusPicker(1, this)">
+                                        <span>Pending</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <polyline points="6 9 12 15 18 9" />
@@ -639,49 +624,33 @@
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $deadline = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
-                                        $isOverdue = $deadline && $deadline->isPast();
-                                    @endphp
-                                    <div class="monday-date {{ $isOverdue ? 'overdue' : '' }}" onclick="alert('Change date')">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                    <div class="monday-date overdue" onclick="alert('Change date')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                             <circle cx="12" cy="12" r="9" />
                                             <polyline points="12 7 12 12 15 15" />
                                         </svg>
-                                        <span>{{ $deadline ? $deadline->format('M d, H:i') : '-' }}</span>
+                                        <span>Nov 20, 18:00</span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell text-center">
-                                    @if($task->priority)
-                                        <span class="monday-badge" style="background-color: #fef3c7; color: #d97706;">High</span>
-                                    @else
-                                        <span class="monday-badge" style="background-color: #e5e7eb; color: #6b7280;">Normal</span>
-                                    @endif
+                                    <span class="monday-badge" style="background-color: #fef3c7; color: #d97706;">High</span>
                                 </td>
                                 <td class="monday-table-cell">
-                                    <span class="text-muted">
-                                        @if($task->epic && is_object($task->epic))
-                                            {{ $task->epic->name }}
-                                        @elseif($task->epic && is_string($task->epic))
-                                            {{ $task->epic }}
-                                        @else
-                                            -
-                                        @endif
-                                    </span>
+                                    <span class="text-muted">-</span>
                                 </td>
                                 <td class="monday-table-cell text-center">
-                                    <span class="monday-sp monday-editable" data-field="story_points" data-task-id="{{ $task->id }}" onclick="editInline(this)">{{ $task->story_points ?? 0 }}</span>
+                                    <span class="monday-sp monday-editable" data-field="story_points" data-task-id="1" onclick="editInline(this)">0</span>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit">
+                                        <button class="monday-action-btn edit" onclick="editTask(1)" title="Edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
                                                 <path d="M16 5l3 3" />
                                             </svg>
                                         </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete">
+                                        <button class="monday-action-btn delete" onclick="deleteTask(1)" title="Delete">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M4 7l16 0" />
                                                 <path d="M10 11l0 6" />
@@ -693,11 +662,68 @@
                                     </div>
                                 </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">No tasks found</td>
+                            <tr class="monday-table-row" data-task-id="2">
+                                <td class="monday-table-cell-task">
+                                    <div class="monday-task-content">
+                                        <svg class="monday-task-priority-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="opacity: 0.3;" onclick="togglePriority(2, event)">
+                                            <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+                                        </svg>
+                                        <span class="monday-task-text monday-editable" data-field="content" data-task-id="2" onclick="editInline(this)">this is mine task</span>
+                                    </div>
+                                </td>
+                                <td class="monday-table-cell">
+                                    <div class="monday-person">
+                                        <div class="monday-avatar" style="background-color: #00c875;">ZA</div>
+                                    </div>
+                                </td>
+                                <td class="monday-table-cell">
+                                    <div class="monday-status monday-status-clickable" style="background-color: #fdab3d20; color: #fdab3d;" onclick="openStatusPicker(2, this)">
+                                        <span>Pending</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </div>
+                                </td>
+                                <td class="monday-table-cell">
+                                    <div class="monday-date" onclick="alert('Change date')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                            <circle cx="12" cy="12" r="9" />
+                                            <polyline points="12 7 12 12 15 15" />
+                                        </svg>
+                                        <span>Nov 28, 18:00</span>
+                                    </div>
+                                </td>
+                                <td class="monday-table-cell text-center">
+                                    <span class="monday-badge" style="background-color: #e5e7eb; color: #6b7280;">Normal</span>
+                                </td>
+                                <td class="monday-table-cell">
+                                    <span class="text-muted">-</span>
+                                </td>
+                                <td class="monday-table-cell text-center">
+                                    <span class="monday-sp monday-editable" data-field="story_points" data-task-id="2" onclick="editInline(this)">0</span>
+                                </td>
+                                <td class="monday-table-cell">
+                                    <div class="monday-actions" style="display: flex !important; opacity: 1;">
+                                        <button class="monday-action-btn edit" onclick="editTask(2)" title="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                                <path d="M16 5l3 3" />
+                                            </svg>
+                                        </button>
+                                        <button class="monday-action-btn delete" onclick="deleteTask(2)" title="Delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                                <path d="M4 7l16 0" />
+                                                <path d="M10 11l0 6" />
+                                                <path d="M14 11l0 6" />
+                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
-                            @endforelse
                         </tbody>
                     </table>
                     <div class="monday-pagination">
@@ -708,6 +734,7 @@
                 </div>
             </div>
 
+            <!-- COMPLETED GROUP -->
             <div class="monday-group" data-group="completed">
                 <div class="monday-group-header" onclick="toggleGroup('completed')">
                     <svg class="monday-group-collapse-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
@@ -716,59 +743,40 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #00c875;"></div>
                     <h3 class="monday-group-title">Completed</h3>
-                    <span class="monday-group-count">{{ $completedTasks && method_exists($completedTasks, 'total') ? $completedTasks->total() : count($completedTasks ?? []) }}</span>
+                    <span class="monday-group-count">18</span>
                 </div>
 
                 <div class="monday-group-content" id="group-completed" style="display: none;">
                     <table class="monday-table">
                         <thead class="monday-table-header">
                             <tr>
-                                <th style="width: 40%">TASK</th>
-                                <th style="width: 150px">PERSON</th>
-                                <th style="width: 120px">STATUS</th>
-                                <th style="width: 130px">DEADLINE</th>
+                                <th style="width: 35%">TASK</th>
+                                <th style="width: 110px">PERSON</th>
+                                <th style="width: 100px">STATUS</th>
+                                <th style="width: 110px">DEADLINE</th>
                                 <th style="width: 80px">PRIORITY</th>
-                                <th style="width: 100px">EPIC</th>
-                                <th style="width: 80px">SP</th>
-                                <th style="width: 80px" class="text-center">ACTIONS</th>
+                                <th style="width: 90px">EPIC</th>
+                                <th style="width: 50px">SP</th>
+                                <th style="width: 100px" class="text-center">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($completedTasks ?? [] as $task)
-                            <tr class="monday-table-row completed" data-task-id="{{ $task->id }}">
+                            <tr class="monday-table-row completed" data-task-id="100">
                                 <td class="monday-table-cell-task">
                                     <div class="monday-task-content">
-                                        <span class="monday-task-text">{{ $task->content }}</span>
+                                        <span class="monday-task-text">Velit</span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
-                                        @foreach($task->assigned_users ?? [] as $user)
-                                            @php
-                                                $initials = strtoupper(substr($user->name, 0, 1) . (strpos($user->name, ' ') !== false ? substr($user->name, strpos($user->name, ' ') + 1, 1) : ''));
-                                                $colors = ['#a3e635', '#1f2937', '#d946ef', '#0073ea', '#00c875'];
-                                                $color = $colors[array_rand($colors)];
-                                            @endphp
-                                            <div class="monday-avatar" style="background-color: {{ $color }};">{{ $initials }}</div>
-                                        @endforeach
+                                        <div class="monday-avatar" style="background-color: #1f2937;">MZ</div>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $statusColor = '#00c875';
-                                        $statusName = 'Completed';
-                                        if ($task->status && is_object($task->status)) {
-                                            $statusColor = $task->status->color ?? '#00c875';
-                                            $statusName = $task->status->name ?? 'Completed';
-                                        }
-                                    @endphp
-                                    <div class="monday-status" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</div>
+                                    <div class="monday-status" style="background-color: #00c87520; color: #00c875;">Completed</div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $deadline = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
-                                    @endphp
-                                    <span class="text-muted">{{ $deadline ? $deadline->format('M d') : '-' }}</span>
+                                    <span class="text-muted">Nov 08</span>
                                 </td>
                                 <td class="monday-table-cell text-center">
                                     <span class="text-muted">-</span>
@@ -781,7 +789,7 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit">
+                                        <button class="monday-action-btn edit" onclick="editTask(100)" title="Edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -791,11 +799,6 @@
                                     </div>
                                 </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">No completed tasks found</td>
-                            </tr>
-                            @endforelse
                         </tbody>
                     </table>
                     <div class="monday-pagination">
@@ -806,6 +809,7 @@
                 </div>
             </div>
 
+            <!-- ABORTED GROUP -->
             <div class="monday-group" data-group="aborted">
                 <div class="monday-group-header" onclick="toggleGroup('aborted')">
                     <svg class="monday-group-collapse-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
@@ -814,60 +818,42 @@
                     </svg>
                     <div class="monday-group-color" style="background-color: #e2445c;"></div>
                     <h3 class="monday-group-title">Aborted</h3>
-                    <span class="monday-group-count">{{ $abortedTasks && method_exists($abortedTasks, 'total') ? $abortedTasks->total() : count($abortedTasks ?? []) }}</span>
+                    <span class="monday-group-count">5</span>
                 </div>
 
                 <div class="monday-group-content" id="group-aborted" style="display: none;">
                     <table class="monday-table">
                         <thead class="monday-table-header">
                             <tr>
-                                <th style="width: 40%">TASK</th>
-                                <th style="width: 150px">PERSON</th>
-                                <th style="width: 120px">STATUS</th>
-                                <th style="width: 130px">DEADLINE</th>
-                                <th style="width: 80px" class="text-center">ACTIONS</th>
+                                <th style="width: 35%">TASK</th>
+                                <th style="width: 110px">PERSON</th>
+                                <th style="width: 100px">STATUS</th>
+                                <th style="width: 110px">DEADLINE</th>
+                                <th style="width: 100px" class="text-center">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($abortedTasks ?? [] as $task)
-                            <tr class="monday-table-row" data-task-id="{{ $task->id }}">
+                            <tr class="monday-table-row" data-task-id="200">
                                 <td class="monday-table-cell-task">
                                     <div class="monday-task-content">
-                                        <span class="monday-task-text text-decoration-line-through text-muted">{{ $task->content }}</span>
+                                        <span class="monday-task-text text-decoration-line-through text-muted">zubair</span>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-person">
-                                        @foreach($task->assigned_users ?? [] as $user)
-                                            @php
-                                                $initials = strtoupper(substr($user->name, 0, 1) . (strpos($user->name, ' ') !== false ? substr($user->name, strpos($user->name, ' ') + 1, 1) : ''));
-                                                $colors = ['#a3e635', '#1f2937', '#d946ef', '#0073ea', '#00c875'];
-                                                $color = $colors[array_rand($colors)];
-                                            @endphp
-                                            <div class="monday-avatar" style="background-color: {{ $color }};">{{ $initials }}</div>
-                                        @endforeach
+                                        <div class="monday-avatar" style="background-color: #d946ef;">AM</div>
+                                        <div class="monday-avatar" style="background-color: #00c875;">SC</div>
                                     </div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $statusColor = '#e2445c';
-                                        $statusName = 'Aborted';
-                                        if ($task->status && is_object($task->status)) {
-                                            $statusColor = $task->status->color ?? '#e2445c';
-                                            $statusName = $task->status->name ?? 'Aborted';
-                                        }
-                                    @endphp
-                                    <div class="monday-status" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</div>
+                                    <div class="monday-status" style="background-color: #e2445c20; color: #e2445c;">Aborted</div>
                                 </td>
                                 <td class="monday-table-cell">
-                                    @php
-                                        $deadline = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
-                                    @endphp
-                                    <span class="text-muted">{{ $deadline ? $deadline->format('M d') : '-' }}</span>
+                                    <span class="text-muted">Nov 30</span>
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete">
+                                        <button class="monday-action-btn delete" onclick="deleteTask(200)" title="Delete">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
                                                 <path d="M4 7l16 0" />
                                                 <path d="M10 11l0 6" />
@@ -879,11 +865,6 @@
                                     </div>
                                 </td>
                             </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">No aborted tasks found</td>
-                            </tr>
-                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -1015,7 +996,6 @@
                     element.style.backgroundColor = status.color + '20';
                     element.style.color = status.color;
                     dropdown.remove();
-                    // setTimeout(() => location.reload(), 500); // Removed this line to prevent reload on static page
                 };
                 dropdown.appendChild(item);
             });
@@ -1032,20 +1012,10 @@
             }, 10);
         }
 
-       // ==========================================
-        // == 📍 THIS IS THE FIX ==
-        // ==========================================
-        function editTask(taskId) {
-            // OLD CODE:
-            // alert('Redirecting to edit task ' + taskId);
-            
-            // NEW CODE:
-            // This redirects to the correct route (e.g., /task/3/edit)
-            window.location.href = '/task/' + taskId + '/edit';
-        }
-        // ==========================================
-        // == END OF FIX ==
-        //
+        function editTask(taskId) {
+            window.location.href = '/task/' + taskId + '/edit';
+        }
+
         function deleteTask(taskId) {
             if (confirm('Are you sure you want to delete this task?')) {
                 const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
@@ -1054,7 +1024,6 @@
                     row.style.transform = 'translateX(-20px)';
                     setTimeout(() => {
                         row.remove();
-                        // Update count after removal
                         const groupHeader = row.closest('.monday-group').querySelector('.monday-group-header');
                         if (groupHeader) {
                             const countSpan = groupHeader.querySelector('.monday-group-count');
@@ -1070,18 +1039,9 @@
             }
         }
 
-        // ==========================================
-        // == UPDATED NEW TASK FUNCTION ==
-        // ==========================================
         function newTask() {
-            // This now redirects to your 'create' page, 
-            // which will show the full form and save permanently.
             window.location.href = '/task/create';
         }
-        // ==========================================
-        // == END OF UPDATED FUNCTION ==
-        // ==========================================
-
 
         function previousPage(group) {
             alert('Previous page for ' + group);

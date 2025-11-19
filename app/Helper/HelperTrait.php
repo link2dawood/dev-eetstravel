@@ -134,4 +134,30 @@ trait HelperTrait{
     {
         return $table = with(new $model)->getTable();
     }
+    
+    /**
+     * Get only valid service model classes that actually exist
+     * Root fix: Filter out non-existent model classes upfront
+     * 
+     * @return array Array of valid service names
+     */
+    public function getValidServices()
+    {
+        static $validServices = null;
+        
+        // Cache the result to avoid checking on every call
+        if ($validServices !== null) {
+            return $validServices;
+        }
+        
+        $validServices = [];
+        foreach ($this->services as $service) {
+            $namespace = 'App\\' . $service;
+            if (class_exists($namespace)) {
+                $validServices[] = $service;
+            }
+        }
+        
+        return $validServices;
+    }
 }

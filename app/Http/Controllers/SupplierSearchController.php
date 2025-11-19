@@ -51,25 +51,10 @@ class SupplierSearchController extends Controller
         if($request->search['value']) $searchName = $request->search['value'];
 
         if ($request->service === 'Service' || $request->service === 'All') {
-            try {
-                $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
-                // Root cause fix: Ensure getCollection returns valid data
-                if (empty($namespace)) {
-                    $namespace = [];
-                }
-            } catch (\Error $e) {
-                // Root cause fix: Catch fatal errors (e.g., class not found)
-                \Log::error('Fatal error in getCollection: ' . $e->getMessage(), [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
-                $namespace = [];
-            } catch (\Exception $e) {
-                // Root cause fix: Catch other exceptions
-                \Log::error('Exception in getCollection: ' . $e->getMessage(), [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
+            // Root fix: Use only valid services (existing model classes)
+            $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
+            // Ensure we always have an array
+            if (empty($namespace) || !is_array($namespace)) {
                 $namespace = [];
             }
         }
@@ -135,23 +120,19 @@ class SupplierSearchController extends Controller
         }
         ini_set('memory_limit', '800M');
         set_time_limit(0);
-        //@ToDo: change on correct generate response for datatable
         
-        // Root cause fix: Ensure $namespace is valid before processing
+        // Root fix: Normalize data structure - ensure we have a valid array
         if (empty($namespace)) {
-            $namespace = [];
+            $services = [];
+        } elseif (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
+            $services = [$namespace];
+        } else {
+            $namespace = collect($namespace);
+            $services = $namespace->unique()->all();
         }
         
-        // Ensure $namespace is an array/collection
-        if (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
-            $namespace = [$namespace];
-        }
-        
-        $namespace = collect($namespace);
-        $services = $namespace->unique()->all();
-        
-        // Root cause fix: Ensure services array is not empty before passing to Datatables
-        if (empty($services)) {
+        // Ensure we have a valid array for DataTables
+        if (!is_array($services)) {
             $services = [];
         }
         
@@ -341,22 +322,20 @@ class SupplierSearchController extends Controller
     public function getCollection($criterias, $rates = null, $cityCode=null, $searchName = null, $countryAlias = null)
     {
         $data = [];
-        foreach ($this->services as $service) {
+        // Root fix: Only process valid services (existing model classes)
+        // This prevents any errors from non-existent classes
+        $validServices = $this->getValidServices();
+        
+        foreach ($validServices as $service) {
         	if ($service == 'Transfer') {
         		continue;
 	        }
             
-            // Root cause fix: Check if model class exists before trying to use it
+            // All services in $validServices have been validated to exist
             $namespace = 'App\\' . $service;
-            if (!class_exists($namespace)) {
-                \Log::warning("Model class does not exist: {$namespace}");
-                continue; // Skip this service if model doesn't exist
-            }
-            
-            try {
-                $services = [];
-                $model_test = $namespace;
-                $table_name = $this->getTableName($model_test);
+            $services = [];
+            $model_test = $namespace;
+            $table_name = $this->getTableName($model_test);
                 $query_builder = $service == 'Cruises' || $service == 'Flight' ?
 
                 $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country_from")
@@ -420,33 +399,12 @@ class SupplierSearchController extends Controller
             if ($rates) array_push($services, $this->findByRate($rates, $namespace, $cityCode, $searchName, $countryAlias));
             $c_service = collect($services)->collapse()->all();
             array_push($data, $c_service);
-            } catch (\Error $e) {
-                // Root cause fix: Catch class not found and other fatal errors
-                \Log::error("Error processing service {$service}: " . $e->getMessage(), [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'namespace' => $namespace
-                ]);
-                continue; // Skip this service and continue with next
-            } catch (\Exception $e) {
-                // Catch other exceptions
-                \Log::error("Exception processing service {$service}: " . $e->getMessage(), [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'namespace' => $namespace
-                ]);
-                continue; // Skip this service and continue with next
-            }
         }
 
         $collection = collect($data)->collapse()->all();
         
-        // Root cause fix: Ensure we always return an array, even if empty
-        if (empty($collection) || !is_array($collection)) {
-            return [];
-        }
-        
-        return $collection;
+        // Root fix: Ensure we always return a valid array
+        return is_array($collection) ? $collection : [];
     }
 
     public function actionColumn($data, $can)

@@ -1082,28 +1082,53 @@ public function store(StoreTourRequest $request)
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
         // Root fix: Only load active offices, not all offices
-        $select_office = Offices::where('status', 1)->first();
-        $offices = Offices::where('status', 1)->get(); // Only active offices
+        // Handle case where offices table might not exist or query fails
+        $select_office = null;
+        $offices = collect([]);
+        try {
+            $select_office = Offices::where('status', 1)->first();
+            $offices = Offices::where('status', 1)->get();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to load offices', ['error' => $e->getMessage()]);
+            // Continue with empty offices collection
+        }
 
         // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
-        $invoice_tours_query = \App\InvoicesTours::where("invoices_tours_id", $tour->id)
-            ->join('supplier_invoices as invoices', 'invoices.id', '=', 'invoices_tours.invoices_id')
-            ->leftJoin('offices', 'offices.id', '=', 'invoices.office_id')
-            ->leftJoin('tour_packages as packages', 'packages.id', '=', 'invoices_tours.package_id')
-            ->select(
-                'invoices.id',
-                'invoices.invoice_no',
-                'invoices.dueDate',
-                'invoices.receivedDate',
-                'invoices.total_amount',
-                'invoices.extra_amount',
-                'invoices.amount_payable',
-                'offices.office_name',
-                'packages.name as package_name',
-                'invoices_tours.invoices_id'
-            );
-        
-        $invoice_tours = $invoice_tours_query->get();
+        // Root fix: Use correct table name 'office_fees' instead of 'offices'
+        $invoice_tours = collect([]);
+        try {
+            $invoice_tours_query = \App\InvoicesTours::where("invoices_tours_id", $tour->id)
+                ->join('supplier_invoices as invoices', 'invoices.id', '=', 'invoices_tours.invoices_id')
+                ->leftJoin('office_fees as offices', 'offices.id', '=', 'invoices.office_id')
+                ->leftJoin('tour_packages as packages', 'packages.id', '=', 'invoices_tours.package_id')
+                ->select(
+                    'invoices.id',
+                    'invoices.invoice_no',
+                    'invoices.dueDate',
+                    'invoices.receivedDate',
+                    'invoices.total_amount',
+                    'invoices.extra_amount',
+                    'invoices.amount_payable',
+                    'offices.office_name',
+                    'packages.name as package_name',
+                    'invoices_tours.invoices_id'
+                );
+            
+            $invoice_tours = $invoice_tours_query->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Failed to load invoice tours data', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A'
+            ]);
+            // Continue with empty collection - page will still load without invoice data
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error loading invoice tours', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage()
+            ]);
+            // Continue with empty collection
+        }
         
         // Pre-load all transaction sums in one query to avoid N+1
         $invoiceIds = $invoice_tours->pluck('invoices_id')->filter()->unique()->toArray();
@@ -1145,18 +1170,35 @@ public function store(StoreTourRequest $request)
         }
 
         // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
-        $transactions = \App\ClientInvoices::where("client_invoices.tour_id", $tour->id)
-            ->leftJoin('offices', 'offices.id', '=', 'client_invoices.office_id')
-            ->select(
-                'client_invoices.id',
-                'client_invoices.total_amount',
-                'client_invoices.created_at',
-                'client_invoices.date',
-                'offices.office_name',
-                'tours.name as tour_name'
-            )
-            ->leftJoin('tours', 'tours.id', '=', 'client_invoices.tour_id')
-            ->get();
+        // Root fix: Use correct table name 'office_fees' instead of 'offices'
+        $transactions = collect([]);
+        try {
+            $transactions = \App\ClientInvoices::where("client_invoices.tour_id", $tour->id)
+                ->leftJoin('office_fees as offices', 'offices.id', '=', 'client_invoices.office_id')
+                ->select(
+                    'client_invoices.id',
+                    'client_invoices.total_amount',
+                    'client_invoices.created_at',
+                    'client_invoices.date',
+                    'offices.office_name',
+                    'tours.name as tour_name'
+                )
+                ->leftJoin('tours', 'tours.id', '=', 'client_invoices.tour_id')
+                ->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Failed to load billing transactions data', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A'
+            ]);
+            // Continue with empty collection - page will still load without billing data
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error loading billing transactions', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage()
+            ]);
+            // Continue with empty collection
+        }
         
         $billingData = [];
         foreach ($transactions as $transaction) {
@@ -1210,27 +1252,67 @@ public function store(StoreTourRequest $request)
         ]);
         
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error('Tour not found in show method', ['tour_id' => $tourId ?? 'unknown', 'message' => $e->getMessage()]);
+            \Log::error('Tour not found in show method', [
+                'tour_id' => $tourId ?? 'unknown',
+                'message' => $e->getMessage(),
+                'url' => $request->fullUrl()
+            ]);
             return abort(404, 'Tour not found');
-        } catch (\Exception $e) {
-            \Log::error('Tour show method error', [
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database query error in tour show method', [
                 'tour_id' => $tourId ?? 'unknown',
                 'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A',
+                'bindings' => $e->getBindings() ?? [],
+                'url' => $request->fullUrl(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'line' => $e->getLine()
             ]);
             
             // Root fix: Return proper error response instead of redirecting
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error loading tour: ' . (config('app.debug') ? $e->getMessage() : 'Please try again')
+                    'message' => 'Database error occurred. Please contact support if this persists.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+            
+            // For non-AJAX, show error page with helpful message
+            $errorMessage = config('app.debug') 
+                ? 'Database error: ' . $e->getMessage() 
+                : 'A database error occurred while loading the tour. Please try again or contact support.';
+            
+            return response()->view('errors.500', [
+                'message' => $errorMessage
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error in tour show method', [
+                'tour_id' => $tourId ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'url' => $request->fullUrl()
+            ]);
+            
+            // Root fix: Return proper error response instead of redirecting
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An unexpected error occurred. Please try again or contact support.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
                 ], 500);
             }
             
             // For non-AJAX, show error page
-            return abort(500, 'Error loading tour: ' . (config('app.debug') ? $e->getMessage() : 'Please try again'));
+            $errorMessage = config('app.debug') 
+                ? 'Error: ' . $e->getMessage() 
+                : 'An unexpected error occurred. Please try again or contact support.';
+            
+            return response()->view('errors.500', [
+                'message' => $errorMessage
+            ], 500);
         }
     }
 

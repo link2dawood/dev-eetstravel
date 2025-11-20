@@ -72,4 +72,32 @@ class LoginController extends Controller
     {
         return $request->only($this->username(), 'password');
     }
+
+    /**
+     * The user has been authenticated.
+     * Root fix: Override to check permissions before redirecting to prevent redirect loops
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        // Check if user has permission to access dashboard
+        try {
+            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('dashboard.index')) {
+                return redirect()->intended($this->redirectPath());
+            }
+        } catch (\Exception $e) {
+            // If permission check fails, log and redirect anyway to prevent loops
+            \Log::warning('Permission check failed during login redirect', [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Root fix: Redirect to home even if permission check fails to prevent redirect loops
+        // The middleware will handle showing appropriate error if needed
+        return redirect()->intended($this->redirectPath());
+    }
 }

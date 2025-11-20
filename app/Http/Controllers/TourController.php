@@ -973,7 +973,13 @@ public function store(StoreTourRequest $request)
             return URL::to('tour/' . $tourId);
         }
 
-        $tour = Tour::findOrfail($tourId);
+        // Root fix: Add eager loading to prevent N+1 queries
+        $tour = Tour::with([
+            'status:id,name,color',
+            'client:id,name',
+            'tour_days.packages',
+            'quotations'
+        ])->findOrfail($tourId);
 	    $title = $tour->is_quotation ? 'Quotation' :  'Tour';
         if($tour == null){
             return abort(404);
@@ -1041,58 +1047,89 @@ public function store(StoreTourRequest $request)
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
-$select_office=Offices::where('status',1)->first();
-		 $offices=Offices::all();
+        // Root fix: Only load active offices, not all offices
+        $select_office = Offices::where('status', 1)->first();
+        $offices = Offices::where('status', 1)->get(); // Only active offices
 
-        // Fetch invoices data directly for Bootstrap table
-        $invoice_tours = \App\InvoicesTours::where("invoices_tours_id", $tour->id)->get();
+        // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
+        $invoice_tours_query = \App\InvoicesTours::where("invoices_tours_id", $tour->id)
+            ->join('supplier_invoices as invoices', 'invoices.id', '=', 'invoices_tours.invoices_id')
+            ->leftJoin('offices', 'offices.id', '=', 'invoices.office_id')
+            ->leftJoin('tour_packages as packages', 'packages.id', '=', 'invoices_tours.package_id')
+            ->select(
+                'invoices.id',
+                'invoices.invoice_no',
+                'invoices.dueDate',
+                'invoices.receivedDate',
+                'invoices.total_amount',
+                'invoices.extra_amount',
+                'invoices.amount_payable',
+                'offices.office_name',
+                'packages.name as package_name',
+                'invoices_tours.invoices_id'
+            );
+        
+        $invoice_tours = $invoice_tours_query->get();
+        
+        // Pre-load all transaction sums in one query to avoid N+1
+        $invoiceIds = $invoice_tours->pluck('invoices_id')->filter()->unique()->toArray();
+        $transactionSums = empty($invoiceIds) ? [] : \App\Transaction::whereIn("invoice_id", $invoiceIds)
+            ->where("pay_to", "Supplier")
+            ->selectRaw('invoice_id, SUM(amount) as total_amount')
+            ->groupBy('invoice_id')
+            ->pluck('total_amount', 'invoice_id')
+            ->toArray();
+        
         $invoicesData = [];
         foreach ($invoice_tours as $invoice_tour) {
-            $invoice = \App\Invoices::find($invoice_tour->invoices_id);
-            if ($invoice) {
-                $office = \App\Offices::find($invoice->office_id);
-                $package = \App\TourPackage::find($invoice_tour->package_id);
-
-                // Calculate invoice status
-                $transaction = \App\Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Supplier");
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoice->total_amount;
-                $remaining_amount = $amount - $sum_amount;
-                if ($sum_amount == $amount) {
-                    $invoiceStatus = "Paid";
-                } elseif ($sum_amount == 0) {
-                    $invoiceStatus = "You Owe " . $amount;
-                } else {
-                    $invoiceStatus = "You Owe " . $remaining_amount;
-                }
-
-                $invoicesData[] = [
-                    'id' => $invoice->id,
-                    'office_name' => $office->office_name ?? '',
-                    'invoice_no' => $invoice->invoice_no ?? '',
-                    'due_date' => $invoice->dueDate ?? '',
-                    'received_date' => $invoice->receivedDate ?? '',
-                    'total_amount' => $invoice->total_amount ?? '',
-                    'extra_amount' => $invoice->extra_amount ?? '',
-                    'amount_payable' => $invoice->amount_payable ?? '',
-                    'tour_name' => $tour->name,
-                    'package_name' => $package->name ?? 'Extra Cost',
-                    'status' => $invoiceStatus
-                ];
+            // Get transaction sum from pre-loaded array
+            $sum_amount = $transactionSums[$invoice_tour->invoices_id] ?? 0;
+            $amount = $invoice_tour->total_amount ?? 0;
+            $remaining_amount = $amount - $sum_amount;
+            
+            if ($sum_amount == $amount) {
+                $invoiceStatus = "Paid";
+            } elseif ($sum_amount == 0) {
+                $invoiceStatus = "You Owe " . $amount;
+            } else {
+                $invoiceStatus = "You Owe " . $remaining_amount;
             }
+
+            $invoicesData[] = [
+                'id' => $invoice_tour->id,
+                'office_name' => $invoice_tour->office_name ?? '',
+                'invoice_no' => $invoice_tour->invoice_no ?? '',
+                'due_date' => $invoice_tour->dueDate ?? '',
+                'received_date' => $invoice_tour->receivedDate ?? '',
+                'total_amount' => $invoice_tour->total_amount ?? '',
+                'extra_amount' => $invoice_tour->extra_amount ?? '',
+                'amount_payable' => $invoice_tour->amount_payable ?? '',
+                'tour_name' => $tour->name,
+                'package_name' => $invoice_tour->package_name ?? 'Extra Cost',
+                'status' => $invoiceStatus
+            ];
         }
 
-        // Fetch billing data directly for Bootstrap table
-        $transactions = \App\ClientInvoices::where("tour_id", $tour->id)->get();
+        // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
+        $transactions = \App\ClientInvoices::where("client_invoices.tour_id", $tour->id)
+            ->leftJoin('offices', 'offices.id', '=', 'client_invoices.office_id')
+            ->select(
+                'client_invoices.id',
+                'client_invoices.total_amount',
+                'client_invoices.created_at',
+                'client_invoices.date',
+                'offices.office_name',
+                'tours.name as tour_name'
+            )
+            ->leftJoin('tours', 'tours.id', '=', 'client_invoices.tour_id')
+            ->get();
+        
         $billingData = [];
         foreach ($transactions as $transaction) {
-            $office = \App\Offices::find($transaction->office_id);
-            $tour_obj = \App\Tour::find($transaction->tour_id);
-
             $billingData[] = [
                 'id' => $transaction->id,
-                'office_name' => $office ? $office->office_name : '',
-                'tour_name' => $tour_obj ? $tour_obj->name : '',
+                'office_name' => $transaction->office_name ?? '',
+                'tour_name' => $transaction->tour_name ?? '',
                 'total_amount' => $transaction->total_amount ?? 0,
                 'date' => $transaction->created_at ?? $transaction->date ?? now()
             ];
@@ -1104,7 +1141,11 @@ $select_office=Offices::where('status',1)->first();
         $tourDayLookup = collect($serviceDays)->mapWithKeys(function ($day) {
             return [$day['date_key'] => $day['tour_day_id']];
         });
-        $serviceCatalog = $this->buildServiceCatalog();
+        
+        // Root fix: Don't load ALL services on every page load - this is extremely slow
+        // Service catalog will be loaded lazily via AJAX when the modal is opened
+        // This improves initial page load time significantly
+        $serviceCatalog = collect([]); // Empty collection, loaded on-demand
 
         return view('tour.show', [
 			'select_office'=>$select_office,

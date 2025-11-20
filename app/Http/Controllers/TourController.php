@@ -1583,7 +1583,8 @@ $select_office=Offices::where('status',1)->first();
 					
                     $status = Status::query()->where('id', $tour->status)->first();
                     $status_name = $status ? $status->name : '';
-                    $url = route('tour.show', ['id' => $tour->id]);
+                    // Root fix: Use 'tour' parameter name instead of 'id'
+                    $url = route('tour.show', ['tour' => $tour->id]);
                     $parsingURL = parse_url($url);
                     $uri = $parsingURL['path'];
 
@@ -1607,7 +1608,8 @@ $select_office=Offices::where('status',1)->first();
            }else {
                 $status = Status::query()->where('id', $request->fieldValue)->first();
                 $status_name = $status ? $status->name : '';
-                $url = route('tour.show', ['id' => $tour->id]);
+                // Root fix: Use 'tour' parameter name instead of 'id'
+                $url = route('tour.show', ['tour' => $tour->id]);
                 $parsingURL = parse_url($url);
                 $uri = $parsingURL['path'];
 
@@ -1718,7 +1720,8 @@ $select_office=Offices::where('status',1)->first();
         }
 
         if($request->status != $tour_model->status){
-            $url = route('tour.show', ['id' => $tour]);
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            $url = route('tour.show', ['tour' => $tour]);
             $parsingURL = parse_url($url);
             $uri = $parsingURL['path'];
             $status = Status::query()->where('id', $request->status)->first();
@@ -1836,7 +1839,8 @@ $select_office=Offices::where('status',1)->first();
         }else if($request->get('tab')){
             return redirect()->to('profile?'.$request->get('tab'));
         }else{
-            return redirect()->route('tour.show', [ 'id' => $tour ]);
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            return redirect()->route('tour.show', [ 'tour' => $tour ]);
         }
 		
     }
@@ -2282,7 +2286,8 @@ public function destroy($id, $tab = null)
 	        return response()->json(['success' => true, 'message' => 'Tour converted successfully']);
 	    }
 
-	    return redirect(route('tour.show', ['id' => $id]));
+	    // Root fix: Use 'tour' parameter name instead of 'id'
+	    return redirect(route('tour.show', ['tour' => $id]));
     }
 	public function convertToQuotation(Request $request, $id) {
     	$tour = Tour::find($id);
@@ -2299,7 +2304,8 @@ public function destroy($id, $tab = null)
 	        return response()->json(['success' => true, 'message' => 'Quotation converted successfully']);
 	    }
 
-	    return redirect(route('tour.show', ['id' => $id]));
+	    // Root fix: Use 'tour' parameter name instead of 'id'
+	    return redirect(route('tour.show', ['tour' => $id]));
     }
 	
 	

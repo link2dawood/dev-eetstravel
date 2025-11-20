@@ -53,8 +53,9 @@ trait ExportTrait{
                         protected $tour;
                         public function __construct($tour) { $this->tour = $tour; }
                         public function view(): \Illuminate\Contracts\View\View {
+                            // Root fix: Pass both tour and tourDates to the view
                             $tourDates = \App\TourDay::get(['id', 'date', 'tour'])->where('tour', $this->tour->id)->sortBy('date');
-                            return view('export.package', ['tourDates' => $tourDates]);
+                            return view('export.package', ['tour' => $this->tour, 'tourDates' => $tourDates]);
                         }
                     },
                 ];
@@ -194,6 +195,12 @@ trait ExportTrait{
 	
 // Sanitize the HTML content
 $config = HTMLPurifier_Config::createDefault();
+// Root fix: Set writable cache directory for HTMLPurifier
+$cacheDir = storage_path('app/htmlpurifier');
+if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0755, true);
+}
+$config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
@@ -327,6 +334,12 @@ ini_set('post_max_size', '62M');
 	
 // Sanitize the HTML content
 $config = HTMLPurifier_Config::createDefault();
+// Root fix: Set writable cache directory for HTMLPurifier
+$cacheDir = storage_path('app/htmlpurifier');
+if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0755, true);
+}
+$config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
@@ -628,6 +641,12 @@ public function exportDocShort($tour, $data, $request)
 	
 // Sanitize the HTML content
 $config = HTMLPurifier_Config::createDefault();
+// Root fix: Set writable cache directory for HTMLPurifier
+$cacheDir = storage_path('app/htmlpurifier');
+if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0755, true);
+}
+$config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content

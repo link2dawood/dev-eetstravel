@@ -59,7 +59,8 @@ class RoomListController extends Controller {
 
         LaravelFlashSessionHelper::setFlashMessage("Templates #$template->name created");
 
-        return redirect()->route('tour.show', ['id' => $tourId, 'tab' => 'room_list' ]);
+        // Root fix: Use 'tour' parameter name instead of 'id'
+        return redirect()->route('tour.show', ['tour' => $tourId, 'tab' => 'room_list' ]);
 	}
 
     public function update( Request $request ) {
@@ -71,7 +72,8 @@ class RoomListController extends Controller {
 
        LaravelFlashSessionHelper::setFlashMessage("Templates #$template->name edited");
 
-       return redirect()->route('tour.show', ['id' => $id, 'tab' => 'room_list' ]);
+       // Root fix: Use 'tour' parameter name instead of 'id'
+       return redirect()->route('tour.show', ['tour' => $id, 'tab' => 'room_list' ]);
     }
     
     public function send($tourId, Request $request ) {

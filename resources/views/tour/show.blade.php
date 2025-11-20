@@ -1304,8 +1304,37 @@ $(function() {
         container.append(overlay);
         selectedGuestList.hide();
         
-        var questionModal = bootstrap.Modal.getInstance(document.getElementById('question_modal'));
-        questionModal.hide();
+        // Root fix: Bootstrap Modal compatibility - handle both Bootstrap 4 and 5
+        var questionModalEl = document.getElementById('question_modal');
+        var questionModal = null;
+        if (questionModalEl && typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+            try {
+                // Try Bootstrap 5.1+ getOrCreateInstance
+                if (bootstrap.Modal.getOrCreateInstance && typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                    questionModal = bootstrap.Modal.getOrCreateInstance(questionModalEl);
+                }
+                // Try Bootstrap 5.0 getInstance
+                else if (bootstrap.Modal.getInstance && typeof bootstrap.Modal.getInstance === 'function') {
+                    questionModal = bootstrap.Modal.getInstance(questionModalEl);
+                    if (!questionModal && typeof bootstrap.Modal === 'function') {
+                        questionModal = new bootstrap.Modal(questionModalEl);
+                    }
+                }
+                // Try direct constructor
+                else if (typeof bootstrap.Modal === 'function') {
+                    questionModal = new bootstrap.Modal(questionModalEl);
+                }
+            } catch (e) {
+                console.warn('Bootstrap Modal API failed, falling back to jQuery:', e);
+            }
+        }
+        
+        // Fallback to jQuery/Bootstrap 4
+        if (questionModal && typeof questionModal.hide === 'function') {
+            questionModal.hide();
+        } else if (questionModalEl && typeof $ !== 'undefined') {
+            $(questionModalEl).modal('hide');
+        }
         
         $.ajax({
             method: 'GET',

@@ -34,7 +34,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modalEl = document.getElementById('generic-delete-modal');
-    if (!modalEl || typeof bootstrap === 'undefined') {
+    if (!modalEl) {
         return;
     }
 
@@ -42,7 +42,42 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
 
-    const modal = new bootstrap.Modal(modalEl);
+    // Root fix: Bootstrap Modal compatibility - handle both Bootstrap 4 and 5
+    let modal = null;
+    if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+        try {
+            // Try Bootstrap 5.1+ getOrCreateInstance
+            if (bootstrap.Modal.getOrCreateInstance && typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            }
+            // Try Bootstrap 5.0 getInstance
+            else if (bootstrap.Modal.getInstance && typeof bootstrap.Modal.getInstance === 'function') {
+                modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal && typeof bootstrap.Modal === 'function') {
+                    modal = new bootstrap.Modal(modalEl);
+                }
+            }
+            // Try direct constructor
+            else if (typeof bootstrap.Modal === 'function') {
+                modal = new bootstrap.Modal(modalEl);
+            }
+        } catch (e) {
+            console.warn('Bootstrap Modal API failed, falling back to jQuery:', e);
+        }
+    }
+    
+    // Fallback to jQuery/Bootstrap 4
+    if (!modal && typeof $ !== 'undefined') {
+        modal = {
+            show: function() { $(modalEl).modal('show'); },
+            hide: function() { $(modalEl).modal('hide'); }
+        };
+    }
+    
+    if (!modal) {
+        console.error('Unable to initialize modal. Bootstrap and jQuery are not available.');
+        return;
+    }
     const messageEl = modalEl.querySelector('[data-delete-modal-message]');
     const confirmBtn = modalEl.querySelector('[data-delete-modal-confirm]');
     const defaultMessage = messageEl ? messageEl.textContent.trim() : 'Do you really want to delete this record?';

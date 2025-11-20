@@ -1,5 +1,6 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Edit')
+@include('component.datatables_cdn')
 @section('content')
     @include('layouts.title',
            ['title' => 'Tour Package', 'sub_title' => 'Tour Package Edit',

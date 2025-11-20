@@ -150,7 +150,8 @@ class ComparisonController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Front sheet quotation #$quotation->name edited");
 
-	    return redirect(route('tour.show', ['id' => $quotation->tour_id, 'tab' => 'quotation_tab']));
+	    // Root fix: Use 'tour' parameter name instead of 'id'
+	    return redirect(route('tour.show', ['tour' => $quotation->tour_id, 'tab' => 'quotation_tab']));
     }
 
     /**

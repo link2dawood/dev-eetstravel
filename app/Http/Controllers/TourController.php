@@ -962,24 +962,52 @@ public function store(StoreTourRequest $request)
      */
     public function show($tourId, Request $request)
     {
-        if ($request->notification_click){
-            $notification = Notification::find($request->notification_click);
-            $notification->click = true;
-            $notification->save();
-        }
+        try {
+            if ($request->notification_click){
+                $notification = Notification::find($request->notification_click);
+                if ($notification) {
+                    $notification->click = true;
+                    $notification->save();
+                }
+            }
 
+            if ($request->ajax()) {
+                return URL::to('tour/' . $tourId);
+            }
 
-        if ($request->ajax()) {
-            return URL::to('tour/' . $tourId);
-        }
-
-        // Root fix: Add eager loading to prevent N+1 queries
-        $tour = Tour::with([
-            'status:id,name,color',
-            'client:id,name',
-            'tour_days.packages',
-            'quotations'
-        ])->findOrfail($tourId);
+            // Root fix: Handle route parameter binding - Laravel resource routes use {tour} parameter
+            // Get tour ID from route parameter (could be bound as 'tour' or passed as first argument)
+            if (empty($tourId)) {
+                $tourId = $request->route('tour') ?? $request->route('id') ?? $request->get('tour') ?? $request->get('id');
+            }
+            
+            if (!$tourId || (!is_numeric($tourId) && !is_object($tourId))) {
+                \Log::error('Invalid tour ID in show method', [
+                    'tour_id' => $tourId,
+                    'route_params' => $request->route()->parameters() ?? [],
+                    'url' => $request->fullUrl()
+                ]);
+                return abort(404, 'Tour ID is required');
+            }
+            
+            // Handle if $tourId is already a Tour model (route model binding)
+            if (is_object($tourId) && $tourId instanceof Tour) {
+                $tour = $tourId;
+            } else {
+                // Root fix: Add eager loading to prevent N+1 queries
+                $tour = Tour::with([
+                'status:id,name,color',
+                'client:id,name',
+                'tour_days.packages',
+                'quotations'
+                ])->findOrfail($tourId);
+            }
+            
+            // Ensure tour is loaded with relationships
+            if (!$tour->relationLoaded('status')) {
+                $tour->load(['status:id,name,color', 'client:id,name', 'tour_days.packages', 'quotations']);
+            }
+            
 	    $title = $tour->is_quotation ? 'Quotation' :  'Tour';
         if($tour == null){
             return abort(404);
@@ -1152,6 +1180,11 @@ public function store(StoreTourRequest $request)
         // Service catalog will be loaded lazily via AJAX when the modal is opened
         // This improves initial page load time significantly
         $serviceCatalog = collect([]); // Empty collection, loaded on-demand
+        
+        // Root fix: Initialize $locations variable to prevent undefined variable error
+        $locations = $tourPackagesData['locations'] ?? [];
+        $dvoTourDates = !empty($locations['dvoTourDates']) ? $locations['dvoTourDates'] : false;
+        $routes = !empty($locations['routes']) ? json_encode($locations['routes']) : false;
 
         return view('tour.show', [
 			'select_office'=>$select_office,
@@ -1165,8 +1198,8 @@ public function store(StoreTourRequest $request)
             'tourDates' => $tourDates,
             'options' => $this->services,
             'listRoomsHotel' => $listRoomsHotel,
-            'dvoTourDates' => empty($locations['dvoTourDates']) ? false : $locations['dvoTourDates'],
-            'routes' => empty($locations['routes']) ? false : json_encode($locations['routes']),
+            'dvoTourDates' => $dvoTourDates,
+            'routes' => $routes,
             'quotation' => $quotation,
             'comparison'  => $comparison,
             'invoicesData' => $invoicesData,
@@ -1175,6 +1208,30 @@ public function store(StoreTourRequest $request)
             'serviceCatalog' => $serviceCatalog,
             'tourDayLookup' => $tourDayLookup
         ]);
+        
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Tour not found in show method', ['tour_id' => $tourId ?? 'unknown', 'message' => $e->getMessage()]);
+            return abort(404, 'Tour not found');
+        } catch (\Exception $e) {
+            \Log::error('Tour show method error', [
+                'tour_id' => $tourId ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Root fix: Return proper error response instead of redirecting
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error loading tour: ' . (config('app.debug') ? $e->getMessage() : 'Please try again')
+                ], 500);
+            }
+            
+            // For non-AJAX, show error page
+            return abort(500, 'Error loading tour: ' . (config('app.debug') ? $e->getMessage() : 'Please try again'));
+        }
     }
 
 

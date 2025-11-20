@@ -1030,20 +1030,26 @@ public function store(StoreTourRequest $request)
             }
         }
 
-            $quotation_id = $tour->quotations()->first()->id??0;
+            // Root fix: Safely get quotation ID without causing fatal error if none exists
+            $quotation = $tour->quotations()->first();
+            $quotation_id = $quotation ? $quotation->id : 0;
         
 
-        $quotation = Quotation::find($quotation_id);
+        $quotation = $quotation ?: ($quotation_id > 0 ? Quotation::find($quotation_id) : null);
 
-        $comparison = Comparison::where(['id' => $quotation_id])->first();
+        // Root fix: Only create comparison if quotation exists
+        $comparison = null;
+        if ($quotation_id > 0) {
+            $comparison = Comparison::where(['id' => $quotation_id])->first();
 
-        if (!$comparison) {
-            $newComparison = new Comparison();
-            $newComparison->id = $quotation_id;
-            $newComparison->save();
-            $comparison = $newComparison;
+            if (!$comparison) {
+                $newComparison = new Comparison();
+                $newComparison->id = $quotation_id;
+                $newComparison->save();
+                $comparison = $newComparison;
+            }
+            $this->syncComparisonRows($comparison);
         }
-       $this->syncComparisonRows($comparison);
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 

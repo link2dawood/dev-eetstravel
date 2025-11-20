@@ -428,7 +428,8 @@ class TourPackageController extends Controller
         $text = $descriptionPackage ? "TourPackage: add description service: {$package->description} at {$tour->name}"
             : "TourPackage: {$package->name} created at Tour: {$tour->name}";
         activity('TourPackage')
-            ->withProperties(['action' => 'created', 'link' => route('tour.show', ['id' => $tour->id]) ])
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            ->withProperties(['action' => 'created', 'link' => route('tour.show', ['tour' => $tour->id]) ])
             ->on($package)
             ->log($text);
     }
@@ -843,7 +844,8 @@ class TourPackageController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Tour package {$tourPackage->name} edited", 'success');
 
-        return redirect(route('tour.show', ['id' => $tourId]));
+        // Root fix: Use 'tour' parameter name instead of 'id'
+        return redirect(route('tour.show', ['tour' => $tourId]));
 //        return redirect(route('tour_package.edit', ['id' => $id]));
     }
 

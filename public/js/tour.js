@@ -745,33 +745,96 @@ let addService = {
         }
     },
     generateDataTableServicesType : (check = 'false') => {
-        // Load service list via AJAX for Bootstrap table
-        $.ajax({
-            url: "/table_service_list",
-            data: {
-                service_type_id: addService.service_type_id,
-                service_id: addService.service_id
-            },
-            success: function(response) {
-                // Update table content with response data
-                let tableBody = $('#search-table-service-list tbody');
-                tableBody.empty();
+        // Root fix: Ensure DataTables is loaded before initialization
+        const tableEl = $('#search-table-service-list');
+        if (!tableEl.length) {
+            console.warn('Table #search-table-service-list not found');
+            return;
+        }
+        
+        // Check if DataTables is already initialized and destroy it
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#search-table-service-list')) {
+            $('#search-table-service-list').DataTable().destroy();
+        }
+        
+        // Load DataTables if not available
+        const loadDataTables = window.loadDataTables || function() {
+            return Promise.resolve();
+        };
+        
+        loadDataTables().then(() => {
+            // Load service list via AJAX
+            $.ajax({
+                url: "/table_service_list",
+                data: {
+                    service_type_id: addService.service_type_id,
+                    service_id: addService.service_id
+                },
+                success: function(response) {
+                    // Update table content with response data
+                    let tableBody = $('#search-table-service-list tbody');
+                    tableBody.empty();
 
-                if(response.data && response.data.length > 0) {
-                    response.data.forEach(function(item) {
-                        let row = `<tr>
-                            <td>${item.name || ''}</td>
-                            <td>${item.address_first || ''}</td>
-                            <td>${item.country || ''}</td>
-                            <td>${item.city || ''}</td>
-                            <td>${item.work_phone || ''}</td>
-                            <td>${item.contact_name || ''}</td>
-                            <td>${item['action-change-service'] || ''}</td>
-                        </tr>`;
-                        tableBody.append(row);
-                    });
+                    if(response.data && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            let row = `<tr>
+                                <td>${item.name || ''}</td>
+                                <td>${item.address_first || ''}</td>
+                                <td>${item.country || ''}</td>
+                                <td>${item.city || ''}</td>
+                                <td>${item.work_phone || ''}</td>
+                                <td>${item.contact_name || ''}</td>
+                                <td>${item['action-change-service'] || ''}</td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    }
+                    
+                    // Initialize DataTables if available
+                    if (typeof $.fn.DataTable !== 'undefined') {
+                        $('#search-table-service-list').DataTable({
+                            responsive: true,
+                            pageLength: 25,
+                            order: [[0, 'asc']],
+                            language: {
+                                search: "Search:",
+                                lengthMenu: "Show _MENU_ entries"
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading service list:', error);
                 }
-            }
+            });
+        }).catch(function(error) {
+            console.error('Failed to load DataTables:', error);
+            // Fallback: Load data without DataTables
+            $.ajax({
+                url: "/table_service_list",
+                data: {
+                    service_type_id: addService.service_type_id,
+                    service_id: addService.service_id
+                },
+                success: function(response) {
+                    let tableBody = $('#search-table-service-list tbody');
+                    tableBody.empty();
+                    if(response.data && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            let row = `<tr>
+                                <td>${item.name || ''}</td>
+                                <td>${item.address_first || ''}</td>
+                                <td>${item.country || ''}</td>
+                                <td>${item.city || ''}</td>
+                                <td>${item.work_phone || ''}</td>
+                                <td>${item.contact_name || ''}</td>
+                                <td>${item['action-change-service'] || ''}</td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    }
+                }
+            });
         });
 
         if(check === 'false'){

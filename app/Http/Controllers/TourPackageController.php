@@ -628,7 +628,8 @@ class TourPackageController extends Controller
         $text = $descriptionPackage ? "TourPackage: add description service: {$package->description} at {$tour->name}"
             : "TourPackage: {$package->name} created at Tour: {$tour->name}";
         activity('TourPackage')
-            ->withProperties(['action' => 'created', 'link' => route('tour.show', ['id' => $tour->id]) ])
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            ->withProperties(['action' => 'created', 'link' => route('tour.show', ['tour' => $tour->id]) ])
             ->on($package)
             ->log($text);
     }
@@ -1087,7 +1088,8 @@ class TourPackageController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Tour package {$tourPackage->name} edited", 'success');
 
-        return redirect(route('tour.show', ['id' => $tourId]));
+        // Root fix: Use 'tour' parameter name instead of 'id'
+        return redirect(route('tour.show', ['tour' => $tourId]));
 //        return redirect(route('tour_package.edit', ['id' => $id]));
     }
 
@@ -1521,9 +1523,10 @@ class TourPackageController extends Controller
         $this->logActivity($package, Tour::find($day->tour), true);
 		$tour = Tour::find($day->tour);
         
-			$route = redirect()->route('tour.show', ['id' => $tour->id, 'tab' => 'service_tab']);
+		// Root fix: Use 'tour' parameter name instead of 'id'
+			$route = redirect()->route('tour.show', ['tour' => $tour->id, 'tab' => 'service_tab']);
 		//return $route;
-		if ($request->ajax()) return response(route('tour.show', ['id' => $tour->id]));
+		if ($request->ajax()) return response(route('tour.show', ['tour' => $tour->id]));
         return $route;
     }
 

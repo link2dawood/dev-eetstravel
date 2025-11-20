@@ -5,7 +5,7 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^7.4|^8.0",
+        "php": "^8.0",
         "amranidev/ajaxis": "^3.0",
         "anthropic-ai/sdk": "^0.3.0",
         "barryvdh/laravel-debugbar": "^3.6",

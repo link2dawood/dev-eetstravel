@@ -1501,34 +1501,73 @@ class TourPackageController extends Controller
         return response()->json($package[$request->timeKey]);
     }
 
-    public function descriptionPackage(Request $request)
-    {
+    // public function descriptionPackage(Request $request)
+    // {
 
-        $day = TourDay::find($request->tourDayId);
-        $status = Status::where('type', 'service_in_tour')->where('name', 'Confirmed')->first()->id;
-        $defaultTime = $this->getDefaultTimes('description');
-		//dd($defaultTime['time_from']);
-		//dd($request->time);
-		if($request->time){
-			$date = "{$day->date} {$request->time}";
-		}else{
-        $date = "{$day->date} {$defaultTime['time_from']}";
-		}
-        $package = TourPackage::create([
-            'time_from' => $date,
-            'description' => $request->description,
-            'description_package' => true,
-            'status' => $status]);
-        $package->assignTourDay(TourDay::find($request->tourDayId));
-        $this->logActivity($package, Tour::find($day->tour), true);
-		$tour = Tour::find($day->tour);
+    //     $day = TourDay::find($request->tourDayId);
+    //     $status = Status::where('type', 'service_in_tour')->where('name', 'Confirmed')->first()->id;
+    //     $defaultTime = $this->getDefaultTimes('description');
+	// 	//dd($defaultTime['time_from']);
+	// 	//dd($request->time);
+	// 	if($request->time){
+	// 		$date = "{$day->date} {$request->time}";
+	// 	}else{
+    //     $date = "{$day->date} {$defaultTime['time_from']}";
+	// 	}
+    //     $package = TourPackage::create([
+    //         'time_from' => $date,
+    //         'description' => $request->description,
+    //         'description_package' => true,
+    //         'status' => $status]);
+    //     $package->assignTourDay(TourDay::find($request->tourDayId));
+    //     $this->logActivity($package, Tour::find($day->tour), true);
+	// 	$tour = Tour::find($day->tour);
         
-		// Root fix: Use 'tour' parameter name instead of 'id'
-			$route = redirect()->route('tour.show', ['tour' => $tour->id, 'tab' => 'service_tab']);
-		//return $route;
-		if ($request->ajax()) return response(route('tour.show', ['tour' => $tour->id]));
-        return $route;
+    //     return redirect()->back();
+	// 	// Root fix: Use 'tour' parameter name instead of 'id'
+	// 		$route = redirect()->route('tour.show', ['tour' => $tour->id, 'tab' => 'service_tab']);
+	// 	//return $route;
+	// 	if ($request->ajax()) return response(route('tour.show', ['tour' => $tour->id]));
+    //     return $route;
+    // }
+    
+public function descriptionPackage(Request $request)
+{
+  
+    $day = TourDay::find($request->tourDayId);
+    $status = Status::where('type', 'service_in_tour')
+                    ->where('name', 'Confirmed')
+                    ->first()
+                    ->id;
+
+    $defaultTime = $this->getDefaultTimes('description');
+
+    $date = $request->time
+        ? "{$day->date} {$request->time}"
+        : "{$day->date} {$defaultTime['time_from']}";
+
+    $package = TourPackage::create([
+        'time_from' => $date,
+        'description' => $request->description,
+        'description_package' => true,
+        'status' => $status
+    ]);
+
+    $package->assignTourDay($day);
+    $this->logActivity($package, Tour::find($day->tour), true);
+
+    $tour = Tour::find($day->tour);
+
+    // --- FIX ---
+    if ($request->ajax()) {
+        return response()->json([
+            'redirect' => route('tour.show', ['tour' => $tour->id])
+        ]);
     }
+
+    return redirect()->route('tour.show', ['tour' => $tour->id]);
+}
+
 
     public function ajaxUpdate(Request $request)
     {

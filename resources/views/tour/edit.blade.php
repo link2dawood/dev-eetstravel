@@ -414,10 +414,10 @@
 @endsection
 
 @push('scripts')
-    <script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
-    <script type="text/javascript" src='{{asset('js/rooms.js')}}'></script>
-    <script type="text/javascript" src='{{asset('js/tour.js')}}'></script>
-    <script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
+<script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
+<script type="text/javascript" src='{{asset('js/rooms.js')}}'></script>
+<script type="text/javascript" src='{{asset('js/tour.js')}}'></script>
+<script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
     <script type="text/javascript" src='{{asset('js/attachments.js')}}'></script>
 <script>
 function addChildFields() {

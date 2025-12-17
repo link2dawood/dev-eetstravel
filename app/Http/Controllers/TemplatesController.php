@@ -522,10 +522,12 @@ class TemplatesController extends Controller
 
     public function loadServiceTemplates(Request $request)
     {
+        
       //  $this->setClient();
         $data = [];
         $templates = Templates::query()->where('service_id', $request->input('id'))->get();
         $data['templates'] = $templates;
+      
         return response()->json($data);
     }
 	public function replyEmail($userId,Request $request){

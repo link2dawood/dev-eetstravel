@@ -295,6 +295,7 @@ let addService = {
         });
         $('body').on('click', '.add-service-button', function(e){
             e.preventDefault();
+            
             addService.service_type = $(this).data('service_type');
             addService.service_id = $(this).data('service_id');
             addService.service_name = $(this).data('service_name');

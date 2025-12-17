@@ -395,6 +395,43 @@
     @endforeach
 </div>
 
+
+    <div class="modal fade in" tabindex="-1" role='dialog' id="service-description">
+        <div class="modal-dialog" role='document'  style="width: 90%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss='modal' aria-label="Close"><span
+                            aria-hidden='true'>&times;</span></button>
+                    <h4 class="modal-title">{!! trans('main.Adddescriptionpackage') !!}</h4>
+                </div>
+                <div class="box box-body" style="border-top: none">
+                    <form action="{{ route('description_package') }}" method="Post" id="description-service">
+						  {{csrf_field()}}
+                        <div class="form-group">
+                            <label for="description">{!! trans('main.Text') !!}</label>
+							<h2>Select Time</h2>
+							<label for="appt">Select a time:</label>
+                            <input type="time" id="time" name="time">
+							<div class="form-group">
+                        	<div class="input-group">
+							 <span class="input-group-addon"> {!! trans('main.Template') !!}</span>
+							<select id="desc_template_selector" name="desc_template_selector" class="form-control">
+                            </select>
+								</div>
+							</div>
+                            {{-- <input type="text" name="description" class="form-control" required> --}}
+                            <textarea name="description" id="description"  class="form-control" style="width: 100%; resize: vertical;"></textarea>
+                        </div>
+                        <input type="text" hidden="hidden" id="tour_day_id" name="tourDayId">
+                        <button type="submit" class="btn btn-primary pre-loader-func">{!! trans('main.Create') !!}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 <div class="modal fade" tabindex="-1" id="list-tour-packages" style="padding-left: 17px;padding-right: 17px;">
     <div class="modal-dialog modal-lg" style="width: 90%;">
         <div class="modal-content" style="overflow: hidden;">
@@ -1176,3 +1213,11 @@
         });
 	}
 </script>
+
+<script>
+function loadDescriptionemplate() {
+    // Open modal
+    $("#service-description").modal('show');
+}
+</script>
+

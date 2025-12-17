@@ -1,6 +1,62 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Create')
+@section('post_styles')
+<style>
+    /* Enhanced checkbox/selectgroup styling */
+    .form-selectgroup-item {
+        flex: 1;
+    }
+
+    .form-selectgroup-label {
+        border: 1px solid rgba(98, 105, 118, 0.16);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fff;
+        min-height: 42px;
+    }
+
+    .form-selectgroup-label:hover {
+        border-color: #206bc4;
+        background: rgba(32, 107, 196, 0.02);
+    }
+
+    .form-selectgroup-input:checked ~ .form-selectgroup-label {
+        border-color: #206bc4;
+        background: rgba(32, 107, 196, 0.06);
+        font-weight: 500;
+    }
+
+    .form-selectgroup-check {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #d1d5db;
+        border-radius: 3px;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check {
+        background: #206bc4;
+        border-color: #206bc4;
+    }
+
+    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+</style>
+@endsection
 @section('content')
+
     @include('layouts.title',
    ['title' => $title, 'sub_title' => $subTitle,
    'breadcrumbs' => [
@@ -8,6 +64,7 @@
    ['title' => 'Tours', 'icon' => 'suitcase', 'route' => route('tour.index')],
    ['title' => 'Create', 'route' => null]]])
     <section class="content">
+        
         <div class="box box-primary">
             <div class="box box-body border_top_none">
                 @if (count($errors) > 0)
@@ -20,8 +77,8 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!!url("tour")!!}' enctype="multipart/form-data" id="tour-create-form">
-
+                <form method='POST' action="{{url('tour/save')}}"  enctype="multipart/form-data" >
+<!-- action='{!!url("tour")!!}' -->
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -32,6 +89,25 @@
                             </div>
                         </div>
                     </div>
+                    
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <div class="d-flex">
+                            <div>
+                                <i class="ti ti-alert-circle icon alert-icon"></i>
+                            </div>
+                            <div>
+                                <h4 class="alert-title">Validation Errors</h4>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                    </div>
+                @endif
 
                     <div class="row">
                         {{csrf_field()}}
@@ -84,7 +160,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-								<div class="form-group">
+								<!-- <div class="form-group">
 									<label for="assigned_user">{!! trans('main.AssignedUser') !!} *</label>
 									<div class="form-control" style="max-height:200px !important;overflow-x:auto;height: auto; ">
 										<table>
@@ -110,7 +186,32 @@
 											</tr>
 										</table>
 									</div>
-								</div>
+								</div> -->
+                                                                <!-- <div class="mb-3">
+                                    <label class="form-label">{!! trans('main.AssignedUser') !!}</label>
+                                    <div class="card card-sm">
+                                        <div class="card-body" style="max-height:250px; overflow-y:auto;">
+                                            <div class="row g-2">
+                                                @foreach ($users as $user)
+                                                    <div class="col-md-6 col-lg-4">
+                                                        <label class="form-selectgroup-item flex-fill">
+                                                            <input type="checkbox" name="assigned_user[]" value="{{ $user->id }}"
+                                                                   class="form-selectgroup-input" {{$user->selected ? 'checked' : ''}}>
+                                                            <div class="form-selectgroup-label d-flex align-items-center p-2">
+                                                                <div class="me-2">
+                                                                    <span class="form-selectgroup-check"></span>
+                                                                </div>
+                                                                <div class="form-selectgroup-label-content">
+                                                                    <div class="font-weight-medium">{{ $user->name }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
 
                                 <div class="form-group">
                                     <label for="responsible_user">{!!trans('main.ResponsibleUser')!!}</label>
@@ -237,8 +338,13 @@
             </div>
         </div>
     </section>
+    @push('scripts')
    <script type="text/javascript" src='{{asset('js/rooms.js')}}'></script>
    <script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
+   <script type="text/javascript" src='{{asset('js/tour.js')}}'></script>
+<script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
+    <script type="text/javascript" src='{{asset('js/attachments.js')}}'></script>
+
     
     <script type="text/javascript">
         function readURL(input) {
@@ -280,20 +386,20 @@ setInterval(function () {
   handleCheckboxes();
 }, 500); // Adjust the interval time as needed
 
-// Handle form submission
-$(document).ready(function() {
-    $('#tour-create-form').on('submit', function(e) {
-        var form = $(this);
-        var submitBtn = form.find('button[type="submit"]');
+// // Handle form submission
+// $(document).ready(function() {
+//     $('#tour-create-form').on('submit', function(e) {
+//         var form = $(this);
+//         var submitBtn = form.find('button[type="submit"]');
         
-        // Disable submit button to prevent double submission
-        submitBtn.prop('disabled', true);
-        submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+//         // Disable submit button to prevent double submission
+//         submitBtn.prop('disabled', true);
+//         submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Saving...');
         
-        // If form is submitted normally (not AJAX), let it proceed
-        // The server will handle the response appropriately
-    });
-});
+//         // If form is submitted normally (not AJAX), let it proceed
+//         // The server will handle the response appropriately
+//     });
+// });
 
 function addChildFields() {
     var count = document.getElementById('child_count').value;
@@ -317,5 +423,6 @@ function addChildFields() {
 
 
 </script>
+@endpush
 
 @endsection

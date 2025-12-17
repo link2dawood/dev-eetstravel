@@ -783,6 +783,7 @@ private function handleLandingPageImage($request, $tour)
  */
 public function store(StoreTourRequest $request)
 {
+    
     $request['pax'] = $request->get('pax') == null ? 0 : $request->get('pax', 0);
     $request['pax_free'] = $request->get('pax_free') == null ? 0 : $request->get('pax_free', 0);
 
@@ -949,6 +950,195 @@ public function store(StoreTourRequest $request)
     }
 }
 
+// public function store(StoreTourRequest $request)
+// {
+//     dd('aaaa');
+//     // Default values for pax and pax_free
+//     $request['pax'] = $request->get('pax', 0) ?? 0;
+//     $request['pax_free'] = $request->get('pax_free', 0) ?? 0;
+
+//     // Manual Validation (extra business rules) -------------------------
+//     $request->validate([
+//         'name'              => 'required|string|max:255',
+//         'overview'          => 'nullable|string',
+//         'remark'            => 'nullable|string',
+//         'departure_date'    => 'required|date|before_or_equal:retirement_date',
+//         'retirement_date'   => 'required|date|after_or_equal:departure_date',
+//         'country_begin'     => 'required|integer|exists:countries,id',
+//         'country_end'       => 'required|integer|exists:countries,id',
+//         'city_begin'        => 'required|integer|exists:cities,id',
+//         'city_end'          => 'required|integer|exists:cities,id',
+//         'status'            => 'required|integer',
+//         'is_quotation'      => 'required|boolean',
+//         'responsible_user'  => 'nullable|integer|exists:users,id',
+
+//         // Child fields
+//         'child_count'       => 'nullable|integer|min:0',
+//         'ages.*'            => 'nullable|integer|min:0|max:17',
+//         'prices.*'          => 'nullable|numeric|min:0',
+
+//         // Room types
+//         'room_types_qty.*'  => 'nullable|integer|min:0',
+
+//         // Assigned users only if NOT a quotation
+//         'assigned_user'     => $request->is_quotation ? 'nullable' : 'required',
+//     ]);
+
+//     // Check Date Range
+//     $dateRange = $this->findDateRange([
+//         'departure_date' => $request->departure_date,
+//         'retirement_date' => $request->retirement_date
+//     ]);
+
+//     if (!$dateRange) {
+//         return back()->withErrors(['date' => 'Invalid date range.'])->withInput();
+//     }
+
+//     // Check assigned users business rule
+//     if (!$request->is_quotation) {
+//         $assignedUsers = $request->assigned_user;
+//         if (empty($assignedUsers) || (is_array($assignedUsers) && count($assignedUsers) == 0)) {
+//             return back()
+//                 ->withErrors(['assigned_user' => 'At least one assigned user is required.'])
+//                 ->withInput();
+//         }
+//     }
+
+//     // Set city begin/end automatically
+//     $request = CitiesHelper::setCityBegin($request);
+//     $request = CitiesHelper::setCityEnd($request);
+
+//     // Create safe tour name based on date -------------------------
+//     try {
+//         if (!empty($request->departure_date) &&
+//             preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->departure_date)) {
+
+//             $formattedDate = Carbon::parse($request->departure_date)->format('md');
+//         } else {
+//             $formattedDate = Carbon::now()->format('md');
+//         }
+//     } catch (\Exception $e) {
+//         $formattedDate = Carbon::now()->format('md');
+//     }
+
+//     $tour_name = $request->name . " #" . $formattedDate;
+
+//     // Begin DB Transaction
+//     DB::beginTransaction();
+
+//     try {
+//         // Create tour
+//         $tour = new Tour();
+//         $tour->name = $tour_name;
+//         $tour->overview = $request->overview;
+//         $tour->remark = $request->remark;
+//         $tour->departure_date = $request->departure_date;
+//         $tour->retirement_date = $request->retirement_date;
+//         $tour->pax = $request->pax;
+//         $tour->pax_free = $request->pax_free;
+//         $tour->total_amount = $request->total_amount ?? 0;
+//         $tour->price_for_one = $request->price_for_one ?? 0;
+//         $tour->itinerary_tl = $request->itinerary_tl;
+//         $tour->country_begin = $request->country_begin;
+//         $tour->city_begin = $request->city_begin;
+//         $tour->country_end = $request->country_end;
+//         $tour->city_end = $request->city_end;
+//         $tour->invoice = $request->invoice;
+//         $tour->ga = $request->ga;
+//         $tour->author = Auth::id();
+//         $tour->status = $request->status;
+//         $tour->is_quotation = $request->is_quotation;
+//         $tour->responsible = $request->responsible_user ?? 0;
+//         $tour->phone = $request->phone ?? '';
+//         $tour->save();
+
+//         // Set external name after saving
+//         $tour->external_name = $this->generateExternalName($request->country_begin, $tour->id);
+//         $tour->save();
+
+//         // ---------------- CHILDREN ----------------
+//         $childCount = $request->input('child_count', 0);
+//         if ($childCount > 0) {
+//             foreach (range(0, $childCount - 1) as $i) {
+//                 Childrens::create([
+//                     'tour_id' => $tour->id,
+//                     'age' => $request->ages[$i] ?? 0,
+//                     'price' => $request->prices[$i] ?? 0,
+//                 ]);
+//             }
+//         }
+
+//         // ---------------- ROOM TYPES ----------------
+//         if ($request->room_types_qty) {
+//             foreach ($request->room_types_qty as $roomTypeId => $qty) {
+//                 if ($qty > 0) {
+//                     TourRoomTypeHotel::create([
+//                         'tour_id' => $tour->id,
+//                         'room_type_id' => $roomTypeId,
+//                         'count' => $qty,
+//                     ]);
+//                 }
+//             }
+//         }
+
+//         // ---------------- ASSIGNED USERS ----------------
+//         if ($request->assigned_user) {
+//             $assigned = is_array($request->assigned_user)
+//                 ? $request->assigned_user
+//                 : explode(',', $request->assigned_user);
+
+//             $tour->users()->sync($assigned);
+
+//             foreach ($assigned as $userId) {
+//                 $notification = Notification::create([
+//                     'content' => "New tour {$tour->name}",
+//                     'link' => '/tour/' . $tour->id
+//                 ]);
+
+//                 User::find($userId)?->notifications()->attach($notification);
+//             }
+//         }
+
+//         // ---------------- DATES ----------------
+//         $this->createUpdateTourDates($tour->id, $dateRange);
+
+//         // ---------------- FILE UPLOADS ----------------
+//         if ($request->hasFile('attach')) {
+//             $this->addFile($request, $tour);
+//         }
+//         if ($request->hasFile('files')) {
+//             $this->handleLandingPageImage($request, $tour);
+//         }
+
+//         DB::commit();
+
+//         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
+
+//         if ($request->modal_create_tour == 1) {
+//             return $request->ajax()
+//                 ? response()->json(['route' => url('home')])
+//                 : redirect('home');
+//         }
+
+//         return $request->ajax()
+//             ? response()->json(['route' => route('tour.show', $tour->id)])
+//             : redirect()->route('tour.show', $tour->id);
+
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+
+//         \Log::error('Tour creation error: ' . $e->getMessage(), [
+//             'trace' => $e->getTraceAsString(),
+//             'request_data' => $request->except(['password', '_token'])
+//         ]);
+
+//         return $request->ajax()
+//             ? response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500)
+//             : back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput();
+//     }
+// }
+
+
     public function generateExternalName($country_code, $id){
         return 'EETS' . $country_code . (100 + $id);
     }
@@ -1081,6 +1271,7 @@ public function store(StoreTourRequest $request)
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
+<<<<<<< HEAD
         // Root fix: Only load active offices, not all offices
         // Handle case where offices table might not exist or query fails
         $select_office = null;
@@ -1091,6 +1282,46 @@ public function store(StoreTourRequest $request)
         } catch (\Exception $e) {
             \Log::warning('Failed to load offices', ['error' => $e->getMessage()]);
             // Continue with empty offices collection
+=======
+        $select_office=Offices::where('status',1)->first();
+		 $offices=Offices::all();
+
+        // Fetch invoices data directly for Bootstrap table
+        $invoice_tours = \App\InvoicesTours::where("invoices_tours_id", $tour->id)->get();
+        $invoicesData = [];
+        foreach ($invoice_tours as $invoice_tour) {
+            $invoice = \App\Invoices::find($invoice_tour->invoices_id);
+            if ($invoice) {
+                $office = \App\Offices::find($invoice->office_id);
+                $package = \App\TourPackage::find($invoice_tour->package_id);
+
+                // Calculate invoice status
+                $transaction = \App\Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Supplier");
+                $sum_amount = $transaction->sum("amount");
+                $amount = $invoice->total_amount;
+                $remaining_amount = $amount - $sum_amount;
+                if ($sum_amount == $amount) {
+                    $invoiceStatus = "Paid";
+                } elseif ($sum_amount == 0) {
+                    $invoiceStatus = "You Owe " . $amount;
+                } else {
+                    $invoiceStatus = "You Owe " . $remaining_amount;
+                }
+
+                $invoicesData[] = [
+                    'id' => $invoice->id,
+                    'office_name' => $office->office_name ?? '',
+                    'invoice_no' => $invoice->invoice_no ?? '',
+                    'due_date' => $invoice->dueDate ?? '',
+                    'received_date' => $invoice->receivedDate ?? '',
+                    'total_amount' => $invoice->total_amount ?? '',
+                    'extra_amount' => $invoice->extra_amount ?? '',
+                    'amount_payable' => $invoice->amount_payable ?? '',
+                    'tour_name' => $tour->name,
+                    'package_name' => $package->name ?? 'Extra Cost',
+                    'status' => $invoiceStatus
+                ];
+            }
         }
 
         // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
@@ -1228,13 +1459,45 @@ public function store(StoreTourRequest $request)
         $dvoTourDates = !empty($locations['dvoTourDates']) ? $locations['dvoTourDates'] : false;
         $routes = !empty($locations['routes']) ? json_encode($locations['routes']) : false;
 
+        // 
+      $id = $tourId;
+        $data = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
+        $tour = Tour::findOrfail($id);
+        $dateRange = $this->findDateRange($data);
+        if (!$dateRange) return null;
+        $this->createUpdateTourDates($id, $dateRange);
+        $tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $id)->sortBy('date');
+        $arr = array();
+        $i = 0;
+        foreach ($tourDates as $tourDate){
+            $tour_packages = collect();
+            foreach ($tourDate->packages as $package_item){
+                $package_item['time_from_new'] = (new Carbon($package_item->time_from))->format('H:i:s');
+                $tour_packages->push($package_item);
+            }
+            // dd($tourDate->packages->sortBy('time_from'));
+            $tourDate->packages = $tour_packages->sortBy('time_from_new');
+            foreach ($tourDate->packages as $package){
+                $arr[] = $package->status;
+                $package->time_from = $this->convertDateToHoursMinute($package->time_from);
+                $package->time_to = $this->convertDateToHoursMinute($package->time_to);
+            }
+        }
+        $statusPackages = Status::query()->whereIn('id', $arr)->orderBy('sort_order')->get();
+        $statusesTransfers = Status::query()->orderBy('sort_order', 'asc')->where('type', 'bus')->orderBy('sort_order')->get();
+
+       
+
         return view('tour.show', [
 			'select_office'=>$select_office,
 			'offices'=>$offices,
             'title' => $title,
+            'id'=> $tourId,
             'tour' => $tour,
+            'statusPackage' => $statusPackages,
             'files' => $files,
             'status' => $status,
+            'statusesTransfers' =>$statusesTransfers,
             'listIdTasks' => $tasksId,
             'tasksData' => $tasksData,
             'tourDates' => $tourDates,
@@ -1715,7 +1978,6 @@ public function store(StoreTourRequest $request)
      */
     public function update($tour, UpdateTourRequest $request)
     {
-
         if($request->ajax() && $request->cityName){
             $city = City::where('code', $request->fieldValue)->first() ?? City::create([ 'code' => $request->fieldValue, 'name' => $request->cityName, 'country' => $request->countryAlias]);
 

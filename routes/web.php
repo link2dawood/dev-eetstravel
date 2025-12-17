@@ -279,6 +279,7 @@ Route::group(['middleware' => 'web'], function () {
 	});
 //tour Routes
     Route::group(['middleware' => 'web'], function () {
+        Route::post('tour/save', '\App\Http\Controllers\TourController@store');
         Route::resource('tour', '\App\Http\Controllers\TourController');
         Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
         Route::get('tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');

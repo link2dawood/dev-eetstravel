@@ -744,6 +744,12 @@
                         </thead>
                         
                         <tbody data-default_tour_day_id='{{$tourDate->id}}'>
+                            
+                            @php
+                            $count =  $tourDate->packages->count();
+                            
+                            @endphp
+                            @if($count > 0 )
                         @foreach($tourDate->packages as $package)
 							
 							<tr >
@@ -1070,7 +1076,29 @@
                                     @endif
                                 </tr>
                             @endif
+
+
+
                         @endforeach
+
+
+       @else
+       <tr>
+
+           <td colspan="14">@if(Auth::user()->can('tour_package.create'))
+<button class="btn btn-flat btn-success pull-right add-service-quick"
+data-tourDayId="{{$tourDate->id}}"
+data-link="{{route('tour_package.store')}}" data-date="{!! $tourDate->date !!}"
+data-tour_id='{{$tour->id}}'
+data-departure_date='{{$tour->departure_date}}'
+data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
+</button>
+<button class="btn btn-flat btn-success pull-right add-description-package" dayid="{{$tourDate->id}}" onclick=loadDescriptionemplate()>{!!trans('main.Adddescription')!!}</button>
+@endif</td>
+       </tr>
+
+       @endif
+
                         </tbody>
                     </table>
                 </div>

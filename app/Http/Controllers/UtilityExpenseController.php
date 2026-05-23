@@ -40,8 +40,8 @@ class UtilityExpenseController extends Controller {
      public function __construct()
     {
         $this->middleware('permissions.required');
-        $this->middleware('preventBackHistory', ['except' => 'landingPage']);
-        $this->middleware('auth', ['except' => 'landingPage']);
+        $this->middleware('preventBackHistory');
+        $this->middleware('auth');
     }
 
     /**

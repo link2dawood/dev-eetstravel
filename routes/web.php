@@ -814,7 +814,17 @@ Route::group(['middleware' => 'web'], function () {
 	Route::resource('menu', 'MenuController');	
 });
 
-Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landing_page');
+// Public client-facing tour landing page. Anonymous access requires a
+// ?t=<share_token> query param matching the tour's share_token column
+// (set lazily by Tour::ensureShareToken()). throttle:30,1 limits abuse
+// of the endpoint by attackers trying to brute-force tokens or
+// enumerate tour ids. id MUST be numeric — refuse path-traversal-y
+// requests before they reach the controller.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/tour/{id}/landingpage', 'TourController@landingPage')
+        ->where('id', '[0-9]+')
+        ->name('landing_page');
+});
 
 
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');

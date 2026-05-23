@@ -1,0 +1,61 @@
+/*
+ * TMS — Tailwind CSS entry point.
+ * Compiled by Laravel Mix (see webpack.mix.js) into public/css/tailwind.css.
+ *
+ * Three layers, loaded in this order:
+ *   1. @tailwind base       — Preflight reset + element defaults
+ *   2. @tailwind components — Reusable component classes (.btn, etc. if any)
+ *   3. @tailwind utilities  — Atomic utilities (mt-2, text-sm, …)
+ *
+ * Loaded AFTER Bootstrap/Tabler in the layout so utilities win on conflict
+ * (e.g. our `text-center` overrides Bootstrap's during the migration).
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------------------------------------------------
+ * Self-hosted Inter — UI typeface
+ * Subset: Latin (extended) + numerals; weights 400, 500, 600.
+ * Hosted from Google Fonts CDN for now; in Phase 4 we'll self-host woff2
+ * files to drop the third-party request.
+ * -------------------------------------------------------------------------*/
+@import url('https://rsms.me/inter/inter.css');
+
+@layer base {
+    /* Apply Inter to the entire app once tailwind.css is included.
+     * The selector deliberately uses `html` not `body` so it cascades over
+     * any per-element font-family Bootstrap leftover sets. */
+    html {
+        font-family: 'Inter', 'system-ui', '-apple-system', 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Inter ships variable-font features. Enable cv11 for an alternative
+     * single-storey "a" that reads more cleanly at small sizes (the default
+     * double-storey "a" gets muddy below 14px on Windows). */
+    @supports (font-variation-settings: normal) {
+        html {
+            font-family: 'Inter var', 'Inter', 'system-ui', sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+        }
+    }
+
+    /* Default focus ring: visible only on keyboard navigation, not mouse
+     * clicks. Tailwind's default uses :focus which clashes with Bootstrap. */
+    :focus { outline: none; }
+    :focus-visible {
+        outline: 2px solid theme('colors.primary.600');
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
+@layer components {
+    /* Reserved: any reusable widget styles that can't be expressed as a
+     * single utility class belong here. Phase 2 widgets aim for zero
+     * entries in this layer; if one shows up, document why. */
+}

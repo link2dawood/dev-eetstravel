@@ -719,7 +719,11 @@ Route::group(['middleware' => 'web'], function () {
 	Route::post('email/addFolder', 'EmailController@addFolder')->name('email.addFolder');
 	Route::get('email/template', 'EmailController@composeEmailTemplate')->name('email.template');
 	Route::get('email/addFolderForm', 'EmailController@addFolderForm')->name('email.addFolderForm');
-	Route::get('email/{page?}', 'EmailController@index')->name('email.index');
+	// Constrain {page?} to digits only so /email/webmail, /email/configure, /email/folder/*
+	// and other named segments are not swallowed by this catch-all before later routes match.
+	Route::get('email/{page?}', 'EmailController@index')
+	    ->where('page', '[0-9]+')
+	    ->name('email.index');
 	Route::get('email/folder/{name}/{page?}', 'EmailController@folder')->name('email.folder')
         ->where('name', '.*');
 	Route::get('email/mail/{id}/{currentFolder?}', 'EmailController@mail')->name('email.mail')

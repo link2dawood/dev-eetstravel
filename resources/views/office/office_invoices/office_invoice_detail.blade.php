@@ -2,6 +2,10 @@
 
 @section('title', 'Office Invoice Details')
 
+@section('post_styles')
+    @include('component.datatables_cdn')
+@endsection
+
 @section('content')
     @include('layouts.title', [
         'title' => 'Invoice Items',

@@ -1,5 +1,8 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Index')
+@section('post_styles')
+    @include('component.datatables_cdn')
+@endsection
 @section('content')
     @include('layouts.title',
         ['title' => 'Activities', 'sub_title' => 'Activities List',

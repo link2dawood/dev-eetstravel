@@ -64,7 +64,12 @@ class User extends Authenticatable
         'lastUID',
         'education',
         'location',
-        'note'
+        'note',
+        'email_login',
+        'email_password',
+        'email_password_encrypted',
+        'email_server',
+        'timezone',
     ];
 
     /**
@@ -75,6 +80,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_password',
     ];
 
     /**
@@ -84,6 +90,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'email_password_encrypted' => 'boolean',
     ];
 
     /**

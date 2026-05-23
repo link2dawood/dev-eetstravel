@@ -1,97 +1,60 @@
-<div class="box box-primary" style="height: 55rem;">
+<div class="card shadow-sm h-100">
     @if(Auth::user()->can('dashboard.inbox'))
-        <div id="inbox">
-            <div class="box-header">
-                <h4>Inbox</h4>
-                <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                    </button>
-                    <button type="button" class="btn btn-box-tool" data-widget="remove">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <a @click="openNewEmailModal()">
-                            <button class="btn btn-default btn-flat" style="display:none">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                    <polyline points="3 7 12 13 21 7" />
-                                </svg>
-                                New Email
-                            </button>
-                        </a>
-                        <a href="{{route('email.index')}}">
-                            <button href="javascript:void(0)" class="btn btn-default btn-flat pull-right">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                    <polyline points="3 7 12 13 21 7" />
-                                </svg>
-                                View All Emails
-                            </button>
-                        </a>
-                    </div>
-                </div>
+        <div id="inbox" class="d-flex flex-column h-100">
+            <div class="card-header d-flex align-items-center">
+                <h3 class="card-title mb-0 flex-grow-1">
+                    <i class="ti ti-inbox me-2 text-primary"></i>Inbox
+                </h3>
+                <a href="{{ route('email.index') }}" class="btn btn-sm btn-outline-primary me-2">
+                    <i class="ti ti-mail-opened me-1"></i>View all
+                </a>
+                <button type="button"
+                        class="btn btn-sm btn-icon btn-ghost-secondary"
+                        data-widget="collapse"
+                        aria-label="Collapse">
+                    <i class="ti ti-minus"></i>
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-icon btn-ghost-secondary ms-1"
+                        data-widget="remove"
+                        aria-label="Close">
+                    <i class="ti ti-x"></i>
+                </button>
             </div>
-            
-            <div class="col-md-12" style="margin-bottom: 20px">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="search_emails" style="margin-top: 20px">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <circle cx="10" cy="10" r="7" />
-                                        <line x1="21" y1="21" x2="15" y2="15" />
-                                    </svg>
-                                </span>
-                                <input type="text" id="search" name="search" class="form-control" v-model="search" placeholder="Search emails...">
-                                <button class="btn btn-primary" @click="fetchData">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <circle cx="10" cy="10" r="7" />
-                                        <line x1="21" y1="21" x2="15" y2="15" />
-                                    </svg>
-                                    {{ trans('main.Search') }}
-                                </button>
-                                <button type="button" class="btn btn-danger btn-sm" @click="ClearSearchForm()" v-if="search!=null">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-md-3"></div>
-                </div>
-                <div>
-                    <div v-if="loading">
-                        <div style="height: 300px;">
-                            <div class="loader"></div>
-                        </div>
-                    </div>
 
-                    <div v-else>
-                        <div class="table-responsive mailbox-messages" style="height: 600px;">
+            <div class="card-body border-bottom py-3">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="ti ti-search"></i>
+                    </span>
+                    <input type="text"
+                           id="search"
+                           name="search"
+                           class="form-control"
+                           v-model="search"
+                           placeholder="Search emails…"
+                           @keyup.enter="fetchData">
+                    <button class="btn btn-primary" @click="fetchData">
+                        {{ trans('main.Search') }}
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-danger"
+                            @click="ClearSearchForm()"
+                            v-if="search != null && search !== ''">
+                        <i class="ti ti-x me-1"></i>Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-body p-0 flex-grow-1 d-flex flex-column overflow-hidden">
+                <div v-if="loading" class="d-flex align-items-center justify-content-center" style="min-height: 240px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading…</span>
+                    </div>
+                </div>
+
+                <div v-else class="flex-grow-1 d-flex flex-column overflow-hidden">
+                    <div class="table-responsive mailbox-messages flex-grow-1" style="overflow-y:auto;">
                             <table class="table table-hover table-striped finder-disable emails-inbox">
                                 <tbody>
                                     <tr v-if="!mails" class="row">
@@ -186,24 +149,14 @@
             </div>
         </div>
     @else
-        <div class="box-header">
-            <h4>
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                    <polyline points="3 7 12 13 21 7" />
-                </svg>
-                {{ trans('main.Inbox') }}
-            </h4>
+        <div class="card-header">
+            <h3 class="card-title mb-0">
+                <i class="ti ti-mail me-2 text-primary"></i>{{ trans('main.Inbox') }}
+            </h3>
         </div>
-        <div class="box-body">
-            <div class="alert alert-warning d-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <circle cx="12" cy="12" r="9" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+        <div class="card-body">
+            <div class="alert alert-warning d-flex align-items-center mb-0">
+                <i class="ti ti-alert-circle me-2"></i>
                 <div>{{ trans('main.Youdonthavepermissions') }}</div>
             </div>
         </div>

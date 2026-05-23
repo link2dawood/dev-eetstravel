@@ -6,40 +6,43 @@
     'breadcrumbs' => [
     ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
     ['title' => 'Emails', 'icon' => 'map-signs', 'route' => null]]])
-    <section class="content">
+    <section class="content py-3">
         @if(!$imapConnected)
-            Please input right credits in <a href="{{route('profile')}}">Profile</a>
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="ti ti-alert-triangle me-2"></i>
+                <div>
+                    Your mailbox is not connected.
+                    <a href="{{ route('snappymail.configure') }}" class="alert-link">Configure your mailbox credentials</a>
+                    to receive mail here, or
+                    <a href="{{ route('snappymail.sso') }}" class="alert-link" target="_blank">open SnappyMail webmail</a>.
+                </div>
+            </div>
         @else
-        <div class="row" id="emailsfolders">
-            <div class="col-md-3">
-                <a href="#"  @click="openNewEmailModal()"
-                   class=" btn btn-primary btn-block margin-bottom" style="display:none" >
-                    <span style="color: white">New Email</span>
-                </a>
-
+        <div class="row g-3" id="emailsfolders">
+            <div class="col-lg-3 col-md-4">
+                <button type="button"
+                        class="btn btn-primary w-100 mb-3"
+                        v-show="false"
+                        @click="openNewEmailModal()">
+                    <i class="ti ti-pencil-plus me-2"></i>New email
+                </button>
 
                 @include('email.parts.foldersList')
 				@include('email.parts.tourfolders')
             </div>
-			<div style="height: 300px;display: flex;align-items: center;justify-content: center; font-size:30px" v-if="tour">
-                            <div class="">You dont recieve any email in this Tour</div>
-
-                        </div>
-			<div class="col-md-9" id="tour_box" style="display:none">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Tour List</h3>
-						<a href="javascript:history.back()" style=
-
-"float: right;">
-                                <button class="btn btn-primary">Back</button>
-                            </a>
-                        <p class="margin"></p>
-                        
-                        {{--</form>--}}
-                        <!-- /.box-tools -->
+            <div class="col-lg-9 col-md-8" id="tour_box" style="display:none">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex align-items-center">
+                        <h3 class="card-title mb-0 flex-grow-1">
+                            <i class="ti ti-route me-2 text-primary"></i>Tours
+                        </h3>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+                            <i class="ti ti-arrow-left me-1"></i>Back
+                        </a>
                     </div>
-                     @include('email.tour_index')
+                    <div class="card-body">
+                        @include('email.tour_index')
+                    </div>
                     
 
 
@@ -49,37 +52,53 @@
                 </div>
             </div>
             <!-- /.col -->
-            <div class="col-md-9" id="email_box">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">@{{ currentFolder }}</h3>
-							<a href="javascript:history.back()" style=
-
-"float: right;">
-                                <button class="btn btn-primary">Back</button>
+            <div class="col-lg-9 col-md-8" id="email_box">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center w-100">
+                            <h3 class="card-title mb-0 flex-grow-1 text-uppercase">
+                                <i class="ti ti-mail me-2 text-primary"></i>@{{ currentFolder }}
+                            </h3>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+                                <i class="ti ti-arrow-left me-1"></i>Back
                             </a>
-						
-                        <p class="margin"></p>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="search" name="search" class="form-control" v-model="search">
-                            <span class="input-group-btn">
-                                   <button class="btn btn-primary" @click="getListEmailsByUser">Search</button>
-                                <button type="button" class="btn btn-danger btn-sm" @click="ClearSearchForm()" v-if="search!=null">Clear</button>
+                        </div>
+
+                        <div class="input-group mt-3">
+                            <span class="input-group-text">
+                                <i class="ti ti-search"></i>
                             </span>
-
+                            <input type="text" id="search" name="search" class="form-control"
+                                   v-model="search" placeholder="Search emails…"
+                                   @keyup.enter="getListEmailsByUser">
+                            <button class="btn btn-primary" @click="getListEmailsByUser">
+                                <i class="ti ti-search me-1"></i>Search
+                            </button>
+                            <button type="button" class="btn btn-outline-danger"
+                                    @click="ClearSearchForm()"
+                                    v-if="search != null && search !== ''">
+                                <i class="ti ti-x me-1"></i>Clear
+                            </button>
                         </div>
-                        {{--</form>--}}
-                        <!-- /.box-tools -->
                     </div>
-				<div style="height: 300px;display: flex;align-items: center;justify-content: center; font-size:30px" v-if="tour">
-                            <div class="">You dont recieve any email in this Tour</div>
 
+                    <div v-if="tour"
+                         class="d-flex align-items-center justify-content-center text-muted"
+                         style="min-height: 240px; font-size: 1.1rem;">
+                        <div class="text-center">
+                            <i class="ti ti-mail-off d-block mb-2" style="font-size: 2.5rem;"></i>
+                            You don't have any emails for this tour yet.
                         </div>
-                    @yield('main-content')
-                    <div v-if="loading">
-                        <div style="height: 300px;display: flex;align-items: center;justify-content: center; font-size:30px">
-                            <div class="">Kindly Connect To Email Server First</div>
+                    </div>
 
+                    @yield('main-content')
+
+                    <div v-if="loading" class="d-flex align-items-center justify-content-center" style="min-height: 240px;">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border text-primary mb-2" role="status">
+                                <span class="visually-hidden">Loading…</span>
+                            </div>
+                            <div>Connecting to mail server…</div>
                         </div>
                     </div>
 
@@ -90,11 +109,9 @@
 
                 </div>
             </div>
-					 @include('email.modals.createFolder')
-
-                    @include('email.modals.changeFolder')
-
-                    @include('email.modals.message')
+            @include('email.modals.createFolder')
+            @include('email.modals.changeFolder')
+            @include('email.modals.message')
         </div>
     </section>
     @endif

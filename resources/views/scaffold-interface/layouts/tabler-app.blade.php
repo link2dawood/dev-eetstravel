@@ -26,6 +26,10 @@
     <link href="{{asset('css/modern-forms.css')}}" rel="stylesheet" type="text/css"/>
     <link href="{{asset('css/modern-tables.css')}}" rel="stylesheet" type="text/css"/>
 
+    {{-- Tailwind utilities + new widget library (Phase 2 of Bootstrap → Tailwind migration).
+         Loaded AFTER all Bootstrap/Tabler CSS so Tailwind utilities win on conflict. --}}
+    <link href="{{ asset('css/tailwind.css') }}" rel="stylesheet" type="text/css"/>
+
     <style>
         @import url('https://rsms.me/inter/inter.css');
         :root {
@@ -84,10 +88,30 @@
         .box {
             background: #ffffff;
             border: 1px solid var(--tblr-border-color, #e5e7eb);
+            border-top: 3px solid var(--tblr-border-color, #e5e7eb);
             border-radius: var(--tblr-border-radius, 6px);
             margin-bottom: 1.5rem;
             box-shadow: var(--tblr-box-shadow, rgba(0,0,0,0.04) 0 2px 4px 0);
+            position: relative;
         }
+
+        /* AdminLTE color variants: top border accent */
+        .box.box-primary { border-top-color: var(--tblr-primary, #066fd1); }
+        .box.box-info    { border-top-color: var(--tblr-info, #4299e1); }
+        .box.box-success { border-top-color: var(--tblr-success, #2fb344); }
+        .box.box-warning { border-top-color: var(--tblr-warning, #f76707); }
+        .box.box-danger  { border-top-color: var(--tblr-danger, #d63939); }
+        .box.box-default { border-top-color: var(--tblr-border-color, #e5e7eb); }
+
+        /* box-solid: solid header background matching the variant */
+        .box.box-solid > .box-header { color: #fff; border-bottom: 0; }
+        .box.box-solid.box-primary > .box-header { background: var(--tblr-primary, #066fd1); }
+        .box.box-solid.box-info    > .box-header { background: var(--tblr-info, #4299e1); }
+        .box.box-solid.box-success > .box-header { background: var(--tblr-success, #2fb344); }
+        .box.box-solid.box-warning > .box-header { background: var(--tblr-warning, #f76707); }
+        .box.box-solid.box-danger  > .box-header { background: var(--tblr-danger, #d63939); }
+        .box.box-solid > .box-header h3,
+        .box.box-solid > .box-header .box-title { color: #fff; }
 
         .box-header {
             background: #ffffff;
@@ -106,6 +130,7 @@
 
         .box-body {
             padding: 1.5rem;
+            position: relative;
         }
 
         .box-footer {
@@ -135,6 +160,60 @@
 
         .btn-box-tool:hover {
             color: var(--tblr-primary, #066fd1);
+        }
+
+        /* AdminLTE .nav-tabs-custom -> tabler card with nav-tabs */
+        .nav-tabs-custom {
+            background: #ffffff;
+            border: 1px solid var(--tblr-border-color, #e5e7eb);
+            border-radius: var(--tblr-border-radius, 6px);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--tblr-box-shadow, rgba(0,0,0,0.04) 0 2px 4px 0);
+        }
+        .nav-tabs-custom > .nav-tabs {
+            margin: 0;
+            border-bottom: 1px solid var(--tblr-border-color, #e5e7eb);
+            padding: 0 0.5rem;
+        }
+        .nav-tabs-custom > .tab-content {
+            padding: 1.25rem;
+        }
+
+        /* AdminLTE .info-box minimal port */
+        .info-box {
+            display: flex;
+            align-items: center;
+            min-height: 80px;
+            background: #ffffff;
+            border-radius: var(--tblr-border-radius, 6px);
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            box-shadow: var(--tblr-box-shadow, rgba(0,0,0,0.04) 0 2px 4px 0);
+        }
+        .info-box-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            color: #fff;
+            background: var(--tblr-secondary, #6b7280);
+            border-radius: var(--tblr-border-radius, 6px);
+            margin-right: 0.75rem;
+        }
+        .info-box-content { flex: 1; }
+        .info-box-text {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--tblr-secondary-color, #6b7280);
+            text-transform: uppercase;
+        }
+        .info-box-number {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--tblr-body-color, #1f2937);
         }
 
         /* Content Header */
@@ -618,35 +697,66 @@
     <!-- Tabler Core (includes Bootstrap 5) -->
     <script src="{{ asset('tabler/js/tabler.min.js') }}"></script>
 
-    <!-- Ensure Bootstrap global is available -->
+    <!-- Bootstrap compatibility shim: makes Bootstrap 5 API calls safe even when
+         Tabler's Bootstrap is missing/partially loaded, falling back to jQuery
+         when Bootstrap classes are unavailable. -->
     <script>
-        // Tabler includes Bootstrap 5, expose it globally if not already
-        if (typeof bootstrap === 'undefined' && typeof window.bootstrap !== 'undefined') {
-            window.bootstrap = window.bootstrap;
-        }
-        // Create bootstrap namespace if needed
-        if (typeof bootstrap === 'undefined') {
-            window.bootstrap = {
-                Modal: function(element, options) {
-                    this.element = element;
-                    this.options = options || {};
+        (function () {
+            // jQuery-backed stand-ins used when bootstrap.* classes are absent.
+            function ModalFallback(element, options) {
+                this.element = element;
+                this.options = options || {};
+            }
+            ModalFallback.prototype.show   = function () { $(this.element).modal('show'); };
+            ModalFallback.prototype.hide   = function () { $(this.element).modal('hide'); };
+            ModalFallback.prototype.toggle = function () { $(this.element).modal('toggle'); };
+            ModalFallback.prototype.dispose = function () { $(this.element).modal('dispose'); };
 
-                    this.show = function() {
-                        $(element).modal('show');
-                    };
+            function TabFallback(element) { this.element = element; }
+            TabFallback.prototype.show = function () { $(this.element).tab('show'); };
 
-                    this.hide = function() {
-                        $(element).modal('hide');
-                    };
+            function NoopFallback() {}
+            NoopFallback.prototype.show    = function () {};
+            NoopFallback.prototype.hide    = function () {};
+            NoopFallback.prototype.dispose = function () {};
 
-                    this.toggle = function() {
-                        $(element).modal('toggle');
-                    };
+            if (typeof window.bootstrap === 'undefined') {
+                window.bootstrap = {};
+            }
 
-                    return this;
+            // Polyfill each Bootstrap component class + the static
+            // getInstance / getOrCreateInstance lookups every caller relies on.
+            function ensureComponent(name, Fallback) {
+                var Klass = window.bootstrap[name];
+                if (typeof Klass !== 'function') {
+                    window.bootstrap[name] = Klass = Fallback;
                 }
-            };
-        }
+                if (typeof Klass.getInstance !== 'function') {
+                    Klass.getInstance = function (element) {
+                        return element && element._bsFallbackInstance
+                            ? element._bsFallbackInstance
+                            : null;
+                    };
+                }
+                if (typeof Klass.getOrCreateInstance !== 'function') {
+                    Klass.getOrCreateInstance = function (element, config) {
+                        if (!element) return null;
+                        var existing = Klass.getInstance(element);
+                        if (existing) return existing;
+                        var instance = new Klass(element, config);
+                        try { element._bsFallbackInstance = instance; } catch (e) {}
+                        return instance;
+                    };
+                }
+            }
+
+            ensureComponent('Modal',    ModalFallback);
+            ensureComponent('Tab',      TabFallback);
+            ensureComponent('Tooltip',  NoopFallback);
+            ensureComponent('Popover',  NoopFallback);
+            ensureComponent('Collapse', NoopFallback);
+            ensureComponent('Offcanvas', ModalFallback);
+        })();
     </script>
 
     <!-- Core JS -->
@@ -659,6 +769,11 @@
     <script src="{{asset('js/bootstrap-datepicker.min.js')}}"></script>
     <script src="{{asset('js/script.js')}}"></script>
     <script src="{{asset('js/magnific.js')}}"></script>
+
+    {{-- Compiled JS entry: Alpine.js + new widget library behaviors.
+         Use `defer` so Alpine initialises after the DOM is parsed, matching
+         the recommended Alpine load pattern. --}}
+    <script src="{{ asset('js/app.js') }}" defer></script>
     
     <!-- Google Maps API (load before google_places.js) -->
     @if(config('google.places.key'))

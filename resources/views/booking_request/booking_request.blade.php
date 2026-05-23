@@ -19,7 +19,11 @@
         integrity="sha512-yWu5jVw5P8+IsI7tK+Uuc7pFfQvWiBfFfVlT5r0KP6UogGtZEc4BxDIhNwUysMKbLjqCezf6D8l6lWNQI6MR7Q=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" type="text/css" href="{{asset('css/bootstrap-tables.css')}}"/>
-	
+
+    <!-- DataTables (Bootstrap 5) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
 </head>
 <title>Document</title>
 <style>
@@ -707,6 +711,11 @@
         integrity="sha512-rwhfF2uV7kLu7CBnyhxtxXpDNksNqePq6uHvv+yPaxjtVBfTvlalKFmxJWrkMD2fERPzjedRUGZaRKcsJhC9Xg=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <!-- DataTables (Bootstrap 5) -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
 </body>
 <script type="text/javascript" src="{{asset('js/bootstrap-tables.js')}}"></script>

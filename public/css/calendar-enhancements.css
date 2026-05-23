@@ -15,37 +15,57 @@
 }
 
 /* ===== HEADER DESIGN ===== */
+.calendar-compact > .card-header,
 .calendar-compact .box-header {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: white;
-    padding: 20px 24px;
+    padding: 18px 24px;
     margin: 0;
     border: none;
+    min-height: auto;
 }
 
+.calendar-compact > .card-header .card-title,
+.calendar-compact > .card-header h3,
+.calendar-compact > .card-header h4,
 .calendar-compact .box-header h4 {
-    color: white;
+    color: #ffffff;
     margin: 0;
     font-weight: 600;
-    font-size: 1.2em;
-    letter-spacing: -0.02em;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
 }
 
+.calendar-compact > .card-header .card-title i,
+.calendar-compact > .card-header .text-primary {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+.calendar-compact > .card-header .btn-icon,
+.calendar-compact > .card-header .btn-ghost-secondary,
 .calendar-compact .box-tools .btn {
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.85);
     border: none;
-    background: none;
-    padding: 8px;
+    background: rgba(255,255,255,0.08);
+    padding: 6px;
     border-radius: 6px;
     transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.calendar-compact > .card-header .btn-icon:hover,
+.calendar-compact > .card-header .btn-ghost-secondary:hover,
 .calendar-compact .box-tools .btn:hover {
-    background: rgba(255,255,255,0.1);
-    color: white;
+    background: rgba(255,255,255,0.18);
+    color: #ffffff;
 }
 
 /* ===== CALENDAR BODY ===== */
+.calendar-compact > .card-body,
 .calendar-compact .box-body {
     padding: 0;
     background: white;

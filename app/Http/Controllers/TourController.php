@@ -1271,9 +1271,6 @@ public function store(StoreTourRequest $request)
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
-<<<<<<< HEAD
-        // Root fix: Only load active offices, not all offices
-        // Handle case where offices table might not exist or query fails
         $select_office = null;
         $offices = collect([]);
         try {
@@ -1281,50 +1278,9 @@ public function store(StoreTourRequest $request)
             $offices = Offices::where('status', 1)->get();
         } catch (\Exception $e) {
             \Log::warning('Failed to load offices', ['error' => $e->getMessage()]);
-            // Continue with empty offices collection
-=======
-        $select_office=Offices::where('status',1)->first();
-		 $offices=Offices::all();
-
-        // Fetch invoices data directly for Bootstrap table
-        $invoice_tours = \App\InvoicesTours::where("invoices_tours_id", $tour->id)->get();
-        $invoicesData = [];
-        foreach ($invoice_tours as $invoice_tour) {
-            $invoice = \App\Invoices::find($invoice_tour->invoices_id);
-            if ($invoice) {
-                $office = \App\Offices::find($invoice->office_id);
-                $package = \App\TourPackage::find($invoice_tour->package_id);
-
-                // Calculate invoice status
-                $transaction = \App\Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Supplier");
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoice->total_amount;
-                $remaining_amount = $amount - $sum_amount;
-                if ($sum_amount == $amount) {
-                    $invoiceStatus = "Paid";
-                } elseif ($sum_amount == 0) {
-                    $invoiceStatus = "You Owe " . $amount;
-                } else {
-                    $invoiceStatus = "You Owe " . $remaining_amount;
-                }
-
-                $invoicesData[] = [
-                    'id' => $invoice->id,
-                    'office_name' => $office->office_name ?? '',
-                    'invoice_no' => $invoice->invoice_no ?? '',
-                    'due_date' => $invoice->dueDate ?? '',
-                    'received_date' => $invoice->receivedDate ?? '',
-                    'total_amount' => $invoice->total_amount ?? '',
-                    'extra_amount' => $invoice->extra_amount ?? '',
-                    'amount_payable' => $invoice->amount_payable ?? '',
-                    'tour_name' => $tour->name,
-                    'package_name' => $package->name ?? 'Extra Cost',
-                    'status' => $invoiceStatus
-                ];
-            }
         }
 
-        // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
+        // Use joins to prevent N+1 queries - single query instead of multiple
         // Root fix: Use correct table name 'office_fees' instead of 'offices'
         $invoice_tours = collect([]);
         try {

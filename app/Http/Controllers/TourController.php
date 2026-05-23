@@ -1772,58 +1772,78 @@ public function store(StoreTourRequest $request)
         return $pdf = $this->exportHtmlShort($tour, $data,$request);
     }
 
+    /**
+     * Public, no-auth tour landing page served at GET /tour/{id}/landingpage.
+     *
+     * Access rules (anti-IDOR — AUDIT.md "Landing page" Critical findings):
+     *   - Anonymous viewers must pass ?t=<share_token> matching the tour's
+     *     share_token column. Mismatched or missing tokens 404.
+     *   - Authenticated staff can access by id alone (so internal links
+     *     in the staff app keep working without rewriting them).
+     *
+     * Response is uncacheable (`Cache-Control: no-store`) because the URL
+     * is shared with end clients and may carry confidential trip info.
+     *
+     * Rate limit (throttle:30,1) is applied at the route layer.
+     */
     public function landingPage(Request $request, $id)
     {
-		
-        $tour = Tour::findOrFail($id);
-		
+        $tour = Tour::find($id);
+
+        // Anonymous → must produce a matching share_token. Don't reveal
+        // whether the id exists.
+        if (!\Auth::check()) {
+            $token = (string) $request->query('t', '');
+            if ($tour === null
+                || empty($tour->share_token)
+                || !hash_equals((string) $tour->share_token, $token)
+            ) {
+                return response()->view('errors.landing-not-found', [], 404)
+                    ->header('Cache-Control', 'no-store, max-age=0');
+            }
+        } elseif ($tour === null) {
+            return response()->view('errors.landing-not-found', [], 404)
+                ->header('Cache-Control', 'no-store, max-age=0');
+        }
+
         $dayFrom = !empty($tour->departure_date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tour->departure_date)
             ? Carbon::createFromFormat('Y-m-d', $tour->departure_date)
-            : Carbon::now();
+            : null;
         $dayTo = !empty($tour->retirement_date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tour->retirement_date)
             ? Carbon::createFromFormat('Y-m-d', $tour->retirement_date)
-            : Carbon::now();
-        $diff = $dayFrom->diffInDays($dayTo);
-        $tour->tourCode = "$tour->name#$dayFrom->month$dayTo->day-$diff-D";
-//        $data = $this->prepareTourPackages($tour, $request);
-        $attachmenttypes = \App\Attachmenttype::all();
-        
-        $serviceTypes = [
-                     'hotel',
-                     'event',
-                     'guide',
-                     'transfer',
-                     'restaurant',
-                     'tourPackage',
-                     'cruise',
-                     'flight'
-                 ];
-        $tourDays = TourDay::where('tour', $tour->id)->get()->sortBy('date');
-        
-        $tourTransfers = $tour->transfers;
+            : null;
 
-        $exclude = [];
-        if(!empty($request->input('exclude'))){
-        if(count($request->input('exclude')) > 0 ) {
-            $exclude = $request->input('exclude');
-        } else  {
-            $exclude = [];
-        }  
-        }
-		
-        $usersResponsible = User::find($tour->responsible);
+        $serviceTypes = ['hotel', 'event', 'guide', 'transfer', 'restaurant', 'tourPackage', 'cruise', 'flight'];
 
-        $listRoomsHotel = \App\TourRoomTypeHotel::where('tour_id', $tour->id )->get();        
-        
-        view()->share([ 'tour' => $tour, 
-                         'serviceTypes' => $serviceTypes,
-                         'tourDays' => $tourDays,
-                         'tourTransfers' => $tourTransfers,
-                         'usersResponsible' => $usersResponsible,
-                         'listRoomsHotel' => $listRoomsHotel,
-                         'attachmenttypes' => $attachmenttypes,
-                         'exclude' => $exclude ]);
-        return view('export.landing_page');
+        // Sort packages within each day by start time so the itinerary
+        // reads top-to-bottom in chronological order.
+        $tourDays = TourDay::where('tour', $tour->id)
+            ->with(['packages' => function ($q) {
+                $q->orderBy('time_from');
+            }])
+            ->get()
+            ->sortBy('date');
+
+        // `exclude` is a user-supplied query param: capped at 200 ids and
+        // coerced to ints to defang any injection attempt before it hits
+        // the in_array() checks in the view.
+        $exclude = collect((array) $request->input('exclude', []))
+            ->take(200)
+            ->map(fn ($v) => (int) $v)
+            ->all();
+
+        $listRoomsHotel = \App\TourRoomTypeHotel::where('tour_id', $tour->id)->get();
+
+        return response()->view('export.landing_page', [
+            'tour'           => $tour,
+            'serviceTypes'   => $serviceTypes,
+            'tourDays'       => $tourDays,
+            'tourDateFrom'   => $dayFrom,
+            'tourDateTo'     => $dayTo,
+            'listRoomsHotel' => $listRoomsHotel,
+            'exclude'        => $exclude,
+        ])->header('Cache-Control', 'no-store, max-age=0')
+          ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     /**

@@ -80,6 +80,43 @@ class Tour extends Model
         return $this->morphMany('App\Attachment', 'attachable');
     }
 
+    /**
+     * Return the tour's public share token, generating + persisting one on
+     * first call. The token gates anonymous access to the landing page
+     * route (GET /tour/{id}/landingpage?t=<token>) so attackers can't
+     * enumerate sequential tour ids.
+     *
+     * Token format: 40 lowercase hex chars (sha1 of random bytes). Backed
+     * by the `share_token` column added in
+     * 2026_05_23_010000_add_share_token_to_tours.
+     */
+    public function ensureShareToken(): string
+    {
+        if (!empty($this->share_token)) {
+            return $this->share_token;
+        }
+
+        // Generate a fresh token; loop in the absurd case of a collision
+        // (40-hex-char namespace = 2^160, so collisions are theoretical).
+        do {
+            $token = sha1(random_bytes(32));
+        } while (self::where('share_token', $token)->exists());
+
+        $this->share_token = $token;
+        $this->save();
+
+        return $token;
+    }
+
+    /**
+     * Public, signed URL for the landing page. Pass to staff "Copy share
+     * link" UI / mail templates instead of building the URL by hand.
+     */
+    public function landingPageUrl(): string
+    {
+        return route('landing_page', ['id' => $this->id, 't' => $this->ensureShareToken()]);
+    }
+
     public function status(){
         return $this->belongsTo('App\Status', 'status', 'id');
     }

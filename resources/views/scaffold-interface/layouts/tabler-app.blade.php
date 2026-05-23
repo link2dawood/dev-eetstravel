@@ -770,10 +770,14 @@
     <script src="{{asset('js/script.js')}}"></script>
     <script src="{{asset('js/magnific.js')}}"></script>
 
-    {{-- Compiled JS entry: Alpine.js + new widget library behaviors.
-         Use `defer` so Alpine initialises after the DOM is parsed, matching
-         the recommended Alpine load pattern. --}}
-    <script src="{{ asset('js/app.js') }}" defer></script>
+    {{-- NOTE: `<script src="{{ asset('js/app.js') }}" defer>` was previously
+         registered here as the Alpine.js entry, but the existing compiled
+         bundle at public/js/app.js is a stale Vue + jQuery artifact that
+         was never loaded by this layout historically, and including it
+         globally collapsed the Tabler sidebar's navbar-collapse drawer.
+         Alpine will be re-introduced via a freshly compiled bundle in a
+         later Phase 3 module when the first Alpine-using widget actually
+         needs to run on a migrated page. See SIDEBAR_DIAGNOSIS.md. --}}
     
     <!-- Google Maps API (load before google_places.js) -->
     @if(config('google.places.key'))

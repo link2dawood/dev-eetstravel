@@ -175,7 +175,7 @@ class ClientController extends Controller
 		if($contacts){
             $data = ['hotelContacts' => true, 'fullNameErrorValidate' => trans('main.ContactsshouldnothaveanemptyFullName')];
             foreach ($contacts as $itemContact){
-                if(!$itemContact['contact_full_name']){
+                if(!($itemContact['contact_full_name'] ?? null)){
 					return redirect()->back();
                     return response()->json($data);
                 }
@@ -187,11 +187,11 @@ class ClientController extends Controller
         if($contacts){
             foreach ($contacts as $contact) {
                 $clientContact = new ClientContacts();
-                $clientContact->full_name = $contact['contact_full_name'];
-                $clientContact->mobile_phone = $contact['contact_mobile_phone'];
-                $clientContact->work_phone = $contact['contact_work_phone'];
-                $clientContact->email = $contact['contact_email'];
-                $clientContact->client_id = $id;
+                $clientContact->full_name    = $contact['contact_full_name']    ?? '';
+                $clientContact->mobile_phone = $contact['contact_mobile_phone'] ?? null;
+                $clientContact->work_phone   = $contact['contact_work_phone']   ?? null;
+                $clientContact->email        = $contact['contact_email']        ?? null;
+                $clientContact->client_id    = $id;
                 $clientContact->save();
             }
         }

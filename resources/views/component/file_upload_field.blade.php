@@ -20,8 +20,15 @@
 				let sr  = [];
 				obj._token = "{{csrf_token()}}";
 				
-				// Collect all form inputs
-				$(targetForm).find('input:text, input[type=number], input:password, input:hidden, input[type=date]').each(function(){
+				// Collect all form inputs.
+				// Use a negative selector instead of an allow-list so input
+				// types like `tel`, `email`, `url`, `search`, `time`, etc.
+				// aren't silently dropped from the upload extra data — the
+				// old positive list missed `tel` and `email`, which broke
+				// the dynamic contact-row sub-form on /clients/{id}/edit
+				// whenever files were attached.
+				// Checkboxes and radios are handled separately below.
+				$(targetForm).find('input').not('[type=file], [type=submit], [type=reset], [type=button], [type=checkbox], [type=radio], [type=image]').each(function(){
 					if ($(this).attr('name') && $(this).attr('id') !== 'attach') {
 						obj[$(this).attr('name')] = $(this).val();
 					}

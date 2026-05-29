@@ -76,7 +76,11 @@
         // latest activity regardless of which "todo/completed/aborted"
         // bucket the assigner-scoped collections above filtered into.
         try {
-            $recentTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'assigned_users'])
+            // Eager-load tourModel (not tour) because Task has both a `tour`
+            // column AND a tour() relation — attribute access returns the
+            // FK string, not the loaded Tour model. tourModel() points to
+            // the same belongsTo and is the documented workaround.
+            $recentTasks = \App\Task::with(['status', 'assignedTo', 'tourModel', 'assigned_users'])
                 ->orderByDesc('updated_at')
                 ->take(6)
                 ->get();
@@ -230,8 +234,8 @@
                                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning-600"></span>
                                 <span class="flex-1 min-w-0">
                                     <span class="block truncate text-sm text-slate-900">{{ $task->content ?: 'Untitled task' }}</span>
-                                    @if ($task->tour)
-                                        <span class="block truncate text-xs text-slate-500 mt-0.5">{{ optional($task->tour)->name }}</span>
+                                    @if ($task->tourModel)
+                                        <span class="block truncate text-xs text-slate-500 mt-0.5">{{ $task->tourModel->name }}</span>
                                     @endif
                                 </span>
                                 @if ($assignees->count())
@@ -342,8 +346,8 @@
                                     <span class="dash-inline-edit block truncate font-medium text-slate-900 cursor-text rounded px-1 -mx-1 hover:bg-slate-100"
                                           data-task-id="{{ $task->id }}" data-field="content"
                                           title="Click to edit">{{ $task->content ?: 'Untitled task' }}</span>
-                                    @if ($task->tour)
-                                        <a href="{{ url('/tour/' . $task->tour->id) }}" class="block truncate text-xs text-slate-500 mt-0.5 hover:text-primary-600">{{ optional($task->tour)->name }}</a>
+                                    @if ($task->tourModel)
+                                        <a href="{{ url('/tour/' . $task->tourModel->id) }}" class="block truncate text-xs text-slate-500 mt-0.5 hover:text-primary-600">{{ $task->tourModel->name }}</a>
                                     @endif
                                     <a href="{{ url('/task/' . $task->id . '/edit') }}" class="mt-1 inline-block text-[10px] text-slate-400 hover:text-primary-600">Open →</a>
                                 </td>

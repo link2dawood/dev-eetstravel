@@ -90,6 +90,34 @@
            page. Tailwind's `.hidden` continues to work for `protect_loader`
            and `author_name` elsewhere on the page; no behaviour change. */
 
+        /* Migrated Tailwind underline tabs.
+           Bootstrap's tab JS (data-bs-toggle="tab") REQUIRES the `nav-tabs`
+           class on the parent <ul> to wire up keyboard nav + active-class
+           swapping. But the matching Tabler CSS paints a slate-tinted pill
+           background, top/side borders, and color-tinted text behind the
+           active `.nav-link`. Against the Tailwind tab card that looks like
+           a chip stuck in a header, not a tab.
+           Whenever the <ul> ALSO carries `nav-tabs-underline`, we suppress
+           Tabler's chrome — leaving the clean underline + colored text
+           from the Tailwind utility classes (`[&.active]:border-primary-600`
+           `[&.active]:text-primary-700`) as the only visible cue. */
+        .nav-tabs.nav-tabs-underline > .nav-item > .nav-link,
+        .nav-tabs.nav-tabs-underline > .nav-link {
+            background-color: transparent !important;
+            border-top-color: transparent !important;
+            border-left-color: transparent !important;
+            border-right-color: transparent !important;
+        }
+        .nav-tabs.nav-tabs-underline > .nav-item > .nav-link.active,
+        .nav-tabs.nav-tabs-underline > .nav-link.active {
+            background-color: transparent !important;
+            color: inherit;
+        }
+        .nav-tabs.nav-tabs-underline > .nav-item > .nav-link:hover,
+        .nav-tabs.nav-tabs-underline > .nav-link:hover {
+            isolation: isolate; /* prevents Tabler's hover-pill bleeding */
+        }
+
         /* Legacy AdminLTE Component Compatibility */
         .box {
             background: #ffffff;

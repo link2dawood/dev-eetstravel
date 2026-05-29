@@ -306,14 +306,23 @@ html {
 .right-0 {
         right: 0px;
 }
+.right-1 {
+        right: 0.25rem;
+}
 .right-4 {
         right: 1rem;
 }
 .top-0\.5 {
         top: 0.125rem;
 }
+.top-1 {
+        top: 0.25rem;
+}
 .top-4 {
         top: 1rem;
+}
+.isolate {
+        isolation: isolate;
 }
 .z-10 {
         z-index: 10;
@@ -602,6 +611,9 @@ html {
 }
 .h-2 {
         height: 0.5rem;
+}
+.h-24 {
+        height: 6rem;
 }
 .h-3 {
         height: 0.75rem;
@@ -1170,6 +1182,9 @@ html {
         --tw-bg-opacity: 1;
         background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
+.bg-white\/90 {
+        background-color: rgb(255 255 255 / 0.9);
+}
 .from-gray-700 {
         --tw-gradient-from: #374151 var(--tw-gradient-from-position);
         --tw-gradient-to: rgb(55 65 81 / 0) var(--tw-gradient-to-position);
@@ -1316,6 +1331,9 @@ html {
 .pb-3 {
         padding-bottom: 0.75rem;
 }
+.pb-4 {
+        padding-bottom: 1rem;
+}
 .pe-0 {
         padding-inline-end: 0px;
 }
@@ -1360,6 +1378,9 @@ html {
 }
 .pt-3 {
         padding-top: 0.75rem;
+}
+.pt-4 {
+        padding-top: 1rem;
 }
 .pt-6 {
         padding-top: 1.5rem;
@@ -1961,6 +1982,9 @@ html {
 .group:hover .group-hover\:text-slate-500 {
         --tw-text-opacity: 1;
         color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+}
+.group:hover .group-hover\:opacity-100 {
+        opacity: 1;
 }
 .group.active .group-\[\.active\]\:bg-primary-50 {
         --tw-bg-opacity: 1;

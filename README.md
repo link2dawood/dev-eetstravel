@@ -617,6 +617,21 @@ Data tables get a horizontal scroll wrapper:
 - For interactive widgets in this phase, use **vanilla JS** or **Bootstrap's bundled JS** (`data-bs-toggle="modal"`, `data-bs-toggle="tab"`, `data-bs-toggle="dropdown"`).
 - When wrapping a Bootstrap component in Tailwind chrome, **preserve every CSS hook and JS handler** the existing code listens on (e.g. `.selectedOffice`, `nav-link`, `dropdown-toggle`). The redesign is visual; the behavior must keep working unchanged.
 
+#### Tab bars: `nav-tabs-underline` marker class
+
+Bootstrap's tab JS (`data-bs-toggle="tab"`) requires `.nav-tabs` on the parent
+`<ul>`. But Tabler's matching CSS paints a tinted background and side borders
+behind the active `.nav-link`, which clashes with the Tailwind underline-tab
+look. Always add `nav-tabs-underline` next to `nav-tabs` on the `<ul>`:
+
+```blade
+<ul class="nav nav-tabs nav-tabs-underline -mb-px flex flex-nowrap gap-6 ..."
+    data-bs-toggle="tabs" role="tablist">
+```
+
+The marker is hooked by an override in `tabler-app.blade.php` that suppresses
+Tabler's background / side-borders, leaving only the clean Tailwind underline.
+
 ---
 
 ## UI migration status (Bootstrap → Tailwind)

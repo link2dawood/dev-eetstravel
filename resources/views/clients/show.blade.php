@@ -34,7 +34,7 @@
 {{-- ============================================================ --}}
 <div class="rounded border border-slate-200 bg-white">
     <div class="border-b border-slate-200 px-1" role="tablist">
-        <ul class="nav nav-tabs -mb-px flex flex-nowrap gap-6 overflow-x-auto border-0 px-3 list-none pl-0 m-0 [&_.nav-link]:cursor-pointer" data-bs-toggle="tabs" role="tablist">
+        <ul class="nav nav-tabs nav-tabs-underline -mb-px flex flex-nowrap gap-6 overflow-x-auto border-0 px-3 list-none pl-0 m-0 [&_.nav-link]:cursor-pointer" data-bs-toggle="tabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <a href="#info-tab" class="nav-link active {{ $tabClass }}" data-bs-toggle="tab" aria-selected="true" role="tab">
                     <x-ui.icon name="info" />{!! trans('main.Info') !!}

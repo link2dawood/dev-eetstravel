@@ -1,394 +1,216 @@
-<!DOCTYPE html>
-<html lang="en">
+{{--
+    Public client-facing tour landing page.
+    Route:  GET /tour/{id}/landingpage  (TourController@landingPage)
+    Layout: layouts.public (no auth, no sidebar, no jQuery, no Bootstrap)
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{!! trans('main.Itinerary') !!} - {{ $tour->name }}</title>
-    <!-- Bootstrap -->
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
-
-    <style>
-        .tour-image {
-            @if ($tour->attachments()->first() == null)
-                height: 150px;
-            @endif
-        }
-
-        .tms-logo {
-            position: absolute;
-            left: 15px;
-            top: 5px;
-            width: 75px;
-            height: 70px;
-        }
-
-        .tms-logo-maxi {
-            position: absolute;
-            left: 50px;
-            top: 10px;
-            width: 125px;
-            height: 110px;
-        }
-
-        .rectangle {
-            background-color: #FFFFFF;
-            box-shadow: 0 30px 40px 0 rgba(30, 30, 36, 0.20000000298023224);
-            padding: 10px;
-
-        }
-
-        .header-grey {
-            color: #6F6F7A;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 14px;
-            font-style: italic;
-            font-weight: 400;
-            line-height: 24px;
-            text-align: left;
-            padding: 10px 0px 0 50px;
-        }
-
-        .header-bl {
-            color: #3D3C4A;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 24px;
-            font-weight: 600;
-            line-height: 30px;
-            text-align: left;
-            padding: 10px 10px 30px 50px;
-        }
-
-        .info-box {
-            width: 100%;
-            height: 100%;
-            padding: 50px;
-            margin-top: 10%;
-        }
-
-        .pic-box {
-            width: 100%;
-            margin-top: 10%;
-            border-radius: 2px;
-            padding: 10px;
-            box-shadow: 0 30px 40px 0 rgba(30, 30, 36, 0.20000000298023224);
-        }
-
-        .info-header {
-            color: #6F6F7A;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 24px;
-            font-weight: 400;
-            line-height: 30px;
-            text-align: left;
-        }
-
-        .info-descr {
-            color: #6F6F7A;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 29px;
-            width: 80%;
-            text-align: justify;
-        }
-
-        .info-name {
-            color: #3D3C4A;
-            font-family: SignPainter;
-            font-size: 45px;
-            font-weight: 600;
-            line-height: 56px;
-            text-align: left;
-        }
-
-        .info-pending {
-            color: #6F6F7A;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 24px;
-            font-weight: 400;
-            line-height: 30px;
-            text-align: left;
-        }
-
-        .info-telfax {
-            color: #6F6F7A;
-            font-family: OpenSans;
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 24px;
-
-            text-align: left;
-        }
-
-        .pic {
-            width: 100%;
-            height: 100%;
-        }
-
-        .day {
-            margin: auto;
-            padding-top: 40px;
-        }
-
-        /*
-        */
-    </style>
-
-</head>
-@php
-    $peopleCount = 0;
-    $roomsCodes = '';
-    $countDay = 0;
-    $parity = 0;
-@endphp
-@foreach ($listRoomsHotel as $item)
-    @php
-        $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$item->room_types->code]) ? App\TourPackage::$roomsPeopleCount[$item->room_types->code] * $item->count : 0;
-        $roomsCodes == '' ? ($roomsCodes = $item->count . $item->room_types->code) : ($roomsCodes .= ' + ' . $item->count . $item->room_types->code);
-    @endphp
-@endforeach
-
-<body>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="row">
-					<div class="logo mb-5">
-                       
-                        <img class="tms-logo d-block d-md-none" src="{{ asset('/') . '/img/eets_logo.png' }}">
-                        <img class="tms-logo-maxi  d-none d-md-block" src="{{ asset('/') . '/img/eets_logo.png' }}">
-                    </div>
-                   
-                </div>
-                <div class="rectangle mt-5">
-                    <div class="row mt-5">
-                        <div class="col-md-6">
-                            <p class="header-grey">Tour name</p>
-                            <p class="header-bl">{{ $tour->name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="header-grey">Dep Date - Ret Date</p>
-                            <p class="header-bl">{{ \Carbon\Carbon::parse($tour->departure_date)->format('d/M') }} -
-                                {{ \Carbon\Carbon::parse($tour->retirement_date)->format('d/M') }}</p>
-                        </div>
-
-                        {{--                <div class="col-md-7">
-                        <p class="header-grey">Rooms</p>
-                        <p class="header-bl">{{ $roomsCodes }}</p>
-                    </div>
+    Vars passed from controller:
+        $tour           App\Tour
+        $serviceTypes   array<string>  index→name map used to label packages
+        $tourDays       Collection<App\TourDay> sorted by date, each with eager-loaded packages
+        $tourDateFrom   Carbon|null
+        $tourDateTo     Carbon|null
+        $listRoomsHotel Collection<TourRoomTypeHotel>
+        $exclude        int[] package ids to skip (capped, sanitised)
 --}}
-                    </div>
+@extends('layouts.public')
+
+@section('title', trans('main.Itinerary') . ' — ' . $tour->name)
+
+@php
+    // Aggregate the rooming summary (e.g. "2DBL + 1SGL") once instead of
+    // recomputing inside loops.
+    $roomsCodes = '';
+    foreach ($listRoomsHotel as $item) {
+        $code = optional($item->room_types)->code;
+        if (!$code) { continue; }
+        $roomsCodes .= ($roomsCodes === '' ? '' : ' + ') . $item->count . $code;
+    }
+
+    $logoUrl = asset('img/eets_logo.png');
+@endphp
+
+@section('content')
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 print:max-w-none print:p-0">
+
+    {{-- Top bar: logo + (print-only-visible-on-screen) print button --}}
+    <header class="mb-8 flex items-center justify-between print:hidden">
+        <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="h-12 w-auto" />
+        <button
+            type="button"
+            onclick="window.print()"
+            class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        >
+            <x-ui.icon name="printer" />
+            {{ trans('main.Print') ?? 'Print' }}
+        </button>
+    </header>
+
+    {{-- Hero card: tour name + date range --}}
+    <section class="overflow-hidden rounded-md bg-white shadow-card">
+        <div class="border-b border-slate-200 px-6 py-5 sm:px-8 sm:py-6">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                    <p class="text-xs italic text-slate-500">{{ trans('main.Tour') }}</p>
+                    <h1 class="mt-1 text-2xl font-semibold text-slate-900">{{ $tour->name }}</h1>
                 </div>
-				 <p class="header-grey">Image for landing page</p>
-				 <div class="tour-image mt-5">
-                        @if ($tour->attachments()->first() != null && isset($tour->attachments()->first()->url))
-                            <img src="{{ $tour->attachments()->first()->url }}" alt="{{ $tour->name }}"
-                                style="width:100%;">
+                <div>
+                    <p class="text-xs italic text-slate-500">{{ trans('main.Dates') }}</p>
+                    <p class="mt-1 text-2xl font-semibold text-slate-900">
+                        @if ($tourDateFrom && $tourDateTo)
+                            {{ $tourDateFrom->translatedFormat('d M') }}
+                            —
+                            {{ $tourDateTo->translatedFormat('d M Y') }}
+                        @else
+                            <span class="text-slate-400">—</span>
                         @endif
-                      
-                    </div>
+                    </p>
+                </div>
             </div>
 
+            @if ($roomsCodes !== '')
+                <div class="mt-4 text-sm text-slate-500">
+                    <span class="font-medium text-slate-700">{{ trans('main.Rooms') ?? 'Rooms' }}:</span>
+                    {{ $roomsCodes }}
+                </div>
+            @endif
         </div>
 
+        @php
+            $hero = $tour->attachments()->first();
+        @endphp
+        @if ($hero && !empty($hero->url))
+            <figure class="bg-slate-100">
+                <img
+                    src="{{ $hero->url }}"
+                    alt="{{ $tour->name }}"
+                    class="h-72 w-full object-cover sm:h-96"
+                    loading="lazy"
+                />
+            </figure>
+        @endif
+    </section>
 
+    {{-- Day-by-day itinerary --}}
+    @foreach ($tourDays as $dayIndex => $tourDay)
+        @php
+            // The `description_package` flag marks a package whose only
+            // job is to carry rich-text description applied to the NEXT
+            // non-description package. We collect them as we walk and
+            // flush onto the next real entry.
+            $pendingDescription = '';
+            $dayNumber = $loop->iteration;
 
-        @foreach ($tourDays as $tourDay)
-            <?php
-            $countDay++;
-            $packageDescription = '';
-            ?>
-            <div class="row">
-                <div class="col-md-12">
-                    <h3 class="text-center day">Day {{ $countDay }} -
-                        {{ (new \Carbon\Carbon($tourDay->date))->formatLocalized('%B %d, %Y (%A)') }}</h3>
+            try {
+                $dayLabel = (new \Carbon\Carbon($tourDay->date))->translatedFormat('F j, Y (l)');
+            } catch (\Throwable $e) {
+                $dayLabel = '';
+            }
+        @endphp
 
-                </div>
-            </div>
-            @foreach ($tourDay->packages as $package)
-                @if ($package->description_package)
-                    <?php
-                    $packageDescription = $package->description;
-                    ?>
-                @else
-                    <?php
-                    $parity++;
-                    ?>
-                    <div class="row">
+        <section class="mt-10 print:mt-6">
+            <header class="mb-4 border-b border-slate-200 pb-2">
+                <h2 class="text-lg font-semibold text-slate-900">
+                    {{ trans('main.Day') ?? 'Day' }} {{ $dayNumber }}
+                    @if ($dayLabel)
+                        <span class="text-slate-500"> — {{ $dayLabel }}</span>
+                    @endif
+                </h2>
+            </header>
 
-                        @if ($parity % 2 == 0)
-                            @php
-                                $srv = $package->service();
-                                $image = [];
-						if(!empty($srv->files)){
-                                foreach ($srv->files as $file) {
-                                    if ($file->attach_content_type == 'image/png' || $file->attach_content_type == 'image/jpeg') {
-                                        $image[] = [
-                                            'id' => $file->id,
-                                            'file_name' => $file->attach_file_name,
-                                        ];
-                                    }
+            <ol class="space-y-4">
+                @foreach ($tourDay->packages as $package)
+                    @php
+                        if ($package->description_package) {
+                            $pendingDescription = (string) $package->description;
+                            continue;
+                        }
+
+                        if (in_array((int) $package->id, $exclude, true)) {
+                            // Caller explicitly hid this package from
+                            // the share link. Skip but still flush any
+                            // pending description so the NEXT real
+                            // package picks it up (matches old behaviour).
+                            continue;
+                        }
+
+                        $srv = $package->service();
+                        $packageImages = [];
+                        if ($srv && !empty($srv->files)) {
+                            foreach ($srv->files as $file) {
+                                if (in_array($file->attach_content_type, ['image/png', 'image/jpeg', 'image/webp'], true)) {
+                                    $packageImages[] = [
+                                        'id' => $file->id,
+                                        'file_name' => $file->attach_file_name,
+                                    ];
                                 }
-							}
-                            @endphp
-                            @foreach ($image as $img)
-                                <div class="col-md-6 d-none d-md-block">
-                                    <div class="pic-box">
-                                        <img class="pic"
-                                            src="{{ asset('system/App/File/attaches/000/000/' .str_pad($img['id'], 3, '0', STR_PAD_LEFT) . '/original/' . $img['file_name']) }}">
-                                    </div>
+                            }
+                        }
 
-                                </div>
-                            @endforeach
-                            {{--			
-                                                <div class="col-md-6 d-none d-md-block">
-                                                    <div class="pic-box">
-                                                        @if ($package->type != 4)
-                                                            @php
-                                                                $attachment = $attachmenttypes->where('model', ucfirst($serviceTypes[$package->type]))->first();
-                                                        
-                                                            @endphp
-                                                        @if (!empty($attachment))
-                                                            @if ($attachment && $attachment->attachments()->first())
-                                                                <img class="pic" src="{{ $attachment->attachments()->first()->url??"" }}">
-                                                            @else
-                                                                @if (Carbon\Carbon::parse($package->time_from)->format('H:i') < '15:00')
-                                                                    @php
-                                                                        $defaultAttachment = $attachmenttypes->find(2);
-                                                                    @endphp
-                                                                    @if ($defaultAttachment && $defaultAttachment->attachments()->first())
-                                                                        <img class="pic" src="{{ $defaultAttachment->attachments()->first()->url }}">
-                                                                    @endif
-                                                                @else
-                                                                    @php
-                                                                        $defaultAttachment = $attachmenttypes->find(3);
-                                                                    @endphp
-                                                                    @if ($defaultAttachment && $defaultAttachment->attachments()->first())
-                                                                        <img class="pic" src="{{ $defaultAttachment->attachments()->first()->url }}">
-                                                                    @endif
-                                                                @endif
-                                                            @endif
-                                                        @endif
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @endif
+                        $timeFrom = $package->time_from
+                            ? \Carbon\Carbon::parse($package->time_from)->format('H:i')
+                            : null;
+                        $timeTo = $package->time_to
+                            ? \Carbon\Carbon::parse($package->time_to)->format('H:i')
+                            : null;
 
+                        $packageTypeLabel = ($package->type !== null && isset($serviceTypes[$package->type]))
+                            ? ucfirst($serviceTypes[$package->type])
+                            : null;
 
-                                            <div class="col-md-6 d-block d-md-none">
-                                                <div class="pic-box">
-                                                    @php
-                                                                $attachment = $attachmenttypes->where('model', ucfirst($serviceTypes[$package->type]))->first();
-                                                        
-                                                            @endphp
-                                                    @if (!empty($attachment))
-                                                    @if ($package->type != 4 && isset($attachment->attachments()->first()->url))
-                                                        <img class="pic" src="{{$attachment->attachments()->first()->url }}">
-                                                    @else
-                                                        @if (Carbon\Carbon::parse($package->time_from)->format('H:i') < '15:00')
-                                                            <img class="pic" src="{{ $attachmenttypes->find(2)->attachments()->first()->url }}">
-                                                        @else
-                                                            <img class="pic" src="{{ $attachmenttypes->find(3)->attachments()->first()->url }}">
-                                                        @endif
-                                                    @endif --}}
+                        $alternate = $loop->iteration % 2 === 0;
+
+                        $descriptionForThis = $pendingDescription;
+                        $pendingDescription = '';
+                    @endphp
+
+                    <li class="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start
+                               {{ $alternate ? 'md:[&>*:first-child]:order-2' : '' }}">
+
+                        {{-- Image column (hidden on mobile if no image) --}}
+                        @if (!empty($packageImages))
+                            <figure class="overflow-hidden rounded-md bg-slate-100 shadow-subtle">
+                                @php $firstImg = $packageImages[0]; @endphp
+                                <img
+                                    src="{{ asset('system/App/File/attaches/000/000/' . str_pad($firstImg['id'], 3, '0', STR_PAD_LEFT) . '/original/' . $firstImg['file_name']) }}"
+                                    alt="{{ $package->name }}"
+                                    class="h-56 w-full object-cover md:h-64"
+                                    loading="lazy"
+                                />
+                            </figure>
+                        @else
+                            <div class="hidden md:block" aria-hidden="true"></div>
                         @endif
 
+                        {{-- Text column --}}
+                        <article class="space-y-2">
+                            <h3 class="text-xl font-semibold text-slate-900">
+                                {{ $package->name }}
+                            </h3>
 
-                        <div class="col-md-6">
-                            <div class="info-box">
-                                @if (!in_array($package->id, $exclude))
-                                    <p class="info-name">{{ $package->name }}</p>
-                                    <?php
-                                    $srv = $package->service();
-                                    ?>
-                                    <p class="info-pending">
-                                        {{ Carbon\Carbon::parse($package->time_from)->format('H:i') }}
-                                        @if (!$package->description_package)
-                                            - {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}
-                                            @if ($package->type !== null)
-                                                {{ ucfirst($serviceTypes[$package->type]) }}
-                                            @endif
-                                            {{ $package->getStatusName() }}
-                                        @endif
-                                    </p>
-                                    @if ($srv)
-                                        @if ($srv->work_phone)
-                                            <p class="info-telfax"> {!! trans('main.Tel') !!}: {{ $srv->work_phone }}
-                                                @endif @if ($srv->work_fax)
-                                                    Fax: {{ $srv->work_fax }} </p>
-                                        @endif
-                                        {{--                            @if ($package->time_from)<p class="info-telfax"> {!!trans('main.Pickup')!!}: {{ \Carbon\Carbon::parse( $package->time_from)->format('m-d-Y H:i') }} </p> @endif
-                        @if ($package->time_to)<p class="info-telfax"> {!!trans('main.Dropoff')!!}: {{ \Carbon\Carbon::parse( $package->time_to )->format('m-d-Y H:i') }} </p> @endif --}}
-                                    @endif
-
-
-                                    @if ($packageDescription != '')
-                                        <p class="info-descr">{!! $packageDescription !!}</p>
-                                        <?php
-                                        $packageDescription = '';
-                                        ?>
-                                    @endif
+                            <p class="text-sm text-slate-500">
+                                @if ($timeFrom){{ $timeFrom }}@endif
+                                @if ($timeFrom && $timeTo) — {{ $timeTo }}@endif
+                                @if ($packageTypeLabel)
+                                    <span class="mx-2 text-slate-300">·</span>
+                                    {{ $packageTypeLabel }}
                                 @endif
-                            </div>
-                        </div>
+                            </p>
 
-                        @if ($parity % 2 != 0)
-                            @php
-
-                                $image = [];
-								if(!empty($srv->files)){
-                                foreach ($srv->files as $file) {
-                                    if ($file->attach_content_type == 'image/png' || $file->attach_content_type == 'image/jpeg') {
-                                        $image[] = [
-                                            'id' => $file->id,
-                                            'file_name' => $file->attach_file_name,
-                                        ];
-                                    }
-                                }
-													}
-
-                            @endphp
-                            @foreach ($image as $img)
-                                <div class="col-md-6 d-none d-md-block">
-                                    <div class="pic-box">
-                                        <img class="pic"
-                                            src="{{ asset('system/App/File/attaches/000/000/' .str_pad($img['id'], 3, '0', STR_PAD_LEFT) . '/original/' . $img['file_name']) }}">
-                                    </div>
-
+                            @if ($descriptionForThis !== '')
+                                <div class="prose-sm max-w-prose text-sm leading-relaxed text-slate-600">
+                                    {!! purify_html($descriptionForThis) !!}
                                 </div>
-                            @endforeach
-                                            {{--
-                                    @php
-                                            $attachment = $attachmenttypes->where('model', ucfirst($serviceTypes[$package->type]))->first();
-                                    
-                                        @endphp
-                                    @if (!empty($attachment))
-                                    @if ($package->type != 4 && isset($attachment->attachments()->first()->url))
-                                        <img class="pic" src="{{ $attachment->attachments()->first()->url }}">
-                                    @else
-                                        @if (Carbon\Carbon::parse($package->time_from)->format('H:i') < '15:00')
-                                            <img class="pic" src="{{ $attachmenttypes->find(2)->attachments()->first()->url }}">
-                                        @else
-                                            <img class="pic" src="{{ $attachmenttypes->find(3)->attachments()->first()->url }}">
-                                        @endif
-                                    @endif
-                                    @endif
-                                    --}}
-                        @endif
+                            @endif
+                        </article>
+                    </li>
+                @endforeach
+            </ol>
+        </section>
+    @endforeach
 
-                    </div>
-                @endif
-            @endforeach
-        @endforeach
-
-    </div>
-</body>
-
-</html>
+    {{-- Footer: agency credit --}}
+    <footer class="mt-12 border-t border-slate-200 pt-6 text-center text-xs text-slate-400 print:mt-8">
+        {{ config('app.name', 'TMS') }}
+    </footer>
+</div>
+@endsection

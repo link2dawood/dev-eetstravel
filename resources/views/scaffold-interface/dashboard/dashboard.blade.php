@@ -213,7 +213,7 @@
                             <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
                                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning-600"></span>
                                 <span class="flex-1 min-w-0">
-                                    <span class="block truncate text-sm text-slate-900">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                    <span class="block truncate text-sm text-slate-900">{{ $task->content ?: 'Untitled task' }}</span>
                                     @if ($task->tour)
                                         <span class="block truncate text-xs text-slate-500 mt-0.5">{{ optional($task->tour)->name }}</span>
                                     @endif
@@ -229,8 +229,10 @@
                                         @endif
                                     </span>
                                 @endif
-                                @if (optional($task->status)->name)
-                                    <x-ui.badge variant="warning" class="shrink-0">{{ $task->status->name }}</x-ui.badge>
+                                @php $statusName = $task->getStatusName(); $statusColor = $task->getStatusColor(); @endphp
+                                @if ($statusName && $statusName !== 'Unknown')
+                                    <span class="shrink-0 inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+                                          style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</span>
                                 @endif
                             </a>
                         </li>
@@ -255,7 +257,7 @@
                             <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
                                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-info-600"></span>
                                 <span class="flex-1 min-w-0">
-                                    <span class="block truncate text-sm text-slate-900">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                    <span class="block truncate text-sm text-slate-900">{{ $task->content ?: 'Untitled task' }}</span>
                                     <span class="block text-xs text-slate-500 mt-0.5">
                                         @if ($task->dead_line)
                                             {{ \Carbon\Carbon::parse($task->dead_line)->translatedFormat('l, M j') }}
@@ -314,15 +316,15 @@
                         @foreach ($recentTasks as $task)
                             @php
                                 $assignees   = tms_task_assignees($task);
-                                $statusName  = optional($task->status)->name;
-                                $statusColor = optional($task->status)->color ?: '#64748b';
+                                $statusName  = $task->getStatusName();
+                                $statusColor = $task->getStatusColor();
                                 $deadline    = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
                                 $overdue     = $deadline && $deadline->isPast();
                             @endphp
                             <tr class="hover:bg-slate-50">
                                 <td class="px-4 py-3">
                                     <a href="{{ url('/task/' . $task->id . '/edit') }}" class="block">
-                                        <span class="block truncate font-medium text-slate-900 max-w-[28rem]">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                        <span class="block truncate font-medium text-slate-900 max-w-[28rem]">{{ $task->content ?: 'Untitled task' }}</span>
                                         @if ($task->tour)
                                             <span class="block truncate text-xs text-slate-500 mt-0.5 max-w-[28rem]">{{ optional($task->tour)->name }}</span>
                                         @endif
@@ -344,7 +346,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    @if ($statusName)
+                                    @if ($statusName && $statusName !== 'Unknown')
                                         <span class="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
                                               style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</span>
                                     @else

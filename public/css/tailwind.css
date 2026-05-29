@@ -288,6 +288,9 @@ html {
 .-bottom-px {
         bottom: -1px;
 }
+.bottom-0 {
+        bottom: 0px;
+}
 .bottom-4 {
         bottom: 1rem;
 }
@@ -348,6 +351,10 @@ html {
 .-mx-2 {
         margin-left: -0.5rem;
         margin-right: -0.5rem;
+}
+.-mx-4 {
+        margin-left: -1rem;
+        margin-right: -1rem;
 }
 .-my-2 {
         margin-top: -0.5rem;
@@ -1584,6 +1591,11 @@ html {
         --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
         box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
+.shadow-\[0_-4px_8px_-4px_rgba\(15\2c 23\2c 42\2c 0\.05\)\] {
+        --tw-shadow: 0 -4px 8px -4px rgba(15,23,42,0.05);
+        --tw-shadow-colored: 0 -4px 8px -4px var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
 .shadow-card {
         --tw-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
         --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
@@ -2027,6 +2039,10 @@ html {
 }
 @media (min-width: 640px) {
 
+        .sm\:static {
+                position: static;
+        }
+
         .sm\:fixed {
                 position: fixed;
         }
@@ -2037,6 +2053,11 @@ html {
 
         .sm\:top-0 {
                 top: 0px;
+        }
+
+        .sm\:mx-0 {
+                margin-left: 0px;
+                margin-right: 0px;
         }
 
         .sm\:ml-0 {
@@ -2090,6 +2111,33 @@ html {
                 justify-content: space-between;
         }
 
+        .sm\:rounded {
+                border-radius: 0.375rem;
+        }
+
+        .sm\:border {
+                border-width: 1px;
+        }
+
+        .sm\:border-t-0 {
+                border-top-width: 0px;
+        }
+
+        .sm\:border-slate-200 {
+                --tw-border-opacity: 1;
+                border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
+        }
+
+        .sm\:bg-slate-50 {
+                --tw-bg-opacity: 1;
+                background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
+        }
+
+        .sm\:px-5 {
+                padding-left: 1.25rem;
+                padding-right: 1.25rem;
+        }
+
         .sm\:px-6 {
                 padding-left: 1.5rem;
                 padding-right: 1.5rem;
@@ -2112,8 +2160,18 @@ html {
         .sm\:text-right {
                 text-align: right;
         }
+
+        .sm\:shadow-none {
+                --tw-shadow: 0 0 #0000;
+                --tw-shadow-colored: 0 0 #0000;
+                box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+        }
 }
 @media (min-width: 768px) {
+
+        .md\:col-span-2 {
+                grid-column: span 2 / span 2;
+        }
 
         .md\:block {
                 display: block;

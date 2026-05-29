@@ -1,15 +1,17 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Settings')
+
 @section('content')
-	@include('layouts.title',
-        ['title' => 'Settings', 'sub_title' => 'Settings List', 'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Settings', 'icon' => null, 'route' => null]]])
-	<section class="content">
-		<div class="box box-primary">
-			<div class="box-body">
-				
-			</div>
-		</div>
-	</section>
+<x-ui.page-header
+    title="Settings"
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Settings', 'href' => route('settings.index')],
+        ['label' => 'Show'],
+    ]"
+/>
+
+<div class="rounded border border-slate-200 bg-white px-5 py-8 text-sm text-slate-500 text-center">
+    Nothing to display here. Use the <a href="{{ route('settings.index') }}" class="text-primary-700 hover:underline">settings list</a> to manage configuration keys.
+</div>
 @endsection

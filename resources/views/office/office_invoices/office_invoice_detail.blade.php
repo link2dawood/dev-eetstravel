@@ -1,5 +1,4 @@
 @extends('scaffold-interface.layouts.tabler-app')
-
 @section('title', 'Office Invoice Details')
 
 @section('post_styles')
@@ -7,64 +6,58 @@
 @endsection
 
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Invoice Items',
-        'sub_title' => 'Office Invoice Detail',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'officeInvoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'office_invoice_detail', 'route' => null],
-        ],
-    ])
+<x-ui.page-header
+    title="Invoice Items"
+    description="Line items recorded against this office invoice."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Office Invoices'],
+        ['label' => 'Detail'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="{{ route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'type' => 'short']) }}" variant="secondary" icon="file-text">
+            Invoice PDF
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-	<section class="content">
-    <div class="box box-primary">
-		<a class="btn btn-default"
-                                               
-                                               href="{{route('office_invoices_pdf_export', ['id' =>$officeinvoice_dataId, 'type' => 'short'])}}" style = "float:right;">Invoice PDF</a>
-        <div class="box-body">
-            <div>
-             
-            </div>
-            @if(session('message_buses'))
-            <div class="alert alert-info col-md-12" style="text-align: center;">
-                {{session('message_buses')}}
-            </div>
-            @endif
-         
-            <br>
-            <br>
-      
+@if(session('message_buses'))
+    <div class="mb-4 rounded border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-800">
+        {{ session('message_buses') }}
+    </div>
+@endif
 
-           <table id="officesinvoicedetail-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 90%; table-layout: fixed ; display = "none"'>
-			     <input id="offices_id" type="hidden" name="offices_id" value = {{$officeinvoice_dataId}}>
-                <thead>
+<input id="offices_id" type="hidden" name="offices_id" value="{{ $officeinvoice_dataId }}">
+
+<div class="rounded border border-slate-200 bg-white">
+    <div class="px-4 py-4">
+        <div class="overflow-x-auto">
+            <table id="officesinvoicedetail-table" class="min-w-full divide-y divide-slate-200 text-sm" style="background:#fff; width:100%;">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3">id</th>
+                        <th class="px-4 py-3">Items</th>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Item Code</th>
+                        <th class="px-4 py-3">Amount</th>
+                        <th class="px-4 py-3">Action</th>
+                    </tr>
+                </thead>
+                <tfoot>
                     <tr>
                         <th>id</th>
                         <th>Items</th>
                         <th>Date</th>
                         <th>Item Code</th>
-						<th>Amount</th>
-						<th>Action</th>
-                        
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                       <th>id</th>
-                        <th>Items</th>
-                        <th>Date</th>
-                        <th>Item Code</th>
-						<th>Amount</th>
-						<th>Action</th>
-                        
+                        <th>Amount</th>
+                        <th>Action</th>
                     </tr>
                 </tfoot>
-              
             </table>
         </div>
     </div>
-</section>
+</div>
 @endsection
 
 @section('post_scripts')
@@ -102,10 +95,6 @@
                     exportOptions: {
                         columns: ':not(.actions-button)',
                     },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths = 
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
                 },
             ],
             language: {
@@ -122,33 +111,32 @@
         data: 'officeInvoiceId',
         name: 'officeInvoiceId',
     },
-    
-  
-				
+
+
 	{
         data: 'officeinvoice_item',
         name: 'officeinvoice_item',
         className: 'officeinvoiceedit-name'
     },
-				
+
 	{
         data: 'officeinvoice_date',
         name: 'officeinvoice_date',
         className: 'officeinvoiceedit-name'
     },
-	
+
 	{
         data: 'officeinvoice_code',
         name: 'officeinvoice_code',
-        className: 'officeinvoiceedit-name' 
+        className: 'officeinvoiceedit-name'
     },
-				
+
 	{
         data: 'officeinvoice_amount',
         name: 'officeinvoice_amount',
         className: 'officeinvoiceedit-name'
     },
-  
+
     {
         data: 'action',
         name: 'action',
@@ -205,4 +193,3 @@
     })
 </script>
 @endpush
-	

@@ -1,169 +1,113 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Edit')
+@section('title', 'Edit Invoice')
+
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Supplier Invoice',
-        'sub_title' => 'Edit Invoice',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
+@php
+    $inputClass = 'block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600';
+    $labelClass = 'block text-sm font-medium text-slate-700 mb-1';
+@endphp
 
-    <style>
-        .cloned-container {
-            margin-left: 210px;
-            /* Adjust the margin as needed */
-        }
+<x-ui.page-header
+    title="Edit Supplier Invoice"
+    description="Update the invoice details and supplier payments."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Supplier Invoices', 'href' => route('invoices.index')],
+        ['label' => 'Edit'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-        .button_div {
-            margin-top: 0px;
-            /* Adjust the margin as needed */
-        }
+<form method='POST' action='{{ route('invoice.update', ['id' => $invoices->id]) }}' enctype="multipart/form-data">
+    {{ csrf_field() }}
+    <input type='hidden' name='_token' value='{{ Session::token() }}'>
+    <input id="invoice_id" value="{{ $invoices->invoices->id }}" type="hidden">
 
-        
+    @if (count($errors) > 0)
+        <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+            <ul class="list-disc pl-5 space-y-1 m-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        /* Style the button */
-        .custom-button {
-            background-color:darkslategray; /* Green background color */
-            color: white; /* White text color */
-            border: none; /* No border */
-            padding: 10px 20px; /* Padding around the text */
-            font-size: 18px; /* Font size */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Cursor style on hover */
-        }
+    {{-- Invoice Detail --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+            <x-ui.icon name="file-text" size="sm" class="text-slate-400" />
+            <h2 class="text-base font-semibold text-slate-900">Invoice Detail</h2>
+        </div>
+        <div class="px-5 py-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <label for="office_id" class="{{ $labelClass }}">{{ trans('Office') }}</label>
+                    <select name="office_id" id="office_id" class="{{ $inputClass }}" required>
+                        @foreach ($offices as $office)
+                            <option value="{{ $office->id }}" {{ $invoices->invoices->office_id === $office->id ? 'selected' : '' }}>{{ $office->office_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-        /* Style the button on hover */
-        .custom-button:hover {
-            background-color: gray; /* Darker green on hover */
-        }
+                <div>
+                    <label for="invoice_no" class="{{ $labelClass }}">{!! trans('Invoice No') !!} <span class="text-danger-600">*</span></label>
+                    <input class="{{ $inputClass }}" required name="invoice_no" id="invoice_no" type="text" value="{{ $invoices->invoices->invoice_no }}">
+                </div>
 
-        /* Style the icon inside the button */
-        .custom-button i {
-            margin-right: 5px; /* Spacing between icon and text */
-        }
-    </style>
-    <section class="content">
-        <form method='POST' action='{{route('invoice.update', ['id' => $invoices->id])}}' enctype="multipart/form-data">
-            <div class="box box-secondry">
-                <div class="box box-body ">
+                <div>
+                    <label for="tour_id" class="{{ $labelClass }}">{{ trans('main.Tour') }}</label>
+                    <select name="tours" id="tour_id" class="{{ $inputClass }}">
+                        @foreach ($tours as $tour)
+                            <option value="{{ $tour->id }}" {{ $invoices->tours->name === $tour->name ? 'selected' : '' }}>{{ $tour->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    {{ csrf_field() }}
-                    @if (count($errors) > 0)
-                        <br>
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Invoice Detail</h1>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <input type='hidden' name='_token' value='{{ Session::token() }}'>
-							<input id="invoice_id" value="{{$invoices->invoices->id}}" type="hidden">
-                           
-							<div class="form-group">
-                                <label for="office_id">{{ trans('Office') }}</label>
-                                <select name="office_id" id="office_id" class="form-control" required>
-
-                                    @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}" {{  $invoices->invoices->office_id ===  $office->id? 'selected' : '' }}>{{ $office->office_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-							 <div class="form-group">
-                                <label for="name">{!! trans('Invoice No') !!} *</label>
-								 <input class="form-control" required="" name="invoice_no" type="text" value="{{$invoices->invoices->invoice_no}}">
-                            </div>
-
-
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="tours">{{ trans('main.Tour') }}</label>
-                                <select name="tours" id="tour_id" class="form-control">
-
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}" {{  $invoices->tours->name ===  $tour->name ? 'selected' : '' }}>{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-							
-							
-                            <div class="form-group" id="services" >
-							
-                            </div>
-                            <div class="form-group" id="service_div">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                           
-							<div class="form-group" required>
-                                <label for="name">{!! trans('Total Amount') !!} *</label>
-								<input class="form-control" required="" name="total_amount" type="text" value="{{$invoices->invoices->total_amount}}">
-                            </div>
-                            
-                        </div>
-                    </div>
-
+                <div>
+                    <label for="total_amount" class="{{ $labelClass }}">{!! trans('Total Amount') !!} <span class="text-danger-600">*</span></label>
+                    <input class="{{ $inputClass }}" required name="total_amount" id="total_amount" type="text" value="{{ $invoices->invoices->total_amount }}">
                 </div>
             </div>
 
-            <div class="box box-secondry">
-                <div class="box box-body ">
-    
-    
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
-                            </div>
-                            <div>Payments that you were paid 
-								to Supplier?</div>
-                        </div>
-                       
-                        
-                        <div class="margin_button">
-                            <button class="custom-button" id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-    
-                        <div class="row">
-                         
-                                <div id="payment-inputs" class="row col-md-10">
-    
-                                </div>
-                           
-                        </div>
-    
-                    </div>
-                    
-    
-    
-    
-    
-    
-    
-                </div>
+            {{-- Services (dynamically populated via AJAX) --}}
+            <div id="services" class="mt-4"></div>
+            <div id="service_div" class="mt-4"></div>
+        </div>
+    </div>
+
+    {{-- Payment --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Payment</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Payments that you paid to the supplier.</p>
             </div>
-            <a href="javascript:history.back()">
-                <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-            </a>
-            <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
-        </form>
-    </section>
+            <x-ui.button type="button" id="add_feild_button" icon="plus" variant="secondary">
+                {!! trans('Add Payment') !!}
+            </x-ui.button>
+        </div>
+        <div class="px-5 py-5">
+            <div id="payment-inputs" class="row"></div>
+        </div>
+    </div>
+
+    {{-- Actions --}}
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+        <x-ui.button as="a" href="javascript:history.back()" variant="secondary" icon="arrow-left" class="back_btn">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+        <x-ui.button type="submit" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </div>
+</form>
+@endsection
+
+@push('scripts')
     <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
     <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
 
@@ -213,14 +157,13 @@
 		package_dropdown_ajax(selectedValue);
 
         $(document).ready(function() {
-			
-            
+
             $("#tour_id").change(function() {
                			var selectedValue = $(this).val();
                 		package_dropdown_ajax(selectedValue);
-                        
+
                     });
-              		
+
 
             function removeDropdown() {
                 // Remove the dropdown element if no selection is made
@@ -283,7 +226,7 @@
             $(this).val("{{ csrf_token() }}");
         });
             });
-        }   
+        }
       $('#add_feild_button').on('click', function() {
         payment_view_ajax();
         });
@@ -291,4 +234,4 @@
             $(this).closest('.item-contact').remove();
         });
     </script>
-@endsection
+@endpush

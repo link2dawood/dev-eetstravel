@@ -1,148 +1,153 @@
 @extends('scaffold-interface.layouts.tabler-app')
-
-@section('title', 'Create')
+@section('title', 'Create Office Invoice')
 
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Office Fees',
-        'sub_title' => 'Create Office',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'officeInvoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
-<style>
-	.validation-msg {
-  display: block;
-  color: red;
-  font-size: 12px;
-  margin-top: 5px;
-}
+@php
+    $inputClass = 'block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600';
+    $labelClass = 'block text-sm font-medium text-slate-700 mb-1';
+@endphp
 
+<style>
+    .validation-msg { display:block; color:#dc2626; font-size:12px; margin-top:5px; }
 </style>
 
-    <section class="content">
-        <div class="box box-primary">
-			<div class="box-body border_top_none">
-				 <form method="POST" action="{{ route('officeInvoices.store') }}" id="data-form"  enctype="multipart/form-data">
-					{{ csrf_field() }}
-					<div class="row">
-						<div class="col-lg-6">
-							<label for="officename">From Office</label>
-							<select name="from_office" id="from_office" class="form-control select2-hidden-accessible" value="" tabindex="-1" aria-hidden="true" value = "1" disabled>
-								<option value="{{ $office_from->id }}" selected>{{$office_from->office_name}}</option>
-                            </select>
-						</div>
-						<div class="col-md-4">
-						<div class="form-group">
-							<label for="office_id">{{ trans('Office') }}</label>
-                                <select name="to_office" id="to_office" class="form-control">
+<x-ui.page-header
+    title="Office Fees"
+    description="Record fees and items invoiced between offices."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Office Invoices'],
+        ['label' => 'Create'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left" class="back_btn">Back</x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-                                     @foreach ($offices_to as $office_to)
-									@if($office_to->office_name == $office_from->office_name)
-									@else
-                                        <option value="{{ $office_to->id }}">{{ $office_to->office_name }}</option>
-									@endif
-                                    @endforeach
-                                </select>
-                            </div>
-						</div>
-						<div class="col-lg-6">
-							<label for="dateoffice">Date</label>
-                            <input type="date" name="date" id="dateoffice" class="form-control" value="" required>
-						</div>
-						<div class="col-lg-6">
-							<label for="invoiceno">Invoice NO</label>
-                            <input type="text" name="invoiceno" id="invoiceno" class="form-control" value="" required>
-						</div>
-					</div>
-			
-			</div>
-		</div>
-
-	
-
-		
-        <div class="box box-primary">
-            <div class="box-body border_top_none">
-                @if (count($errors) > 0)
-                    <br>
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="office_item">Item*</label>
-                                <input type="text" name="office_item" id="office_item" class="form-control" value="" required>
-                            </div>
-                        </div>
-						<div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="des">Description*</label>
-                                <input type="text" name="des" id="des" class="form-control" value="" required>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="officeinvoice_date">Date*</label>
-                                <input type="date" name="officeinvoice_date" id="officeinvoice_date" class="form-control" value="" required>
-                            </div>
-                        </div>
-						 <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="officeinvoice_code">Item Code*</label>
-                                <input type="text" name="officeinvoice_code" id="officeinvoice_code" class="form-control" value="" required>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="form-group">
-                         <label for="name">Amount*</label>
-                         <input type="text" name="officeinvoice_amount" id="officeinvoice_amount" class="form-control" value="" required>
-                     </div>
-                     <div style="display: flex; align-items-center; justify-content: end; gap: 10px; margin-top: 20px;">
-                        <button class="btn btn-success" id="addme" type="button">Add Me</button>
-                    </div>
-                </form>
+{{-- Invoice header --}}
+<form method="POST" action="{{ route('officeInvoices.store') }}" id="data-form" enctype="multipart/form-data">
+    {{ csrf_field() }}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+            <x-ui.icon name="building" size="sm" class="text-slate-400" />
+            <h2 class="text-base font-semibold text-slate-900">Invoice Header</h2>
+        </div>
+        <div class="px-5 py-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <label for="from_office" class="{{ $labelClass }}">From Office</label>
+                    <select name="from_office" id="from_office" class="{{ $inputClass }}" disabled>
+                        <option value="{{ $office_from->id }}" selected>{{ $office_from->office_name }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="to_office" class="{{ $labelClass }}">{{ trans('Office') }}</label>
+                    <select name="to_office" id="to_office" class="{{ $inputClass }}">
+                        @foreach ($offices_to as $office_to)
+                            @if($office_to->office_name == $office_from->office_name)
+                            @else
+                                <option value="{{ $office_to->id }}">{{ $office_to->office_name }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="dateoffice" class="{{ $labelClass }}">Date</label>
+                    <input type="date" name="date" id="dateoffice" class="{{ $inputClass }}" value="" required>
+                </div>
+                <div>
+                    <label for="invoiceno" class="{{ $labelClass }}">Invoice No</label>
+                    <input type="text" name="invoiceno" id="invoiceno" class="{{ $inputClass }}" value="" required>
+                </div>
             </div>
         </div>
-        <div class="box box-primary">
-			<div class="box-body border_top_none">
-               <table id="offices-table" class="table table-striped table-bordered table-hover" style='background:#fff;; table-layout: fixed ;'>
-    <thead>
-        <tr>
-            <th>id</th>
-            <!-- <th>Office Name</th> -->
-            <th>Invoice Date</th>
-            <th>Item Number</th>
-            <th>Desc</th>
-            <th>Code</th>
-            <th>Amount</th>
-        </tr>
-    </thead>
-    <tbody>
+    </div>
 
-    </tbody>
-</table>
+    {{-- Add item --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+            <x-ui.icon name="list" size="sm" class="text-slate-400" />
+            <h2 class="text-base font-semibold text-slate-900">Add Item</h2>
+        </div>
+        <div class="px-5 py-5">
+            @if (count($errors) > 0)
+                <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+                    <ul class="list-disc pl-5 space-y-1 m-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-<div style="display: flex; align-items-center; justify-content: end; gap: 10px; margin-top: 20px;">
-    <a href="javascript:history.back()" class="btn btn-primary back_btn">Back</a>
-    <button id="submit-btn" class="btn btn-success" type="button">Submit</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <label for="office_item" class="{{ $labelClass }}">Item <span class="text-danger-600">*</span></label>
+                    <input type="text" name="office_item" id="office_item" class="{{ $inputClass }}" value="" required>
+                </div>
+                <div>
+                    <label for="des" class="{{ $labelClass }}">Description <span class="text-danger-600">*</span></label>
+                    <input type="text" name="des" id="des" class="{{ $inputClass }}" value="" required>
+                </div>
+                <div>
+                    <label for="officeinvoice_date" class="{{ $labelClass }}">Date <span class="text-danger-600">*</span></label>
+                    <input type="date" name="officeinvoice_date" id="officeinvoice_date" class="{{ $inputClass }}" value="" required>
+                </div>
+                <div>
+                    <label for="officeinvoice_code" class="{{ $labelClass }}">Item Code <span class="text-danger-600">*</span></label>
+                    <input type="text" name="officeinvoice_code" id="officeinvoice_code" class="{{ $inputClass }}" value="" required>
+                </div>
+                <div>
+                    <label for="officeinvoice_amount" class="{{ $labelClass }}">Amount <span class="text-danger-600">*</span></label>
+                    <input type="text" name="officeinvoice_amount" id="officeinvoice_amount" class="{{ $inputClass }}" value="" required>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+                <x-ui.button id="addme" type="button" icon="plus" variant="secondary">Add Me</x-ui.button>
+            </div>
+        </div>
+    </div>
+</form>
+
+{{-- Added items --}}
+<div class="rounded border border-slate-200 bg-white mb-6">
+    <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+        <x-ui.icon name="table" size="sm" class="text-slate-400" />
+        <h2 class="text-base font-semibold text-slate-900">Items</h2>
+    </div>
+    <div class="px-5 py-5">
+        <div class="overflow-x-auto">
+            <table id="offices-table" class="min-w-full divide-y divide-slate-200 text-sm" style="background:#fff;">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3">id</th>
+                        <th class="px-4 py-3">Invoice Date</th>
+                        <th class="px-4 py-3">Item Number</th>
+                        <th class="px-4 py-3">Desc</th>
+                        <th class="px-4 py-3">Code</th>
+                        <th class="px-4 py-3">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+            <a href="javascript:history.back()" class="back_btn inline-flex h-9 items-center rounded border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50">Back</a>
+            <button id="submit-btn" type="button" class="inline-flex h-9 items-center gap-2 rounded bg-primary-600 px-4 text-sm font-medium text-white hover:bg-primary-700">
+                Submit
+            </button>
+        </div>
+    </div>
 </div>
-			</div>
-		</div>
-    </section>
+@endsection
 
-  <script>
+@push('scripts')
+<script>
 $(document).ready(function() {
-  var counter = 0; // Counter variable 
+  var counter = 0; // Counter variable
 
  $('#addme').on('click', function() {
 	var dateoffice = $("#dateoffice").val();
@@ -195,12 +200,12 @@ $(document).ready(function() {
     };
 
     var newRow = '<tr>' +
-      '<td>' + newData.id + '</td>' +
-      '<td>' + newData.officeinvoice_date + '</td>' +
-      '<td>' + newData.office_item + '</td>' +
-      '<td>' + newData.des + '</td>' +
-      '<td>' + newData.officeinvoice_code + '</td>' +
-      '<td>' + newData.officeinvoice_amount + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.id + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.officeinvoice_date + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.office_item + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.des + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.officeinvoice_code + '</td>' +
+      '<td class="px-4 py-3 text-slate-700">' + newData.officeinvoice_amount + '</td>' +
       '</tr>';
 
     $('#offices-table tbody').append(newRow);
@@ -219,7 +224,7 @@ $(document).ready(function() {
     removeValidationMessage('officeinvoice_code');
     removeValidationMessage('officeinvoice_amount');
   });
-	
+
   $('#submit-btn').on('click', function() {
     var tableData = [];
 
@@ -235,11 +240,11 @@ $(document).ready(function() {
 
     // Prepare the data to be sent to the database
     var formData = {
-      _token: $('meta[name="csrf-token"]').attr('content'), 
+      _token: $('meta[name="csrf-token"]').attr('content'),
       from_office: $('#from_office').val(),
       to_office: $('#to_office').val(),
-      dateoffice: $('#dateoffice').val(), 
-      invoiceno: $('#invoiceno').val(), 
+      dateoffice: $('#dateoffice').val(),
+      invoiceno: $('#invoiceno').val(),
       data: tableData
     };
 
@@ -273,7 +278,5 @@ $(document).ready(function() {
   }
 
 });
-
 </script>
-@endsection
-	
+@endpush

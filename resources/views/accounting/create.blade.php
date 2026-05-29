@@ -1,243 +1,187 @@
-{{-- 
-    Accounting Create Page - Tabler Design
-    Create new client invoices with modern Tabler styling
---}}
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Create Invoice')
 
 @section('content')
-<div class="container-xl">
-    {{-- Page Header --}}
-    <div class="page-header d-print-none">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <div class="page-pretitle">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('accounting.index') }}">Invoices</a></li>
-                            <li class="breadcrumb-item active">Create Invoice</li>
-                        </ol>
-                    </nav>
+@php
+    $inputClass = 'block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600';
+    $labelClass = 'block text-sm font-medium text-slate-700 mb-1';
+@endphp
+
+<x-ui.page-header
+    title="Create Client Invoice"
+    description="Create a new client invoice with extra items and payments."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Client Invoices', 'href' => route('accounting.index')],
+        ['label' => 'Create Invoice'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">{!! trans('main.Back') !!}</x-ui.button>
+        <x-ui.button type="submit" form="invoice-form" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </x-slot>
+</x-ui.page-header>
+
+<form method="POST" action="{{ url('accounting') }}" enctype="multipart/form-data" id="invoice-form">
+    @csrf
+    <input type="hidden" name="_token" value="{{ Session::token() }}">
+
+    @if (empty($quotation))
+        <input id="quotation_id" type="hidden" name="quotation_id" value="">
+    @else
+        <input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
+    @endif
+
+    @if (count($errors) > 0)
+        <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+            <h4 class="font-semibold mb-1">Validation Errors</h4>
+            <ul class="list-disc pl-5 space-y-1 m-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Invoice Detail --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+            <x-ui.icon name="file-text" size="sm" class="text-slate-400" />
+            <h2 class="text-base font-semibold text-slate-900">Invoice Detail</h2>
+        </div>
+        <div class="px-5 py-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                <div>
+                    <label for="currency" class="{{ $labelClass }}">Currency <span class="text-danger-600">*</span></label>
+                    <select name="currency" id="currency" class="{{ $inputClass }}" required>
+                        <option value="" disabled selected>Choose currency...</option>
+                        <option value="EUR">Euro (EUR)</option>
+                        <option value="USD">Dollar (USD)</option>
+                        <option value="CHF">Swiss Franks (CHF)</option>
+                    </select>
                 </div>
-                <h2 class="page-title">
-                    <i class="ti ti-file-invoice me-2"></i>Create Client Invoice
-                </h2>
+                <div>
+                    <label for="office_id" class="{{ $labelClass }}">Office <span class="text-danger-600">*</span></label>
+                    <select name="office_id" id="office_id" class="{{ $inputClass }}" required>
+                        <option value="" disabled selected>Choose office...</option>
+                        @foreach ($offices as $office)
+                            <option value="{{ $office->id }}">{{ $office->office_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="tour_id" class="{{ $labelClass }}">{{ trans('main.Tour') }} <span class="text-danger-600">*</span></label>
+                    <select name="tour_id" id="tour_id" class="{{ $inputClass }}" required>
+                        <option value="" disabled selected>Choose tour...</option>
+                        @foreach ($tours as $tour)
+                            <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="client_id" class="{{ $labelClass }}">Client <span class="text-danger-600">*</span></label>
+                    <select name="client_id" id="client_id" class="{{ $inputClass }}" required>
+                        <option value="" disabled selected>Choose client...</option>
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            {{-- Page Actions --}}
-            <div class="col-auto ms-auto d-print-none">
-                <div class="btn-list">
-                    <a href="javascript:history.back()" class="btn btn-ghost-secondary">
-                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
-                    </a>
-                    <button type="submit" form="invoice-form" class="btn btn-success">
-                        <i class="ti ti-device-floppy me-1"></i>{!! trans('main.Save') !!}
-                    </button>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
+                <div>
+                    <label for="extra_cost" class="{{ $labelClass }}">Extra Cost</label>
+                    <input type="number" name="extra_cost" id="extra_cost" class="{{ $inputClass }}" placeholder="0.00" step="0.01">
+                </div>
+                <div>
+                    <label for="note" class="{{ $labelClass }}">Note</label>
+                    <textarea id="note" name="note" rows="3"
+                              class="block w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600"
+                              placeholder="Add any additional notes..."></textarea>
+                </div>
+            </div>
+
+            {{-- Hidden service fields (populated via JS) --}}
+            <div class="mt-4" id="services" style="display:none">
+                <label for="service" class="{{ $labelClass }}">Service</label>
+                <select id="service" name="service" class="{{ $inputClass }}">
+                    <option value="" disabled selected>Choose service...</option>
+                </select>
+            </div>
+            <div class="mt-4" id="service_div"></div>
+        </div>
+    </div>
+
+    {{-- Extra Items --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Extra Items</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Add extra items to this invoice.</p>
+            </div>
+            <x-ui.button type="button" id="add_contact" icon="plus" variant="secondary">Add Item</x-ui.button>
+        </div>
+        <div class="px-5 py-5">
+            <div id="items-contacts" class="space-y-3">
+                <div class="item-contact rounded border border-slate-200 bg-slate-50 p-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+                        <div class="lg:col-span-3">
+                            <label class="{{ $labelClass }}">Item Name</label>
+                            <input id="item_name" name="items[1][item_name]" type="text" class="{{ $inputClass }}" placeholder="Enter item name" required>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="{{ $labelClass }}">Quantity</label>
+                            <input id="item_desc" name="items[1][quantity]" type="number" class="{{ $inputClass }}" onchange="calculateItemTotal(this)" placeholder="0" required>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="{{ $labelClass }}">Price (excl. VAT)</label>
+                            <input id="amount" name="items[1][amount]" type="number" class="{{ $inputClass }}" onchange="calculateItemTotal(this)" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="{{ $labelClass }}">VAT Rate</label>
+                            <select name="items[{{$count}}][vat]" id="vat" class="{{ $inputClass }}" onchange="calculateItemTotal(this)" required>
+                                <option value="" disabled selected>Choose VAT...</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{$tax->value/100}}">{{$tax->name}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="{{ $labelClass }}">Total Amount</label>
+                            <input id="total_amount" name="items[1][total_amount]" type="number" class="{{ $inputClass }} item_total" placeholder="0.00" readonly>
+                        </div>
+                        <div class="lg:col-span-1 flex items-end">
+                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded text-slate-400 hover:bg-danger-50 hover:text-danger-700" id="delete_contact_item" title="Delete item">
+                                <x-ui.icon name="trash-2" size="sm" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <form method="POST" action="{{ url('accounting') }}" enctype="multipart/form-data" id="invoice-form">
-        @csrf
-        <input type="hidden" name="_token" value="{{ Session::token() }}">
-        
-        @if (empty($quotation))
-            <input id="quotation_id" type="hidden" name="quotation_id" value="">
-        @else
-            <input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
-        @endif
-
-        @if (count($errors) > 0)
-            <div class="alert alert-danger alert-dismissible" role="alert">
-                <div class="d-flex">
-                    <div><i class="ti ti-alert-circle me-2"></i></div>
-                    <div>
-                        <h4 class="alert-title">Validation Errors</h4>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {{-- Payment --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Payment</h2>
+                <p class="mt-0.5 text-sm text-slate-500">How is the client paying you?</p>
             </div>
-        @endif
-
-        {{-- Invoice Detail Section --}}
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="ti ti-file-text me-2"></i>Invoice Detail
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    {{-- Currency --}}
-                    <div class="col-md-3">
-                        <label class="form-label required">Currency</label>
-                        <select name="currency" id="currency" class="form-select" required>
-                            <option value="" disabled selected>Choose currency...</option>
-                            <option value="EUR">Euro (EUR)</option>
-                            <option value="USD">Dollar (USD)</option>
-                            <option value="CHF">Swiss Franks (CHF)</option>
-                        </select>
-                    </div>
-
-                    {{-- Office --}}
-                    <div class="col-md-3">
-                        <label class="form-label required">Office</label>
-                        <select name="office_id" id="office_id" class="form-select" required>
-                            <option value="" disabled selected>Choose office...</option>
-                            @foreach ($offices as $office)
-                                <option value="{{ $office->id }}">{{ $office->office_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Tour --}}
-                    <div class="col-md-3">
-                        <label class="form-label required">{{ trans('main.Tour') }}</label>
-                        <select name="tour_id" id="tour_id" class="form-select" required>
-                            <option value="" disabled selected>Choose tour...</option>
-                            @foreach ($tours as $tour)
-                                <option value="{{ $tour->id }}">{{ $tour->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Client --}}
-                    <div class="col-md-3">
-                        <label class="form-label required">Client</label>
-                        <select name="client_id" id="client_id" class="form-select" required>
-                            <option value="" disabled selected>Choose client...</option>
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Extra Cost --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Extra Cost</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="ti ti-currency-dollar"></i>
-                            </span>
-                            <input type="number" name="extra_cost" class="form-control" placeholder="0.00" step="0.01">
-                        </div>
-                    </div>
-
-                    {{-- Note --}}
-                    <div class="col-md-6">
-                        <label class="form-label">Note</label>
-                        <textarea id="note" name="note" class="form-control" rows="3" placeholder="Add any additional notes..."></textarea>
-                    </div>
-
-                    {{-- Hidden Service Fields --}}
-                    <div class="col-md-12" id="services" style="display:none">
-                        <label class="form-label">Service</label>
-                        <select id="service" name="service" class="form-select">
-                            <option value="" disabled selected>Choose service...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12" id="service_div"></div>
-                </div>
-            </div>
+            <x-ui.button type="button" id="add_feild_button" icon="plus" variant="secondary">Add Payment</x-ui.button>
         </div>
-        {{-- Extra Items Section --}}
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title">
-                            <i class="ti ti-list me-2"></i>Extra Items
-                        </h3>
-                        <p class="text-muted mb-0">Add extra items to this invoice</p>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-success" id="add_contact" type="button">
-                            <i class="ti ti-plus me-1"></i>Add Item
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="items-contacts" class="row g-3">
-                    <div class="item-contact col-12">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <label class="form-label">Item Name</label>
-                                <input id="item_name" name="items[1][item_name]" type="text" class="form-control" placeholder="Enter item name" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Quantity</label>
-                                <input id="item_desc" name="items[1][quantity]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Price (excl. VAT)</label>
-                                <input id="amount" name="items[1][amount]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0.00" step="0.01" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">VAT Rate</label>
-                                <select name="items[{{$count}}][vat]" id="vat" class="form-select" onchange="calculateItemTotal(this)" required>
-                                    <option value="" disabled selected>Choose VAT...</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{$tax->value/100}}">{{$tax->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Total Amount</label>
-                                <input id="total_amount" name="items[1][total_amount]" type="number" class="form-control item_total" placeholder="0.00" readonly>
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-icon btn-ghost-danger" id="delete_contact_item" title="Delete item">
-                                    <i class="ti ti-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="px-5 py-5">
+            <div id="payment-inputs" class="row"></div>
         </div>
-        {{-- Payment Section --}}
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title">
-                            <i class="ti ti-credit-card me-2"></i>Payment
-                        </h3>
-                        <p class="text-muted mb-0">How is the client paying you?</p>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-success" id="add_feild_button" type="button">
-                            <i class="ti ti-plus me-1"></i>Add Payment
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="payment-inputs" class="row g-3">
-                    {{-- Payments will be dynamically added here --}}
-                </div>
-            </div>
-        </div>
+    </div>
 
-        {{-- Form Footer Actions --}}
-        <div class="d-flex justify-content-end gap-2 mt-3 mb-3">
-            <a href="javascript:history.back()" class="btn btn-ghost-secondary">
-                <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
-            </a>
-            <button class="btn btn-success" type="submit">
-                <i class="ti ti-device-floppy me-1"></i>{!! trans('main.Save') !!}
-            </button>
-        </div>
-    </form>
-</div>
-
+    {{-- Actions --}}
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+        <x-ui.button as="a" href="javascript:history.back()" variant="secondary" icon="arrow-left">{!! trans('main.Back') !!}</x-ui.button>
+        <x-ui.button type="submit" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </div>
+</form>
 @endsection
 
 @section('post_scripts')
@@ -331,7 +275,7 @@
 
         // Calculate item total with VAT
         window.calculateItemTotal = function(iteminput) {
-            const itemContainer = iteminput.closest('.row');
+            const itemContainer = iteminput.closest('.item-contact') || iteminput.closest('.row');
             const quantity = parseFloat(itemContainer.querySelector("#item_desc")?.value) || 0;
             const price = parseFloat(itemContainer.querySelector("#amount")?.value) || 0;
             const vat = parseFloat(itemContainer.querySelector("#vat")?.value) || 0;

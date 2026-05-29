@@ -1,109 +1,63 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Edit')
+@section('title', 'Add Payment')
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Supplier Invoice',
-        'sub_title' => 'Edit Invoice',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
+<x-ui.page-header
+    title="Add Payment"
+    description="Record payments made to the supplier for this invoice."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Supplier Invoices', 'href' => route('invoices.index')],
+        ['label' => 'Add Payment'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-    <style>
-        .cloned-container {
-            margin-left: 210px;
-            /* Adjust the margin as needed */
-        }
+<input id="invoice_id" type="hidden" value="{{ $invoices->id }}">
 
-        .button_div {
-            margin-top: 0px;
-            /* Adjust the margin as needed */
-        }
+<form method='POST' action='{{ route('payment.store', ['id' => $invoices->id]) }}' enctype="multipart/form-data">
+    {{ csrf_field() }}
 
-        
+    @if (count($errors) > 0)
+        <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+            <ul class="list-disc pl-5 space-y-1 m-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        /* Style the button */
-        .custom-button {
-            background-color:darkslategray; /* Green background color */
-            color: white; /* White text color */
-            border: none; /* No border */
-            padding: 10px 20px; /* Padding around the text */
-            font-size: 18px; /* Font size */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Cursor style on hover */
-        }
-
-        /* Style the button on hover */
-        .custom-button:hover {
-            background-color: gray; /* Darker green on hover */
-        }
-
-        /* Style the icon inside the button */
-        .custom-button i {
-            margin-right: 5px; /* Spacing between icon and text */
-        }
-    </style>
-    <section class="content">
-        <form method='POST' action='{{route('payment.store', ['id' => $invoices->id])}}' enctype="multipart/form-data">
-            {{ csrf_field() }}
-                    @if (count($errors) > 0)
-                        <br>
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-            <div class="box box-secondry">
-                <div class="box box-body ">
-    
-    
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
-                            </div>
-                            <div>Payments that you were paid 
-								to Supplier?</div>
-                        </div>
-                       
-                        
-                        <div class="margin_button">
-                            <button class="custom-button" id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-    
-                        <div class="row">
-                         
-                                <div id="payment-inputs" class="row col-md-10">
-    
-                                </div>
-                           
-                        </div>
-    
-                    </div>
-                    
-    
-    
-    
-    
-    
-    
-                </div>
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Payment</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Payments that you paid to the supplier.</p>
             </div>
-            <a href="javascript:history.back()">
-                <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-            </a>
-            <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
-        </form>
-    </section>
+            <x-ui.button type="button" id="add_feild_button" icon="plus" variant="secondary">
+                {!! trans('Add Payment') !!}
+            </x-ui.button>
+        </div>
+
+        <div class="px-5 py-5">
+            <div id="payment-inputs" class="row"></div>
+        </div>
+    </div>
+
+    <div class="mt-4 flex items-center gap-2">
+        <x-ui.button as="a" href="javascript:history.back()" variant="secondary" class="back_btn">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+        <x-ui.button type="submit" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </div>
+</form>
+@endsection
+
+@push('scripts')
     <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
     <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
 
@@ -153,14 +107,13 @@
 		package_dropdown_ajax(selectedValue);
 
         $(document).ready(function() {
-			
-            
+
             $("#tour_id").change(function() {
                			var selectedValue = $(this).val();
                 		package_dropdown_ajax(selectedValue);
-                        
+
                     });
-              		
+
 
             function removeDropdown() {
                 // Remove the dropdown element if no selection is made
@@ -223,7 +176,7 @@
             $(this).val("{{ csrf_token() }}");
         });
             });
-        }   
+        }
       $('#add_feild_button').on('click', function() {
         payment_view_ajax();
         });
@@ -231,4 +184,4 @@
             $(this).closest('.item-contact').remove();
         });
     </script>
-@endsection
+@endpush

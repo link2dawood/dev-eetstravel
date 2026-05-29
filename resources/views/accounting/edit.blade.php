@@ -1,213 +1,136 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Edit')
+@section('title', 'Edit Client Invoice')
+
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Customer Transaction',
-        'sub_title' => 'Edit Billing',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
-    <section class="content">
-		<form method='post' action="{{route('accounts.update', ['id' => $transactions->id])}}" enctype="multipart/form-data">
-		<div class="margin_button">
-                <a href="javascript:history.back()">
-                    <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-                </a>
-                <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
-            </div>
-        <div class="box">
-                <div class="box box-body border_top_none">
+@php
+    $inputClass = 'block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600';
+    $labelClass = 'block text-sm font-medium text-slate-700 mb-1';
+@endphp
 
+<x-ui.page-header
+    title="Edit Client Invoice"
+    description="Update the client invoice details, extra items and payments."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Client Invoices', 'href' => route('accounting.index')],
+        ['label' => 'Edit'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">{!! trans('main.Back') !!}</x-ui.button>
+        <x-ui.button type="submit" form="invoice-edit-form" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-                    {{ csrf_field() }}
-                    @if (count($errors) > 0)
-                        <br>
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+<form method='post' action="{{ route('accounts.update', ['id' => $transactions->id]) }}" enctype="multipart/form-data" id="invoice-edit-form">
+    {{ csrf_field() }}
+    <input type='hidden' name='_token' value='{{ Session::token() }}'>
+    <input id="invoice_id" value="{{ $transactions->id }}" type="hidden">
+    @if (empty($quotation))
+        <input id="quotation_id" type="hidden" name="quotation_id" value="">
+    @else
+        <input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
+    @endif
 
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Invoice Detail</h1>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <input type='hidden' name='_token' value='{{ Session::token() }}'>
-							<input id="invoice_id" value="{{$transactions->id}}" type="hidden">
-                            
+    @if (count($errors) > 0)
+        <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+            <ul class="list-disc pl-5 space-y-1 m-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                            <div class="form-group">
-                                <label for="currency">Currency</label>
-								
-                                <select name="currency" id="currency" class="form-control" required>
-                                    @php
-									 $currencies = ["Euro", "Dollar", "Swiss Franks"];
-									@endphp
-									@foreach ($currencies as $currency)
-										<option value="{{ $currency }}" {{ $currency == $transactions->currency ? 'selected' : '' }}>
-											{{ $currency }}
-										</option>
-									@endforeach
-                                </select>
-                            </div>
-
-
-                            <div class="form-group">
-                                <label for="office_id">{{ trans('Office') }}</label>
-                                <select name="office_id" id="office_id" class="form-control">
-
-                                    @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}">{{ $office->office_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-
-                            {{--
-                          <div  class="form-group">
-                                    <label for="name">{!! trans('Service') !!} *</label>
-                                    <select id="serviceDropdown"class="form-control" >
-                                        <option name = "service"selected>{!! trans('Hotels') !!}</option>
-                                        @foreach ($options as $option)
-                                            <option>
-                                                @if ($option === 'Transfer')
-                                                    Bus Company
-                                                @else
-                                                    {{ $option }}
-                                                @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                           --}}
-
-
-
-
-
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="tour_id">{{ trans('main.Tour') }}</label>
-                                <select name="tour_id" id="tour_id" class="form-control">
-
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}" {{ $transactions->tour_id ===  $tour->id  ? 'selected' : '' }}>{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                           
-								@if (empty($quotation))
-                                    <input  id="quotation_id" type="hidden" name="quotation_id" value="">
-								@else
-										<input id="quotation_id" type="hidden" name="quotation_id" value="{{ $quotation->id }}">
-								@endif
-                            
-
-
-                            <div class="form-group" id="services" style="display:none">
-                                <label for="service">{{ trans('Service') }}</label>
-                                <select id="service" name="service" id="service" class="form-control">
-
-                                </select>
-                            </div>
-                            <div class="form-group" id="service_div">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="client_id">{{ trans('Client') }}</label>
-                                <select name="client_id" id="client_id" class="form-control">
-
-                                    @foreach ($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                           
-
-                        </div>
-                    </div>
-
-
+    {{-- Invoice Detail --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex items-center gap-2">
+            <x-ui.icon name="file-text" size="sm" class="text-slate-400" />
+            <h2 class="text-base font-semibold text-slate-900">Invoice Detail</h2>
+        </div>
+        <div class="px-5 py-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                <div>
+                    <label for="currency" class="{{ $labelClass }}">Currency</label>
+                    <select name="currency" id="currency" class="{{ $inputClass }}" required>
+                        @php $currencies = ["Euro", "Dollar", "Swiss Franks"]; @endphp
+                        @foreach ($currencies as $currency)
+                            <option value="{{ $currency }}" {{ $currency == $transactions->currency ? 'selected' : '' }}>{{ $currency }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="office_id" class="{{ $labelClass }}">{{ trans('Office') }}</label>
+                    <select name="office_id" id="office_id" class="{{ $inputClass }}">
+                        @foreach ($offices as $office)
+                            <option value="{{ $office->id }}">{{ $office->office_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="tour_id" class="{{ $labelClass }}">{{ trans('main.Tour') }}</label>
+                    <select name="tour_id" id="tour_id" class="{{ $inputClass }}">
+                        @foreach ($tours as $tour)
+                            <option value="{{ $tour->id }}" {{ $transactions->tour_id === $tour->id ? 'selected' : '' }}>{{ $tour->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="client_id" class="{{ $labelClass }}">{{ trans('Client') }}</label>
+                    <select name="client_id" id="client_id" class="{{ $inputClass }}">
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
-			
-			<div class="box box-secondry">
-                <div class="box box-body ">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Extra Items</h1>
-                            </div>
-                            <div>Extra Items In this Invoice?</div>
-                        </div>
-                        <div class="margin_button">
-                            <button class='btn btn-success' id="add_contact" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Extra Items') !!}
-                            </button>
-                        </div>
-                      
-						<div id="items-contacts" class="row col-md-10">
 
-						</div>
-                        
-                    </div>
-                </div>
+            {{-- Hidden service fields (populated via JS) --}}
+            <div class="mt-4" id="services" style="display:none">
+                <label for="service" class="{{ $labelClass }}">{{ trans('Service') }}</label>
+                <select id="service" name="service" class="{{ $inputClass }}"></select>
             </div>
-            <div class="box box-secondry">
-                <div class="box box-body ">
+            <div class="mt-4" id="service_div"></div>
+        </div>
+    </div>
 
-
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
-                            </div>
-                            <div>How is the client paying you?</div>
-                        </div>
-
-
-                        <div class="margin_button">
-                            <button class='btn btn-success' id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-
-
-						<div id="payment-inputs" class="row col-md-10">
-
-						</div>
-
-
-                    </div>
-
-
-
-
-
-
-
-                </div>
+    {{-- Extra Items --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Extra Items</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Extra items in this invoice.</p>
             </div>
-            <a href="javascript:history.back()">
-                <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-            </a>
-            <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
+            <x-ui.button type="button" id="add_contact" icon="plus" variant="secondary">{!! trans('Extra Items') !!}</x-ui.button>
+        </div>
+        <div class="px-5 py-5">
+            <div id="items-contacts" class="row"></div>
+        </div>
+    </div>
 
-		</form>
-    </section>
+    {{-- Payment --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Payment</h2>
+                <p class="mt-0.5 text-sm text-slate-500">How is the client paying you?</p>
+            </div>
+            <x-ui.button type="button" id="add_feild_button" icon="plus" variant="secondary">{!! trans('Add Payment') !!}</x-ui.button>
+        </div>
+        <div class="px-5 py-5">
+            <div id="payment-inputs" class="row"></div>
+        </div>
+    </div>
+
+    {{-- Actions --}}
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+        <x-ui.button as="a" href="javascript:history.back()" variant="secondary" icon="arrow-left">{!! trans('main.Back') !!}</x-ui.button>
+        <x-ui.button type="submit" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </div>
+</form>
+@endsection
+
+@push('scripts')
     <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
     <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
 
@@ -230,11 +153,11 @@
             readURL(this);
         });
 
-      
+
 		  $("#tour_id").change(function() {
 
-			  let tour_id = $(this).val(); 
-			  
+			  let tour_id = $(this).val();
+
 			  $.ajax({
 				  type: "GET",
 					url:`/accounting/api/getTourquotation/${tour_id}`,
@@ -247,8 +170,8 @@
 				  }
 			  });
 		  })
-		
-		
+
+
         let contactItemCount = 0;
         invoice_items();
         invoice_payments();
@@ -259,7 +182,7 @@
                 method: 'GET',
                 data: {
                     itemCount: contactItemCount + 1,
-					invoice_id:invoice_id, 
+					invoice_id:invoice_id,
                 }
             }).done((res) => {
                 contactItemCount++;
@@ -350,18 +273,18 @@
                 }
             });
         })
-		
+
 
 		function calculateItemTotal(iteminput) {
-			
+
             const itemContainer = iteminput.parentElement.parentElement.parentElement;
-			
-			
+
+
             const quantity = parseFloat(itemContainer.querySelector("#item_desc").value) || 0;
-			
+
             const price = parseFloat(itemContainer.querySelector("#amount").value) || 0;
             const vat = parseFloat(itemContainer.querySelector("#vat").value) || 0;
-			
+
 			const total_price = quantity * price;
             const total_tax = total_price * vat;
 			 const itemTotal = total_price + total_tax;
@@ -372,7 +295,7 @@
             // Recalculate the overall total
             calculateOverallTotal();
         }
-		
+
 		function calculateOverallTotal() {
             const itemTotals = document.querySelectorAll(".item-total");
             let overallTotal = 0;
@@ -384,6 +307,6 @@
             // Update the overall total
            // document.getElementById("total").textContent = overallTotal.toFixed(2);
         }
-		
+
     </script>
-@endsection
+@endpush

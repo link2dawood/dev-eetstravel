@@ -1,78 +1,61 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Edit')
+@section('title', 'Add Payment')
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Customer Transaction',
-        'sub_title' => 'Edit Billing',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'Create', 'route' => null],
-        ],
-    ])
-    <section class="content">
-		<form method='post' action="{{route('inv_payment.store', ['id' => $transactions->id])}}" enctype="multipart/form-data">
-		<div class="margin_button">
-                <a href="javascript:history.back()">
-                    <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-                </a>
-                <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
+<x-ui.page-header
+    title="Add Payment"
+    description="Record a payment received from the client for this invoice."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Client Invoices', 'href' => route('accounting.index')],
+        ['label' => 'Add Payment'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
+
+<form method='post' action="{{ route('inv_payment.store', ['id' => $transactions->id]) }}" enctype="multipart/form-data">
+    {{ csrf_field() }}
+
+    @if (count($errors) > 0)
+        <div class="mb-4 rounded border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800">
+            <ul class="list-disc pl-5 space-y-1 m-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Payment</h2>
+                <p class="mt-0.5 text-sm text-slate-500">How is the client paying you?</p>
             </div>
-       
-			
-            <div class="box box-secondry">
-                <div class="box box-body ">
+            <x-ui.button type="button" id="add_feild_button" icon="plus" variant="secondary">
+                {!! trans('Add Payment') !!}
+            </x-ui.button>
+        </div>
 
-					 {{ csrf_field() }}
-                    @if (count($errors) > 0)
-                        <br>
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
-                            </div>
-                            <div>How is the client paying you?</div>
-                        </div>
+        <div class="px-5 py-5">
+            <div id="payment-inputs" class="row"></div>
+        </div>
+    </div>
 
+    <div class="mt-4 flex items-center gap-2">
+        <x-ui.button as="a" href="javascript:history.back()" variant="secondary" class="back_btn">
+            {!! trans('main.Back') !!}
+        </x-ui.button>
+        <x-ui.button type="submit" icon="check">{!! trans('main.Save') !!}</x-ui.button>
+    </div>
+</form>
+@endsection
 
-                        <div class="margin_button">
-                            <button class='btn btn-success' id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-
-
-						<div id="payment-inputs" class="row col-md-10">
-
-						</div>
-
-
-                    </div>
-
-
-
-
-
-
-
-                </div>
-            </div>
-            <a href="javascript:history.back()">
-                <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
-            </a>
-            <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
-
-		</form>
-    </section>
+@push('scripts')
     <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
     <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
 
@@ -95,11 +78,11 @@
             readURL(this);
         });
 
-      
+
 		  $("#tour_id").change(function() {
 
-			  let tour_id = $(this).val(); 
-			  
+			  let tour_id = $(this).val();
+
 			  $.ajax({
 				  type: "GET",
 					url:`/accounting/api/getTourquotation/${tour_id}`,
@@ -112,8 +95,8 @@
 				  }
 			  });
 		  })
-		
-		
+
+
         let contactItemCount = 0;
         invoice_items();
         invoice_payments();
@@ -124,7 +107,7 @@
                 method: 'GET',
                 data: {
                     itemCount: contactItemCount + 1,
-					invoice_id:invoice_id, 
+					invoice_id:invoice_id,
                 }
             }).done((res) => {
                 contactItemCount++;
@@ -215,18 +198,18 @@
                 }
             });
         })
-		
+
 
 		function calculateItemTotal(iteminput) {
-			
+
             const itemContainer = iteminput.parentElement.parentElement.parentElement;
-			
-			
+
+
             const quantity = parseFloat(itemContainer.querySelector("#item_desc").value) || 0;
-			
+
             const price = parseFloat(itemContainer.querySelector("#amount").value) || 0;
             const vat = parseFloat(itemContainer.querySelector("#vat").value) || 0;
-			
+
 			const total_price = quantity * price;
             const total_tax = total_price * vat;
 			 const itemTotal = total_price + total_tax;
@@ -237,7 +220,7 @@
             // Recalculate the overall total
             calculateOverallTotal();
         }
-		
+
 		function calculateOverallTotal() {
             const itemTotals = document.querySelectorAll(".item-total");
             let overallTotal = 0;
@@ -249,6 +232,6 @@
             // Update the overall total
            // document.getElementById("total").textContent = overallTotal.toFixed(2);
         }
-		
+
     </script>
-@endsection
+@endpush

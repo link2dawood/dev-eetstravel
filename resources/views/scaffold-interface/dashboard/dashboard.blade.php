@@ -321,14 +321,15 @@
                                 $deadline    = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
                                 $overdue     = $deadline && $deadline->isPast();
                             @endphp
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-4 py-3">
-                                    <a href="{{ url('/task/' . $task->id . '/edit') }}" class="block">
-                                        <span class="block truncate font-medium text-slate-900 max-w-[28rem]">{{ $task->content ?: 'Untitled task' }}</span>
-                                        @if ($task->tour)
-                                            <span class="block truncate text-xs text-slate-500 mt-0.5 max-w-[28rem]">{{ optional($task->tour)->name }}</span>
-                                        @endif
-                                    </a>
+                            <tr class="hover:bg-slate-50" data-task-row="{{ $task->id }}">
+                                <td class="px-4 py-3 max-w-[28rem]">
+                                    <span class="dash-inline-edit block truncate font-medium text-slate-900 cursor-text rounded px-1 -mx-1 hover:bg-slate-100"
+                                          data-task-id="{{ $task->id }}" data-field="content"
+                                          title="Click to edit">{{ $task->content ?: 'Untitled task' }}</span>
+                                    @if ($task->tour)
+                                        <a href="{{ url('/tour/' . $task->tour->id) }}" class="block truncate text-xs text-slate-500 mt-0.5 hover:text-primary-600">{{ optional($task->tour)->name }}</a>
+                                    @endif
+                                    <a href="{{ url('/task/' . $task->id . '/edit') }}" class="mt-1 inline-block text-[10px] text-slate-400 hover:text-primary-600">Open →</a>
                                 </td>
                                 <td class="px-4 py-3">
                                     @if ($assignees->count())
@@ -346,12 +347,15 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    @if ($statusName && $statusName !== 'Unknown')
-                                        <span class="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
-                                              style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</span>
-                                    @else
-                                        <span class="text-xs text-slate-400">—</span>
-                                    @endif
+                                    <button type="button"
+                                            class="dash-inline-status inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium hover:ring-2 hover:ring-slate-300 transition"
+                                            data-task-id="{{ $task->id }}"
+                                            data-status-id="{{ $task->status }}"
+                                            style="background-color: {{ ($statusName && $statusName !== 'Unknown') ? $statusColor.'20' : '#f1f5f9' }}; color: {{ ($statusName && $statusName !== 'Unknown') ? $statusColor : '#94a3b8' }};"
+                                            title="Click to change status">
+                                        <span class="dash-status-label">{{ ($statusName && $statusName !== 'Unknown') ? $statusName : 'Set status' }}</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 text-xs {{ $overdue ? 'text-danger-600 font-medium' : 'text-slate-600' }}">
                                     {{ $deadline ? $deadline->translatedFormat('M j, H:i') : '—' }}
@@ -447,6 +451,141 @@
     {{-- Modals required by inline JS (existing partials, untouched) --}}
     @include('component.modal_add_tour')
     @include('scaffold-interface.dashboard.components.create_task_popup')
+
+    {{-- Inline-edit script for the Recent tasks panel.
+         - Click .dash-inline-edit (the title)   → input field, Enter to save, Esc to cancel
+         - Click .dash-inline-status (the pill)  → status dropdown, pick to save
+         POSTs to /task/{id}/update-field with {field, value}. CSRF taken
+         from the <meta name="csrf-token"> tag at the top of @section('content'). --}}
+    <script>
+    (function () {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        // Task-type statuses for the dropdown — only pass id/name/color the picker needs.
+        const TASK_STATUSES = @json(($statuses ?? collect())->where('type', 'task')->values()->map(fn($s) => [
+            'id'    => $s->id,
+            'name'  => $s->name,
+            'color' => $s->color ?: '#64748b',
+        ]));
+
+        function saveField(taskId, field, value) {
+            return fetch('/task/' + taskId + '/update-field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ field: field, value: value }),
+            }).then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, body: j })));
+        }
+
+        // ---------- Inline content edit ----------
+        document.addEventListener('click', function (e) {
+            const span = e.target.closest('.dash-inline-edit');
+            if (!span || span.dataset.editing === '1') return;
+
+            const taskId = span.dataset.taskId;
+            const field  = span.dataset.field;
+            const original = span.textContent.trim();
+
+            span.dataset.editing = '1';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = original === 'Untitled task' ? '' : original;
+            input.className = 'block w-full h-7 rounded border border-primary-500 bg-white px-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30';
+            const placeholder = span.cloneNode(true);
+            span.replaceWith(input);
+            input.focus();
+            input.select();
+
+            let committed = false;
+
+            function restore(value, edited) {
+                if (committed) return;
+                committed = true;
+                placeholder.textContent = value || 'Untitled task';
+                placeholder.dataset.editing = '0';
+                input.replaceWith(placeholder);
+                if (edited) {
+                    placeholder.style.transition = 'background-color .8s ease';
+                    placeholder.style.backgroundColor = 'rgba(13,148,136,0.15)';
+                    setTimeout(() => placeholder.style.backgroundColor = '', 800);
+                }
+            }
+
+            input.addEventListener('blur', () => commit(input.value.trim()));
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter')  { ev.preventDefault(); commit(input.value.trim()); }
+                if (ev.key === 'Escape') { ev.preventDefault(); restore(original, false); }
+            });
+
+            function commit(newValue) {
+                if (newValue === original) { restore(original, false); return; }
+                if (!newValue) { restore(original, false); return; }
+                saveField(taskId, field, newValue).then(({ ok }) => {
+                    restore(ok ? newValue : original, ok);
+                }).catch(() => restore(original, false));
+            }
+        });
+
+        // ---------- Status dropdown ----------
+        function closeAllStatusPickers() {
+            document.querySelectorAll('.dash-status-popup').forEach(el => el.remove());
+        }
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.dash-inline-status');
+            if (!btn) { closeAllStatusPickers(); return; }
+            e.stopPropagation();
+
+            // Toggle if already open for this button
+            const existing = document.querySelector('.dash-status-popup');
+            const wasOpenFor = existing?.dataset.taskId === btn.dataset.taskId;
+            closeAllStatusPickers();
+            if (wasOpenFor) return;
+
+            const popup = document.createElement('div');
+            popup.className = 'dash-status-popup rounded border border-slate-200 bg-white shadow-lg py-1 z-50';
+            popup.style.position = 'absolute';
+            popup.style.minWidth = '180px';
+            popup.dataset.taskId = btn.dataset.taskId;
+
+            TASK_STATUSES.forEach(s => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-slate-50';
+                item.innerHTML = `<span class="inline-block h-2.5 w-2.5 rounded-full" style="background-color:${s.color}"></span><span class="text-slate-700">${s.name}</span>`;
+                item.onclick = (ev) => {
+                    ev.stopPropagation();
+                    saveField(btn.dataset.taskId, 'status', s.id).then(({ ok, body }) => {
+                        if (ok) {
+                            const color = body?.status?.color || s.color;
+                            const name  = body?.status?.name  || s.name;
+                            btn.querySelector('.dash-status-label').textContent = name;
+                            btn.style.backgroundColor = color + '20';
+                            btn.style.color = color;
+                            btn.dataset.statusId = s.id;
+                            btn.style.transition = 'box-shadow .6s ease';
+                            btn.style.boxShadow = '0 0 0 3px rgba(13,148,136,0.25)';
+                            setTimeout(() => btn.style.boxShadow = '', 600);
+                        }
+                        closeAllStatusPickers();
+                    }).catch(() => closeAllStatusPickers());
+                };
+                popup.appendChild(item);
+            });
+
+            document.body.appendChild(popup);
+            const r = btn.getBoundingClientRect();
+            popup.style.top  = (r.bottom + window.scrollY + 4) + 'px';
+            popup.style.left = (r.left + window.scrollX) + 'px';
+        });
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllStatusPickers(); });
+    })();
+    </script>
 
 @endsection
 

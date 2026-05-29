@@ -82,9 +82,13 @@
             font-size: 3rem;
             color: #fff;
         }
-        .hidden {
-            display: none;
-        }
+        /* NOTE: The legacy `.hidden { display: none; }` rule was removed from
+           this inline style block. Tailwind already ships an identical `.hidden`
+           utility — but because this inline block loads AFTER tailwind.css, the
+           duplicate rule used to win the cascade against responsive variants
+           like `md:block`, collapsing every `hidden md:block` element on the
+           page. Tailwind's `.hidden` continues to work for `protect_loader`
+           and `author_name` elsewhere on the page; no behaviour change. */
 
         /* Legacy AdminLTE Component Compatibility */
         .box {

@@ -1,55 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-  @include('TMSClient.layout.head')
-  <body style="background-image: url('https://images.unsplash.com/photo-1577366773073-a57cdf7132cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80'); background-position: center;">
-    <div class="main">
-      <div class="main-content">
-        <section class="register">
-          <div class="container-fluid">
-              <div class="wrapper">
-                <div class="card">
-                    <div class="card-body p-5">
-						<img src="https://eetstravel.com/wp-content/uploads/2022/05/final-1-300x263.jpg" class="img-fluid w-50 mx-auto d-block mb-4">
-                        <h1 class="title text-center fs-2">Login to your account</h1>
-                        @if(session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-                        <form action="{{ route('client.login') }}" method="post">
-                             {{csrf_field()}}
-                          <div class="d-flex flex-column align-items-center w-100">
-                            <div class="input-wrapper">
-                              <input type="text" class="form-control" placeholder="Email Address" name = "contact_email">
-                            </div>
-                            <div class="input-wrapper mb-4">
-                              <input type="password" class="form-control" placeholder="Password" name = "password">
-                            </div>
-                            <button class="btn btn-primary px-lg-5 w-100" type="submit">Login</button>
-                          </div>
-                         
-                        </form>
-                    </div>
-                </div>
-              </div>
-            <!-- <div class="row">
-              <div class="col-lg-7">
-              </div>
-              <div class="col-lg-5 p-0 d-none d-lg-flex">
-                <div class="register-img">
-                  <div class="d-flex align-items-center justify-content-center flex-column h-100 w-100 position-relative">
-                    <h1 class="title text-white">New here?</h1>
-                    <p class="text text-white text-center px-3 px-lg-5 ">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Obcaecati temporibus nobis maiores.</p>
-                    <a href="" class="btn btn-primary px-lg-5">Sign up</a>
-                  </div>
-                </div>
-              </div>
-            </div> -->
-          </div>
-        </section>
-      </div>
+@extends('TMSClient.layouts.app')
+@section('title', 'Sign in — TMS Client')
+@section('with-nav-false')@endsection
 
-      <div class="cursor"></div>
-    </div>
+@section('content')
+<div class="min-h-screen grid lg:grid-cols-2">
+    {{-- Left brand panel --}}
+    <aside class="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 text-white px-12 py-16 flex-col justify-between">
+        <div aria-hidden="true" class="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div aria-hidden="true" class="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-primary-400/30 blur-3xl"></div>
 
-    @include('TMSClient.layout.footer')
-  </body>
-</html>
+        <div class="relative inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <span class="flex h-9 w-9 items-center justify-center rounded-md bg-white/15 backdrop-blur">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+                </svg>
+            </span>
+            TMS Client
+        </div>
+
+        <div class="relative">
+            <h1 class="text-4xl font-semibold tracking-tight leading-tight">Welcome to your client portal.</h1>
+            <p class="mt-4 text-base text-white/80 max-w-md">Submit quotation requests, review your tours, and stay in sync with your travel partner.</p>
+        </div>
+
+        <p class="relative text-xs text-white/60">© {{ date('Y') }} eetstravel.com</p>
+    </aside>
+
+    {{-- Right form pane --}}
+    <main class="flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
+        <div class="w-full max-w-md">
+            <div class="lg:hidden mb-8 text-center">
+                <div class="inline-flex items-center gap-2 text-lg font-semibold text-primary-700">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-md bg-primary-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                            <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+                        </svg>
+                    </span>
+                    TMS Client
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-semibold text-slate-900 mb-1">Sign in to your account</h2>
+            <p class="text-sm text-slate-500 mb-8">Use the credentials your travel partner shared with you.</p>
+
+            @if(session('error'))
+                <div class="mb-4 flex items-start gap-3 rounded border border-danger-600/20 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mt-0.5 text-danger-600 shrink-0"><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    <div class="flex-1">{{ session('error') }}</div>
+                </div>
+            @endif
+
+            <form action="{{ route('client.login') }}" method="post" class="space-y-4">
+                {{ csrf_field() }}
+                <div>
+                    <label for="contact_email" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Email</label>
+                    <input id="contact_email" type="email" name="contact_email" required autofocus autocomplete="email" placeholder="you@example.com"
+                           class="block w-full h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="password" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Password</label>
+                    <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+                           class="block w-full h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+
+                <button type="submit"
+                        class="inline-flex w-full h-10 items-center justify-center gap-2 rounded-md bg-primary-600 px-4 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:ring-offset-2">
+                    Sign in
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+@endsection

@@ -90,6 +90,54 @@
            page. Tailwind's `.hidden` continues to work for `protect_loader`
            and `author_name` elsewhere on the page; no behaviour change. */
 
+        /* bootstrap-fileinput button chrome.
+           The plugin emits <button class="btn btn-sm <yourClass>"> for every
+           action — passing our own class names from the file_upload_field
+           config lets us style the Browse / Cancel / Remove buttons + the
+           per-preview action pills (zoom/remove) without touching Bootstrap's
+           generic .btn-primary which would bleed onto every other page.
+           These classes live HERE rather than in tailwind.css because they
+           need to win against the legacy AdminLTE .btn-primary block below. */
+        .btn-tms-primary {
+            background-color: #0d9488; border: 1px solid #0d9488; color: #fff;
+            border-radius: 0.375rem; font-weight: 500;
+        }
+        .btn-tms-primary:hover, .btn-tms-primary:focus {
+            background-color: #0f766e; border-color: #0f766e; color: #fff;
+        }
+        .btn-tms-secondary {
+            background-color: #fff; border: 1px solid #cbd5e1; color: #475569;
+            border-radius: 0.375rem; font-weight: 500;
+        }
+        .btn-tms-secondary:hover, .btn-tms-secondary:focus {
+            background-color: #f8fafc; border-color: #94a3b8; color: #1e293b;
+        }
+        .btn-tms-action-primary {
+            background-color: #f0fdfa; border: 1px solid transparent; color: #0f766e;
+            border-radius: 0.375rem; padding: 0.25rem 0.5rem;
+        }
+        .btn-tms-action-primary:hover {
+            background-color: #ccfbf1; color: #115e59;
+        }
+        .btn-tms-action-danger {
+            background-color: #fef2f2; border: 1px solid transparent; color: #b91c1c;
+            border-radius: 0.375rem; padding: 0.25rem 0.5rem;
+        }
+        .btn-tms-action-danger:hover {
+            background-color: #fee2e2; color: #991b1b;
+        }
+        /* The plugin's caption box (the dashed dropzone) — soften the border. */
+        .file-input .file-caption, .file-input .file-caption .form-control {
+            border-color: #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        /* Preview thumbnails (the cards under the dropzone). */
+        .file-input .kv-file-content, .file-input .file-preview-frame {
+            border-color: #e2e8f0;
+            border-radius: 0.5rem;
+        }
+
         /* Migrated Tailwind underline tabs.
            Bootstrap's tab JS (data-bs-toggle="tab") REQUIRES the `nav-tabs`
            class on the parent <ul> to wire up keyboard nav + active-class

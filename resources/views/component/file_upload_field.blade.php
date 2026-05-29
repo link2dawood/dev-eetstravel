@@ -69,15 +69,35 @@
 			elErrorContainer: '#err-container',
 			msgPlaceholder: "Select files...",
 			previewFileIcon: '<i class="ti ti-file"></i>',
+			// Top-level button icons (the main action bar at the bottom of
+			// the widget — Browse / Remove / Cancel). The plugin defaults to
+			// glyphicon-* classes which aren't loaded; without these the
+			// buttons render with empty icon slots.
+			browseIcon: '<i class="ti ti-folder-open me-1"></i> ',
+			browseLabel: ' Browse',
+			browseClass: 'btn btn-sm btn-tms-primary',
+			removeIcon: '<i class="ti ti-trash me-1"></i> ',
+			removeLabel: ' Remove',
+			removeClass: 'btn btn-sm btn-tms-secondary',
+			cancelIcon: '<i class="ti ti-x me-1"></i> ',
+			cancelLabel: ' Cancel',
+			cancelClass: 'btn btn-sm btn-tms-secondary',
+			uploadIcon: '<i class="ti ti-upload me-1"></i> ',
+			uploadClass: 'btn btn-sm btn-tms-primary',
 			fileActionSettings: {
 				showUpload: false,
 				showZoom: true,
 				showDrag: true,
 				showRemove: true,
 				removeIcon: '<i class="ti ti-trash"></i>',
-				removeClass: 'btn btn-sm btn-danger',
+				removeClass: 'btn btn-xs btn-tms-action-danger',
+				removeTitle: 'Remove file',
 				zoomIcon: '<i class="ti ti-zoom-in"></i>',
-				zoomClass: 'btn btn-sm btn-primary',
+				zoomClass: 'btn btn-xs btn-tms-action-primary',
+				zoomTitle: 'Preview',
+				dragIcon: '<i class="ti ti-grip-vertical"></i>',
+				dragClass: 'text-slate-400',
+				dragTitle: 'Reorder',
 			}
 		}).on('filebatchuploaderror', function(event, data, msg){
 			console.error('Upload error:', data);

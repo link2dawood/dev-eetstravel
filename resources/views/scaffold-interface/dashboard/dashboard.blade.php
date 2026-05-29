@@ -70,6 +70,50 @@
         try {
             $recentTours = \App\Tour::orderByDesc('created_at')->take(5)->get();
         } catch (\Throwable $e) { $recentTours = collect(); }
+
+        // Recent tasks (latest across all states, with assignees) for the
+        // "Recent tasks" panel below. We re-fetch directly so we get the
+        // latest activity regardless of which "todo/completed/aborted"
+        // bucket the assigner-scoped collections above filtered into.
+        try {
+            $recentTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'assigned_users'])
+                ->orderByDesc('updated_at')
+                ->take(6)
+                ->get();
+        } catch (\Throwable $e) { $recentTasks = collect(); }
+
+        // Helpers — avatar initials + a stable colour from the user's name.
+        if (!function_exists('tms_user_initials')) {
+            function tms_user_initials($name) {
+                $name = trim((string) $name);
+                if ($name === '') return '?';
+                $parts = preg_split('/\s+/', $name);
+                if (count($parts) >= 2) {
+                    return strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1));
+                }
+                return strtoupper(mb_substr($parts[0], 0, 2));
+            }
+        }
+        if (!function_exists('tms_user_color')) {
+            function tms_user_color($name) {
+                $palette = ['#0d9488','#0073ea','#a25ddc','#e2445c','#00c875','#fdab3d','#f43f5e','#6366f1','#0891b2','#7c3aed'];
+                $hash = 0;
+                foreach (str_split((string) $name) as $ch) { $hash = ($hash * 31 + ord($ch)) & 0xffffff; }
+                return $palette[$hash % count($palette)];
+            }
+        }
+        // Collect assignees for a task: prefer many-to-many; fall back to assignedTo
+        if (!function_exists('tms_task_assignees')) {
+            function tms_task_assignees($task) {
+                $assignees = collect();
+                if ($task->relationLoaded('assigned_users') && $task->assigned_users->count()) {
+                    $assignees = $task->assigned_users;
+                } elseif ($task->assignedTo) {
+                    $assignees = collect([$task->assignedTo]);
+                }
+                return $assignees;
+            }
+        }
     @endphp
 
     <x-ui.page-header
@@ -164,6 +208,7 @@
                 </header>
                 <ul class="divide-y divide-slate-100">
                     @forelse ($tasksToday as $task)
+                        @php $assignees = tms_task_assignees($task); @endphp
                         <li>
                             <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
                                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning-600"></span>
@@ -173,6 +218,17 @@
                                         <span class="block truncate text-xs text-slate-500 mt-0.5">{{ optional($task->tour)->name }}</span>
                                     @endif
                                 </span>
+                                @if ($assignees->count())
+                                    <span class="shrink-0 flex -space-x-1.5" title="{{ $assignees->pluck('name')->implode(', ') }}">
+                                        @foreach ($assignees->take(3) as $u)
+                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-2 ring-white"
+                                                  style="background-color: {{ tms_user_color($u->name ?? '') }};">{{ tms_user_initials($u->name ?? '') }}</span>
+                                        @endforeach
+                                        @if ($assignees->count() > 3)
+                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 ring-2 ring-white">+{{ $assignees->count() - 3 }}</span>
+                                        @endif
+                                    </span>
+                                @endif
                                 @if (optional($task->status)->name)
                                     <x-ui.badge variant="warning" class="shrink-0">{{ $task->status->name }}</x-ui.badge>
                                 @endif
@@ -194,6 +250,7 @@
                 </header>
                 <ul class="divide-y divide-slate-100">
                     @forelse ($tasksThisWeek as $task)
+                        @php $assignees = tms_task_assignees($task); @endphp
                         <li>
                             <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
                                 <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-info-600"></span>
@@ -205,6 +262,17 @@
                                         @endif
                                     </span>
                                 </span>
+                                @if ($assignees->count())
+                                    <span class="shrink-0 flex -space-x-1.5" title="{{ $assignees->pluck('name')->implode(', ') }}">
+                                        @foreach ($assignees->take(3) as $u)
+                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold text-white ring-2 ring-white"
+                                                  style="background-color: {{ tms_user_color($u->name ?? '') }};">{{ tms_user_initials($u->name ?? '') }}</span>
+                                        @endforeach
+                                        @if ($assignees->count() > 3)
+                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 ring-2 ring-white">+{{ $assignees->count() - 3 }}</span>
+                                        @endif
+                                    </span>
+                                @endif
                             </a>
                         </li>
                     @empty
@@ -214,6 +282,87 @@
             </div>
 
         </div>
+    </div>
+
+    {{-- Recent tasks --}}
+    <div class="rounded border border-slate-200 bg-white mb-6">
+        <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900">Recent tasks</h3>
+                <p class="mt-0.5 text-xs text-slate-500">Latest task activity and assignees</p>
+            </div>
+            <a href="{{ url('/task') }}" class="text-xs font-medium text-primary-600 hover:text-primary-700">View all</a>
+        </header>
+        @if ($recentTasks->isEmpty())
+            <div class="px-4 py-8 text-center text-sm text-slate-500">
+                <x-ui.icon name="list-checks" size="md" class="mx-auto mb-2 text-slate-300" />
+                No tasks yet.
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                            <th class="px-4 py-2.5">Task</th>
+                            <th class="px-4 py-2.5">Assignees</th>
+                            <th class="px-4 py-2.5">Status</th>
+                            <th class="px-4 py-2.5">Deadline</th>
+                            <th class="px-4 py-2.5">Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($recentTasks as $task)
+                            @php
+                                $assignees   = tms_task_assignees($task);
+                                $statusName  = optional($task->status)->name;
+                                $statusColor = optional($task->status)->color ?: '#64748b';
+                                $deadline    = $task->dead_line ? \Carbon\Carbon::parse($task->dead_line) : null;
+                                $overdue     = $deadline && $deadline->isPast();
+                            @endphp
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3">
+                                    <a href="{{ url('/task/' . $task->id . '/edit') }}" class="block">
+                                        <span class="block truncate font-medium text-slate-900 max-w-[28rem]">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                        @if ($task->tour)
+                                            <span class="block truncate text-xs text-slate-500 mt-0.5 max-w-[28rem]">{{ optional($task->tour)->name }}</span>
+                                        @endif
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if ($assignees->count())
+                                        <div class="flex -space-x-1.5" title="{{ $assignees->pluck('name')->implode(', ') }}">
+                                            @foreach ($assignees->take(4) as $u)
+                                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-2 ring-white"
+                                                      style="background-color: {{ tms_user_color($u->name ?? '') }};">{{ tms_user_initials($u->name ?? '') }}</span>
+                                            @endforeach
+                                            @if ($assignees->count() > 4)
+                                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700 ring-2 ring-white">+{{ $assignees->count() - 4 }}</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-slate-400">Unassigned</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if ($statusName)
+                                        <span class="inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium"
+                                              style="background-color: {{ $statusColor }}20; color: {{ $statusColor }};">{{ $statusName }}</span>
+                                    @else
+                                        <span class="text-xs text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-xs {{ $overdue ? 'text-danger-600 font-medium' : 'text-slate-600' }}">
+                                    {{ $deadline ? $deadline->translatedFormat('M j, H:i') : '—' }}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-slate-500">
+                                    {{ $task->updated_at ? $task->updated_at->diffForHumans() : '—' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 
     {{-- Recent tours + Announcements --}}

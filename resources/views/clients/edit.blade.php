@@ -217,6 +217,17 @@
             @endphp
 
             @if($hasExisting)
+                @php
+                    // Same cap pattern as the show page — keep the section
+                    // scannable. Modal shows the full set with delete on each.
+                    $imagePreviewLimit  = 4;
+                    $attachPreviewLimit = 5;
+                    $previewImages      = $existingImages->take($imagePreviewLimit);
+                    $previewAttach      = $existingAttach->take($attachPreviewLimit);
+                    $hiddenImages       = max(0, $existingImages->count() - $imagePreviewLimit);
+                    $hiddenAttach       = max(0, $existingAttach->count() - $attachPreviewLimit);
+                @endphp
+
                 {{-- Current files block. Inline delete via the same
                      .del-attach + data-attach-url handler the show page uses. --}}
                 <div>
@@ -226,8 +237,8 @@
                     </div>
 
                     @if($existingImages->count())
-                        <div class="image grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
-                            @foreach($existingImages as $image)
+                        <div class="image grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
+                            @foreach($previewImages as $image)
                                 @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
                                 <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
                                     <a href="{{ $imgUrl }}" class="block w-full h-full">
@@ -243,11 +254,18 @@
                                 </div>
                             @endforeach
                         </div>
+                        @if($hiddenImages > 0)
+                            <button type="button" onclick="editFilesModalOpen('images')"
+                                    class="mb-4 inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
+                                Manage all photos ({{ $existingImages->count() }})
+                                <x-ui.icon name="arrow-right" size="xs" />
+                            </button>
+                        @endif
                     @endif
 
                     @if($existingAttach->count())
                         <ul class="divide-y divide-slate-100 list-none pl-0 m-0 rounded border border-slate-200">
-                            @foreach($existingAttach as $attach)
+                            @foreach($previewAttach as $attach)
                                 @php
                                     $fileUrl     = asset('storage/' . $attach->attach_file_name);
                                     $displayName = basename($attach->attach_file_name);
@@ -276,6 +294,13 @@
                                 </li>
                             @endforeach
                         </ul>
+                        @if($hiddenAttach > 0)
+                            <button type="button" onclick="editFilesModalOpen('attachments')"
+                                    class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
+                                Manage all files ({{ $existingAttach->count() }})
+                                <x-ui.icon name="arrow-right" size="xs" />
+                            </button>
+                        @endif
                     @endif
                 </div>
 
@@ -306,6 +331,140 @@
         </x-ui.button>
     </div>
 </form>
+
+{{-- ============================================================ --}}
+{{-- Manage-all files modal (edit-page variant).                   --}}
+{{-- Mirrors the show-page modal but each tile / row carries the   --}}
+{{-- .del-attach button so the user can delete from inside.        --}}
+{{-- ============================================================ --}}
+@if(!empty($existingImages) && ($existingImages->count() > 0 || $existingAttach->count() > 0))
+<div id="editFilesModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="editFilesModalTitle">
+    <div class="absolute inset-0 bg-slate-900/60" onclick="editFilesModalClose()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="relative w-full max-w-4xl max-h-[90vh] rounded-md bg-white shadow-overlay pointer-events-auto flex flex-col">
+
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <h3 id="editFilesModalTitle" class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <x-ui.icon name="paperclip" size="sm" class="text-slate-400" />
+                    <span data-edit-files-modal-title>Manage all files</span>
+                </h3>
+                <button type="button" onclick="editFilesModalClose()" class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
+                    <x-ui.icon name="x" />
+                </button>
+            </div>
+
+            <div class="overflow-y-auto px-5 py-5 flex-1">
+
+                @if($existingImages->count())
+                    <section data-edit-files-modal-section="images" class="mb-6">
+                        <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-3">
+                            Photos
+                            <span class="ml-1 text-slate-400 normal-case font-normal">({{ $existingImages->count() }})</span>
+                        </h4>
+                        <div class="image-edit-gallery grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            @foreach($existingImages as $image)
+                                @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
+                                <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
+                                    <a href="{{ $imgUrl }}" class="block w-full h-full">
+                                        <img src="{{ $imgUrl }}" alt="" loading="lazy"
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                    </a>
+                                    <button type="button"
+                                            class="del-attach absolute top-1.5 right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-danger-600 shadow-overlay opacity-0 group-hover:opacity-100 transition-opacity"
+                                            data-attach-url="{{ route('file_delete', ['id' => $image->id]) }}"
+                                            aria-label="Delete photo">
+                                        <x-ui.icon name="trash-2" size="xs" />
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
+                @if($existingAttach->count())
+                    <section data-edit-files-modal-section="attachments">
+                        <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-3">
+                            Files
+                            <span class="ml-1 text-slate-400 normal-case font-normal">({{ $existingAttach->count() }})</span>
+                        </h4>
+                        <ul class="divide-y divide-slate-100 list-none pl-0 m-0 rounded border border-slate-200">
+                            @foreach($existingAttach as $attach)
+                                @php
+                                    $fileUrl     = asset('storage/' . $attach->attach_file_name);
+                                    $displayName = basename($attach->attach_file_name);
+                                @endphp
+                                <li class="del-container px-4 py-3 flex items-center gap-3 hover:bg-slate-50">
+                                    <span class="flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-500 shrink-0">
+                                        <x-ui.icon name="paperclip" size="sm" />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{{ $fileUrl }}" target="_blank" class="block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
+                                            {{ $displayName }}
+                                        </a>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            {{ $attach->created_at }}
+                                            @if(!empty($attach->attach_file_size))
+                                                · {{ round($attach->attach_file_size / 1024, 1) }} KB
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <a href="{{ $fileUrl }}" download class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Download">
+                                        <x-ui.icon name="download" size="sm" />
+                                    </a>
+                                    <button type="button"
+                                            class="del-attach inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-danger-50 hover:text-danger-700"
+                                            data-attach-url="{{ route('file_delete', ['id' => $attach->id]) }}"
+                                            aria-label="Delete file">
+                                        <x-ui.icon name="trash-2" size="sm" />
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.editFilesModalOpen = function (mode) {
+        var modal = document.getElementById('editFilesModal');
+        if (!modal) return;
+        var title = modal.querySelector('[data-edit-files-modal-title]');
+        if (title) title.textContent = mode === 'attachments' ? 'Manage all files' : 'Manage all photos';
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        var section = modal.querySelector('[data-edit-files-modal-section="' + mode + '"]');
+        if (section) {
+            requestAnimationFrame(function () { section.scrollIntoView({ block: 'start', behavior: 'auto' }); });
+        }
+
+        if (window.jQuery && jQuery.fn.magnificPopup) {
+            jQuery('#editFilesModal .image-edit-gallery').magnificPopup({
+                delegate: 'a:not(.del-attach)',
+                type: 'image',
+                gallery: { enabled: true }
+            });
+        }
+    };
+    window.editFilesModalClose = function () {
+        var modal = document.getElementById('editFilesModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+    document.addEventListener('keydown', function (e) {
+        var modal = document.getElementById('editFilesModal');
+        if (modal && !modal.classList.contains('hidden') && e.key === 'Escape') {
+            window.editFilesModalClose();
+        }
+    });
+</script>
+@endif
 @endsection
 
 @push('scripts')

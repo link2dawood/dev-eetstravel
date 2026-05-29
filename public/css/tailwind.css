@@ -1206,6 +1206,9 @@ html {
 .bg-white\/90 {
         background-color: rgb(255 255 255 / 0.9);
 }
+.bg-white\/95 {
+        background-color: rgb(255 255 255 / 0.95);
+}
 .from-gray-700 {
         --tw-gradient-from: #374151 var(--tw-gradient-from-position);
         --tw-gradient-to: rgb(55 65 81 / 0) var(--tw-gradient-to-position);

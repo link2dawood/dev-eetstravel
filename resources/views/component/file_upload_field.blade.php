@@ -68,15 +68,15 @@
 			allowedFileExtensions: null, // Allow all file types
 			elErrorContainer: '#err-container',
 			msgPlaceholder: "Select files...",
-			previewFileIcon: '<i class="glyphicon glyphicon-file"></i>',
+			previewFileIcon: '<i class="ti ti-file"></i>',
 			fileActionSettings: {
 				showUpload: false,
 				showZoom: true,
 				showDrag: true,
 				showRemove: true,
-				removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
+				removeIcon: '<i class="ti ti-trash"></i>',
 				removeClass: 'btn btn-sm btn-danger',
-				zoomIcon: '<i class="glyphicon glyphicon-zoom-in"></i>',
+				zoomIcon: '<i class="ti ti-zoom-in"></i>',
 				zoomClass: 'btn btn-sm btn-primary',
 			}
 		}).on('filebatchuploaderror', function(event, data, msg){

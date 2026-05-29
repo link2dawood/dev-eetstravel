@@ -137,6 +137,35 @@
             border-color: #e2e8f0;
             border-radius: 0.5rem;
         }
+        /* Force bootstrap-fileinput's preview area into a responsive grid.
+           Default layout is a horizontal flex row that wraps awkwardly and
+           reads as a slider rather than a gallery. The grid below mirrors
+           the "Current files" block on the edit page (auto-fill, minmax)
+           so the uploader and the existing-files block visually match. */
+        .file-input .file-preview-thumbnails {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.75rem;
+            float: none;
+        }
+        /* Reset per-frame fixed widths / floats so the grid actually controls
+           sizing. The plugin emits width="160px" and float:left on each frame
+           inline; need !important to win. */
+        .file-input .file-preview-thumbnails .file-preview-frame {
+            width: auto !important;
+            margin: 0 !important;
+            float: none !important;
+            position: relative;
+        }
+        .file-input .file-preview-thumbnails .file-preview-frame .kv-file-content {
+            width: 100% !important;
+            height: auto !important;
+        }
+        .file-input .file-preview-thumbnails .file-preview-frame img {
+            width: 100% !important;
+            height: 140px !important;
+            object-fit: cover !important;
+        }
 
         /* Migrated Tailwind underline tabs.
            Bootstrap's tab JS (data-bs-toggle="tab") REQUIRES the `nav-tabs`

@@ -1,146 +1,249 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Create Guide')
+@section('title','Create Guide')
 
 @section('content')
-<div class="container-xl">
-    <div class="page-header d-print-none">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <div class="page-pretitle">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url('/home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('guide.index') }}">Guides</a></li>
-                            <li class="breadcrumb-item active">Create</li>
-                        </ol>
-                    </nav>
+<x-ui.page-header
+    title="New guide"
+    description="Add a guide supplier to the catalog."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Guides', 'href' => route('guide.index')],
+        ['label' => 'New'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="{{ route('guide.index') }}" variant="ghost" icon="arrow-left">
+            {{ trans('main.Back') }}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
+
+@if(count($errors) > 0)
+    <div class="mb-4 rounded border border-danger-600/20 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+        <div class="flex items-center gap-2 font-medium">
+            <x-ui.icon name="alert-octagon" class="text-danger-600" />
+            Please correct the following:
+        </div>
+        <ul class="mt-2 list-disc pl-5 space-y-0.5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<span id="page" data-page="create" hidden></span>
+
+<form method="POST" action="{{ route('guide.store') }}" enctype="multipart/form-data" id="guide-form"
+      class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    @csrf
+
+    {{-- ============================================================ --}}
+    {{-- LEFT COLUMN (2/3) — form sections --}}
+    {{-- ============================================================ --}}
+    <div class="lg:col-span-2 space-y-4">
+
+        {{-- Section 1: Identity --}}
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="user-check" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">Identity</h2>
+                    <p class="text-xs text-slate-500">Who is this guide?</p>
                 </div>
-                <h2 class="page-title"><i class="ti ti-plus me-2"></i>Create Guide</h2>
             </div>
+            <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="name" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                        {{ trans('main.Name') }} <span class="text-danger-600">*</span>
+                    </label>
+                    <input id="name" name="name" type="text" value="{{ old('name') }}" required
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="company" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Company</label>
+                    <input id="company" name="company" type="text" value="{{ old('company') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div class="md:col-span-2">
+                    <label for="address_first" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.AddressFirst') }}</label>
+                    <input id="address_first" name="address_first" type="text" value="{{ old('address_first') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div class="md:col-span-2">
+                    <label for="address_second" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.AddressSecond') }}</label>
+                    <input id="address_second" name="address_second" type="text" value="{{ old('address_second') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @component('component.city_form', [
+                        'country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => 0,
+                        'city_label'    => 'city',    'city_translation'    => 'main.City',    'city_default'    => 0,
+                    ])@endcomponent
+                </div>
+                <div>
+                    <label for="code" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Code') }}</label>
+                    <input id="code" name="code" type="text" value="{{ old('code') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="website" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Website') }}</label>
+                    <input id="website" name="website" type="url" placeholder="https://example.com" value="{{ old('website') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+            </div>
+        </div>
+
+        {{-- Section 2: Contact --}}
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="phone" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">Contact</h2>
+                    <p class="text-xs text-slate-500">Reach the guide directly.</p>
+                </div>
+            </div>
+            <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="work_phone" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.WorkPhone') }}</label>
+                    <input id="work_phone" name="work_phone" type="tel" value="{{ old('work_phone') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="work_fax" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.WorkFax') }}</label>
+                    <input id="work_fax" name="work_fax" type="tel" value="{{ old('work_fax') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div class="md:col-span-2">
+                    <label for="work_email" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.WorkEmail') }}</label>
+                    <input id="work_email" name="work_email" type="email" value="{{ old('work_email') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="contact_name" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ContactName') }}</label>
+                    <input id="contact_name" name="contact_name" type="text" value="{{ old('contact_name') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <label for="contact_phone" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ContactPhone') }}</label>
+                    <input id="contact_phone" name="contact_phone" type="tel" value="{{ old('contact_phone') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div class="md:col-span-2">
+                    <label for="contact_email" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ContactEmail') }}</label>
+                    <input id="contact_email" name="contact_email" type="email" value="{{ old('contact_email') }}"
+                           class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+            </div>
+        </div>
+
+        {{-- Section 3: Criteria & rate --}}
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="star" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">Criteria &amp; classification</h2>
+                    <p class="text-xs text-slate-500">Tags + rate band used when filtering supplier search.</p>
+                </div>
+            </div>
+            <div class="px-5 py-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{{ trans('main.Criteria') }}</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        @foreach($criterias as $criteria)
+                            <label class="flex items-center gap-2 rounded border border-slate-300 bg-white px-3 py-2 cursor-pointer hover:bg-slate-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+                                <input type="checkbox" name="criterias" value="{{ $criteria->id }}"
+                                       class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600/30" />
+                                <span class="text-sm text-slate-700">{{ $criteria->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <label for="rate" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Rate') }}</label>
+                    <select id="rate" name="rate"
+                            class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        <option value="">— select —</option>
+                        @foreach($rates as $rate)
+                            <option value="{{ $rate->id }}" {{ old('rate') == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{-- Section 4: Notes --}}
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="notebook" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">Notes</h2>
+                    <p class="text-xs text-slate-500">Public comments + internal notes (latter not visible to clients).</p>
+                </div>
+            </div>
+            <div class="px-5 py-5 grid grid-cols-1 gap-4">
+                <div>
+                    <label for="comments" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Comments') }}</label>
+                    <textarea id="comments" name="comments" rows="3"
+                              class="block w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">{{ old('comments') }}</textarea>
+                </div>
+                <div>
+                    <label for="int_comments" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.IntComments') }}</label>
+                    <textarea id="int_comments" name="int_comments" rows="3"
+                              class="block w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">{{ old('int_comments') }}</textarea>
+                    <p class="mt-1 text-xs text-slate-500">Internal — not visible to clients.</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Section 5: Files --}}
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="paperclip" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">{{ trans('main.Files') }}</h2>
+                    <p class="text-xs text-slate-500">Attach contracts, anything related.</p>
+                </div>
+            </div>
+            <div class="px-5 py-5">
+                @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
+            </div>
+        </div>
+
+        {{-- Form footer --}}
+        <div class="sticky bottom-0 -mx-4 sm:mx-0 sm:static sm:rounded sm:border sm:border-slate-200 bg-white sm:bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 sm:border-t-0 sm:border flex items-center justify-end gap-2 shadow-[0_-4px_8px_-4px_rgba(15,23,42,0.05)] sm:shadow-none">
+            <x-ui.button as="a" href="{{ route('guide.index') }}" variant="secondary">{{ trans('main.Cancel') }}</x-ui.button>
+            <x-ui.button type="submit" variant="primary" icon="save">{{ trans('main.Save') }}</x-ui.button>
         </div>
     </div>
 
-    <form method="POST" action="{{ route('guide.store') }}" enctype="multipart/form-data">
-        @csrf
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header"><h3 class="card-title">Guide Information</h3></div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label required">Name</label>
-                                <input name="name" type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
-                                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Company</label>
-                                <input name="company" type="text" class="form-control" value="{{ old('company') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Address 1</label>
-                                <input name="address_first" type="text" class="form-control" value="{{ old('address_first') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Address 2</label>
-                                <input name="address_second" type="text" class="form-control" value="{{ old('address_second') }}">
-                            </div>
-                            <div class="col-12 mb-3">
-                                @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => 0, 'city_label' => 'city', 'city_translation' => 'main.City', 'city_default' => 0])@endcomponent
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Code</label>
-                                <input name="code" type="text" class="form-control" value="{{ old('code') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Phone</label>
-                                <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-phone"></i></span>
-                                <input name="work_phone" type="text" class="form-control" value="{{ old('work_phone') }}"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Fax</label>
-                                <input name="work_fax" type="text" class="form-control" value="{{ old('work_fax') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Email</label>
-                                <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-mail"></i></span>
-                                <input name="work_email" type="email" class="form-control" value="{{ old('work_email') }}"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Name</label>
-                                <input name="contact_name" type="text" class="form-control" value="{{ old('contact_name') }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Phone</label>
-                                <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-phone"></i></span>
-                                <input name="contact_phone" type="text" class="form-control" value="{{ old('contact_phone') }}"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Email</label>
-                                <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-mail"></i></span>
-                                <input name="contact_email" type="email" class="form-control" value="{{ old('contact_email') }}"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Website</label>
-                                <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-world"></i></span>
-                                <input name="website" type="url" class="form-control" value="{{ old('website') }}"></div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Comments</label>
-                                <input name="comments" type="text" class="form-control" value="{{ old('comments') }}">
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Internal Comments</label>
-                                <textarea name="int_comments" rows="3" class="form-control">{{ old('int_comments') }}</textarea>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Rate</label>
-                                <select name="rate" class="form-select">
-                                    @foreach($rates as $rate)
-                                        <option value="{{ $rate->id }}" {{ old('rate') == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Criterias</label>
-                                <div class="row">
-                                    @foreach($criterias as $criteria)
-                                        <div class="col-md-6 mb-2">
-                                            <label class="form-check">
-                                                <input type="checkbox" class="form-check-input" value="{{ $criteria->id }}" name="criterias">
-                                                <span class="form-check-label">{{ $criteria->name }}</span>
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Files</label>
-                                @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <button class="btn btn-primary" type="submit"><i class="ti ti-check me-1"></i>Save</button>
-                        <a href="{{ route('guide.index') }}" class="btn"><i class="ti ti-x me-1"></i>Cancel</a>
-                    </div>
-                </div>
+    {{-- ============================================================ --}}
+    {{-- RIGHT COLUMN — Map sidebar (sticky on desktop) --}}
+    {{-- ============================================================ --}}
+    <div>
+        <div class="lg:sticky lg:top-4 rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+                <x-ui.icon name="map" size="sm" class="text-slate-400" />
+                <h2 class="text-sm font-medium text-slate-700">Location</h2>
             </div>
-            <div class="col-lg-4">
-                <div class="card sticky-top" style="top: 1rem;">
-                    <div class="card-header"><h3 class="card-title"><i class="ti ti-map me-2"></i>Location</h3></div>
-                    <div class="card-body">
-                        <button class="btn btn-primary w-100 mb-2" type="button" id="btn_generate_map"><i class="ti ti-map-pin me-1"></i>Generate Location</button>
-                        <button class="btn btn-outline-primary w-100" type="button" id="btn_select_location"><i class="ti ti-click me-1"></i>Select Location</button>
-                        <div id="map" style="height: 400px; border-radius: 6px; margin-top: 1rem;"></div>
-                        <input type="hidden" name="place_id" id="place_id">
-                    </div>
+            <div class="px-5 py-5 space-y-3">
+                <div class="flex flex-col gap-2">
+                    <x-ui.button type="button" id="btn_generate_map" icon="map-pin" block>
+                        {{ trans('main.GenerateLocation') }}
+                    </x-ui.button>
+                    <x-ui.button type="button" variant="secondary" id="btn_select_location" icon="mouse-pointer-click" block>
+                        {{ trans('main.SelectLocation') }}
+                    </x-ui.button>
                 </div>
+                <span id="error_map" class="text-sm text-danger-700"></span>
+                <div class="block_map">
+                    <div id="map" class="rounded border border-slate-200" style="height: 400px;"></div>
+                </div>
+                <input type="hidden" name="place_id" id="place_id">
             </div>
         </div>
-    </form>
-</div>
-<span id="page" data-page="create" hidden></span>
+    </div>
+</form>
 @endsection
 
 @push('scripts')

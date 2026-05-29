@@ -870,7 +870,25 @@ Route::get('check', function(){
 	
 
 });
-	
+
+// ---------------------------------------------------------------------
+// Help module — Phase 3 scaffold. AUDIT.md → Help Critical.
+//
+// Both routes sit inside `web` + `perm` middleware:
+//   * `web`  — standard CSRF + session.
+//   * `perm` — PermissionsRequiredMiddleware derives the slug from the
+//             route name and checks via Spatie. Seeded in
+//             database/seeds/PermissionsHelpSeeder.php.
+//
+// throttle:5,1 on POST /help/contact prevents form-submission abuse.
+// ---------------------------------------------------------------------
+Route::middleware(['web', 'perm'])->group(function () {
+    Route::get('/help', '\App\Http\Controllers\HelpController@index')->name('help.index');
+    Route::post('/help/contact', '\App\Http\Controllers\HelpController@contact')
+        ->middleware('throttle:5,1')
+        ->name('help.contact');
+});
+
 Auth::routes();
 
 

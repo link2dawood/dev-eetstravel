@@ -353,6 +353,21 @@
                         <span class="nav-link-title">{{trans('Activities')}}</span>
                     </a>
                 </li>
+
+                {{-- Help — Phase 3 scaffold (AUDIT.md Help Critical).
+                     Visible to every authenticated user; gated by the
+                     help.index permission seeded in
+                     database/seeds/PermissionsHelpSeeder.php. --}}
+                @if(Auth::user()->can('help.index'))
+                <li class="nav-item {!! \App\Helper\DashboardHelper::isMenuActive('help.index', $route) !!}">
+                    <a class="nav-link" href="{{ route('help.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-help-circle icon"></i>
+                        </span>
+                        <span class="nav-link-title">{{ trans('Help') }}</span>
+                    </a>
+                </li>
+                @endif
             </ul>
         </div>
     </div>

@@ -1,474 +1,442 @@
+{{--
+    /tour/{id}/edit — Tour edit form.
+    Migrated chrome to Tailwind. JS hooks preserved:
+      - Form action url("tour/{$tour->id}/update") unchanged
+      - Field names: name, external_name, departure_date, retirement_date,
+        assigned_user[], responsible_user, status, pax, child_count,
+        ages[], prices[], pax_free, itinerary_tl, phone, files[]
+      - Hidden inputs #tab, reference_id, calendar_edit preserved
+      - #tour_form, #submitBtn, #tour_dates, #tour_date_id, #url
+      - #passenger_count not used here; #pax is the input
+      - #responsible_user, #status, #name, #external_name, #phone, etc.
+      - .datepicker (bootstrap-datepicker binding)
+      - .btn_for_select_room_type + #list_selected_room_types +
+        .list_room_types + .select_room_type
+      - #child_count + #child_details + addChildFields()
+      - #files + #file-name-display (existing change listener)
+      - Service-search modal #service-modal preserved
+      - Post-scripts: hide_elements.js, rooms.js, tour.js,
+        supplier-search.js, attachments.js
+--}}
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Edit Tour')
 
-@section('post_styles')
-<style>
-    /* Enhanced checkbox/selectgroup styling */
-    .form-selectgroup-item {
-        flex: 1;
-    }
-
-    .form-selectgroup-label {
-        border: 1px solid rgba(98, 105, 118, 0.16);
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background: #fff;
-        min-height: 42px;
-    }
-
-    .form-selectgroup-label:hover {
-        border-color: #206bc4;
-        background: rgba(32, 107, 196, 0.02);
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label {
-        border-color: #206bc4;
-        background: rgba(32, 107, 196, 0.06);
-        font-weight: 500;
-    }
-
-    .form-selectgroup-check {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #d1d5db;
-        border-radius: 3px;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check {
-        background: #206bc4;
-        border-color: #206bc4;
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check::after {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 4px;
-        height: 8px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-</style>
-@endsection
-
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Tour', 'sub_title' => 'Edit Tour',
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Tours', 'icon' => 'suitcase', 'route' => route('tour.index')],
-   ['title' => 'Edit', 'route' => null]]])
-    @php
-        $tab = '' ;
-        $uri_parts = explode('?', \Request::fullUrl() );
-        if(count($uri_parts)>1){
-           $tab_parts = explode('=', $uri_parts[1]);
-           if($tab_parts[0] == 'tab') $tab = $uri_parts[1];
-        }
-    @endphp
+<x-ui.page-header
+    :title="$tour->name ?: 'Edit tour'"
+    :description="$tour->external_name ?: null"
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Tours', 'href' => route('tour.index')],
+        ['label' => $tour->name ?: 'Tour'],
+        ['label' => 'Edit'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="{{ route('tour.show', $tour->id) }}" variant="ghost" icon="arrow-left">
+            {{ trans('main.Back') }}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-    {{-- Modal for service table --}}
-    <div class="modal modal-blur fade" role='dialog' id="service-modal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role='document'>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{!!trans('main.Addservice')!!}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss='modal' aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="{{route('supplier_show')}}">
-                        <div class="mb-3">
-                            <select id="service-select" class="form-select">
-                                <option selected>{!!trans('main.All')!!}</option>
-                                @foreach($options as $option)
-                                    <option>{{$option}}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </form>
-                    <div class="table-responsive">
-                        <table id="search-table" class="table table-striped table-bordered">
-                            <thead>
+@php
+    $tab = '';
+    $uri_parts = explode('?', \Request::fullUrl());
+    if(count($uri_parts) > 1){
+        $tab_parts = explode('=', $uri_parts[1]);
+        if($tab_parts[0] == 'tab') $tab = $uri_parts[1];
+    }
+@endphp
+
+{{-- Service-search modal — kept as Bootstrap modal since supplier-search.js
+     opens it via bootstrap.Modal API. --}}
+<div class="modal modal-blur fade" role="dialog" id="service-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ trans('main.Addservice') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('supplier_show') }}">
+                    <div class="mb-3">
+                        <select id="service-select" class="form-select">
+                            <option selected>{{ trans('main.All') }}</option>
+                            @foreach($options as $option)
+                                <option>{{ $option }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+                <div class="table-responsive">
+                    <table id="search-table" class="table table-striped table-bordered">
+                        <thead>
                             <tr>
-                                <th>{!!trans('main.Name')!!}</th>
-                                <th>{!!trans('main.Address')!!}</th>
-                                <th>{!!trans('main.Phone')!!}</th>
-                                <th>{!!trans('main.ContactName')!!}</th>
+                                <th>{{ trans('main.Name') }}</th>
+                                <th>{{ trans('main.Address') }}</th>
+                                <th>{{ trans('main.Phone') }}</th>
+                                <th>{{ trans('main.ContactName') }}</th>
                                 <th></th>
                             </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if(session('message_buses'))
+    <div class="mb-4 flex items-start gap-3 rounded border border-info-600/20 bg-info-50 px-4 py-3 text-sm text-info-700">
+        <x-ui.icon name="info" class="mt-0.5 text-info-600" />
+        <div class="flex-1">{{ session('message_buses') }}</div>
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="mb-4 rounded border border-danger-600/20 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+        <div class="flex items-center gap-2 font-medium">
+            <x-ui.icon name="alert-octagon" class="text-danger-600" />
+            Please correct the following:
+        </div>
+        <ul class="mt-2 list-disc pl-5 space-y-0.5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+{{-- Driver/bus block-error (filled by tour.js when relevant). --}}
+<div class="block-error-driver mb-4 hidden rounded border border-info-600/20 bg-info-50 px-4 py-3 text-sm text-info-700"></div>
+
+<form method="POST" action="{{ url("tour/{$tour->id}/update") }}" enctype="multipart/form-data" id="tour_form" class="space-y-4">
+    @csrf
+    <input type="hidden" id="tab" name="tab" value="{{ $tab }}" />
+    <input type="hidden" name="reference_id" value="{{ $tour->id }}" />
+    <input type="hidden" name="calendar_edit" value="{{ $calendar_edit }}" />
+
+    {{-- ============================================================ --}}
+    {{-- Section 1: Identity                                            --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="plane" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Identity</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="name" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Name') }}</label>
+                <input id="name" name="name" type="text" value="{{ old('name', $tour->name) }}"
+                       class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+            </div>
+            <div>
+                <label for="external_name" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ExternalName') }}</label>
+                <input id="external_name" name="external_name" type="text" value="{{ $tour->external_name }}"
+                       class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+            </div>
+            <div>
+                <label for="itinerary" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.tourleader') }}</label>
+                {!! Form::text('itinerary_tl', old('itinerary_tl', $tour->itinerary_tl), ['id' => 'itinerary', 'class' => 'form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+            </div>
+            <div>
+                <label for="phone" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Phone') }}</label>
+                <input id="phone" name="phone" type="text" value="{{ old('phone', $tour->phone) }}"
+                       class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- Section 2: Schedule                                            --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="calendar" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Schedule</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="departure_date" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.DepDate') }}</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <x-ui.icon name="calendar" size="sm" />
+                    </span>
+                    {!! Form::text('departure_date', old('departure_date', $tour->departure_date), ['id' => 'departure_date', 'placeholder' => 'Select date', 'class' => 'form-control datepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+                </div>
+            </div>
+            <div>
+                <label for="retirement_date" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.RetDate') }}</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <x-ui.icon name="calendar" size="sm" />
+                    </span>
+                    {!! Form::text('retirement_date', old('retirement_date', $tour->retirement_date), ['id' => 'retirement_date', 'placeholder' => 'Select date', 'class' => 'form-control datepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- Section 3: Staff (Status + Responsible + Assigned)             --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="users" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Status &amp; staff</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="status" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Status') }}</label>
+                    <select name="status" id="status"
+                            class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->id }}"
+                                {{ ($errors != null && count($errors) > 0) ? (old('status') == $status->id ? 'selected' : '') : ($tour->status == $status->id ? 'selected' : '') }}>
+                                {{ $status->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="responsible_user" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ResponsibleUser') }}</label>
+                    <select name="responsible_user" id="responsible_user"
+                            class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        <option value="0">{{ trans('main.Withoutresponsibleuser') }}</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" {{ $tour->getResponsibleUser() && $tour->getResponsibleUser()->id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{{ trans('main.AssignedUser') }}</label>
+                <div class="rounded border border-slate-200 bg-white max-h-[280px] overflow-y-auto p-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        @foreach($users as $user)
+                            <label class="flex items-center gap-2 rounded border border-slate-300 bg-white px-3 py-2 cursor-pointer hover:bg-slate-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+                                <input type="checkbox" name="assigned_user[]" value="{{ $user->id }}" {{ $user->selected ? 'checked' : '' }}
+                                       class="user_checkboxes h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600/30" />
+                                <span class="text-sm text-slate-700">{{ $user->name }}</span>
+                            </label>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="page-body">
-        <div class="container-xl">
-            <form method='POST' action='{{ url("tour/{$tour->id}/update") }}' enctype="multipart/form-data" id="tour_form">
-                @csrf
-                <input type="hidden" id="tab" name="tab" value="{{ $tab }}" >
-                <input type="hidden" name="reference_id" value="{{ $tour->id }}">
-                <input type="hidden" name="calendar_edit" value="{{ $calendar_edit }}">
-
-                {{-- Action Buttons --}}
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <div class="btn-list">
-                            <a href="javascript:history.back()" class='btn btn-secondary'>
-                                <i class="ti ti-arrow-left me-1"></i>
-                                {!!trans('main.Back')!!}
-                            </a>
-                            <button class='btn btn-primary' type='submit' id="submitBtn">
-                                <i class="ti ti-device-floppy me-1"></i>
-                                {!!trans('main.Save')!!}
-                            </button>
-                        </div>
-                    </div>
+    {{-- ============================================================ --}}
+    {{-- Section 4: Capacity + children                                 --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="user-check" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Capacity</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="pax" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Pax</label>
+                    <input id="pax" name="pax" type="number" value="{{ old('pax', $tour->pax) }}"
+                           class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
                 </div>
-
-                {{-- Messages --}}
-                @if(session('message_buses'))
-                    <div class="alert alert-info alert-dismissible" role="alert">
-                        <div class="d-flex">
-                            <div>
-                                <i class="ti ti-info-circle icon alert-icon"></i>
-                            </div>
-                            <div>
-                                {{session('message_buses')}}
-                            </div>
-                        </div>
-                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <div class="d-flex">
-                            <div>
-                                <i class="ti ti-alert-circle icon alert-icon"></i>
-                            </div>
-                            <div>
-                                <h4 class="alert-title">Validation Errors</h4>
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                    </div>
-                @endif
-
-                <div class="alert alert-info block-error-driver" style="display: none;"></div>
-
-                {{-- Main Form Card --}}
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Tour Information</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {{-- Left Column --}}
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" for="name">{!!trans('main.Name')!!}</label>
-                                    <input id="name" name="name" type="text" class="form-control"
-                                           value="{!!old('name', $tour->name)!!}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="external_name">{!!trans('main.ExternalName')!!}</label>
-                                    <input id="external_name" name="external_name" type="text"
-                                           class="form-control" value="{!!$tour->external_name!!}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="departure_date">{!!trans('main.DepDate')!!}</label>
-                                    <div class="input-icon">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar"></i>
-                                        </span>
-                                        {!! Form::text('departure_date', old('departure_date', $tour->departure_date), ['class' => 'form-control datepicker',
-                                         'id' => 'departure_date', 'placeholder' => 'Select date']) !!}
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="retirement_date">{!!trans('main.RetDate')!!}</label>
-                                    <div class="input-icon">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar"></i>
-                                        </span>
-                                        {!! Form::text('retirement_date', old('retirement_date', $tour->retirement_date), ['class' => 'form-control datepicker',
-                                         'id' => 'retirement_date', 'placeholder' => 'Select date']) !!}
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">{!! trans('main.AssignedUser') !!}</label>
-                                    <div class="card card-sm">
-                                        <div class="card-body" style="max-height:250px; overflow-y:auto;">
-                                            <div class="row g-2">
-                                                @foreach ($users as $user)
-                                                    <div class="col-md-6 col-lg-4">
-                                                        <label class="form-selectgroup-item flex-fill">
-                                                            <input type="checkbox" name="assigned_user[]" value="{{ $user->id }}"
-                                                                   class="form-selectgroup-input" {{$user->selected ? 'checked' : ''}}>
-                                                            <div class="form-selectgroup-label d-flex align-items-center p-2">
-                                                                <div class="me-2">
-                                                                    <span class="form-selectgroup-check"></span>
-                                                                </div>
-                                                                <div class="form-selectgroup-label-content">
-                                                                    <div class="font-weight-medium">{{ $user->name }}</div>
-                                                                </div>
-                                                            </div>
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="responsible_user">{!!trans('main.ResponsibleUser')!!}</label>
-                                    <select name="responsible_user" class="form-select" id="responsible_user">
-                                        <option value="0">{!!trans('main.Withoutresponsibleuser')!!}</option>
-                                        @foreach($users as $user)
-                                            <option value="{{$user->id}}" {{$tour->getResponsibleUser() ?
-                                             $tour->getResponsibleUser()->id == $user->id ? "selected='selected'" : '' :
-                                             ''}}>{{$user->name}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="status">{!!trans('main.Status')!!}</label>
-                                    <select name="status" id="status" class="form-select">
-                                        @foreach($statuses as $status)
-                                            <option value="{{ $status->id }}"
-                                                {{ ($errors != null && count($errors) > 0) ? (old('status') == $status->id ? 'selected' : '') : ($tour->status == $status->id ? 'selected' : '') }}>
-                                                {{ $status->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            {{-- Right Column --}}
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" for="pax">Pax</label>
-                                    <input id="pax" name="pax" type="number" class="form-control"
-                                           value="{!!old('pax', $tour->pax)!!}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="child_count">Number of Children</label>
-                                    @if(empty($tour->childrens))
-                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', 0) }}">
-                                    @else
-                                    <input type="number" id="child_count" name="child_count" class="form-control" value="{{ old('child_count', count($tour->childrens)) }}">
-                                    @endif
-                                </div>
-
-                                @php $i = 0; @endphp
-                                <div id="child_details" class="mb-3">
-                                @if(!empty($tour->childrens))
-                                @foreach($tour->childrens as $chd)
-                                @php $i++ @endphp
-                                    <div class="card card-sm mb-2 child-field">
-                                        <div class="card-body">
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="age_{{$i}}">Age of Child {{$i}}</label>
-                                                    <input type="number" id="age_{{$i}}" name="ages[]" class="form-control" value="{{ old('ages.'.$loop->index, $chd->age) }}">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="price_{{$i}}">Price</label>
-                                                    <input type="number" id="price_{{$i}}" name="prices[]" class="form-control" step="0.01" value="{{ old('prices.'.$loop->index, $chd->price) }}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                                @endif
-                                </div>
-
-                                <button type="button" onclick="addChildFields()" class="btn btn-primary mb-3">
-                                    <i class="ti ti-refresh me-1"></i>
-                                    Update Child Fields
-                                </button>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="pax_free">{!!trans('main.PaxFree')!!}</label>
-                                    <input id="pax_free" name="pax_free" type="number" class="form-control"
-                                           value="{!!old('pax_free', $tour->getAttributes()['pax_free'])!!}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">{!!trans('main.RoomTypes')!!}</label>
-
-                                    <div id="list_selected_room_types" class="mb-2">
-                                        @if(!empty($selected_room_types))
-                                            @foreach($selected_room_types as $item)
-                                                @include('component.item_hotel_room_type', ['room_type' => $item])
-                                            @endforeach
-                                        @endif
-                                    </div>
-
-                                    <button class="btn btn-success btn_for_select_room_type" type="button">
-                                        <i class="ti ti-bed me-1"></i>
-                                        {!!trans('main.SelectRooms')!!}
-                                    </button>
-
-                                    <ul class="list_room_types">
-                                        <ul class="list_room_types" style="display: block; z-index:999;">
-                                            @if(!empty($room_types))
-                                                @foreach( $room_types as $room_type)
-                                                    <li class="select_room_type">
-                                                        <label>{{ $room_type->name }}</label>
-                                                        <input type="text" data-info="{{ $room_type->id }}" hidden value="{{ $room_type }}">
-                                                    </li>
-                                                @endforeach
-                                            @endif
-                                        </ul>
-                                    </ul>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="itinerary">{!! trans('main.tourleader') !!}</label>
-                                    {!! Form::text('itinerary_tl', old('itinerary_tl', $tour->itinerary_tl), ['class' => 'form-control', 'id'=>'itinerary']) !!}
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="phone">{!!trans('main.Phone')!!}</label>
-                                    <input id="phone" name="phone" type="text" class="form-control"
-                                           value="{!!old('phone', $tour->phone)!!}">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="attach">{!!trans('main.Files')!!}</label>
-                                    @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="files">{!!trans('main.imageforlanding')!!}</label>
-
-                                    <div class="card card-sm mb-2">
-                                        <div class="card-body p-2">
-                                            @if($tour->attachments()->first() != null)
-                                                <img class="img-fluid rounded" src="{{ $tour->attachments()->first()->url }}" style="width:100%; max-height: 300px; object-fit: cover;">
-                                            @else
-                                                <div class="text-center py-5 text-muted">
-                                                    <i class="ti ti-photo ti-lg mb-2"></i>
-                                                    <p>No image uploaded</p>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="file-name-display" readonly placeholder="No file chosen">
-                                        <label class="btn btn-primary" for="files">
-                                            <i class="ti ti-upload me-1"></i>
-                                            Browse
-                                        </label>
-                                        <input name="files[]" id="files" class="fileToUpload d-none" type="file" accept="image/*" />
-                                    </div>
-                                </div>
-                                <span id="url" hidden data-url="{{ route('images.savefile') }}"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer text-end">
-                        <div class="btn-list">
-                            <a href="{{\App\Helper\AdminHelper::getBackButton(route('tour.index'))}}" class='btn btn-secondary'>
-                                <i class="ti ti-x me-1"></i>
-                                {!!trans('main.Cancel')!!}
-                            </a>
-                            <button class='btn btn-primary' type='submit'>
-                                <i class="ti ti-device-floppy me-1"></i>
-                                {!!trans('main.Save')!!}
-                            </button>
-                        </div>
-                    </div>
+                <div>
+                    <label for="pax_free" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.PaxFree') }}</label>
+                    <input id="pax_free" name="pax_free" type="number" value="{{ old('pax_free', $tour->getAttributes()['pax_free']) }}"
+                           class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
                 </div>
-            </form>
+                <div>
+                    <label for="child_count" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Number of children</label>
+                    @if(empty($tour->childrens))
+                        <input type="number" id="child_count" name="child_count" min="0" value="{{ old('child_count', 0) }}"
+                               class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                    @else
+                        <input type="number" id="child_count" name="child_count" min="0" value="{{ old('child_count', count($tour->childrens)) }}"
+                               class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                    @endif
+                </div>
+            </div>
+
+            @php $i = 0; @endphp
+            <div id="child_details" class="space-y-2">
+                @if(!empty($tour->childrens))
+                    @foreach($tour->childrens as $chd)
+                        @php $i++ @endphp
+                        <div class="child-field grid grid-cols-1 md:grid-cols-2 gap-3 rounded border border-slate-200 bg-slate-50 p-3">
+                            <div>
+                                <label for="age_{{ $i }}" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Age of child {{ $i }}</label>
+                                <input type="number" id="age_{{ $i }}" name="ages[]" min="0" value="{{ old('ages.'.$loop->index, $chd->age) }}"
+                                       class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                            </div>
+                            <div>
+                                <label for="price_{{ $i }}" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Price</label>
+                                <input type="number" id="price_{{ $i }}" name="prices[]" step="0.01" value="{{ old('prices.'.$loop->index, $chd->price) }}"
+                                       class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
+            <div>
+                <button type="button" onclick="addChildFields()"
+                        class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <x-ui.icon name="refresh-cw" size="sm" />
+                    Update child fields
+                </button>
+            </div>
         </div>
     </div>
 
-    <span id="tour_dates" data-departure_date='{{$tour->departure_date}}'
-          data-retirement_date='{{$tour->retirement_date}}'></span>
-    <span id="tour_date_id" data-tour-id="{{ $tour->id }}"></span>
+    {{-- ============================================================ --}}
+    {{-- Section 5: Rooms                                               --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="bed" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">{{ trans('main.RoomTypes') }}</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-3">
+            <div id="list_selected_room_types" class="space-y-2">
+                @if(!empty($selected_room_types))
+                    @foreach($selected_room_types as $item)
+                        @include('component.item_hotel_room_type', ['room_type' => $item])
+                    @endforeach
+                @endif
+            </div>
+
+            <button type="button"
+                    class="btn_for_select_room_type inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <x-ui.icon name="plus" size="sm" />
+                {{ trans('main.SelectRooms') }}
+            </button>
+
+            <ul class="list_room_types hidden">
+                <ul class="list_room_types" style="display: block; z-index:999;">
+                    @if(!empty($room_types))
+                        @foreach($room_types as $room_type)
+                            <li class="select_room_type">
+                                <label>{{ $room_type->name }}</label>
+                                <input type="text" data-info="{{ $room_type->id }}" hidden value="{{ $room_type }}">
+                            </li>
+                        @endforeach
+                    @endif
+                </ul>
+            </ul>
+        </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- Section 6: Files                                               --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="paperclip" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">{{ trans('main.Files') }}</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-5">
+            @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
+
+            <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{{ trans('main.imageforlanding') }}</label>
+
+                <div class="rounded border border-slate-200 bg-slate-50 mb-3">
+                    @if($tour->attachments()->first() != null)
+                        <img src="{{ $tour->attachments()->first()->url }}" class="block w-full rounded" style="max-height: 300px; object-fit: cover;" />
+                    @else
+                        <div class="py-10 text-center text-slate-400">
+                            <x-ui.icon name="image" size="lg" class="mx-auto mb-2" />
+                            <p class="text-sm">No image uploaded</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex items-stretch gap-0">
+                    <input type="text" id="file-name-display" readonly placeholder="No file chosen"
+                           class="form-control flex-1 h-9 rounded-l border border-r-0 border-slate-300 bg-white px-3 text-sm text-slate-500" />
+                    <label for="files" class="inline-flex h-9 items-center gap-2 rounded-r border border-slate-300 bg-primary-600 px-3 text-sm font-medium text-white hover:bg-primary-700 cursor-pointer">
+                        <x-ui.icon name="upload" size="sm" />
+                        Browse
+                    </label>
+                    <input type="file" name="files[]" id="files" class="fileToUpload" accept="image/*" style="display:none;" />
+                </div>
+            </div>
+
+            <span id="url" hidden data-url="{{ route('images.savefile') }}"></span>
+        </div>
+    </div>
+
+    {{-- Form footer --}}
+    <div class="sticky bottom-0 -mx-4 sm:mx-0 sm:static sm:rounded sm:border sm:border-slate-200 bg-white sm:bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 sm:border-t-0 sm:border flex items-center justify-end gap-2 shadow-[0_-4px_8px_-4px_rgba(15,23,42,0.05)] sm:shadow-none">
+        <x-ui.button as="a" href="{{ \App\Helper\AdminHelper::getBackButton(route('tour.index')) }}" variant="secondary">{{ trans('main.Cancel') }}</x-ui.button>
+        <x-ui.button type="submit" id="submitBtn" variant="primary" icon="save">{{ trans('main.Save') }}</x-ui.button>
+    </div>
+</form>
+
+<span id="tour_dates" data-departure_date="{{ $tour->departure_date }}" data-retirement_date="{{ $tour->retirement_date }}"></span>
+<span id="tour_date_id" data-tour-id="{{ $tour->id }}"></span>
 @endsection
 
 @push('scripts')
-<script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
-<script type="text/javascript" src='{{asset('js/rooms.js')}}'></script>
-<script type="text/javascript" src='{{asset('js/tour.js')}}'></script>
-<script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
-    <script type="text/javascript" src='{{asset('js/attachments.js')}}'></script>
+<script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/tour.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/supplier-search.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/attachments.js') }}'></script>
 <script>
-function addChildFields() {
-    var count = document.getElementById('child_count').value;
-    var container = document.getElementById('child_details');
-
-    // Clear previous fields
-    container.innerHTML = '';
-
-    for (var i = 1; i <= count; i++) {
-        var div = document.createElement('div');
-        div.classList.add('card', 'card-sm', 'mb-2', 'child-field');
-        div.innerHTML = `
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-md-6">
-                        <label class="form-label" for="age_${i}">Age of Child ${i}</label>
-                        <input type="number" id="age_${i}" name="ages[]" class="form-control" value="">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="price_${i}">Price</label>
-                        <input type="number" id="price_${i}" name="prices[]" class="form-control" step="0.01" value="">
-                    </div>
+    function addChildFields() {
+        var count = document.getElementById('child_count').value;
+        var container = document.getElementById('child_details');
+        container.innerHTML = '';
+        for (var i = 1; i <= count; i++) {
+            var div = document.createElement('div');
+            div.className = 'child-field grid grid-cols-1 md:grid-cols-2 gap-3 rounded border border-slate-200 bg-slate-50 p-3';
+            div.innerHTML = `
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1" for="age_${i}">Age of child ${i}</label>
+                    <input type="number" id="age_${i}" name="ages[]" min="0" class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
                 </div>
-            </div>
-        `;
-        container.appendChild(div);
-    }
-}
-
-// Display selected file name
-document.addEventListener('DOMContentLoaded', function() {
-    var fileInput = document.getElementById('files');
-    if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
-            var fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-            document.getElementById('file-name-display').value = fileName;
-        });
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1" for="price_${i}">Price</label>
+                    <input type="number" id="price_${i}" name="prices[]" step="0.01" class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                </div>
+            `;
+            container.appendChild(div);
+        }
     }
 
-    // Prevent multiple form submissions
-    var form = document.getElementById('tour_form');
-    var submitBtn = document.getElementById('submitBtn');
+    document.addEventListener('DOMContentLoaded', function () {
+        var fileInput = document.getElementById('files');
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                var fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+                document.getElementById('file-name-display').value = fileName;
+            });
+        }
 
-    if (form && submitBtn) {
-        form.addEventListener('submit', function(e) {
-            // Disable submit button to prevent double submission
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
-        });
-    }
-});
+        var form = document.getElementById('tour_form');
+        var submitBtn = document.getElementById('submitBtn');
+        if (form && submitBtn) {
+            form.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="inline-block h-4 w-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Saving...';
+            });
+        }
+    });
 </script>
 @endpush

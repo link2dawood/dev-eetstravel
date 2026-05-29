@@ -480,6 +480,9 @@ html {
 .inline-flex {
         display: inline-flex;
 }
+.\!table {
+        display: table !important;
+}
 .table {
         display: table;
 }
@@ -625,6 +628,9 @@ html {
 }
 .max-h-72 {
         max-height: 18rem;
+}
+.max-h-80 {
+        max-height: 20rem;
 }
 .min-h-screen {
         min-height: 100vh;
@@ -881,8 +887,15 @@ html {
         -moz-column-gap: 0.75rem;
              column-gap: 0.75rem;
 }
+.gap-x-6 {
+        -moz-column-gap: 1.5rem;
+             column-gap: 1.5rem;
+}
 .gap-y-2 {
         row-gap: 0.5rem;
+}
+.gap-y-4 {
+        row-gap: 1rem;
 }
 .space-y-0\.5 > :not([hidden]) ~ :not([hidden]) {
         --tw-space-y-reverse: 0;
@@ -1476,6 +1489,9 @@ html {
         --tw-text-opacity: 1;
         color: rgb(15 118 110 / var(--tw-text-opacity, 1));
 }
+.text-primary-700\/70 {
+        color: rgb(15 118 110 / 0.7);
+}
 .text-slate-300 {
         --tw-text-opacity: 1;
         color: rgb(203 213 225 / var(--tw-text-opacity, 1));
@@ -1796,6 +1812,10 @@ html {
         --tw-text-opacity: 1;
         color: rgb(15 118 110 / var(--tw-text-opacity, 1));
 }
+.hover\:text-primary-900:hover {
+        --tw-text-opacity: 1;
+        color: rgb(19 78 74 / var(--tw-text-opacity, 1));
+}
 .hover\:text-slate-600:hover {
         --tw-text-opacity: 1;
         color: rgb(71 85 105 / var(--tw-text-opacity, 1));
@@ -1929,6 +1949,14 @@ html {
 .group:hover .group-hover\:text-slate-500 {
         --tw-text-opacity: 1;
         color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+}
+.group.active .group-\[\.active\]\:bg-primary-50 {
+        --tw-bg-opacity: 1;
+        background-color: rgb(240 253 250 / var(--tw-bg-opacity, 1));
+}
+.group.active .group-\[\.active\]\:text-primary-700 {
+        --tw-text-opacity: 1;
+        color: rgb(15 118 110 / var(--tw-text-opacity, 1));
 }
 .peer:checked ~ .peer-checked\:translate-x-5 {
         --tw-translate-x: 1.25rem;

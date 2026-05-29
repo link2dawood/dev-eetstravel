@@ -226,9 +226,13 @@
     var contactItemCount = 0;
     let clientId = $('#client_id_span').attr('data-info');
 
+    // cache:false on both calls — jQuery would otherwise let the browser
+    // cache the GET response HTML and a deploy of the partial template
+    // wouldn't take effect until the user manually clears their cache.
     $.ajax({
         url: '/api/getClientContacts',
         method: 'GET',
+        cache: false,
         data: { itemCount: contactItemCount, clientId: clientId }
     }).done((res) => {
         contactItemCount = res.count;
@@ -239,6 +243,7 @@
         $.ajax({
             url: '/api/getItemContactView',
             method: 'GET',
+            cache: false,
             data: { itemCount: contactItemCount + 1 }
         }).done((res) => {
             contactItemCount++;

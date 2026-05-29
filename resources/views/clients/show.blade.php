@@ -154,9 +154,16 @@
                             <h2 class="text-sm font-medium text-slate-700">{!! trans('main.Files') !!}</h2>
                         </div>
                         @php
-                            $images = $files['image'] ?? [];
-                            $attachments = $files['attach'] ?? [];
-                            $totalCount = count($images) + count($attachments);
+                            // Defensive filter: some legacy / partially-uploaded rows have
+                            // $row->attach = null (the polymorphic file association never
+                            // resolved). Calling ->url() on that would crash the whole page.
+                            $images = collect($files['image'] ?? [])
+                                ->filter(fn($i) => !is_null(optional($i)->attach))
+                                ->values();
+                            $attachments = collect($files['attach'] ?? [])
+                                ->filter(fn($a) => !is_null(optional($a)->attach))
+                                ->values();
+                            $totalCount = $images->count() + $attachments->count();
                         @endphp
 
                         @if($totalCount === 0)

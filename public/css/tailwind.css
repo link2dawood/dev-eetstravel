@@ -457,6 +457,9 @@ html {
 .ml-1 {
         margin-left: 0.25rem;
 }
+.ml-2 {
+        margin-left: 0.5rem;
+}
 .ml-4 {
         margin-left: 1rem;
 }
@@ -973,6 +976,13 @@ html {
         -moz-column-gap: 1.5rem;
              column-gap: 1.5rem;
 }
+.gap-x-8 {
+        -moz-column-gap: 2rem;
+             column-gap: 2rem;
+}
+.gap-y-1\.5 {
+        row-gap: 0.375rem;
+}
 .gap-y-2 {
         row-gap: 0.5rem;
 }
@@ -1105,6 +1115,9 @@ html {
 .border-b-2 {
         border-bottom-width: 2px;
 }
+.border-l-0 {
+        border-left-width: 0px;
+}
 .border-r-0 {
         border-right-width: 0px;
 }
@@ -1179,6 +1192,9 @@ html {
 .bg-danger-50 {
         --tw-bg-opacity: 1;
         background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+.bg-danger-50\/40 {
+        background-color: rgb(254 242 242 / 0.4);
 }
 .bg-danger-600 {
         --tw-bg-opacity: 1;
@@ -1255,6 +1271,9 @@ html {
 .bg-success-50 {
         --tw-bg-opacity: 1;
         background-color: rgb(236 253 245 / var(--tw-bg-opacity, 1));
+}
+.bg-success-50\/40 {
+        background-color: rgb(236 253 245 / 0.4);
 }
 .bg-success-600 {
         --tw-bg-opacity: 1;
@@ -1979,6 +1998,10 @@ html {
 .hover\:text-slate-900:hover {
         --tw-text-opacity: 1;
         color: rgb(15 23 42 / var(--tw-text-opacity, 1));
+}
+.hover\:text-success-700:hover {
+        --tw-text-opacity: 1;
+        color: rgb(4 120 87 / var(--tw-text-opacity, 1));
 }
 .hover\:underline:hover {
         text-decoration-line: underline;

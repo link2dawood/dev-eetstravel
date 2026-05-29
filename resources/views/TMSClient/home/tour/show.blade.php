@@ -1,22 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('TMSClient.layouts.app')
+@section('title', $tour->name . ' — TMS Client')
 
-@include('TMSClient.layout.head')
-<style>
-.checked {
-  color: orange;
-}
-</style>
-<body>
-  <div class="main">
-   @include('TMSClient.layout.nav')
-    <div class="main-content" style="margin-top: 64px;">
-      <section class="tours-single">
-        <div class="container">
-          <div class="d-flex justify-content-between align-items-start">
-            <h1 class="title">{{$tour->name}}</h1>
-            {{--<a href="" class="btn btn-primary">Edit</a>--}}
-          </div>
+@push('styles')
+<style>.checked { color: orange; }</style>
+@endpush
+
+@section('content')
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <div>
+            <a href="{{ url('TMS-Client/home') }}" class="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900 mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                All tours
+            </a>
+            <h1 class="text-2xl font-semibold text-slate-900">{{ $tour->name }}</h1>
+        </div>
+    </div>
           <div class="tour-packages"></div>
 		<div class="row">
             <div class="col-lg-8">
@@ -186,8 +185,6 @@
           @endforeach
         </div>
       </section>
-    </div>
-  </div>
 
   <!-- Modal -->
   <input type="text" id="default_reference_id" hidden name="reference_id"
@@ -749,6 +746,4 @@ $('#selectDateForTransferPackage').modal({
 				   }});
     		});
 </script>
-</body>
-
-</html>
+@endsection

@@ -1,50 +1,40 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
-@section('content')
-    @include('layouts.title',
-       ['title' => 'Tax', 'sub_title' => 'Tax Show',
-       'breadcrumbs' => [
-       ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-       ['title' => 'Taxes', 'icon' => null, 'route' => route('taxes.index')],
-       ['title' => 'Show', 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="margin_button">
-                            <a href="javascript:history.back()">
-                                <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                            </a>
-                            <a href="{!! route('taxes.edit', $tax->id) !!}">
-                                <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <table class = 'table table-bordered'>
-                    <tbody>
-                    <tr>
-                        <td class="show_width_td">
-                            <b><i>{!!trans('Tax Name')!!} : </i></b>
-                        </td>
-                        <td>{!!$tax->name!!}</td>
-                    </tr>
-                    <tr>
-                        <td class="show_width_td">
-                            <b><i>{!!trans('Value')!!} : </i></b>
-                        </td>
-                        <td>{!!$tax->value!!}</td>
-                    </tr>
-                   
-                    </tbody>
-                </table>
-            </div>
-        </div>
-     
-    </section>
-@endsection
+@section('title','Tax')
 
-@section('post_scripts')
-    <script src="{{ asset('js/comment.js') }}"></script>
+@section('content')
+<x-ui.page-header
+    :title="$tax->name"
+    description="Tax details"
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Taxes', 'href' => route('taxes.index')],
+        ['label' => $tax->name],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="{{ route('taxes.index') }}" variant="ghost" icon="arrow-left">{{ trans('main.Back') }}</x-ui.button>
+        @if(Auth::user()->can('taxes.edit'))
+            <x-ui.button as="a" href="{!! route('taxes.edit', $tax->id) !!}" variant="secondary" icon="edit">{{ trans('main.Edit') }}</x-ui.button>
+        @endif
+    </x-slot>
+</x-ui.page-header>
+
+<div class="rounded border border-slate-200 bg-white">
+    <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="percentage" size="sm" /></div>
+        <div class="flex-1 min-w-0">
+            <h2 class="text-sm font-medium text-slate-700">Tax details</h2>
+        </div>
+    </div>
+    <dl class="px-5 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('Tax Name') !!}</dt>
+            <dd class="mt-0.5 text-slate-800 font-medium">{!! $tax->name !!}</dd>
+        </div>
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('Value') !!}</dt>
+            <dd class="mt-0.5 text-slate-800">{!! $tax->value !!}</dd>
+        </div>
+    </dl>
+</div>
 @endsection

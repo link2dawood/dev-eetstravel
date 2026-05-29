@@ -3,36 +3,89 @@
 @section('with-nav-false')@endsection
 
 @section('content')
-<div class="min-h-screen grid lg:grid-cols-2">
-    {{-- Left brand panel --}}
-    <aside class="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 text-white px-12 py-16 flex-col justify-between">
-        <div aria-hidden="true" class="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
-        <div aria-hidden="true" class="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-primary-400/30 blur-3xl"></div>
+<style>
+    /* Auth-page-only scoped layout. Preflight is off project-wide so we
+       can't depend on Tailwind base resets — explicit CSS guarantees the
+       50/50 split renders correctly. */
+    .tmsc-auth-shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        background: #f8fafc;
+    }
+    .tmsc-auth-aside {
+        width: 50%;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 4rem 3rem;
+        background-image: linear-gradient(to bottom right, #0f766e 0%, #0d9488 50%, #115e59 100%);
+    }
+    .tmsc-auth-main {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+    }
+    .tmsc-auth-card { width: 100%; max-width: 28rem; }
+    .tmsc-auth-mobile-logo { text-align: center; margin-bottom: 2rem; }
 
-        <div class="relative inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
-            <span class="flex h-9 w-9 items-center justify-center rounded-md bg-white/15 backdrop-blur">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+    @media (max-width: 1023.98px) {
+        .tmsc-auth-aside { display: none; }
+        .tmsc-auth-main  { width: 100%; padding: 3rem 1rem; }
+    }
+    @media (min-width: 1024px) {
+        .tmsc-auth-mobile-logo { display: none; }
+    }
+
+    .tmsc-auth-aside h1 { margin: 0; font-size: 2.25rem; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; }
+    .tmsc-auth-aside p.tmsc-auth-sub { margin: 1rem 0 0; color: rgba(255,255,255,0.85); max-width: 28rem; }
+    .tmsc-auth-orb { position: absolute; border-radius: 9999px; filter: blur(48px); pointer-events: none; }
+    .tmsc-auth-orb-tr { top: -6rem; right: -6rem; height: 18rem; width: 18rem; background: rgba(255,255,255,0.10); }
+    .tmsc-auth-orb-bl { bottom: -8rem; left: -4rem; height: 20rem; width: 20rem; background: rgba(45,212,191,0.30); }
+    .tmsc-auth-brand-row { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.02em; }
+    .tmsc-auth-brand-chip { display: inline-flex; height: 2.25rem; width: 2.25rem; align-items: center; justify-content: center; border-radius: 0.375rem; background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); }
+    .tmsc-auth-foot { position: relative; margin: 0; color: rgba(255,255,255,0.65); font-size: 0.75rem; }
+    .tmsc-auth-mobile-brand { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; color: #0f766e; }
+    .tmsc-auth-mobile-chip  { display: inline-flex; height: 2.25rem; width: 2.25rem; align-items: center; justify-content: center; border-radius: 0.375rem; background: #f0fdfa; }
+</style>
+
+<div class="tmsc-auth-shell">
+    {{-- Left brand panel --}}
+    <aside class="tmsc-auth-aside">
+        <div class="tmsc-auth-orb tmsc-auth-orb-tr" aria-hidden="true"></div>
+        <div class="tmsc-auth-orb tmsc-auth-orb-bl" aria-hidden="true"></div>
+
+        <div class="tmsc-auth-brand-row">
+            <span class="tmsc-auth-brand-chip">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                     <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
                 </svg>
             </span>
             TMS Client
         </div>
 
-        <div class="relative">
-            <h1 class="text-4xl font-semibold tracking-tight leading-tight">Welcome to your client portal.</h1>
-            <p class="mt-4 text-base text-white/80 max-w-md">Submit quotation requests, review your tours, and stay in sync with your travel partner.</p>
+        <div style="position:relative;">
+            <h1>Welcome to your client portal.</h1>
+            <p class="tmsc-auth-sub">Submit quotation requests, review your tours, and stay in sync with your travel partner.</p>
         </div>
 
-        <p class="relative text-xs text-white/60">© {{ date('Y') }} eetstravel.com</p>
+        <p class="tmsc-auth-foot">© {{ date('Y') }} eetstravel.com</p>
     </aside>
 
     {{-- Right form pane --}}
-    <main class="flex items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
-        <div class="w-full max-w-md">
-            <div class="lg:hidden mb-8 text-center">
-                <div class="inline-flex items-center gap-2 text-lg font-semibold text-primary-700">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-md bg-primary-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+    <main class="tmsc-auth-main">
+        <div class="tmsc-auth-card">
+            <div class="tmsc-auth-mobile-logo">
+                <div class="tmsc-auth-mobile-brand">
+                    <span class="tmsc-auth-mobile-chip">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                             <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
                         </svg>
                     </span>

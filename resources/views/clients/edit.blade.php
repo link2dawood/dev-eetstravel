@@ -200,7 +200,96 @@
                 <p class="text-xs text-slate-500">Attach contracts, supplier sheets, anything related.</p>
             </div>
         </div>
-        <div class="px-5 py-5">
+        <div class="px-5 py-5 space-y-5">
+
+            @php
+                // App\File stores the relative path in attach_file_name
+                // (e.g. "uploads/abc.png"). Filter rows that have no
+                // stored path; derive the public URL via the
+                // public/storage -> storage/app/public symlink.
+                $existingImages = collect($files['image'] ?? [])
+                    ->filter(fn($i) => !empty($i->attach_file_name))
+                    ->values();
+                $existingAttach = collect($files['attach'] ?? [])
+                    ->filter(fn($a) => !empty($a->attach_file_name))
+                    ->values();
+                $hasExisting = $existingImages->count() + $existingAttach->count() > 0;
+            @endphp
+
+            @if($hasExisting)
+                {{-- Current files block. Inline delete via the same
+                     .del-attach + data-attach-url handler the show page uses. --}}
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500">Current files</h3>
+                        <span class="text-xs text-slate-400">{{ $existingImages->count() + $existingAttach->count() }} total</span>
+                    </div>
+
+                    @if($existingImages->count())
+                        <div class="image grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+                            @foreach($existingImages as $image)
+                                @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
+                                <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
+                                    <a href="{{ $imgUrl }}" class="block w-full h-full">
+                                        <img src="{{ $imgUrl }}" alt="" loading="lazy" class="w-full h-full object-cover" />
+                                    </a>
+                                    <button type="button"
+                                            class="del-attach absolute top-1.5 right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-danger-600 shadow-subtle opacity-0 group-hover:opacity-100 transition-opacity"
+                                            data-attach-id="{{ $image->id }}"
+                                            data-attach-url="{{ route('file_delete', ['id' => $image->id]) }}"
+                                            aria-label="Delete photo">
+                                        <x-ui.icon name="trash-2" size="xs" />
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if($existingAttach->count())
+                        <ul class="divide-y divide-slate-100 list-none pl-0 m-0 rounded border border-slate-200">
+                            @foreach($existingAttach as $attach)
+                                @php
+                                    $fileUrl     = asset('storage/' . $attach->attach_file_name);
+                                    $displayName = basename($attach->attach_file_name);
+                                @endphp
+                                <li class="del-container px-3 py-2 flex items-center gap-3 hover:bg-slate-50">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-500 shrink-0">
+                                        <x-ui.icon name="paperclip" size="sm" />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{{ $fileUrl }}" target="_blank" class="block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
+                                            {{ $displayName }}
+                                        </a>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            {{ $attach->created_at }}
+                                            @if(!empty($attach->attach_file_size))
+                                                · {{ round($attach->attach_file_size / 1024, 1) }} KB
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <button type="button"
+                                            class="del-attach inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-danger-50 hover:text-danger-700 shrink-0"
+                                            data-attach-url="{{ route('file_delete', ['id' => $attach->id]) }}"
+                                            aria-label="Delete file">
+                                        <x-ui.icon name="trash-2" size="sm" />
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+
+                {{-- Separator between current and upload --}}
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div class="w-full border-t border-slate-200"></div>
+                    </div>
+                    <div class="relative flex justify-center">
+                        <span class="bg-white px-2 text-xs text-slate-500">Add more</span>
+                    </div>
+                </div>
+            @endif
+
             @component('component.file_upload_field')@endcomponent
         </div>
     </div>
@@ -253,6 +342,30 @@
 
     $(document).on('click', '#delete_contact_item', function () {
         $(this).closest('.item-contact').remove();
+    });
+
+    // Existing-files block: lightbox preview + inline ajax delete (mirrors
+    // the show page handler so behaviour is consistent).
+    if ($.fn.magnificPopup) {
+        $('.image').magnificPopup({
+            delegate: 'a',
+            type: 'image',
+            gallery: { enabled: true }
+        });
+    }
+    $(document).on('click', '.del-attach', function (e) {
+        e.preventDefault();
+        var btn = this;
+        var url = $(btn).attr('data-attach-url');
+        if (!url) return;
+        if (!confirm('Are you sure you want to delete this file?')) return;
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: { "_token": "{{ csrf_token() }}" },
+            success: function () { $(btn).closest('.del-container').hide(); },
+            error:   function (res) { console.log(res); }
+        });
     });
 </script>
 @endpush

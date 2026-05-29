@@ -27,8 +27,10 @@
     <link href="{{asset('css/modern-tables.css')}}" rel="stylesheet" type="text/css"/>
 
     {{-- Tailwind utilities + new widget library (Phase 2 of Bootstrap → Tailwind migration).
-         Loaded AFTER all Bootstrap/Tabler CSS so Tailwind utilities win on conflict. --}}
-    <link href="{{ asset('css/tailwind.css') }}" rel="stylesheet" type="text/css"/>
+         Loaded AFTER all Bootstrap/Tabler CSS so Tailwind utilities win on conflict.
+         ?v=<filemtime> cache-busts the CSS whenever the file is recompiled — so
+         users don't see a stale Preflight-enabled build after every deploy. --}}
+    <link href="{{ asset('css/tailwind.css') }}?v={{ file_exists(public_path('css/tailwind.css')) ? filemtime(public_path('css/tailwind.css')) : time() }}" rel="stylesheet" type="text/css"/>
 
     <style>
         @import url('https://rsms.me/inter/inter.css');

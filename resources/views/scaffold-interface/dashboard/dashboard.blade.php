@@ -1,377 +1,383 @@
-@extends('scaffold-interface.layouts.tabler-app')
-@section('title','Dashboard')
-@section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
-    @include('layouts.title',
-    ['title' => 'Dashboard', 'sub_title' => 'Control Panel',
-    'breadcrumbs' => [
-    ['title' => 'Home', 'icon' => 'dashboard', 'route' => null]]])
-    <section>
-            {{--@include('scaffold-interface.dashboard.components.new_emails')--}}
-        <div class="container-fluid">
-            
-            <div class="row">
-                <div class="block-stretch">
-                @include('scaffold-interface.dashboard.components.tasks_calendar')
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="block-stretch">
-                @include('scaffold-interface.dashboard.components.tours_table')
-                </div>
-            </div>
-        
-            <div class="row">
-                <div class="block-stretch">
-                @include('scaffold-interface.dashboard.components.inbox_emails')
-                @include('scaffold-interface.dashboard.components.announcements_list')
-                
-                {{-- ================================== --}}
-                {{-- == THIS IS THE CORRECTED LINE == --}}
-                {{-- ================================== --}}
-                @include('scaffold-interface.dashboard.components.tasks_list', [
-                    'todoTasks' => $todoTasks,
-                    'completedTasks' => $completedTasks,
-                    'abortedTasks' => $abortedTasks,
-                    'statuses' => $statuses
-                ])
-                {{-- ================================== --}}
-                {{-- == END OF FIX == --}}
-                {{-- ================================== --}}
-
-                </div>
-            </div>
-        
-        
 {{--
-        <div class="row">
-            @include('scaffold-interface.dashboard.components.chat_groups_list')
+    Staff dashboard — clean SaaS-style layout, Phase 3 redesign.
 
-            @if(Auth::user()->can('dashboard.main_chat'))
-                @include('scaffold-interface.dashboard.components.direct_chat')
-            @else
-                <div class="col-md-6 dashboard-widget-chat">
-                    <div class="box box-warning direct-chat direct-chat-warning">
-                        <div class="box-header">
-                            <h3>{{ trans('main.MainChat') }}</h3>
-                        </div>
-                        <div class="box-body" style="padding: 0 10px 10px 10px">
-                            {{ trans('main.Youdonthavepermissions') }}
-                        </div>
-                    </div>
-                </div>
+    Original work. Layout patterns (KPI tile row, two-column main grid,
+    activity list) are common to office dashboards and are not copied
+    from any specific third party.
+
+    Data passed in by AppController@dashboard:
+      $announcements    Collection<App\Announcement>  top 5 recent
+      $todoTasks        Collection<App\Task>          assigned to me, not done
+      $completedTasks   Collection<App\Task>          assigned to me, done
+      $abortedTasks     Collection<App\Task>          assigned to me, aborted
+      $statuses         Collection<App\Status>        all task statuses
+      $imapConnected    bool
+      $main_chat, $chatUsers, $room_types, $tourUsers  (other widgets)
+--}}
+@extends('scaffold-interface.layouts.tabler-app')
+
+@section('title', 'Dashboard')
+
+@section('post_styles')
+    <link href="{{ asset('css/calendar-enhancements.css') }}?v={{ filemtime(public_path('css/calendar-enhancements.css')) }}" rel="stylesheet">
+@endsection
+
+@section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @php
+        $user           = \Illuminate\Support\Facades\Auth::user();
+        $todayDate      = \Carbon\Carbon::today();
+        $weekEnd        = \Carbon\Carbon::now()->endOfWeek();
+        $monthStart     = \Carbon\Carbon::now()->startOfMonth();
+
+        // KPI counts. try/catch so a missing column or N+1 hiccup can't
+        // crash the dashboard during the in-flight backend audit work.
+        try { $myOpenTasks = $todoTasks->count(); } catch (\Throwable $e) { $myOpenTasks = 0; }
+
+        try {
+            $activeToursCount = \App\Tour::where(function ($q) use ($todayDate) {
+                $q->whereNull('retirement_date')
+                  ->orWhere('retirement_date', '>=', $todayDate->toDateString());
+            })->count();
+        } catch (\Throwable $e) { $activeToursCount = null; }
+
+        try {
+            $completedThisMonth = $completedTasks->filter(function ($t) use ($monthStart) {
+                return $t->updated_at && $t->updated_at >= $monthStart;
+            })->count();
+        } catch (\Throwable $e) { $completedThisMonth = 0; }
+
+        try { $announcementCount = $announcements->count(); } catch (\Throwable $e) { $announcementCount = 0; }
+
+        // Today's tasks (subset of $todoTasks). Ordered by deadline asc.
+        try {
+            $tasksToday = $todoTasks->filter(function ($t) use ($todayDate) {
+                return $t->dead_line && \Carbon\Carbon::parse($t->dead_line)->isSameDay($todayDate);
+            })->take(6);
+        } catch (\Throwable $e) { $tasksToday = collect(); }
+
+        // This-week tasks (excluding today)
+        try {
+            $tasksThisWeek = $todoTasks->filter(function ($t) use ($todayDate, $weekEnd) {
+                if (!$t->dead_line) return false;
+                $d = \Carbon\Carbon::parse($t->dead_line);
+                return $d->gt($todayDate->copy()->endOfDay()) && $d->lte($weekEnd);
+            })->take(6);
+        } catch (\Throwable $e) { $tasksThisWeek = collect(); }
+
+        // Recent tours (last 5 created)
+        try {
+            $recentTours = \App\Tour::orderByDesc('created_at')->take(5)->get();
+        } catch (\Throwable $e) { $recentTours = collect(); }
+    @endphp
+
+    <x-ui.page-header
+        title="Dashboard"
+        description="Today's overview — tours, tasks, and recent activity."
+        :breadcrumbs="[['label' => 'Home']]"
+    >
+        <x-slot name="actions">
+            @if ($user->can('tour.create'))
+                <x-ui.button as="a" href="{{ url('/tour/create') }}" variant="secondary" icon="map-pin">
+                    New tour
+                </x-ui.button>
             @endif
+            @if ($user->can('task.create'))
+                <x-ui.button as="a" href="{{ url('/task/create') }}" variant="primary" icon="plus">
+                    New task
+                </x-ui.button>
+            @endif
+        </x-slot>
+    </x-ui.page-header>
 
+    {{-- KPI tiles --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        @php
+            $kpis = [
+                [
+                    'label'    => 'My open tasks',
+                    'value'    => $myOpenTasks,
+                    'icon'     => 'list-checks',
+                    'href'     => url('/task'),
+                    'sub'      => $tasksToday->count() . ' due today',
+                    'subColor' => $tasksToday->count() > 0 ? 'text-warning-600' : 'text-slate-500',
+                ],
+                [
+                    'label'    => 'Active tours',
+                    'value'    => $activeToursCount ?? '—',
+                    'icon'     => 'map',
+                    'href'     => url('/tour'),
+                    'sub'      => 'Currently in progress',
+                    'subColor' => 'text-slate-500',
+                ],
+                [
+                    'label'    => 'Completed this month',
+                    'value'    => $completedThisMonth,
+                    'icon'     => 'check-circle-2',
+                    'href'     => url('/task'),
+                    'sub'      => 'Closed since ' . $monthStart->format('M j'),
+                    'subColor' => 'text-success-700',
+                ],
+                [
+                    'label'    => 'Announcements',
+                    'value'    => $announcementCount,
+                    'icon'     => 'megaphone',
+                    'href'     => url('/announcements'),
+                    'sub'      => 'In the last 5',
+                    'subColor' => 'text-slate-500',
+                ],
+            ];
+        @endphp
+
+        @foreach ($kpis as $kpi)
+            <a href="{{ $kpi['href'] }}" class="group block rounded border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50">
+                <div class="flex items-start justify-between">
+                    <span class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $kpi['label'] }}</span>
+                    <span class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-500 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                        <x-ui.icon :name="$kpi['icon']" />
+                    </span>
+                </div>
+                <div class="mt-3 text-2xl font-semibold text-slate-900 leading-none">{{ $kpi['value'] }}</div>
+                <div class="mt-2 text-xs {{ $kpi['subColor'] }}">{{ $kpi['sub'] }}</div>
+            </a>
+        @endforeach
+    </div>
+
+    {{-- Main grid: Calendar (left, 8/12) + Today/This week (right, 4/12) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
+
+        <div class="lg:col-span-8">
+            @include('scaffold-interface.dashboard.components.tasks_calendar')
+        </div>
+
+        <div class="lg:col-span-4 space-y-4">
+
+            {{-- Today --}}
+            <div class="rounded border border-slate-200 bg-white">
+                <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900">Today</h3>
+                        <p class="mt-0.5 text-xs text-slate-500">{{ $todayDate->translatedFormat('l, F j') }}</p>
+                    </div>
+                    <a href="{{ url('/task') }}" class="text-xs font-medium text-primary-600 hover:text-primary-700">View all</a>
+                </header>
+                <ul class="divide-y divide-slate-100">
+                    @forelse ($tasksToday as $task)
+                        <li>
+                            <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
+                                <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-warning-600"></span>
+                                <span class="flex-1 min-w-0">
+                                    <span class="block truncate text-sm text-slate-900">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                    @if ($task->tour)
+                                        <span class="block truncate text-xs text-slate-500 mt-0.5">{{ optional($task->tour)->name }}</span>
+                                    @endif
+                                </span>
+                                @if (optional($task->status)->name)
+                                    <x-ui.badge variant="warning" class="shrink-0">{{ $task->status->name }}</x-ui.badge>
+                                @endif
+                            </a>
+                        </li>
+                    @empty
+                        <li class="px-4 py-6 text-center text-xs text-slate-500">Nothing due today.</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            {{-- This week --}}
+            <div class="rounded border border-slate-200 bg-white">
+                <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900">This week</h3>
+                        <p class="mt-0.5 text-xs text-slate-500">Through {{ $weekEnd->translatedFormat('F j') }}</p>
+                    </div>
+                </header>
+                <ul class="divide-y divide-slate-100">
+                    @forelse ($tasksThisWeek as $task)
+                        <li>
+                            <a href="{{ url('/task/' . $task->id . '/edit') }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
+                                <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-info-600"></span>
+                                <span class="flex-1 min-w-0">
+                                    <span class="block truncate text-sm text-slate-900">{{ $task->name ?? $task->title ?? 'Untitled task' }}</span>
+                                    <span class="block text-xs text-slate-500 mt-0.5">
+                                        @if ($task->dead_line)
+                                            {{ \Carbon\Carbon::parse($task->dead_line)->translatedFormat('l, M j') }}
+                                        @endif
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="px-4 py-6 text-center text-xs text-slate-500">No tasks scheduled this week.</li>
+                    @endforelse
+                </ul>
+            </div>
 
         </div>
---}}        
-        {{--<div class="row">
-            @include('scaffold-interface.dashboard.components.activities_list')
-        </div>--}}
-        {{--@include('scaffold-interface.dashboard.components.weChat')--}}
-        @include('component.modal_add_tour')
-        @include('scaffold-interface.dashboard.components.create_task_popup')
+    </div>
 
-</div>
-    </section>
-@section('post_styles')
-    <link href="{{URL::asset('css/jquery-jvectormap-2.0.3.css')}}" rel="stylesheet"/>
-    <link href="{{URL::asset('css/calendar-enhancements.css')}}" rel="stylesheet"/>
+    {{-- Recent tours + Announcements --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+        <div class="rounded border border-slate-200 bg-white">
+            <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h3 class="text-sm font-semibold text-slate-900">Recent tours</h3>
+                <a href="{{ url('/tour') }}" class="text-xs font-medium text-primary-600 hover:text-primary-700">View all</a>
+            </header>
+            @if ($recentTours->isEmpty())
+                <div class="px-4 py-8 text-center text-sm text-slate-500">
+                    <x-ui.icon name="map" size="md" class="mx-auto mb-2 text-slate-300" />
+                    No tours yet.
+                </div>
+            @else
+                <ul class="divide-y divide-slate-100">
+                    @foreach ($recentTours as $tour)
+                        <li>
+                            <a href="{{ url('/tour/' . $tour->id) }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50">
+                                <span class="mt-1 h-2 w-2 shrink-0 rounded-full" style="background-color: {{ \App\Tour::$statusColors[$tour->status] ?? '#94a3b8' }}"></span>
+                                <span class="flex-1 min-w-0">
+                                    <span class="block truncate text-sm font-medium text-slate-900">{{ $tour->name }}</span>
+                                    <span class="block text-xs text-slate-500 mt-0.5">
+                                        @if ($tour->departure_date)
+                                            {{ \Carbon\Carbon::parse($tour->departure_date)->translatedFormat('M j') }}
+                                            @if ($tour->retirement_date)
+                                                — {{ \Carbon\Carbon::parse($tour->retirement_date)->translatedFormat('M j') }}
+                                            @endif
+                                        @else
+                                            No dates
+                                        @endif
+                                        @if ($tour->pax) · {{ $tour->pax }} pax @endif
+                                    </span>
+                                </span>
+                                <x-ui.icon name="chevron-right" size="xs" class="mt-1 text-slate-300" />
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+        <div class="rounded border border-slate-200 bg-white">
+            <header class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h3 class="text-sm font-semibold text-slate-900">Announcements</h3>
+                <a href="{{ url('/announcements') }}" class="text-xs font-medium text-primary-600 hover:text-primary-700">View all</a>
+            </header>
+            @if ($announcements->isEmpty())
+                <div class="px-4 py-8 text-center text-sm text-slate-500">
+                    <x-ui.icon name="megaphone" size="md" class="mx-auto mb-2 text-slate-300" />
+                    No announcements yet.
+                </div>
+            @else
+                <ul class="divide-y divide-slate-100">
+                    @foreach ($announcements as $announcement)
+                        <li class="px-4 py-3">
+                            <div class="flex items-start gap-3">
+                                <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                                    <x-ui.icon name="megaphone" size="xs" />
+                                </span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-slate-900 truncate">
+                                        {{ $announcement->title ?? $announcement->subject ?? 'Untitled' }}
+                                    </p>
+                                    <p class="text-xs text-slate-500 mt-0.5">
+                                        @if ($announcement->sender) {{ $announcement->sender }} @endif
+                                        @if ($announcement->created_at) · {{ $announcement->created_at->diffForHumans() }} @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+    </div>
+
+    {{-- Modals required by inline JS (existing partials, untouched) --}}
+    @include('component.modal_add_tour')
+    @include('scaffold-interface.dashboard.components.create_task_popup')
+
 @endsection
+
 @section('post_scripts_calendar')
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing FullCalendar...');
+    {{-- FullCalendar bootstrap. The element it renders into is inside
+         scaffold-interface.dashboard.components.tasks_calendar and is
+         fed by /home/getToursTasksForCalendar. --}}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('bootsnipp-calendar');
+            if (!calendarEl) return;
 
-    var calendarEl = document.getElementById('bootsnipp-calendar');
-    if (!calendarEl) {
-        console.error('Calendar element not found');
-        return;
-    }
+            var COLOURS = { tour: '#0d9488', task: '#2563eb', holiday: '#dc2626' };
 
-    console.log('Calendar element found, initializing FullCalendar...');
-
-    var task_permission = document.getElementById('task_create_permission')?.getAttribute('data-info') === 'true';
-    var holiday_permission = document.getElementById('holiday_list_permission')?.getAttribute('data-info') === 'true';
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-            expandRows: true,
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: ''
-        },
-        events: function(info, successCallback, failureCallback) {
-            var startStr = info.startStr;
-            var endStr = info.endStr;
-            var url = '/home/getToursTasksForCalendar?start=' + startStr + '&end=' + endStr;
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                },
-                credentials: 'same-origin'
-            })
-                .then(function(response) {
-                    if (!response.ok) {
-                        if (response.status === 401 || response.status === 403) {
-                            successCallback([]);
-                            return null;
-                        }
-                        throw new Error('Network response was not ok: ' + response.status);
-                    }
-                    return response.json();
-                })
-                .then(function(events) {
-                    if (!events) return; // handled above
-                    var transformed = events.map(function(event) {
-                        var backgroundColor = event.backgroundColor || '#6b7280';
-                        var borderColor = backgroundColor;
-                        var classNames = [];
-                        if (!event.backgroundColor) {
-                            if (event.id === 'Holiday') {
-                                backgroundColor = '#ef4444';
-                                borderColor = '#ef4444';
-                                classNames.push('event-holiday');
-                            } else if (event.c_type === 'month') {
-                                backgroundColor = '#3b82f6';
-                                borderColor = '#3b82f6';
-                                classNames.push('event-task');
-                            } else {
-                                backgroundColor = '#10b981';
-                                borderColor = '#10b981';
-                                classNames.push('event-tour');
-                            }
-                        } else {
-                            // If server provided backgroundColor, infer class by id/c_type for CSS consistency
-                            if (event.id === 'Holiday') classNames.push('event-holiday');
-                            else if (event.c_type === 'month') classNames.push('event-task');
-                            else classNames.push('event-tour');
-                        }
-                        return {
-                            id: event.id,
-                            title: event.title,
-                            start: event.date,
-                            allDay: event.allDay !== undefined ? event.allDay : false,
-                            backgroundColor: backgroundColor,
-                            borderColor: borderColor,
-                            textColor: '#ffffff',
-                            classNames: classNames,
-                            extendedProps: {
-                                original: event,
-                                c_type: event.c_type
-                            }
-                        };
-                    });
-                    successCallback(transformed);
-                })
-                .catch(function(error) {
-                    console.error('Error loading calendar data:', error);
-                    failureCallback(error);
-                });
-        },
-        eventClick: function(info) {
-            console.log('Event clicked:', info.event);
-            if (info.event.url) {
-                window.open(info.event.url);
-                info.jsEvent.preventDefault();
-            } else if (
-                info.event &&
-                info.event.id !== 'Holiday' &&
-                info.event.id !== 'error-1' &&
-                !String(info.event.id || '').startsWith('sample-')
-            ) {
-                window.location = '{{ url("task") }}/' + info.event.id + '/edit?calendar_edit=1';
-            }
-        },
-        dateClick: function(info) {
-            if (task_permission) {
-                console.log('Date clicked:', info.dateStr);
-                // You can add task creation logic here
-            }
-        },
-        eventDidMount: function(info) {
-            // Add custom styling based on event type
-            if (info.event.title.includes('Task')) {
-                info.el.classList.add('event-task');
-            } else if (info.event.title.includes('Tour')) {
-                info.el.classList.add('event-tour');
-            } else if (info.event.title.includes('Holiday')) {
-                info.el.classList.add('event-holiday');
-            }
-        }
-    });
-
-    calendar.render();
-    console.log('FullCalendar rendered successfully');
-
-    // Load real data from API
-    function loadCalendarData() {
-        var now = new Date();
-        var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        var endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-        var startStr = startOfMonth.toISOString().split('T')[0];
-        var endStr = endOfMonth.toISOString().split('T')[0];
-
-        console.log('Fetching calendar data from:', '/home/getToursTasksForCalendar?start=' + startStr + '&end=' + endStr);
-
-        fetch('/home/getToursTasksForCalendar?start=' + startStr + '&end=' + endStr, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            },
-            credentials: 'same-origin'
-        })
-            .then(function(response) {
-                console.log('API Response status:', response.status);
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        console.error('Authentication required for calendar data');
-                        return [];
-                    } else if (response.status === 403) {
-                        console.error('Permission denied for calendar data');
-                        return [];
-                    }
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(function(events) {
-                console.log('Loaded calendar events:', events);
-                console.log('Number of events:', events.length);
-
-                // Transform events for FullCalendar
-                var transformedEvents = events.map(function(event) {
-                    var backgroundColor = '#6b7280'; // default gray
-                    var borderColor = '#6b7280';
-
-                    // Use server-provided backgroundColor if available, otherwise use defaults
-                    if (event.backgroundColor) {
-                        backgroundColor = event.backgroundColor;
-                        borderColor = event.backgroundColor;
-                    } else {
-                        // Fallback colors based on event type
-                        if (event.id === 'Holiday') {
-                            backgroundColor = '#ef4444'; // red
-                            borderColor = '#ef4444';
-                        } else if (event.c_type === 'month') {
-                            backgroundColor = '#3b82f6'; // blue for tasks
-                            borderColor = '#3b82f6';
-                        } else {
-                            backgroundColor = '#10b981'; // green for tours
-                            borderColor = '#10b981';
-                        }
-                    }
-
-                    return {
-                        id: event.id,
-                        title: event.title,
-                        start: event.date, // API returns 'date' not 'start'
-                        allDay: event.allDay !== undefined ? event.allDay : false,
-                        backgroundColor: backgroundColor,
-                        borderColor: borderColor,
-                        textColor: '#ffffff',
-                        extendedProps: {
-                            original: event,
-                            c_type: event.c_type
-                        }
-                    };
-                });
-
-                // Replace sample events with real data
-                calendar.removeAllEvents();
-
-                if (transformedEvents.length > 0) {
-                    calendar.addEventSource(transformedEvents);
-                    console.log('Calendar data updated with', transformedEvents.length, 'real events');
-                } else {
-                    // Show sample events if no real data available
-                    console.log('No real events found, showing sample data');
-                    var currentDate = new Date();
-                    var sampleData = [
-                        {
-                            id: 'sample-1',
-                            title: 'No real tasks found - Sample Task',
-                            start: currentDate.toISOString().split('T')[0],
-                            backgroundColor: '#3b82f6',
-                            borderColor: '#3b82f6',
-                            textColor: '#ffffff'
-                        },
-                        {
-                            id: 'sample-2',
-                            title: 'Sample Tour Event',
-                            start: new Date(currentDate.getTime() + 86400000).toISOString().split('T')[0],
-                            backgroundColor: '#10b981',
-                            borderColor: '#10b981',
-                            textColor: '#ffffff'
-                        }
-                    ];
-                    calendar.addEventSource(sampleData);
-                }
-            })
-            .catch(function(error) {
-                console.error('Error loading calendar data:', error);
-
-                // Show error indicator on calendar
-                var currentDate = new Date();
-                var errorEvent = [{
-                    id: 'error-1',
-                    title: 'Error loading tasks - Check console',
-                    start: currentDate.toISOString().split('T')[0],
-                    backgroundColor: '#ef4444',
-                    borderColor: '#ef4444',
-                    textColor: '#ffffff'
-                }];
-
-                calendar.removeAllEvents();
-                calendar.addEventSource(errorEvent);
-                console.log('Error event added to calendar');
-            });
-    }
-
-    // Load real data after a short delay
-    setTimeout(loadCalendarData, 1000);
-
-    // Add navigation buttons if permissions allow
-    if (holiday_permission || task_permission) {
-        var headerElement = document.querySelector('.calendar-compact .box-header');
-        var toolsArea = headerElement && headerElement.querySelector ? headerElement.querySelector('.box-tools') : null;
-
-        if (toolsArea) {
-            if (holiday_permission) {
-                var holidayBtn = document.createElement('button');
-                holidayBtn.className = 'btn btn-box-tool';
-                holidayBtn.title = 'Manage Holidays';
-                holidayBtn.innerHTML = '<i class="fa fa-calendar-o"></i>';
-                holidayBtn.onclick = function() { window.location.assign('/holiday'); };
-                toolsArea.insertBefore(holidayBtn, toolsArea.firstChild);
+            function classify(event) {
+                if (event.id === 'Holiday') return 'holiday';
+                if (event.c_type === 'month') return 'task';
+                return 'tour';
             }
 
-            if (task_permission) {
-                var taskBtn = document.createElement('button');
-                taskBtn.className = 'btn btn-box-tool';
-                taskBtn.title = 'Add Task';
-                taskBtn.innerHTML = '<i class="fa fa-plus"></i>';
-                taskBtn.onclick = function() {
-                    var modal = document.getElementById('modalCreate1');
-                    if (modal && typeof $(modal).modal === 'function') {
-                        $(modal).modal('show');
-                    }
+            function transform(event) {
+                var kind  = classify(event);
+                var color = event.backgroundColor || COLOURS[kind] || '#64748b';
+                return {
+                    id: event.id,
+                    title: event.title,
+                    start: event.date,
+                    allDay: event.allDay !== undefined ? event.allDay : false,
+                    backgroundColor: color,
+                    borderColor: color,
+                    textColor: '#ffffff',
+                    classNames: ['event-' + kind],
+                    extendedProps: { original: event, c_type: event.c_type }
                 };
-                toolsArea.insertBefore(taskBtn, toolsArea.firstChild);
             }
-        }
-    }
-});
-</script>
 
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                expandRows: true,
+                headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+                events: function (info, successCallback, failureCallback) {
+                    var url = '/home/getToursTasksForCalendar?start=' + info.startStr + '&end=' + info.endStr;
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            if (response.status === 401 || response.status === 403) {
+                                successCallback([]);
+                                return null;
+                            }
+                            throw new Error('Network response not OK: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(function (events) {
+                        if (!events) return;
+                        successCallback(events.map(transform));
+                    })
+                    .catch(function (err) {
+                        console.error('Error loading calendar data:', err);
+                        failureCallback(err);
+                    });
+                },
+                eventClick: function (info) {
+                    if (info.event.url) {
+                        window.open(info.event.url);
+                        info.jsEvent.preventDefault();
+                    } else if (info.event && info.event.id !== 'Holiday' && info.event.id !== 'error-1' && !String(info.event.id || '').startsWith('sample-')) {
+                        window.location = '{{ url("task") }}/' + info.event.id + '/edit?calendar_edit=1';
+                    }
+                }
+            });
 
-@endsection
+            calendar.render();
+        });
+    </script>
 @endsection

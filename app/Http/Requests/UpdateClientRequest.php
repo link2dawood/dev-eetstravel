@@ -3,96 +3,81 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Services\ValidationService;
 
 class UpdateClientRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Prepare the data for validation.
-     */
     protected function prepareForValidation()
     {
         $this->merge([
-            'first_name' => trim($this->first_name ?? ''),
-            'country' => trim($this->country ?? ''),
-            'city' => trim($this->city ?? ''),
-            'address' => trim($this->address ?? ''),
-            'work_phone' => trim($this->work_phone ?? ''),
+            'name'          => trim($this->name ?? ''),
+            'country'       => trim($this->country ?? ''),
+            'city'          => trim($this->city ?? ''),
+            'address'       => trim($this->address ?? ''),
+            'work_phone'    => trim($this->work_phone ?? ''),
             'contact_phone' => trim($this->contact_phone ?? ''),
-            'work_email' => strtolower(trim($this->work_email ?? '')),
+            'work_email'    => strtolower(trim($this->work_email ?? '')),
             'contact_email' => strtolower(trim($this->contact_email ?? '')),
-            'work_fax' => trim($this->work_fax ?? ''),
+            'work_fax'      => trim($this->work_fax ?? ''),
         ]);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
-        $clientId = $this->route('id') ?? $this->route('client');
+        // Allow the client to keep its own email on update.
+        $clientId           = $this->route('id') ?? $this->route('client');
+        $workEmailUnique    = 'unique:clients,work_email'    . ($clientId ? ',' . $clientId : '');
+        $contactEmailUnique = 'unique:clients,contact_email' . ($clientId ? ',' . $clientId : '');
 
-        return ValidationService::clientBusinessRules(true, $clientId) + [
-            // File Uploads
-            'files' => 'nullable|array',
-            'files.*' => ValidationService::fileRules(false, 5120, 'jpeg,jpg,png,gif,pdf,doc,docx'),
+        return [
+            // Identity
+            'name'    => 'required|string|max:191|min:2',
+            'country' => 'required|string|max:191',
 
-            // Additional fields specific to updates
-            'password' => 'nullable|string|min:6'
+            // Optional
+            'city'             => 'nullable|string|max:191',
+            'address'          => 'nullable|string|max:500',
+            'account_no'       => 'nullable|string|max:250',
+            'company_address'  => 'nullable|string|max:250',
+            'invoice_address'  => 'nullable|string|max:250',
+            'work_phone'       => 'nullable|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]+$/',
+            'contact_phone'    => 'nullable|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]+$/',
+            'work_email'       => 'nullable|email|max:191|' . $workEmailUnique,
+            'contact_email'    => 'nullable|email|max:191|' . $contactEmailUnique,
+            'work_fax'         => 'nullable|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]+$/',
+            'password'         => 'nullable|string|min:1',
         ];
     }
 
-    /**
-     * Get custom error messages for validation rules.
-     *
-     * @return array
-     */
     public function messages()
     {
-        return array_merge(ValidationService::getCommonMessages(), [
-            'first_name.required' => 'Client name is required.',
-            'first_name.regex' => 'Client name can only contain letters, spaces, hyphens, dots, and apostrophes.',
-            'first_name.min' => 'Client name must be at least 2 characters.',
-            'country.required' => 'Country is required.',
-            'city.required' => 'City is required.',
-            'address.required' => 'Address is required.',
-            'address.min' => 'Address must be at least 5 characters.',
-            'work_phone.required' => 'Work phone number is required.',
-            'work_phone.regex' => 'Please enter a valid work phone number.',
-            'contact_phone.regex' => 'Please enter a valid contact phone number.',
-            'work_email.required' => 'Work email address is required.',
-            'work_email.email' => 'Please enter a valid work email address.',
-            'work_email.unique' => 'This work email address is already registered.',
-            'contact_email.email' => 'Please enter a valid contact email address.',
-            'contact_email.unique' => 'This contact email address is already registered.',
-            'work_fax.regex' => 'Please enter a valid fax number.',
-            'files.*.max' => 'Each file must not exceed 5MB.',
-            'files.*.mimes' => 'Files must be of type: JPEG, JPG, PNG, GIF, PDF, DOC, DOCX.'
-        ]);
+        return [
+            'name.required'         => 'Client name is required.',
+            'name.min'              => 'Client name must be at least 2 characters.',
+            'country.required'      => 'Country is required.',
+            'work_phone.regex'      => 'Please enter a valid work phone number.',
+            'contact_phone.regex'   => 'Please enter a valid contact phone number.',
+            'work_email.email'      => 'Please enter a valid work email address.',
+            'work_email.unique'     => 'This work email address is already registered.',
+            'contact_email.email'   => 'Please enter a valid contact email address.',
+            'contact_email.unique'  => 'This contact email address is already registered.',
+            'work_fax.regex'        => 'Please enter a valid fax number.',
+        ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array
-     */
     public function attributes()
     {
-        return ValidationService::getCommonAttributes() + [
-            'first_name' => 'client name',
-            'work_fax' => 'fax number'
+        return [
+            'name'          => 'client name',
+            'work_phone'    => 'work phone',
+            'contact_phone' => 'contact phone',
+            'work_email'    => 'work email',
+            'contact_email' => 'contact email',
+            'work_fax'      => 'fax number',
         ];
     }
 }

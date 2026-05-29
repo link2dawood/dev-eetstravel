@@ -1,428 +1,337 @@
+{{--
+    /tour/create — Tour or Quotation create form.
+    $isQuotation flips a few sections (status hidden, files+landing image
+    suppressed). Migrated chrome to Tailwind; every JS hook is preserved
+    verbatim:
+      - Form action url('tour/save') unchanged
+      - Field names: name, departure_date, retirement_date, status,
+        responsible_user, pax, pax_free, child_count, ages[], prices[],
+        is_quotation, files[]
+      - #passenger_count, #child_count, #child_details, #responsible_user,
+        #imgInp, #pic, #file-caption-name
+      - .datepicker class (bootstrap-datepicker binding)
+      - .btn_for_select_room_type + #list_selected_room_types +
+        .list_room_types + .select_room_type
+      - .user_checkboxes (used by setInterval handleCheckboxes loop)
+      - readURL() + addChildFields() globals
+      - js-validate partial for quotation mode
+      - Post-scripts: rooms.js, hide_elements.js, tour.js,
+        supplier-search.js, attachments.js
+--}}
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Create')
-@section('post_styles')
-<style>
-    /* Enhanced checkbox/selectgroup styling */
-    .form-selectgroup-item {
-        flex: 1;
-    }
 
-    .form-selectgroup-label {
-        border: 1px solid rgba(98, 105, 118, 0.16);
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background: #fff;
-        min-height: 42px;
-    }
-
-    .form-selectgroup-label:hover {
-        border-color: #206bc4;
-        background: rgba(32, 107, 196, 0.02);
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label {
-        border-color: #206bc4;
-        background: rgba(32, 107, 196, 0.06);
-        font-weight: 500;
-    }
-
-    .form-selectgroup-check {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid #d1d5db;
-        border-radius: 3px;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check {
-        background: #206bc4;
-        border-color: #206bc4;
-    }
-
-    .form-selectgroup-input:checked ~ .form-selectgroup-label .form-selectgroup-check::after {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 4px;
-        height: 8px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-</style>
-@endsection
 @section('content')
+<x-ui.page-header
+    :title="$title ?? ($isQuotation ? 'Create Quotation' : 'Create Tour')"
+    :description="$subTitle ?? null"
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Tours', 'href' => route('tour.index')],
+        ['label' => $isQuotation ? 'Create Quotation' : 'Create Tour'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+            {{ trans('main.Back') }}
+        </x-ui.button>
+    </x-slot>
+</x-ui.page-header>
 
-    @include('layouts.title',
-   ['title' => $title, 'sub_title' => $subTitle,
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Tours', 'icon' => 'suitcase', 'route' => route('tour.index')],
-   ['title' => 'Create', 'route' => null]]])
-    <section class="content">
-        
-        <div class="box box-primary">
-            <div class="box box-body border_top_none">
-                @if (count($errors) > 0)
-                    <br>
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                <form method='POST' action="{{url('tour/save')}}"  enctype="multipart/form-data" >
-<!-- action='{!!url("tour")!!}' -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="margin_button">
-                                <a href="javascript:history.back()">
-                                    <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
-                                </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <div class="d-flex">
-                            <div>
-                                <i class="ti ti-alert-circle icon alert-icon"></i>
-                            </div>
-                            <div>
-                                <h4 class="alert-title">Validation Errors</h4>
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                    </div>
-                @endif
+@if(count($errors) > 0)
+    <div class="mb-4 rounded border border-danger-600/20 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+        <div class="flex items-center gap-2 font-medium">
+            <x-ui.icon name="alert-octagon" class="text-danger-600" />
+            Please correct the following:
+        </div>
+        <ul class="mt-2 list-disc pl-5 space-y-0.5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
-                    <div class="row">
-                        {{csrf_field()}}
-                        @if($isQuotation)
-                            @include('component.js-validate')
-                        @endif
-                        <div class="col-md-6">
-                            <input type='hidden' name='_token' value='{{Session::token()}}'>
-                            <div class="form-group">
-                                <label for="name">{!!trans('main.Name')!!} *</label>
-                                {!! Form::text('name', '', ['class' => 'form-control']) !!}
-                            </div>
-                            
-                            <div class="form-group">
+<form method="POST" action="{{ url('tour/save') }}" enctype="multipart/form-data" class="space-y-4">
+    {{ csrf_field() }}
+    <input type="hidden" name="_token" value="{{ Session::token() }}">
 
-                                <label for="departure_date">{!!trans('main.DepDate')!!} *</label>
+    @if($isQuotation)
+        @include('component.js-validate')
+    @endif
 
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    {!! Form::text('departure_date', '',
-                                    ['class' => 'form-control pull-right datepicker', 'id' => 'departure_date', 'autocomplete' => 'off']) !!}
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="retirement_date">{!!trans('main.RetDate')!!} *</label>
-
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    {!! Form::text('retirement_date', '', ['class' => 'form-control pull-right datepicker', 'id' => 'retirement_date']) !!}
-                                </div>
-                            </div>
-
-                            {{--
-                            <div class="form-group">
-                                <label for="rooms">{!!trans('main.Rooms')!!}</label>
-                                {!! Form::text('rooms', '', ['class' => 'form-control']) !!}
-                            </div>
-                            --}}
-                            @if(!$isQuotation)
-                              
-                                <div class="form-group">
-                                    <label for="status">{!!trans('main.Status')!!}</label>
-                                    <select name="status" id="status" class="form-control">
-                                        @foreach($statuses as $status)
-                                            <option {{ old('status') == $status->id ? 'selected' : '' }} value="{{ $status->id }}">{{ $status->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-								<!-- <div class="form-group">
-									<label for="assigned_user">{!! trans('main.AssignedUser') !!} *</label>
-									<div class="form-control" style="max-height:200px !important;overflow-x:auto;height: auto; ">
-										<table>
-											<tr>
-												@php $i = 1; @endphp
-												@foreach ($users as $user)
-												<td style="width: 30rem;" id="user_data_{{ $user->id }}">
-													<label for="user_{{ $user->id }}" style="font-size: 18px;">
-														{{ $user->name }}
-														
-													</label>
-														<input class = "user_checkboxes" type="checkbox" name="assigned_user[]" id="user_{{ $user->id }}" value="{{ $user->id }}">
-													
-													
-												</td>
-												
-												@if($i % 4 == 0)
-											</tr>
-											<tr>
-												@endif
-												@php $i += 1; @endphp
-												@endforeach
-											</tr>
-										</table>
-									</div>
-								</div> -->
-                                                                <!-- <div class="mb-3">
-                                    <label class="form-label">{!! trans('main.AssignedUser') !!}</label>
-                                    <div class="card card-sm">
-                                        <div class="card-body" style="max-height:250px; overflow-y:auto;">
-                                            <div class="row g-2">
-                                                @foreach ($users as $user)
-                                                    <div class="col-md-6 col-lg-4">
-                                                        <label class="form-selectgroup-item flex-fill">
-                                                            <input type="checkbox" name="assigned_user[]" value="{{ $user->id }}"
-                                                                   class="form-selectgroup-input" {{$user->selected ? 'checked' : ''}}>
-                                                            <div class="form-selectgroup-label d-flex align-items-center p-2">
-                                                                <div class="me-2">
-                                                                    <span class="form-selectgroup-check"></span>
-                                                                </div>
-                                                                <div class="form-selectgroup-label-content">
-                                                                    <div class="font-weight-medium">{{ $user->name }}</div>
-                                                                </div>
-                                                            </div>
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
-
-                                <div class="form-group">
-                                    <label for="responsible_user">{!!trans('main.ResponsibleUser')!!}</label>
-                                    <select name="responsible_user" class="form-control" id="responsible_user">
-                                        <option value="0">{!!trans('main.Withoutresponsibleuser')!!}</option>
-                                        @foreach($users as $user)
-                                            <option value="{{$user->id}}">{{$user->name}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                {{--Status pending--}}
-                                {!! Form::hidden('status', 1) !!}
-                            @endif
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="pax">Pax</label>
-                                {!! Form::text('pax', '', ['class' => 'form-control','id' => 'passenger_count']) !!}
-                            </div>
-							<div class="form-group">
-								<label for="child_count">Number of Children:</label>
-								<input type="number" id="child_count" name="child_count" class="form-control">
-							</div>
-
-							<div id="child_details">
-								<!-- Child details will be added dynamically using JavaScript -->
-							</div>
-
-							 <button type="button" onclick="addChildFields()" class="btn btn-primary">Add Child</button>
-      
-       
-                            <div class="form-group">
-                                <label for="pax_free">{!!trans('main.PaxFree')!!}</label>
-                                {!! Form::text('pax_free', '', ['class' => 'form-control']) !!}
-                            </div>
-                            <!-- ////////////////// -->
-                            <div class="form-group">
-                                <label >{!!trans('main.RoomTypes')!!}</label>
-
-                                <div id="list_selected_room_types">
-
-                                    @if(!empty($selected_room_types))
-                                        @foreach($selected_room_types as $item)
-                                            @include('component.item_hotel_room_type', ['room_type' => $item])
-                                        @endforeach
-                                    @endif
-
-                                </div>
-
-                                <button class="btn btn-success btn_for_select_room_type" type="button">{!!trans('main.SelectRooms')!!}</button>
-
-                                <ul class="list_room_types">
-                                    <ul class="list_room_types" style="display: block; z-index:999;">
-                                        @foreach( $room_types as $room_type)
-                                            <li class="select_room_type">
-                                                <label>{{ $room_type->name }}</label>
-                                                <input type="text" data-info="{{ $room_type->id }}" hidden value="{{ $room_type }}">
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </ul>
-
-                            </div>
-                            <!-- ////////////////// -->
-                            @if(!$isQuotation)
-                            
- {{--                           <div class="form-group">
-                                <label for="retirement_date">{!!trans('main.Invoice')!!}</label>
-
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    {!! Form::text('invoice','', ['class' => 'form-control pull-right datepicker', 'id' => 'invoice', 'autocomplete' => 'off']) !!}
-                                </div>
-
-                            </div>
-                            <div class="form-group">
-                                <label for="retirement_date">G\A</label>
-
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    {!! Form::text('ga','', ['class' => 'form-control pull-right datepicker', 'id' => 'ga', 'autocomplete' => 'off']) !!}
-                                </div>
-
-                            </div>--}}
-                               
-                                <div class="form-group">
-                                    <label>{!!trans('main.Files')!!}</label>
-                                    @component('component.file_upload_field')@endcomponent 
-                                </div>
-                                <div class="form-group">
-                                        <label for="attach">{!!trans('main.imageforlanding')!!}</label>
-                                        <div>
-                                            <div class="file-preview thumbnail">
-                                                <div class="file-drop-zone-title" style="padding:15px 10px;"><center>Image for landing page</center>
-                                                    <img id="pic" src="" style="width:100%">
-                                                </div>                                   
-                                            </div>
-                                        </div>
-
-                                        <div class="input-group file-caption-main">
-                                            <div tabindex="500" class="form-control">
-                                            <div class="file-caption-name" id="file-caption-name"></div>
-                                            </div>
-
-                                                <div class="input-group-btn">
-                                                    <div tabindex="500" class="btn btn-primary btn-file"><i class="glyphicon glyphicon-folder-open"></i>&nbsp;  <span class="hidden-xs">Browse …</span>
-                                                        <input type="file" name="files[]" id="imgInp" class="fileToUpload" multiple>
-
-                                                    </div>
-                                            </div>
-                                         </div>
-                                    </div>
-                            @endif
-                            {!! Form::hidden('is_quotation', 1) !!}
-                        </div>
-                    </div>
-                    <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-                </form>
+    {{-- ============================================================ --}}
+    {{-- Section 1: Identity                                            --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="plane" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Identity</h2>
+                <p class="text-xs text-slate-500">Name + capacity figures.</p>
             </div>
         </div>
-    </section>
-    @push('scripts')
-   <script type="text/javascript" src='{{asset('js/rooms.js')}}'></script>
-   <script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
-   <script type="text/javascript" src='{{asset('js/tour.js')}}'></script>
-<script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
-    <script type="text/javascript" src='{{asset('js/attachments.js')}}'></script>
+        <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+                <label for="name" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                    {{ trans('main.Name') }} <span class="text-danger-600">*</span>
+                </label>
+                {!! Form::text('name', '', ['id' => 'name', 'class' => 'form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+            </div>
+            <div>
+                <label for="passenger_count" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Pax</label>
+                {!! Form::text('pax', '', ['id' => 'passenger_count', 'class' => 'form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+            </div>
+            <div>
+                <label for="pax_free" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.PaxFree') }}</label>
+                {!! Form::text('pax_free', '', ['id' => 'pax_free', 'class' => 'form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+            </div>
+        </div>
+    </div>
 
-    
-    <script type="text/javascript">
-        function readURL(input) {
+    {{-- ============================================================ --}}
+    {{-- Section 2: Schedule                                            --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="calendar" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Schedule</h2>
+                <p class="text-xs text-slate-500">Departure and return dates.</p>
+            </div>
+        </div>
+        <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="departure_date" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                    {{ trans('main.DepDate') }} <span class="text-danger-600">*</span>
+                </label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <x-ui.icon name="calendar" size="sm" />
+                    </span>
+                    {!! Form::text('departure_date', '', ['id' => 'departure_date', 'autocomplete' => 'off', 'class' => 'form-control datepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+                </div>
+            </div>
+            <div>
+                <label for="retirement_date" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                    {{ trans('main.RetDate') }} <span class="text-danger-600">*</span>
+                </label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <x-ui.icon name="calendar" size="sm" />
+                    </span>
+                    {!! Form::text('retirement_date', '', ['id' => 'retirement_date', 'class' => 'form-control datepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600']) !!}
+                </div>
+            </div>
+        </div>
+    </div>
 
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
+    {{-- ============================================================ --}}
+    {{-- Section 3: Staff (Status + Responsible) — tour-only            --}}
+    {{-- ============================================================ --}}
+    @if(!$isQuotation)
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="users" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">Status &amp; staff</h2>
+                </div>
+            </div>
+            <div class="px-5 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="status" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Status') }}</label>
+                    <select name="status" id="status"
+                            class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        @foreach($statuses as $status)
+                            <option {{ old('status') == $status->id ? 'selected' : '' }} value="{{ $status->id }}">{{ $status->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="responsible_user" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.ResponsibleUser') }}</label>
+                    <select name="responsible_user" id="responsible_user"
+                            class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        <option value="0">{{ trans('main.Withoutresponsibleuser') }}</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+    @else
+        {{-- Quotation mode pins status to "pending" --}}
+        {!! Form::hidden('status', 1) !!}
+    @endif
 
-                reader.onload = function(e) {
-                  $('#pic').attr('src', e.target.result);
-                  $('#file-caption-name').html(input.files[0].name); 
-                }
+    {{-- ============================================================ --}}
+    {{-- Section 4: Children                                            --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="baby" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">Children</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                    <label for="child_count" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Number of children</label>
+                    <input type="number" id="child_count" name="child_count" min="0"
+                           class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                </div>
+                <div>
+                    <button type="button" onclick="addChildFields()"
+                            class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <x-ui.icon name="plus" size="sm" />
+                        Add child fields
+                    </button>
+                </div>
+            </div>
+            {{-- addChildFields() injects per-child <input> pairs here. --}}
+            <div id="child_details" class="space-y-2"></div>
+        </div>
+    </div>
 
-                reader.readAsDataURL(input.files[0]);
-            }
+    {{-- ============================================================ --}}
+    {{-- Section 5: Rooms                                               --}}
+    {{-- ============================================================ --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="bed" size="sm" /></div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-sm font-medium text-slate-700">{{ trans('main.RoomTypes') }}</h2>
+            </div>
+        </div>
+        <div class="px-5 py-5 space-y-3">
+            {{-- rooms.js fills this via the .btn_for_select_room_type click handler. --}}
+            <div id="list_selected_room_types" class="space-y-2">
+                @if(!empty($selected_room_types))
+                    @foreach($selected_room_types as $item)
+                        @include('component.item_hotel_room_type', ['room_type' => $item])
+                    @endforeach
+                @endif
+            </div>
+
+            <button type="button"
+                    class="btn_for_select_room_type inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <x-ui.icon name="plus" size="sm" />
+                {{ trans('main.SelectRooms') }}
+            </button>
+
+            {{-- Hidden room-type picker used by rooms.js — list_room_types is read on btn click. --}}
+            <ul class="list_room_types hidden">
+                <ul class="list_room_types" style="display: block; z-index:999;">
+                    @foreach($room_types as $room_type)
+                        <li class="select_room_type">
+                            <label>{{ $room_type->name }}</label>
+                            <input type="text" data-info="{{ $room_type->id }}" hidden value="{{ $room_type }}">
+                        </li>
+                    @endforeach
+                </ul>
+            </ul>
+        </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- Section 6: Files + Landing image (tour-only)                   --}}
+    {{-- ============================================================ --}}
+    @if(!$isQuotation)
+        <div class="rounded border border-slate-200 bg-white">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="paperclip" size="sm" /></div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm font-medium text-slate-700">{{ trans('main.Files') }}</h2>
+                    <p class="text-xs text-slate-500">Vouchers, supplier sheets, etc.</p>
+                </div>
+            </div>
+            <div class="px-5 py-5 space-y-5">
+                @component('component.file_upload_field')@endcomponent
+
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                        {{ trans('main.imageforlanding') }}
+                    </label>
+                    <div class="rounded border border-slate-200 bg-slate-50 p-3 mb-3">
+                        <p class="text-xs text-slate-500 mb-2 text-center">Image for landing page</p>
+                        <img id="pic" src="" class="block w-full h-auto max-h-[300px] object-cover rounded" />
+                    </div>
+                    <div class="flex items-stretch gap-0">
+                        <div class="flex-1 inline-flex items-center h-9 rounded-l border border-r-0 border-slate-300 bg-white px-3 text-sm text-slate-500">
+                            <span class="file-caption-name" id="file-caption-name">No file chosen</span>
+                        </div>
+                        <label for="imgInp" class="inline-flex h-9 items-center gap-2 rounded-r border border-slate-300 bg-primary-600 px-3 text-sm font-medium text-white hover:bg-primary-700 cursor-pointer">
+                            <x-ui.icon name="folder-open" size="sm" />
+                            Browse
+                            <input type="file" name="files[]" id="imgInp" class="fileToUpload" multiple style="display:none;" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {!! Form::hidden('is_quotation', $isQuotation ? 1 : 0) !!}
+
+    {{-- Form footer --}}
+    <div class="sticky bottom-0 -mx-4 sm:mx-0 sm:static sm:rounded sm:border sm:border-slate-200 bg-white sm:bg-slate-50 px-4 sm:px-5 py-3 border-t border-slate-200 sm:border-t-0 sm:border flex items-center justify-end gap-2 shadow-[0_-4px_8px_-4px_rgba(15,23,42,0.05)] sm:shadow-none">
+        <x-ui.button as="a" href="{{ route('tour.index') }}" variant="secondary">{{ trans('main.Cancel') }}</x-ui.button>
+        <x-ui.button type="submit" variant="primary" icon="save">{{ trans('main.Save') }}</x-ui.button>
+    </div>
+</form>
+
+@push('scripts')
+<script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/tour.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/supplier-search.js') }}'></script>
+<script type="text/javascript" src='{{ asset('js/attachments.js') }}'></script>
+
+<script type="text/javascript">
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#pic').attr('src', e.target.result);
+                $('#file-caption-name').html(input.files[0].name);
+            };
+            reader.readAsDataURL(input.files[0]);
         }
-
-        $("#imgInp").change(function() {
-            readURL(this);
-        });
-		
-    </script>
-<script>
- function handleCheckboxes() {
-  const checkboxes = document.querySelectorAll('.user_checkboxes');
-
-  checkboxes.forEach(function (checkbox) {
-    checkbox.addEventListener("click", function () {
-      // No need to recreate checkboxes, just update checked state
-      console.log("User ID " + this.value + " is now " + (this.checked ? "selected" : "deselected"));
-    });
-  });
-}
-
-// Call the function initially
-handleCheckboxes();
-
-// Set an interval to refresh the event handling
-setInterval(function () {
-  handleCheckboxes();
-}, 500); // Adjust the interval time as needed
-
-// // Handle form submission
-// $(document).ready(function() {
-//     $('#tour-create-form').on('submit', function(e) {
-//         var form = $(this);
-//         var submitBtn = form.find('button[type="submit"]');
-        
-//         // Disable submit button to prevent double submission
-//         submitBtn.prop('disabled', true);
-//         submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Saving...');
-        
-//         // If form is submitted normally (not AJAX), let it proceed
-//         // The server will handle the response appropriately
-//     });
-// });
-
-function addChildFields() {
-    var count = document.getElementById('child_count').value;
-    var container = document.getElementById('child_details');
-    
-    // Clear previous fields
-    container.innerHTML = '';
-    
-    for (var i = 1; i <= count; i++) {
-        var div = document.createElement('div');
-        div.classList.add('form-group');
-        div.innerHTML = `
-            <label for="age_${i}">Age of Child ${i}:</label>
-            <input type="number" id="age_${i}" name="ages[]" class="form-control" min="0">
-            <label for="price_${i}">Price:</label>
-            <input type="number" id="price_${i}" name="prices[]" class="form-control">
-        `;
-        container.appendChild(div);
     }
-}
+    $("#imgInp").change(function () { readURL(this); });
 
+    function handleCheckboxes() {
+        const checkboxes = document.querySelectorAll('.user_checkboxes');
+        checkboxes.forEach(function (checkbox) {
+            checkbox.addEventListener("click", function () {
+                console.log("User ID " + this.value + " is now " + (this.checked ? "selected" : "deselected"));
+            });
+        });
+    }
+    handleCheckboxes();
+    setInterval(handleCheckboxes, 500);
 
+    function addChildFields() {
+        var count = document.getElementById('child_count').value;
+        var container = document.getElementById('child_details');
+        container.innerHTML = '';
+        for (var i = 1; i <= count; i++) {
+            var div = document.createElement('div');
+            div.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 rounded border border-slate-200 bg-slate-50 p-3';
+            div.innerHTML = `
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1" for="age_${i}">Age of child ${i}</label>
+                    <input type="number" id="age_${i}" name="ages[]" class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" min="0">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1" for="price_${i}">Price</label>
+                    <input type="number" id="price_${i}" name="prices[]" step="0.01" class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    }
 </script>
 @endpush
-
 @endsection

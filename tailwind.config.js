@@ -54,6 +54,22 @@ module.exports = {
     // See SIDEBAR_DIAGNOSIS.md for the full root-cause analysis.
     corePlugins: {
         preflight: false,
+
+        // Disable Tailwind's `visibility` plugin entirely. It emits
+        // `.collapse { visibility: collapse }` regardless of the
+        // theme.visibility override, and that class name collides with
+        // Bootstrap's collapse component (the staff sidebar's
+        // `<div class="collapse navbar-collapse">`). Tailwind wins on
+        // source order because tailwind.css is loaded AFTER Tabler, so
+        // the sidebar menu becomes invisible while still occupying space.
+        //
+        // We lose Tailwind's `.visible` and `.invisible` utilities; if
+        // those become necessary, re-introduce them as named custom
+        // classes in resources/css/tailwind.css. So far no widget uses
+        // them.
+        //
+        // Re-enable in Phase 4 once Bootstrap is gone.
+        visibility: false,
     },
 
     theme: {
@@ -218,6 +234,7 @@ module.exports = {
                 DEFAULT: '150ms',
             },
         },
+
     },
 
     plugins: [

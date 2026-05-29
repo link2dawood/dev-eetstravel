@@ -339,66 +339,65 @@
             <div class="tab-content">
             {{-- Front Sheet Tab --}}
             <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">
-                <h3 class="mb-4">
-                    <i class="ti ti-file-text me-2"></i>Front Sheet [- {{ $tour->external_name ?? $tour->name }} #{{ $tour->id }}]
-                </h3>
-                
+                <div class="mb-4 flex items-center gap-2">
+                    <x-ui.icon name="file-text" size="sm" class="text-slate-400" />
+                    <h3 class="text-sm font-semibold text-slate-700">Front Sheet — {{ $tour->external_name ?? $tour->name }} <span class="font-mono text-xs text-slate-500">#{{ $tour->id }}</span></h3>
+                </div>
+
                 @if(!empty($quotation) && isset($quotation->id))
                     @if(!empty($serviceDays))
-                    {{-- Summary Information --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h5>
-                                <strong>Rooms:</strong>
-                                @php $peopleCount = 0; @endphp
-                                @foreach ($listRoomsHotel as $room)
-                                    @php
-                                        $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code]) 
-                                            ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count 
-                                            : 0;
-                                    @endphp
-                                    {{ $room->room_types->code }} : {{ $room->count }}{{ !$loop->last ? ', ' : '' }}
+                    @php
+                        $peopleCount = 0;
+                        foreach($listRoomsHotel as $room) {
+                            $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code])
+                                ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count : 0;
+                        }
+                    @endphp
+
+                    {{-- Summary --}}
+                    <div class="rounded border border-slate-200 bg-white px-4 py-3 mb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Rooms</dt>
+                            <dd class="mt-1 flex flex-wrap gap-1">
+                                @foreach($listRoomsHotel as $room)
+                                    <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                        {{ $room->room_types->code }} <span class="text-slate-500">×</span> {{ $room->count }}
+                                    </span>
                                 @endforeach
-                            </h5>
+                            </dd>
                         </div>
-                        <div class="col-md-6">
-                            <h5>
-                                <strong>Pax:</strong> {{ $tour->pax }} +{{ $tour->pax_free }}
-                            </h5>
+                        <div>
+                            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Pax</dt>
+                            <dd class="mt-1 text-lg font-semibold text-slate-900">{{ $tour->pax }} @if($tour->pax_free)<span class="text-slate-400 text-sm font-normal">+ {{ $tour->pax_free }} free</span>@endif</dd>
                         </div>
                     </div>
 
                     @if ($peopleCount != $tour->pax + $tour->pax_free)
-                        <div class="alert alert-warning alert-dismissible" role="alert">
-                            <div class="d-flex">
-                                <div>
-                                    <i class="ti ti-alert-triangle me-2"></i>
-                                </div>
-                                <div class="flex-fill">
-                                    <strong>Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})</strong>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <div class="mb-3 flex items-start gap-2 rounded border border-warning-600/20 bg-warning-50 px-3 py-2 text-sm text-warning-700">
+                            <x-ui.icon name="alert-triangle" size="sm" class="mt-0.5 text-warning-600" />
+                            <div class="flex-1">
+                                Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})
                             </div>
                         </div>
                     @endif
 
                     {{-- Front Sheet Table --}}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle" style="font-size: 0.9rem;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="min-width: 100px;">Date</th>
-                                    <th style="min-width: 80px;">City</th>
-                                    <th style="min-width: 100px;">Quote Single</th>
-                                    <th style="min-width: 100px;">Quote SS</th>
-                                    <th style="min-width: 100px;">Quote HPP</th>
-                                    <th style="min-width: 200px;">CMFD HOTEL</th>
-                                    <th style="min-width: 80px;">Option</th>
-                                    <th style="min-width: 100px;">Offer SS</th>
-                                    <th style="min-width: 100px;">Offer HPP</th>
-                                    <th style="min-width: 80px;">®</th>
-                                    <th style="min-width: 120px;">VC sent to SHA</th>
-                                    <th style="min-width: 120px;">Budget HPP +/-</th>
+                    <div class="rounded border border-slate-200 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 align-middle text-sm">
+                            <thead class="bg-slate-50">
+                                <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                                    <th class="px-3 py-2" style="min-width: 100px;">Date</th>
+                                    <th class="px-3 py-2" style="min-width: 80px;">City</th>
+                                    <th class="px-3 py-2" style="min-width: 100px;">Quote Single</th>
+                                    <th class="px-3 py-2" style="min-width: 100px;">Quote SS</th>
+                                    <th class="px-3 py-2" style="min-width: 100px;">Quote HPP</th>
+                                    <th class="px-3 py-2" style="min-width: 200px;">CMFD Hotel</th>
+                                    <th class="px-3 py-2" style="min-width: 80px;">Option</th>
+                                    <th class="px-3 py-2" style="min-width: 100px;">Offer SS</th>
+                                    <th class="px-3 py-2" style="min-width: 100px;">Offer HPP</th>
+                                    <th class="px-3 py-2" style="min-width: 80px;">®</th>
+                                    <th class="px-3 py-2" style="min-width: 120px;">VC sent to SHA</th>
+                                    <th class="px-3 py-2" style="min-width: 120px;">Budget HPP +/-</th>
                                 </tr>
                             </thead>
                             <!-- <tbody>
@@ -596,65 +595,65 @@
                         </table>
                     </div>
 
-                    {{-- Additional Information --}}
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Column Descriptions</h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled">
-                                                <li><strong>Quote Single:</strong> Single room quoted price</li>
-                                                <li><strong>Quote SS:</strong> Single supplement quoted price</li>
-                                                <li><strong>Quote HPP:</strong> Half-board per person quoted price</li>
-                                                <li><strong>CMFD HOTEL:</strong> Confirmed hotel name</li>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled">
-                                                <li><strong>Option:</strong> Option status</li>
-                                                <li><strong>Offer SS/HPP:</strong> Offered prices</li>
-                                                <li><strong>®:</strong> Registered/Confirmed</li>
-                                                <li><strong>VC sent to SHA:</strong> Voucher/Confirmation sent</li>
-                                                <li><strong>Budget HPP +/-:</strong> Budget variance</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    {{-- Column descriptions --}}
+                    <div class="mt-4 rounded border border-slate-200 bg-white">
+                        <div class="border-b border-slate-200 px-4 py-3">
+                            <h5 class="text-sm font-medium text-slate-700">Column descriptions</h5>
+                        </div>
+                        <div class="px-4 py-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-slate-700">
+                            <div><span class="font-medium text-slate-900">Quote Single:</span> Single room quoted price</div>
+                            <div><span class="font-medium text-slate-900">Option:</span> Option status</div>
+                            <div><span class="font-medium text-slate-900">Quote SS:</span> Single supplement quoted price</div>
+                            <div><span class="font-medium text-slate-900">Offer SS/HPP:</span> Offered prices</div>
+                            <div><span class="font-medium text-slate-900">Quote HPP:</span> Half-board per person quoted price</div>
+                            <div><span class="font-medium text-slate-900">®:</span> Registered / Confirmed</div>
+                            <div><span class="font-medium text-slate-900">CMFD Hotel:</span> Confirmed hotel name</div>
+                            <div><span class="font-medium text-slate-900">VC sent to SHA:</span> Voucher / Confirmation sent</div>
+                            <div></div>
+                            <div><span class="font-medium text-slate-900">Budget HPP +/-:</span> Budget variance</div>
                         </div>
                     </div>
                     @else
-                        <div class="alert alert-info">
-                            <i class="ti ti-info-circle"></i> {{ __('No service schedule is available for this tour yet.') }}
+                        <div class="flex items-start gap-2 rounded border border-info-600/20 bg-info-50 px-3 py-2 text-sm text-info-700">
+                            <x-ui.icon name="info" size="sm" class="mt-0.5 text-info-600" />
+                            <div class="flex-1">{{ __('No service schedule is available for this tour yet.') }}</div>
                         </div>
                     @endif
                 @else
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle"></i> No quotation data available for front sheet. Please create a quotation first.
+                    <div class="flex items-start gap-2 rounded border border-info-600/20 bg-info-50 px-3 py-2 text-sm text-info-700">
+                        <x-ui.icon name="info" size="sm" class="mt-0.5 text-info-600" />
+                        <div class="flex-1">No quotation data available for front sheet. Please create a quotation first.</div>
                     </div>
                 @endif
             </div>
 
             {{-- Services Tab --}}
             <div role="tabpanel" class="tab-pane" id="service-tab">
-                <h3 class="mb-4"><i class="ti ti-list me-2"></i>Services</h3>
-                
-                {{-- Add Package Buttons --}}
-                <div class="btn-toolbar mb-3" role="toolbar">
-                    <div class="btn-group me-2" role="group">
-                        <button type="button" class="btn btn-success btn-sm" onclick="addDay()">
-                            <i class="ti ti-plus me-1"></i>Day
-                        </button>
-                        <button type="button" class="btn btn-info btn-sm" onclick="addAllDays()">Add All</button>
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="list" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-semibold text-slate-700">Services</h3>
                     </div>
-                    <div class="btn-group me-2" role="group">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportCity()">City</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportExcel()">Excel</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportNumber()">Number</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportItinerary()">Itinerary</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printAll()">Print All</button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <div class="inline-flex rounded-md shadow-subtle">
+                            <button type="button" onclick="addDay()"
+                                    class="inline-flex h-8 items-center gap-1 rounded-l border border-r-0 border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                <x-ui.icon name="plus" size="xs" />Day
+                            </button>
+                            <button type="button" onclick="addAllDays()"
+                                    class="inline-flex h-8 items-center gap-1 rounded-r border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                Add all
+                            </button>
+                        </div>
+                        <div class="inline-flex rounded-md shadow-subtle">
+                            @foreach([['City','exportCity()'],['Excel','exportExcel()'],['Number','exportNumber()'],['Itinerary','exportItinerary()'],['Print All','printAll()']] as $i => $btn)
+                                <button type="button" onclick="{{ $btn[1] }}"
+                                        class="inline-flex h-8 items-center gap-1 border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50
+                                               {{ $i === 0 ? 'rounded-l' : '' }} {{ $i === 4 ? 'rounded-r border-l-0' : ($i > 0 ? 'border-l-0' : '') }}">
+                                    {{ $btn[0] }}
+                                </button>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -662,22 +661,17 @@
                 @php $peopleCount = 0; @endphp
                 @foreach ($listRoomsHotel as $room)
                     @php
-                        $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code]) 
-                            ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count 
+                        $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$room->room_types->code])
+                            ? App\TourPackage::$roomsPeopleCount[$room->room_types->code] * $room->count
                             : 0;
                     @endphp
                 @endforeach
-                
+
                 @if ($peopleCount != $tour->pax + $tour->pax_free)
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <div class="d-flex">
-                            <div>
-                                <i class="ti ti-alert-triangle me-2"></i>
-                            </div>
-                            <div class="flex-fill">
-                                <strong>Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})</strong>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="mb-3 flex items-start gap-2 rounded border border-warning-600/20 bg-warning-50 px-3 py-2 text-sm text-warning-700">
+                        <x-ui.icon name="alert-triangle" size="sm" class="mt-0.5 text-warning-600" />
+                        <div class="flex-1">
+                            Pax Count ({{ $tour->pax + $tour->pax_free }}) is not equal to the number of people in the rooms ({{ $peopleCount }})
                         </div>
                     </div>
                 @endif
@@ -696,20 +690,19 @@
 
 
                  <?php $countDay = 0; ?>
-	<div class="alert alert-info block-error-driver" style="text-align: center; display: none;">
-
+	<div class="block-error-driver mb-3 hidden rounded border border-info-600/20 bg-info-50 px-3 py-2 text-sm text-info-700 text-center">
         		</div>
     @foreach($tourDates as $tourDate)
         <?php $countDay++ ?>
 		
         <div class="" >
 			 
-            <div class="">
-
-                <h3 class="box-title">{!!trans('main.Day')!!} {{ $countDay }}
-                    - {{ (new \Carbon\Carbon($tourDate->date))->formatLocalized('%B %d, %Y (%A)') }}</h3>
-                <br/><br/>
-                <div class="">
+            <div class="rounded border border-slate-200 bg-white mb-3">
+                <div class="border-b border-slate-200 px-4 py-3 flex items-center gap-2 bg-slate-50">
+                    <x-ui.icon name="calendar-days" size="sm" class="text-slate-400" />
+                    <h3 class="text-sm font-semibold text-slate-700">{!!trans('main.Day')!!} {{ $countDay }} — {{ (new \Carbon\Carbon($tourDate->date))->formatLocalized('%B %d, %Y (%A)') }}</h3>
+                </div>
+                <div class="p-2 overflow-x-auto">
 					
                     <table class="table table-striped table-bordered table-hover {{ \App\Helper\PermissionHelper::checkPermission('tour_package.edit') ? 'package-service-table' : '' }}"
                            style='background:#fff'>
@@ -1114,33 +1107,35 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
                         </div>
                         @endforeach
                     @else
-                        <div class="alert alert-info">
-                            <i class="ti ti-info-circle"></i> {{ __('No service days are configured for this tour yet.') }}
+                        <div class="flex items-start gap-2 rounded border border-info-600/20 bg-info-50 px-3 py-2 text-sm text-info-700">
+                            <x-ui.icon name="info" size="sm" class="mt-0.5 text-info-600" />
+                            <div class="flex-1">{{ __('No service days are configured for this tour yet.') }}</div>
                         </div>
                     @endif
                 </div>
 
                 {{-- Comments Section --}}
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="ti ti-message me-2"></i>{!! trans('main.Comments') !!}
-                        </h3>
+                <div class="mt-6 rounded border border-slate-200 bg-white">
+                    <div class="border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                        <x-ui.icon name="message-circle" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-medium text-slate-700">{!! trans('main.Comments') !!}</h3>
                     </div>
-                    <div class="card-body">
-                        <div id="show_comments"></div>
+                    <div class="px-4 py-4">
+                        <div id="show_comments" class="max-h-80 overflow-y-auto"></div>
                     </div>
-                    <div class="card-footer">
-                        <form method="POST" action="{{ route('comment.store') }}" id="form_comment">
+                    <div class="border-t border-slate-200 bg-slate-50 px-4 py-4 rounded-b">
+                        <form method="POST" action="{{ route('comment.store') }}" id="form_comment" class="space-y-3">
                             @csrf
-                            <div class="mb-3">
-                                <textarea class="form-control" id="content" name="content" rows="3" placeholder="Ctrl + Enter to post comment"></textarea>
-                            </div>
+                            <textarea class="form-control block w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600"
+                                      id="content" name="content" rows="3" placeholder="Add a comment — Ctrl + Enter to post"></textarea>
                             <input type="hidden" name="reference_id" value="{{ $tour->id }}">
                             <input type="hidden" name="reference_type" value="{{ \App\Comment::$services['tour'] ?? 'tour' }}">
-                            <button type="submit" class="btn btn-success">
-                                <i class="ti ti-send me-1"></i>{!! trans('main.Send') !!}
-                            </button>
+                            <div class="flex">
+                                <button type="submit" class="inline-flex h-9 items-center gap-2 rounded bg-primary-600 px-4 text-sm font-medium text-white hover:bg-primary-700">
+                                    <x-ui.icon name="send" size="sm" />
+                                    {!! trans('main.Send') !!}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -1148,288 +1143,323 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
 
             {{-- Tour Info Tab --}}
             <div role="tabpanel" class="tab-pane" id="tour-tab">
-                <h3 class="mb-4"><i class="ti ti-plane me-2"></i>Tour Information</h3>
-                <div class="row">
-                    <div class="col-md-6">
-                        <table class="table card-table table-vcenter">
-                            <tbody>
-                                <tr>
-                                    <td><strong>{!! trans('main.Name') !!}</strong></td>
-                                    <td>{{ $tour->name ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.ExternalName') !!}</strong></td>
-                                    <td>{{ $tour->external_name ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.Pax') !!}</strong></td>
-                                    <td>{{ $tour->pax ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.PaxFree') !!}</strong></td>
-                                    <td>{{ $tour->pax_free ?? '—' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <table class="table card-table table-vcenter">
-                            <tbody>
-                                <tr>
-                                    <td><strong>{!! trans('main.DepDate') !!}</strong></td>
-                                    <td>{{ $tour->departure_date ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.RetDate') !!}</strong></td>
-                                    <td>{{ $tour->retirement_date ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.Status') !!}</strong></td>
-                                    <td>{{ $status->name ?? '—' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{!! trans('main.Phone') !!}</strong></td>
-                                    <td>{{ $tour->phone ?? '—' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="mb-4 flex items-center gap-2">
+                    <x-ui.icon name="plane" size="sm" class="text-slate-400" />
+                    <h3 class="text-sm font-semibold text-slate-700">Tour information</h3>
                 </div>
+                <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.Name') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->name ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.DepDate') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->departure_date ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.ExternalName') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->external_name ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.RetDate') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->retirement_date ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.Pax') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->pax ?? '—' }} @if($tour->pax_free)<span class="text-slate-400">+ {{ $tour->pax_free }} free</span>@endif</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.Status') !!}</dt>
+                        <dd class="mt-0.5">
+                            @if($status->name ?? null)
+                                <span class="inline-flex items-center rounded bg-info-50 px-2 py-0.5 text-xs font-medium text-info-700">{{ $status->name }}</span>
+                            @else — @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.PaxFree') !!}</dt>
+                        <dd class="mt-0.5 text-slate-800">{{ $tour->pax_free ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{!! trans('main.Phone') !!}</dt>
+                        <dd class="mt-0.5">
+                            @if($tour->phone)<a href="tel:{{ $tour->phone }}" class="text-primary-700 hover:underline">{{ $tour->phone }}</a>
+                            @else <span class="text-slate-400">—</span>@endif
+                        </dd>
+                    </div>
+                </dl>
             </div>
 
             {{-- Quotations Tab --}}
             <div role="tabpanel" class="tab-pane" id="quotation-tab">
-                <h3 class="mb-4"><i class="ti ti-calculator me-2"></i>Quotations</h3>
-                @if (Auth::user()->can('quotation.add'))
-                    <a href="{{ route('quotation.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="ti ti-plus"></i> {!! trans('main.AddQuotation') !!}
-                    </a>
-                @endif
-                
-                <table class="table card-table table-vcenter table-striped">
-                    <thead>
-                        <tr>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Assigned') !!}</th>
-                            <th>{!! trans('main.Frontsheet') !!}</th>
-                            <th>{!! trans('main.Print') !!}</th>
-                            <th>Excel</th>
-                            <th>{!! trans('main.CreatedAt') !!}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tour->quotations as $quotation)
-                            <tr style="background-color: {{ $quotation->is_confirm == 0 ? '#ff00008f' : '#caffbd' }}">
-                                <td>
-                                    @if (Auth::user()->can('quotation.edit'))
-                                        <a href="{{ route('quotation.edit', ['quotation' => $quotation->id]) }}">
-                                            {{ $quotation->name ?? '—' }}
-                                        </a>
-                                    @else
-                                        {{ $quotation->name ?? '—' }}
-                                    @endif
-                                </td>
-                                <td>{{ $quotation->userName() ?? '—' }}</td>
-                                <td>
-                                    @if (Auth::user()->can('comparison.show'))
-                                        <a href="{{ route('comparison.show', ['comparison' => $quotation->id]) }}" onclick="event.stopPropagation();">
-                                            View Front Sheet
-                                        </a>
-                                    @endif
-                                </td>
-                                <td>
-                                    <a href="{{ route('quotation.pdf', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="ti ti-printer"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-success">
-                                        <i class="ti ti-file-excel"></i>
-                                    </a>
-                                </td>
-                                <td>{{ Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y') }}</td>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="calculator" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-semibold text-slate-700">Quotations</h3>
+                    </div>
+                    @if(Auth::user()->can('quotation.add'))
+                        <x-ui.button as="a" href="{{ route('quotation.add', ['id' => $tour->id]) }}" icon="plus" size="sm">
+                            {!! trans('main.AddQuotation') !!}
+                        </x-ui.button>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto rounded border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                                <th class="px-3 py-2">{!! trans('main.Name') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.Assigned') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.Frontsheet') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.CreatedAt') !!}</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">
-                                    <i class="ti ti-inbox"></i> No quotations found
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($tour->quotations as $quotation)
+                                <tr class="hover:bg-slate-50 {{ $quotation->is_confirm == 0 ? 'bg-danger-50/40' : 'bg-success-50/40' }}">
+                                    <td class="px-3 py-2">
+                                        @if(Auth::user()->can('quotation.edit'))
+                                            <a href="{{ route('quotation.edit', ['quotation' => $quotation->id]) }}" class="font-medium text-primary-700 hover:underline">
+                                                {{ $quotation->name ?: '—' }}
+                                            </a>
+                                        @else
+                                            <span class="font-medium text-slate-800">{{ $quotation->name ?: '—' }}</span>
+                                        @endif
+                                        @if($quotation->is_confirm == 0)
+                                            <span class="ml-2 inline-flex items-center rounded bg-danger-50 px-1.5 py-0.5 text-[10px] font-medium text-danger-700 uppercase">Draft</span>
+                                        @else
+                                            <span class="ml-2 inline-flex items-center rounded bg-success-50 px-1.5 py-0.5 text-[10px] font-medium text-success-700 uppercase">Confirmed</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-slate-700">{{ $quotation->userName() ?: '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        @if(Auth::user()->can('comparison.show'))
+                                            <a href="{{ route('comparison.show', ['comparison' => $quotation->id]) }}" onclick="event.stopPropagation();"
+                                               class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
+                                                <x-ui.icon name="layout-grid" size="xs" />Front Sheet
+                                            </a>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-slate-500 text-xs whitespace-nowrap">{{ Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y') }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <a href="{{ route('quotation.pdf', ['id' => $quotation->id]) }}" target="_blank"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700" title="Print PDF">
+                                                <x-ui.icon name="printer" size="sm" />
+                                            </a>
+                                            <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-success-700" title="Excel">
+                                                <x-ui.icon name="file-spreadsheet" size="sm" />
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="px-3 py-8 text-center text-sm text-slate-500">No quotations found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- Guest List Tab --}}
             <div role="tabpanel" class="tab-pane" id="roomlist-tab">
-                <h3 class="mb-4"><i class="ti ti-bed me-2"></i>Guest Lists</h3>
-                @if (Auth::user()->can('guestList.add'))
-                    <a href="{{ route('guestList.add', ['id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="ti ti-plus"></i> Add Guest List
-                    </a>
-                @endif
-                
-                <table class="table card-table table-vcenter table-striped">
-                    <thead>
-                        <tr>
-                            <th>Version</th>
-                            <th>{!! trans('main.Name') !!}</th>
-                            <th>{!! trans('main.Author') !!}</th>
-                            <th>{!! trans('main.CreatedAt') !!}</th>
-                            <th>{!! trans('main.SentAt') !!}</th>
-                            <th>{!! trans('main.Hotels') !!}</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tour->guestLists as $guestList)
-                            <tr>
-                                <td>{{ $guestList->version }}</td>
-                                <td>
-                                    @if (Auth::user()->can('guestList.showbyid'))
-                                        <a href="{{ route('guestList.showbyid', ['id' => $guestList->id]) }}">
-                                            {{ $guestList->name }}
-                                        </a>
-                                    @else
-                                        {{ $guestList->name }}
-                                    @endif
-                                </td>
-                                <td>{{ $guestList->getAuthor()->name ?? '—' }}</td>
-                                <td>{{ Carbon\Carbon::parse($guestList->created_at)->format('d-m-Y') }}</td>
-                                <td>
-                                    @if($guestList->sent_at)
-                                        {{ Carbon\Carbon::parse($guestList->sent_at)->format('d-m-Y') }}
-                                    @else
-                                        <span class="text-muted">Not sent</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @foreach($guestList->getSelectedHotelNames() as $index => $hotelName)
-                                        {{ $hotelName }}{{ $index < count($guestList->getSelectedHotelNames()) - 1 ? ', ' : '' }}
-                                    @endforeach
-                                </td>
-                                <td>
-                                    @if(!$guestList->sent_at)
-                                        <button class="btn btn-sm btn-primary send-guest-list" 
-                                                data-url="{{ route('guestlist.send', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
-                                            <i class="ti ti-send"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger delete-guest-list"
-                                                data-url="{{ route('guestlist.delete', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    @endif
-                                </td>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="bed" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-semibold text-slate-700">Guest lists</h3>
+                    </div>
+                    @if(Auth::user()->can('guestList.add'))
+                        <x-ui.button as="a" href="{{ route('guestList.add', ['id' => $tour->id]) }}" icon="plus" size="sm">
+                            Add guest list
+                        </x-ui.button>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto rounded border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                                <th class="px-3 py-2">Version</th>
+                                <th class="px-3 py-2">{!! trans('main.Name') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.Author') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.CreatedAt') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.SentAt') !!}</th>
+                                <th class="px-3 py-2">{!! trans('main.Hotels') !!}</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center">
-                                    <i class="ti ti-inbox"></i> No guest lists found
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($tour->guestLists as $guestList)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-3 py-2 font-mono text-xs text-slate-500">{{ $guestList->version }}</td>
+                                    <td class="px-3 py-2">
+                                        @if(Auth::user()->can('guestList.showbyid'))
+                                            <a href="{{ route('guestList.showbyid', ['id' => $guestList->id]) }}" class="font-medium text-primary-700 hover:underline">
+                                                {{ $guestList->name }}
+                                            </a>
+                                        @else
+                                            <span class="font-medium text-slate-800">{{ $guestList->name }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-slate-700">{{ $guestList->getAuthor()->name ?? '—' }}</td>
+                                    <td class="px-3 py-2 text-slate-500 text-xs whitespace-nowrap">{{ Carbon\Carbon::parse($guestList->created_at)->format('d-m-Y') }}</td>
+                                    <td class="px-3 py-2 text-xs whitespace-nowrap">
+                                        @if($guestList->sent_at)
+                                            <span class="inline-flex items-center gap-1 rounded bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700">
+                                                <x-ui.icon name="check" size="xs" />{{ Carbon\Carbon::parse($guestList->sent_at)->format('d-m-Y') }}
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400">Not sent</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-slate-700 max-w-xs">
+                                        @foreach($guestList->getSelectedHotelNames() as $index => $hotelName)
+                                            {{ $hotelName }}{{ $index < count($guestList->getSelectedHotelNames()) - 1 ? ', ' : '' }}
+                                        @endforeach
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center justify-end gap-1">
+                                            @if(!$guestList->sent_at)
+                                                <button class="send-guest-list inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700"
+                                                        data-url="{{ route('guestlist.send', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}" title="Send">
+                                                    <x-ui.icon name="send" size="sm" />
+                                                </button>
+                                                <button class="delete-guest-list inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-danger-50 hover:text-danger-700"
+                                                        data-url="{{ route('guestlist.delete', ['id' => $tour->id, 'guestlistid' => $guestList->id]) }}" title="Delete">
+                                                    <x-ui.icon name="trash-2" size="sm" />
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="7" class="px-3 py-8 text-center text-sm text-slate-500">No guest lists found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- Invoices Tab --}}
             <div role="tabpanel" class="tab-pane" id="invoices-tab">
-                <h3 class="mb-4"><i class="ti ti-file-invoice me-2"></i>Invoices</h3>
-                @if(Auth::user()->can('invoices.create'))
-                    <a href="{{ route('invoices.create', ['tour_id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="ti ti-plus me-1"></i>New Invoice
-                    </a>
-                @endif
-                
-                <table class="table card-table table-vcenter table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Invoice No</th>
-                            <th>Due Date</th>
-                            <th>Received Date</th>
-                            <th>Service</th>
-                            <th>Office</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($invoicesData as $invoice)
-                            <tr>
-                                <td>{{ $invoice['id'] }}</td>
-                                <td>{{ $invoice['invoice_no'] }}</td>
-                                <td>{{ $invoice['due_date'] }}</td>
-                                <td>{{ $invoice['received_date'] }}</td>
-                                <td>{{ $invoice['package_name'] }}</td>
-                                <td>{{ $invoice['office_name'] }}</td>
-                                <td>{{ $invoice['total_amount'] }}</td>
-                                <td>{{ $invoice['status'] }}</td>
-                                <td>
-                                    <a href="{{ route('invoices.show', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-info">
-                                        <i class="ti ti-eye"></i>
-                                    </a>
-                                    <a href="{{ route('invoices.edit', ['invoice' => $invoice['id']]) }}" class="btn btn-sm btn-warning">
-                                        <i class="ti ti-edit"></i>
-                                    </a>
-                                </td>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="receipt" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-semibold text-slate-700">Invoices</h3>
+                    </div>
+                    @if(Auth::user()->can('invoices.create'))
+                        <x-ui.button as="a" href="{{ route('invoices.create', ['tour_id' => $tour->id]) }}" icon="plus" size="sm">
+                            New invoice
+                        </x-ui.button>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto rounded border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                                <th class="px-3 py-2">ID</th>
+                                <th class="px-3 py-2">Invoice no</th>
+                                <th class="px-3 py-2">Due date</th>
+                                <th class="px-3 py-2">Received</th>
+                                <th class="px-3 py-2">Service</th>
+                                <th class="px-3 py-2">Office</th>
+                                <th class="px-3 py-2 text-right">Total</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="text-center">
-                                    <i class="ti ti-inbox"></i> No invoices found
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($invoicesData as $invoice)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-3 py-2 font-mono text-xs text-slate-500">#{{ $invoice['id'] }}</td>
+                                    <td class="px-3 py-2 font-medium text-slate-900">{{ $invoice['invoice_no'] }}</td>
+                                    <td class="px-3 py-2 text-slate-700 text-xs whitespace-nowrap">{{ $invoice['due_date'] }}</td>
+                                    <td class="px-3 py-2 text-slate-700 text-xs whitespace-nowrap">{{ $invoice['received_date'] }}</td>
+                                    <td class="px-3 py-2 text-slate-700">{{ $invoice['package_name'] }}</td>
+                                    <td class="px-3 py-2 text-slate-700">{{ $invoice['office_name'] }}</td>
+                                    <td class="px-3 py-2 text-right font-mono text-slate-700">{{ $invoice['total_amount'] }}</td>
+                                    <td class="px-3 py-2">
+                                        @php
+                                            $st = strtolower($invoice['status'] ?? '');
+                                            $stClass = $st === 'paid' ? 'bg-success-50 text-success-700' : 'bg-warning-50 text-warning-700';
+                                        @endphp
+                                        <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium {{ $stClass }}">{{ ucfirst($invoice['status']) }}</span>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <a href="{{ route('invoices.show', ['invoice' => $invoice['id']]) }}"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700" title="View">
+                                                <x-ui.icon name="eye" size="sm" />
+                                            </a>
+                                            <a href="{{ route('invoices.edit', ['invoice' => $invoice['id']]) }}"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700" title="Edit">
+                                                <x-ui.icon name="edit" size="sm" />
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="9" class="px-3 py-8 text-center text-sm text-slate-500">No invoices found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- Billing Tab --}}
             <div role="tabpanel" class="tab-pane" id="billing-tab">
-                <h3 class="mb-4"><i class="ti ti-cash me-2"></i>Billing</h3>
-                @if(Auth::user()->can('accounting.create'))
-                    <a href="{{ route('accounting.create', ['tour_id' => $tour->id]) }}" class="btn btn-success mb-3">
-                        <i class="ti ti-plus me-1"></i>New Billing
-                    </a>
-                @endif
-                
-                <table class="table card-table table-vcenter table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Date</th>
-                            <th>Office</th>
-                            <th>Total Amount</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($billingData as $billing)
-                            <tr>
-                                <td>{{ $billing['id'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d') }}</td>
-                                <td>{{ $billing['office_name'] }}</td>
-                                <td>{{ $billing['total_amount'] }}</td>
-                                <td>
-                                    <a href="{{ route('accounting.show', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-info">
-                                        <i class="ti ti-eye"></i>
-                                    </a>
-                                    <a href="{{ route('accounting.edit', ['accounting' => $billing['id']]) }}" class="btn btn-sm btn-warning">
-                                        <i class="ti ti-edit"></i>
-                                    </a>
-                                </td>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="banknote" size="sm" class="text-slate-400" />
+                        <h3 class="text-sm font-semibold text-slate-700">Billing</h3>
+                    </div>
+                    @if(Auth::user()->can('accounting.create'))
+                        <x-ui.button as="a" href="{{ route('accounting.create', ['tour_id' => $tour->id]) }}" icon="plus" size="sm">
+                            New billing
+                        </x-ui.button>
+                    @endif
+                </div>
+
+                <div class="overflow-x-auto rounded border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                                <th class="px-3 py-2">ID</th>
+                                <th class="px-3 py-2">Date</th>
+                                <th class="px-3 py-2">Office</th>
+                                <th class="px-3 py-2 text-right">Total amount</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center">
-                                    <i class="ti ti-inbox"></i> No billing records found
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($billingData as $billing)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-3 py-2 font-mono text-xs text-slate-500">#{{ $billing['id'] }}</td>
+                                    <td class="px-3 py-2 text-slate-700 text-xs whitespace-nowrap">{{ \Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d') }}</td>
+                                    <td class="px-3 py-2 text-slate-700">{{ $billing['office_name'] }}</td>
+                                    <td class="px-3 py-2 text-right font-mono text-slate-700">{{ $billing['total_amount'] }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <a href="{{ route('accounting.show', ['accounting' => $billing['id']]) }}"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700" title="View">
+                                                <x-ui.icon name="eye" size="sm" />
+                                            </a>
+                                            <a href="{{ route('accounting.edit', ['accounting' => $billing['id']]) }}"
+                                               class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700" title="Edit">
+                                                <x-ui.icon name="edit" size="sm" />
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="px-3 py-8 text-center text-sm text-slate-500">No billing records found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

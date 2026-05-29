@@ -82,6 +82,22 @@
                 ->get();
         } catch (\Throwable $e) { $recentTasks = collect(); }
 
+        // Task-type statuses for the inline status dropdown — pre-compute as
+        // a plain array so the @json directive in the script tag below has
+        // no nested array literals / arrow fns to confuse its bracket parser.
+        try {
+            $taskStatusesForJs = ($statuses ?? collect())
+                ->where('type', 'task')
+                ->values()
+                ->map(function ($s) {
+                    return [
+                        'id'    => $s->id,
+                        'name'  => $s->name,
+                        'color' => $s->color ?: '#64748b',
+                    ];
+                })->all();
+        } catch (\Throwable $e) { $taskStatusesForJs = []; }
+
         // Helpers — avatar initials + a stable colour from the user's name.
         if (!function_exists('tms_user_initials')) {
             function tms_user_initials($name) {
@@ -460,12 +476,8 @@
     <script>
     (function () {
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        // Task-type statuses for the dropdown — only pass id/name/color the picker needs.
-        const TASK_STATUSES = @json(($statuses ?? collect())->where('type', 'task')->values()->map(fn($s) => [
-            'id'    => $s->id,
-            'name'  => $s->name,
-            'color' => $s->color ?: '#64748b',
-        ]));
+        // Task-type statuses for the dropdown (pre-computed in PHP above).
+        const TASK_STATUSES = @json($taskStatusesForJs);
 
         function saveField(taskId, field, value) {
             return fetch('/task/' + taskId + '/update-field', {

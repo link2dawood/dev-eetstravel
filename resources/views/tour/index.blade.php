@@ -241,12 +241,22 @@
                                        title="View">
                                         <x-ui.icon name="eye" />
                                     </a>
-                                    @if ($user->can('tour.update'))
+                                    @if ($user->can('tour.edit'))
                                         <a href="{{ url('/tour/' . $tour->id . '/edit') }}"
                                            class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                                            title="Edit">
                                             <x-ui.icon name="edit" />
                                         </a>
+                                    @endif
+                                    @if ($user->can('tour.destroy'))
+                                        {{-- Alpine-driven confirm. data-tour-delete-url tells the modal which URL
+                                             to navigate to on confirm; data-tour-name shows in the modal copy. --}}
+                                        <button type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-danger-50 hover:text-danger-600"
+                                                title="Delete"
+                                                onclick="window.tourDeleteConfirm('{{ addslashes($tour->name) }}', '{{ url('/tour/' . $tour->id . '/delete') }}')">
+                                            <x-ui.icon name="trash-2" />
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -302,5 +312,88 @@
         @endif
     @endif
 </div>
+
+{{-- Delete-confirmation modal (vanilla JS — no Alpine dep so it works
+     today regardless of whether resources/js/app.js has been compiled).
+     Opened by the per-row Delete button via window.tourDeleteConfirm(). --}}
+<div id="tour-delete-modal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="tour-delete-title">
+    <div class="w-full max-w-md rounded-md border border-slate-200 bg-white shadow-overlay">
+        <header class="flex items-start gap-4 px-6 py-4 border-b border-slate-200">
+            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-50 text-danger-600">
+                <x-ui.icon name="alert-triangle" />
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 id="tour-delete-title" class="text-base font-semibold text-slate-900">Delete tour?</h3>
+                <p class="mt-1 text-sm text-slate-500">
+                    This action cannot be undone. Linked tasks, quotations and invoices may be removed too.
+                </p>
+            </div>
+            <button type="button"
+                    class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    onclick="window.tourDeleteCancel()"
+                    aria-label="Close">
+                <x-ui.icon name="x" />
+            </button>
+        </header>
+
+        <div class="px-6 py-4">
+            <p class="text-sm text-slate-700">
+                <span class="text-slate-500">Tour:</span>
+                <strong id="tour-delete-name" class="text-slate-900"></strong>
+            </p>
+        </div>
+
+        <footer class="flex items-center justify-end gap-2 px-6 py-3 border-t border-slate-200 bg-slate-50/40 rounded-b-md">
+            <x-ui.button variant="secondary" onclick="window.tourDeleteCancel()">Cancel</x-ui.button>
+            <a id="tour-delete-confirm-link"
+               href="#"
+               class="inline-flex h-9 items-center justify-center gap-2 rounded bg-danger-600 px-3 text-sm font-medium text-white transition-colors hover:bg-danger-700">
+                <x-ui.icon name="trash-2" />
+                Delete tour
+            </a>
+        </footer>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal     = document.getElementById('tour-delete-modal');
+        var nameEl    = document.getElementById('tour-delete-name');
+        var confirmEl = document.getElementById('tour-delete-confirm-link');
+        if (!modal || !nameEl || !confirmEl) return;
+
+        window.tourDeleteConfirm = function (name, url) {
+            nameEl.textContent = name || 'this tour';
+            confirmEl.href     = url;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.tourDeleteCancel = function () {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            confirmEl.href = '#';
+            nameEl.textContent = '';
+        };
+
+        // Click on backdrop closes the modal.
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) window.tourDeleteCancel();
+        });
+
+        // ESC closes the modal.
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                window.tourDeleteCancel();
+            }
+        });
+    })();
+</script>
 
 @endsection

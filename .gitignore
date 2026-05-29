@@ -44,3 +44,6 @@ auth.json
 /storage/framework/sessions/*
 /storage/framework/views/*
 .env
+
+# SnappyMail runtime data
+public/snappymail/data/

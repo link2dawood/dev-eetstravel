@@ -30,7 +30,7 @@ class TourController extends Controller
 	/*
 	public function __construct()
     {
-		$this->middleware('clientauth', ['except' => 'landingPage']);
+		$this->middleware('clientauth');
 	}
 	*/
 	public function getShowButton($id, $isQuotation = false, $tour, array $perm)

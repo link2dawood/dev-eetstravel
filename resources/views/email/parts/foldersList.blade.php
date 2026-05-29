@@ -1,98 +1,47 @@
-<div class="box box-solid">
-    <div class="box-header with-border">
-        <h3 class="box-title">Folders</h3>
-
-        <div class="box-tools">
-            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
-            </button>
-        </div>
+{{-- Modernized folder list (Bootstrap 5 + Tabler). Vue bindings preserved. --}}
+<div class="card mb-3 shadow-sm">
+    <div class="card-header d-flex align-items-center">
+        <i class="ti ti-folders me-2 text-primary"></i>
+        <h3 class="card-title mb-0 flex-grow-1">Folders</h3>
+        <button type="button" class="btn btn-sm btn-icon btn-ghost-secondary" data-widget="collapse" aria-label="Collapse">
+            <i class="ti ti-chevron-up"></i>
+        </button>
     </div>
-    <div class="box-body no-padding">
-        <div v-if="loadingFolders">
-            <div style="min-height: 300px;">
-                <div class="loader"></div>
 
+    <div class="card-body p-0">
+        <div v-if="loadingFolders" class="d-flex align-items-center justify-content-center" style="min-height:200px">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading…</span>
             </div>
         </div>
-        <ul class="nav nav-pills nav-stacked" v-if="folders" >
-			<li  class="{active:(index==currentFolder)}">
-                <a href="#" @click="changeFolder('INBOX')">
-                    <i class="fa fa-inbox" ></i> Inbox
+
+        <nav class="list-group list-group-flush" v-if="folders">
+            <a href="#"
+               class="list-group-item list-group-item-action d-flex align-items-center"
+               :class="{ 'active': currentFolder === 'INBOX' }"
+               @click.prevent="changeFolder('INBOX')">
+                <i class="ti ti-inbox me-2"></i>
+                <span class="flex-grow-1">Inbox</span>
+            </a>
+
+            <template v-for="(folder, index) in folders.INBOX">
+                <a v-if="index !== 'Drafts'"
+                   href="#"
+                   :key="index"
+                   class="list-group-item list-group-item-action d-flex align-items-center"
+                   :class="{ 'active': currentFolder === index }"
+                   @click.prevent="changeFolder(index)">
+                    <i class="ti ti-folder me-2"></i>
+                    <span class="flex-grow-1">@{{ index }}</span>
                 </a>
+            </template>
 
-            </li>
-            <li  v-for="(folder, index) in folders.INBOX" :class="{active:(index==currentFolder)}"  v-if="index !== 'Drafts'">
-                <a href="#" @click="changeFolder(index)">
-                    <i class="fa fa-inbox" ></i> @{{index}}
-                </a>
-
-            </li>
-            <li>
-                <a href="#" class="" @click="openCreateFolderModal()">
-                    Add Folder
-                </a>
-            </li>
-{{--
-            <table class="table table-hover table-striped finder-disable" v-if="emailsArray && !view && !loading">
-                <tbody>
-                <tr v-if="emailsArray" style="cursor: pointer" v-for="(email, index) in emailsArray" >
-                    <td class="mailbox-star onclick_redirect">
-                    </td>
-
-                    <td class="mailbox-name" @click="infoEmail(email)">
-                        <a >
-                            <div v-if="currentFolder == 'INBOX.Sent'">@{{email.header.to}}</div>
-                            <div v-else>@{{email.header.from}}</div>
-                        </a>
-                    </td>
-                  
-
-                </tr>
-                </tbody>
-
-                <ul class="email-user-list mt-4">
-                                                       
-                   
-                    <li class="user-item active">
-                        <a href="#" class="text-decoration-none">
-
-                            <div class="card">
-
-                                <div class="card-body">
-
-                                    <div class="d-flex align-items-center justify-content-between">
-
-                                       
-                                        <div class="d-flex align-items-center gap-2">
-                                            
-                                            <div>
-                                                <h3 class="card-title mb-0">
-                                                    <p class="card-text mail-text">
-                                                       
-                                                    </p>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="d-flex flex-column align-items-end">
-                                            <p class="card-text"></p>
-                                            <div class="mail-status"></div>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </a>
-                    </li>
-           
-
-                </ul> 
-            </table>--}}
-        </ul>
+            <a href="#"
+               class="list-group-item list-group-item-action d-flex align-items-center text-primary fw-medium"
+               @click.prevent="openCreateFolderModal()">
+                <i class="ti ti-plus me-2"></i>
+                <span>Add folder</span>
+            </a>
+        </nav>
     </div>
 </div>
-
-

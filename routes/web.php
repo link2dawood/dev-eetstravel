@@ -719,7 +719,11 @@ Route::group(['middleware' => 'web'], function () {
 	Route::post('email/addFolder', 'EmailController@addFolder')->name('email.addFolder');
 	Route::get('email/template', 'EmailController@composeEmailTemplate')->name('email.template');
 	Route::get('email/addFolderForm', 'EmailController@addFolderForm')->name('email.addFolderForm');
-	Route::get('email/{page?}', 'EmailController@index')->name('email.index');
+	// Constrain {page?} to digits only so /email/webmail, /email/configure, /email/folder/*
+	// and other named segments are not swallowed by this catch-all before later routes match.
+	Route::get('email/{page?}', 'EmailController@index')
+	    ->where('page', '[0-9]+')
+	    ->name('email.index');
 	Route::get('email/folder/{name}/{page?}', 'EmailController@folder')->name('email.folder')
         ->where('name', '.*');
 	Route::get('email/mail/{id}/{currentFolder?}', 'EmailController@mail')->name('email.mail')
@@ -810,7 +814,17 @@ Route::group(['middleware' => 'web'], function () {
 	Route::resource('menu', 'MenuController');	
 });
 
-Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landing_page');
+// Public client-facing tour landing page. Anonymous access requires a
+// ?t=<share_token> query param matching the tour's share_token column
+// (set lazily by Tour::ensureShareToken()). throttle:30,1 limits abuse
+// of the endpoint by attackers trying to brute-force tokens or
+// enumerate tour ids. id MUST be numeric — refuse path-traversal-y
+// requests before they reach the controller.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/tour/{id}/landingpage', 'TourController@landingPage')
+        ->where('id', '[0-9]+')
+        ->name('landing_page');
+});
 
 
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');

@@ -1,5 +1,8 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Show')
+@section('post_styles')
+    @include('component.datatables_cdn')
+@endsection
 @section('content')
     @include('layouts.title',
    ['title' => 'Hotel Offer ', 'sub_title' => 'offer Show',

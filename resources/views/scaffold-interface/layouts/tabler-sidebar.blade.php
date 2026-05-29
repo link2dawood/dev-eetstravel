@@ -278,6 +278,9 @@
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('snappymail.sso', $route) !!}" href="{{route('snappymail.sso')}}" target="_blank">
                                     <i class="ti ti-mail-opened icon me-2"></i>Webmail (SnappyMail)
                                 </a>
+                                <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('snappymail.configure', $route) !!}" href="{{route('snappymail.configure')}}">
+                                    <i class="ti ti-settings icon me-2"></i>Configure Mailbox
+                                </a>
                                 @endif
                                 @if(Auth::user()->can('comment.index'))
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('comment.index', $route) !!}" href="{{ route('comment.index') }}">

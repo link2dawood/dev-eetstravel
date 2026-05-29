@@ -90,6 +90,13 @@
            page. Tailwind's `.hidden` continues to work for `protect_loader`
            and `author_name` elsewhere on the page; no behaviour change. */
 
+        /* Legacy Bootstrap 3 .hide utility — Bootstrap 5 dropped it but lots
+           of templates (quotation, guest-list-form, modal_add_tour) and JS
+           (quotation.js) still toggle it. Restoring it globally so those
+           addClass('hide') / removeClass('hide') paths actually toggle
+           visibility again. */
+        .hide { display: none !important; }
+
         /* bootstrap-fileinput button chrome.
            The plugin emits <button class="btn btn-sm <yourClass>"> for every
            action — passing our own class names from the file_upload_field

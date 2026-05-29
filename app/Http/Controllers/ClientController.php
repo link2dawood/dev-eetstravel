@@ -100,9 +100,18 @@ class ClientController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name created", 'success');
 
         $this->addFile($request, $client);
-        $data = ['route' => route('clients.index')];
-		return redirect()->back();
-        //return response()->json($data);
+
+        // The form is always submitted via component/file_upload_field, which
+        // intercepts the submit and POSTs over AJAX. The widget's success
+        // handler navigates via `res.route`. A plain redirect would arrive
+        // as HTML and trip bootstrap-fileinput's "Upload failed" error path.
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'route'   => route('clients.index'),
+            ]);
+        }
+        return redirect()->route('clients.index');
     }
 
     /**
@@ -176,8 +185,10 @@ class ClientController extends Controller
             $data = ['hotelContacts' => true, 'fullNameErrorValidate' => trans('main.ContactsshouldnothaveanemptyFullName')];
             foreach ($contacts as $itemContact){
                 if(!($itemContact['contact_full_name'] ?? null)){
-					return redirect()->back();
-                    return response()->json($data);
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json($data);
+                    }
+                    return redirect()->back()->withErrors(['contacts' => $data['fullNameErrorValidate']]);
                 }
             }
         }
@@ -199,9 +210,16 @@ class ClientController extends Controller
 		LaravelFlashSessionHelper::setFlashMessage("Client $client->name edited", 'success');
 
         $this->addFile($request, $client);
-        $data = ['route' => route('clients.index')];
-		return redirect()->back();
-        return response()->json($data);
+
+        // See store() — file_upload_field always submits over AJAX; return
+        // JSON so the widget can window.location.replace(res.route).
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'route'   => route('clients.index'),
+            ]);
+        }
+        return redirect()->route('clients.index');
     }
 
     /**

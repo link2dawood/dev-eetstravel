@@ -1,39 +1,54 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Chats')
+
 @section('content')
-    @include('layouts.title', [
-                    'title' => 'Chats',
-                     'sub_title' => 'List'])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <br>
-                <table id="chats-table" class="table table-striped table-bordered table-hover" style='background:#fff'>
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>{!!trans('main.Title')!!}</th>
-                        <th>{!!trans('main.Description')!!}</th>
-                        <th>{!!trans('main.Type')!!}</th>
-                        <th>{!!trans('main.Author')!!}</th>
-                        <th class="actions-button" style="width: 140px">{!!trans('main.Actions')!!}</th>
+<x-ui.page-header
+    title="Chats"
+    description="All chat rooms and direct conversations in the system."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Chats'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="{{ route('chat.main') }}" variant="primary" icon="message-circle">Open chat</x-ui.button>
+    </x-slot>
+</x-ui.page-header>
+
+@if(count($chatsData) === 0)
+    <div class="rounded border border-slate-200 bg-white">
+        <x-ui.empty-state icon="message-circle" title="No chats yet" message="Open the chat panel to start a direct conversation or a group chat.">
+            <x-ui.button as="a" href="{{ route('chat.main') }}" variant="primary" icon="message-circle">Open chat</x-ui.button>
+        </x-ui.empty-state>
+    </div>
+@else
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="overflow-x-auto">
+            <table id="chats-table" class="min-w-full divide-y divide-slate-200 text-sm" style="background:#fff">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3">ID</th>
+                        <th class="px-4 py-3">{!! trans('main.Title') !!}</th>
+                        <th class="px-4 py-3">{!! trans('main.Description') !!}</th>
+                        <th class="px-4 py-3">{!! trans('main.Type') !!}</th>
+                        <th class="px-4 py-3">{!! trans('main.Author') !!}</th>
+                        <th class="px-4 py-3 text-right actions-button" style="width: 140px">{!! trans('main.Actions') !!}</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
                     @foreach($chatsData as $chat)
-                        <tr>
-                            <td>{{ $chat->id }}</td>
-                            <td>{{ $chat->title }}</td>
-                            <td>{{ $chat->description }}</td>
-                            <td>{{ $chat->type }}</td>
-                            <td>{{ $chat->author }}</td>
-                            <td>{!! $chat->action_buttons !!}</td>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">#{{ $chat->id }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-900">{{ $chat->title }}</td>
+                            <td class="px-4 py-3 text-slate-700 max-w-xl truncate">{{ $chat->description }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $chat->type }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $chat->author }}</td>
+                            <td class="px-4 py-3"><div class="flex items-center justify-end gap-1">{!! $chat->action_buttons !!}</div></td>
                         </tr>
                     @endforeach
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
-
-    </section>
+    </div>
+@endif
 @endsection

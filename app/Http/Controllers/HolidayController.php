@@ -36,8 +36,26 @@ class HolidayController extends Controller
     public function index()
     {
         $title = 'Index - Calendar holidays';
+        // List view (legacy DataTable still wires to holidaycalendar_data ajax).
         $holidaycalendarday = \App\Holidaycalendarday::query()->orderBy('start_time', 'asc')->paginate(10);
-        return view('holidaycalendar.index', compact('holidaycalendarday', 'title'));
+        // Calendar view feeds events from this same table; the blade renders
+        // them client-side keyed by YYYY-MM-DD.
+        $calendarEvents = \App\Holidaycalendarday::query()
+            ->orderBy('start_time', 'asc')
+            ->get(['id', 'name', 'start_time', 'backgroundcolor'])
+            ->map(function ($h) {
+                return [
+                    'id'    => $h->id,
+                    'name'  => $h->name,
+                    'date'  => $h->start_time ? \Carbon\Carbon::parse($h->start_time)->format('Y-m-d') : null,
+                    'time'  => $h->start_time ? \Carbon\Carbon::parse($h->start_time)->format('H:i') : null,
+                    'color' => $h->backgroundcolor,
+                    'edit_url'   => route('holiday.edit', ['id' => $h->id]),
+                    'delete_url' => "/holiday/{$h->id}/deleteMsg",
+                ];
+            })
+            ->values();
+        return view('holidaycalendar.index', compact('holidaycalendarday', 'title', 'calendarEvents'));
     }
 
     /**

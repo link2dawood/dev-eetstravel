@@ -91,248 +91,251 @@
 @endphp
 
 <div class="container-xl">
-    {{-- Page Header --}}
-    <div class="page-header d-print-none">
-        <div class="row g-2 align-items-center">
-            <div class="col-12">
-                {{-- Page pre-title --}}
-                <div class="page-pretitle">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item 1122"><a href="{{ url('/home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('tour.index') }}">Tours</a></li>
-                            <li class="breadcrumb-item active">{{ $tour->name }}</li>
-                        </ol>
-                    </nav>
-                </div>
-                <h2 class="page-title pt-2 my-2">
-                    <i class="ti ti-plane me-2"></i> {{ $tour->name }}
-                </h2>
+
+    {{-- Page header (Phase-3 redesign — original work). Preserves every
+         JS handler the prior page wired up: export_to(...) for the three
+         dropdowns, showLandingPageModal() for the public landing button. --}}
+    <header class="d-print-none mb-4">
+        <nav aria-label="Breadcrumb" class="mb-2">
+            <ol class="flex items-center gap-1 text-xs text-slate-500">
+                <li><a href="{{ url('/home') }}" class="hover:text-slate-700">Home</a></li>
+                <li><x-ui.icon name="chevron-right" size="xs" class="text-slate-300" /></li>
+                <li><a href="{{ route('tour.index') }}" class="hover:text-slate-700">Tours</a></li>
+                <li><x-ui.icon name="chevron-right" size="xs" class="text-slate-300" /></li>
+                <li class="text-slate-700 truncate" aria-current="page">{{ $tour->name }}</li>
+            </ol>
+        </nav>
+
+        <div class="flex items-start gap-4">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-xl font-semibold text-slate-900 truncate flex items-center gap-2">
+                    <span class="flex h-7 w-7 items-center justify-center rounded bg-primary-50 text-primary-600">
+                        <x-ui.icon name="plane" />
+                    </span>
+                    {{ $tour->name }}
+                </h1>
+                @if (!empty($tour->external_name))
+                    <p class="mt-1 text-sm text-slate-500">{{ $tour->external_name }}</p>
+                @endif
             </div>
-            {{-- Page title actions --}}
-            <div class="col-12 d-print-none mb-3">
-                <div class="btn-list" style="justify-content: space-between;">
-                    <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary">
-                        <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
-                    </a>
-                    @if (Auth::user()->can('tour.edit'))
-                        <a href="{{ route('tour.edit', ['tour' => $tour->id]) }}" class="btn btn-warning">
-                            <i class="ti ti-edit me-1"></i>{!! trans('main.Edit') !!}
+        </div>
+
+        {{-- Action bar: Back on the left, primary actions (Edit / Add Task)
+             in the middle, secondary export-style actions on the right. --}}
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <x-ui.button as="a" href="{{ route('tour.index') }}" variant="ghost" icon="arrow-left">
+                {!! trans('main.Back') !!}
+            </x-ui.button>
+
+            <div class="flex flex-wrap items-center gap-2">
+                @if (Auth::user()->can('tour.edit'))
+                    <x-ui.button as="a" href="{{ route('tour.edit', ['tour' => $tour->id]) }}" variant="secondary" icon="edit">
+                        {!! trans('main.Edit') !!}
+                    </x-ui.button>
+                @endif
+
+                @if (Auth::user()->can('task.create'))
+                    <x-ui.button as="a" href="{{ url('task') }}/create?tour={{ $tour->id }}" variant="secondary" icon="plus">
+                        {!! trans('main.AddTask') !!}
+                    </x-ui.button>
+                @endif
+
+                {{-- Export dropdown — Bootstrap-toggle JS preserved so existing
+                     keyboard / outside-click behaviour keeps working. --}}
+                <div class="btn-group">
+                    <button type="button" class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <x-ui.icon name="download" />
+                        Export
+                    </button>
+                    <div class="dropdown-menu min-w-[180px] rounded-md border border-slate-200 shadow-overlay">
+                        <h6 class="px-3 pt-2 pb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Export tour</h6>
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-spreadsheet" size="xs" />CSV — Tour</span>
                         </a>
-                    @endif
-                    @if (Auth::user()->can('task.create'))
-                        <a href="{{ url('task') }}/create?tour={{ $tour->id }}" class="btn btn-success">
-                            <i class="ti ti-plus me-1"></i>{!! trans('main.AddTask') !!}
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-spreadsheet" size="xs" />CSV — Service</span>
                         </a>
-                    @endif
-                    
-                    {{-- Export Dropdown --}}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-file-export me-1"></i>Export
-                        </button>
-                        <div class="dropdown-menu">
-                            <h6 class="dropdown-header">Export Tour</h6>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'tour']) }}"); return false;'>
-                                <i class="ti ti-file-spreadsheet me-2"></i>CSV - Tour
-                            </a>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'csv', 'type' => 'service']) }}"); return false;'>
-                                <i class="ti ti-file-spreadsheet me-2"></i>CSV - Service
-                            </a>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}"); return false;'>
-                                <i class="ti ti-file-excel me-2"></i>Excel
-                            </a>
-                        </div>
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-spreadsheet" size="xs" />Excel</span>
+                        </a>
                     </div>
-                    
-                    {{-- Voucher Dropdown --}}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-file-invoice me-1"></i>{!! trans('main.Voucher') !!}
-                        </button>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}"); return false;'>
-                                <i class="ti ti-file-type-pdf me-2"></i>PDF
-                            </a>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}"); return false;'>
-                                <i class="ti ti-file-type-doc me-2"></i>DOC
-                            </a>
-                        </div>
+                </div>
+
+                {{-- Voucher dropdown --}}
+                <div class="btn-group">
+                    <button type="button" class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <x-ui.icon name="receipt" />
+                        {!! trans('main.Voucher') !!}
+                    </button>
+                    <div class="dropdown-menu min-w-[160px] rounded-md border border-slate-200 shadow-overlay">
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-text" size="xs" />PDF</span>
+                        </a>
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-text" size="xs" />DOC</span>
+                        </a>
                     </div>
-                    
-                    {{-- Itinerary Dropdown --}}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="ti ti-route me-1"></i>{!! trans('main.Itinerary') !!}
-                        </button>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}"); return false;'>
-                                <i class="ti ti-file-type-pdf me-2"></i>PDF
-                            </a>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}"); return false;'>
-                                <i class="ti ti-file-code me-2"></i>HTML
-                            </a>
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}"); return false;'>
-                                <i class="ti ti-file-type-doc me-2"></i>DOC
-                            </a>
-                        </div>
+                </div>
+
+                {{-- Itinerary dropdown --}}
+                <div class="btn-group">
+                    <button type="button" class="inline-flex h-9 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <x-ui.icon name="route" />
+                        {!! trans('main.Itinerary') !!}
+                    </button>
+                    <div class="dropdown-menu min-w-[160px] rounded-md border border-slate-200 shadow-overlay">
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-text" size="xs" />PDF</span>
+                        </a>
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="code" size="xs" />HTML</span>
+                        </a>
+                        <a class="dropdown-item text-sm" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'short']) }}"); return false;'>
+                            <span class="inline-flex items-center gap-2"><x-ui.icon name="file-text" size="xs" />DOC</span>
+                        </a>
                     </div>
-                    
-                    <button class="btn btn-info" onclick="showLandingPageModal()">
-                        <i class="ti ti-world me-1"></i>Landing Page
+                </div>
+
+                {{-- Landing page modal trigger --}}
+                <button type="button" onclick="showLandingPageModal()" class="inline-flex h-9 items-center gap-2 rounded bg-primary-600 px-3 text-sm font-medium text-white hover:bg-primary-700">
+                    <x-ui.icon name="globe" />
+                    Landing page
+                </button>
+            </div>
+        </div>
+    </header>
+
+    {{-- Office selection. Keeps the .selectedOffice + .select-office-btn
+         CSS hooks the page's existing JS listens on, and the legend
+         modal toggle (data-bs-target=#legendModal) unchanged. --}}
+    <div class="mb-4 rounded border border-slate-200 bg-white p-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div class="flex-1 min-w-0">
+                <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Select office</label>
+                <div class="flex flex-wrap items-stretch gap-2">
+                    <select class="selectedOffice block h-9 min-w-0 flex-1 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        @foreach($offices as $office)
+                            <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
+                                {{ $office->office_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="select-office-btn inline-flex h-9 items-center gap-2 rounded bg-primary-600 px-3 text-sm font-medium text-white hover:bg-primary-700">
+                        <x-ui.icon name="check" />
+                        Select
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {{-- Office Selection --}}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="row align-items-end mb-4">
-    <div class="col-md-8">
-        <label class="form-label">Select Office:</label>
-        <div class="d-flex gap-2">
-            <select class="form-select selectedOffice flex-grow-1">
-                @foreach($offices as $office)
-                    <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
-                        {{ $office->office_name }}
-                    </option>
-                @endforeach
-            </select>
-            <button class="btn btn-primary select-office-btn" type="button">
-                <i class="ti ti-check me-1"></i>Select
+            <button type="button"
+                    data-bs-toggle="modal" data-bs-target="#legendModal"
+                    class="inline-flex h-9 shrink-0 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <x-ui.icon name="help-circle" />
+                Help
             </button>
         </div>
     </div>
-    <div class="col-md-4 text-end">
-        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#legendModal">
-            <i class="ti ti-help me-1"></i>Help
-        </button>
-    </div>
-</div>
-                    <!-- <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label">Select Office:</label>
-                            <div class="input-group">
-                                <select class="form--select selectedOffice">
-                                    @foreach($offices as $office)
-                                        <option value="{{ $office->id }}" {{ (isset($select_office->id) && $office->id == $select_office->id) ? 'selected' : '' }}>
-                                            {{ $office->office_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <button class="btn btn-primary select-office-btn" type="button">
-                                    <i class="ti ti-check me-1"></i>Select
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <button class="btn btn-info mt-4" data-bs-toggle="modal" data-bs-target="#legendModal">
-                                <i class="ti ti-help me-1"></i>Help
-                            </button>
-                        </div>
-                        
-                    </div> -->
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Quotation/Tour Toggle --}}
+    {{-- Convert quotation / tour banner. Same #check1/#check2 IDs +
+         handleToggleConversion JS hook the existing scripts rely on. --}}
     @if ($tour->is_quotation)
-        <div class="alert alert-warning" role="alert">
-            <div class="d-flex">
-                <div class="flex-fill">
-                    <h4 class="alert-title">
-                        <i class="ti ti-exchange me-2"></i>Convert Quotation to Tour
-                    </h4>
-                </div>
+        <div role="alert" class="mb-4 flex items-center justify-between gap-4 rounded border border-warning-600/30 bg-warning-50 px-4 py-3">
+            <div class="flex items-center gap-3 text-warning-700">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-warning-600">
+                    <x-ui.icon name="refresh-cw" />
+                </span>
                 <div>
-                    <div class="toggle">
-                        <input type="checkbox" id="check1" onclick="handleToggleConversion(this, true)" checked />
-                        <label></label>
-                    </div>
+                    <p class="text-sm font-semibold">Convert quotation to tour</p>
+                    <p class="text-xs text-warning-700/80">Toggle to convert this quotation into an active tour.</p>
                 </div>
             </div>
+            <label class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center">
+                <input type="checkbox" id="check1" onclick="handleToggleConversion(this, true)" checked class="peer sr-only" />
+                <span class="block h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-warning-600"></span>
+                <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+            </label>
         </div>
     @else
-        <div class="alert alert-success" role="alert">
-            <div class="d-flex">
-                <div class="flex-fill">
-                    <h4 class="alert-title">
-                        <i class="ti ti-exchange me-2"></i>Convert Tour to Quotation
-                    </h4>
-                </div>
+        <div role="alert" class="mb-4 flex items-center justify-between gap-4 rounded border border-success-600/30 bg-success-50 px-4 py-3">
+            <div class="flex items-center gap-3 text-success-700">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-success-600">
+                    <x-ui.icon name="refresh-cw" />
+                </span>
                 <div>
-                    <div class="toggle">
-                        <input type="checkbox" id="check2" onclick="handleToggleConversion(this, false)" />
-                        <label></label>
-                    </div>
+                    <p class="text-sm font-semibold">Convert tour to quotation</p>
+                    <p class="text-xs text-success-700/80">Toggle to move this tour back into a quotation state.</p>
                 </div>
             </div>
+            <label class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center">
+                <input type="checkbox" id="check2" onclick="handleToggleConversion(this, false)" class="peer sr-only" />
+                <span class="block h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-success-600"></span>
+                <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+            </label>
         </div>
     @endif
 
-    {{-- Session Messages --}}
+    {{-- Session messages --}}
     @if(session('message_buses'))
-        <div class="alert alert-info alert-dismissible" role="alert">
-            <div class="d-flex">
-                <div>
-                    <i class="ti ti-info-circle me-2"></i>
-                </div>
-                <div class="flex-fill">
-                    {{ session('message_buses') }}
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="mb-4 flex items-start gap-3 rounded border border-info-600/30 bg-info-50 px-4 py-3 text-sm text-info-700">
+            <x-ui.icon name="info" class="mt-0.5 shrink-0" />
+            <div class="flex-1">{{ session('message_buses') }}</div>
+            <button type="button" class="rounded p-1 text-info-700/70 hover:bg-white/40" data-bs-dismiss="alert" aria-label="Close">
+                <x-ui.icon name="x" size="xs" />
+            </button>
         </div>
     @endif
 
-    {{-- Tabs --}}
-    <div class="card">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
+    {{-- Tabs.
+         Visual treatment is original (Tailwind underline tabs), but
+         every anchor still carries href="#…-tab" + data-bs-toggle="tab"
+         so Tabler's bundled Bootstrap tab-toggle JS keeps switching
+         the panels below. CSS .nav-link.active hook preserved for
+         that JS to write into. --}}
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-1" role="tablist">
+            <ul class="nav nav-tabs -mb-px flex flex-nowrap gap-6 overflow-x-auto border-0 px-3 [&_.nav-link]:cursor-pointer" data-bs-toggle="tabs" role="tablist">
+                @php
+                    $tabBase = 'group inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-1 pb-3 pt-3 text-sm transition-colors border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300';
+                    $tabActive = '[&.active]:border-primary-600 [&.active]:text-primary-700 [&.active]:font-medium';
+                    $tabClass = $tabBase . ' ' . $tabActive;
+                @endphp
                 <li class="nav-item" role="presentation">
-                    <a href="#frontsheet-tab" class="nav-link active" data-bs-toggle="tab" aria-selected="true" role="tab">
-                        <i class="ti ti-file-text me-1"></i>Front Sheet
+                    <a href="#frontsheet-tab" class="nav-link active {{ $tabClass }}" data-bs-toggle="tab" aria-selected="true" role="tab">
+                        <x-ui.icon name="file-text" />Front Sheet
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#service-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-list me-1"></i>{!! trans('main.Services') !!}
+                    <a href="#service-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="list" />{!! trans('main.Services') !!}
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#tour-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-plane me-1"></i>{!! trans('main.Tour') !!}
+                    <a href="#tour-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="plane" />{!! trans('main.Tour') !!}
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#quotation-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-calculator me-1"></i>{!! trans('main.Quotation') !!}
+                    <a href="#quotation-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="calculator" />{!! trans('main.Quotation') !!}
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#roomlist-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-bed me-1"></i>{!! trans('main.GuestList') !!}
+                    <a href="#roomlist-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="bed" />{!! trans('main.GuestList') !!}
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#invoices-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-file-invoice me-1"></i>Invoices
+                    <a href="#invoices-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="receipt" />Invoices
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#billing-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-cash me-1"></i>Billing
+                    <a href="#billing-tab" class="nav-link {{ $tabClass }}" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
+                        <x-ui.icon name="banknote" />Billing
                     </a>
                 </li>
             </ul>
         </div>
-        <div class="card-body">
+        <div class="p-5">
             <div class="tab-content">
             {{-- Front Sheet Tab --}}
             <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">

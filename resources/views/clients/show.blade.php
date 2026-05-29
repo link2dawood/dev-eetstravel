@@ -154,14 +154,22 @@
                             <h2 class="text-sm font-medium text-slate-700">{!! trans('main.Files') !!}</h2>
                         </div>
                         @php
-                            // Defensive filter: some legacy / partially-uploaded rows have
-                            // $row->attach = null (the polymorphic file association never
-                            // resolved). Calling ->url() on that would crash the whole page.
+                            // App\File stores the uploaded path in
+                            // `attach_file_name` (relative to the `public`
+                            // disk, e.g. "uploads/abc.png"). The legacy
+                            // partial used `$row->attach->url()` which is
+                            // a leftover from a removed Stapler integration
+                            // and never resolves on the current model —
+                            // hence every File silently returned null.
+                            //
+                            // Filter rows that have no stored path, then
+                            // derive the public URL via the storage symlink:
+                            // public/storage -> storage/app/public.
                             $images = collect($files['image'] ?? [])
-                                ->filter(fn($i) => !is_null(optional($i)->attach))
+                                ->filter(fn($i) => !empty($i->attach_file_name))
                                 ->values();
                             $attachments = collect($files['attach'] ?? [])
-                                ->filter(fn($a) => !is_null(optional($a)->attach))
+                                ->filter(fn($a) => !empty($a->attach_file_name))
                                 ->values();
                             $totalCount = $images->count() + $attachments->count();
                         @endphp
@@ -181,9 +189,10 @@
                                     <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Photos') !!}</h3>
                                     <div class="image grid grid-cols-2 gap-2">
                                         @foreach($images as $image)
+                                            @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
                                             <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50">
-                                                <a href="{{ '/public' . $image->attach->url() }}" class="block">
-                                                    <img src="{{ '/public' . $image->attach->url() }}" alt="" class="w-full h-24 object-cover" />
+                                                <a href="{{ $imgUrl }}" class="block">
+                                                    <img src="{{ $imgUrl }}" alt="" class="w-full h-24 object-cover" />
                                                 </a>
                                                 <button type="button"
                                                         class="del-attach absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-danger-600 shadow-subtle opacity-0 group-hover:opacity-100 transition-opacity"
@@ -204,13 +213,18 @@
                                     <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Files') !!}</h3>
                                     <ul class="divide-y divide-slate-100 list-none pl-0 m-0">
                                         @foreach($attachments as $attach)
+                                            @php
+                                                $fileUrl = asset('storage/' . $attach->attach_file_name);
+                                                // Show just the basename, not "uploads/xxx".
+                                                $displayName = basename($attach->attach_file_name);
+                                            @endphp
                                             <li class="del-container py-2 flex items-center gap-3">
                                                 <span class="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-500 shrink-0">
                                                     <x-ui.icon name="paperclip" size="sm" />
                                                 </span>
                                                 <div class="min-w-0 flex-1">
-                                                    <a href="{{ url('public/' . $attach->attach->url()) }}" target="_blank" class="link_file block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
-                                                        <span class="name_link_file">{{ $attach->attach_file_name }}</span>
+                                                    <a href="{{ $fileUrl }}" target="_blank" class="link_file block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
+                                                        <span class="name_link_file">{{ $displayName }}</span>
                                                     </a>
                                                     <p class="text-xs text-slate-500 mt-0.5">{{ $attach->created_at }}</p>
                                                 </div>

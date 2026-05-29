@@ -140,15 +140,85 @@
                         </dl>
                     </div>
 
-                    {{-- Side panel: Files (1/3 width on desktop) --}}
+                    {{-- Side panel: Files (1/3 width on desktop).
+                         Inline replacement for `component.files` so this page
+                         can render the attachment data in the new theme. The
+                         shared partial still ships its Bootstrap-panel markup
+                         to 10 other pages — leaving it untouched. JS hooks
+                         preserved (.del-attach, .image, .del-container,
+                         .link_file) so the existing magnific gallery + ajax
+                         delete keep working. --}}
                     <div class="rounded border border-slate-200 bg-white">
                         <div class="border-b border-slate-200 px-4 py-3 flex items-center gap-2">
                             <x-ui.icon name="paperclip" size="sm" class="text-slate-400" />
                             <h2 class="text-sm font-medium text-slate-700">{!! trans('main.Files') !!}</h2>
                         </div>
-                        <div class="px-4 py-4">
-                            @component('component.files', ['files' => $files])@endcomponent
-                        </div>
+                        @php
+                            $images = $files['image'] ?? [];
+                            $attachments = $files['attach'] ?? [];
+                            $totalCount = count($images) + count($attachments);
+                        @endphp
+
+                        @if($totalCount === 0)
+                            <div class="px-4 py-8 text-center">
+                                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
+                                    <x-ui.icon name="paperclip" />
+                                </div>
+                                <p class="text-sm font-medium text-slate-700">No files yet</p>
+                                <p class="mt-1 text-xs text-slate-500">Attach documents from the Edit page.</p>
+                            </div>
+                        @else
+                            {{-- Image gallery — Magnific Popup binds via .image > a --}}
+                            @if(count($images))
+                                <div class="px-4 pt-4">
+                                    <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Photos') !!}</h3>
+                                    <div class="image grid grid-cols-2 gap-2">
+                                        @foreach($images as $image)
+                                            <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50">
+                                                <a href="{{ '/public' . $image->attach->url() }}" class="block">
+                                                    <img src="{{ '/public' . $image->attach->url() }}" alt="" class="w-full h-24 object-cover" />
+                                                </a>
+                                                <button type="button"
+                                                        class="del-attach absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-danger-600 shadow-subtle opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        data-attach-id="{{ $image->id }}"
+                                                        data-attach-url="{{ route('file_delete', ['id' => $image->id]) }}"
+                                                        aria-label="Delete photo">
+                                                    <x-ui.icon name="x" size="xs" />
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Attachments list --}}
+                            @if(count($attachments))
+                                <div class="px-4 pt-4 pb-4">
+                                    <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Files') !!}</h3>
+                                    <ul class="divide-y divide-slate-100 list-none pl-0 m-0">
+                                        @foreach($attachments as $attach)
+                                            <li class="del-container py-2 flex items-center gap-3">
+                                                <span class="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-500 shrink-0">
+                                                    <x-ui.icon name="paperclip" size="sm" />
+                                                </span>
+                                                <div class="min-w-0 flex-1">
+                                                    <a href="{{ url('public/' . $attach->attach->url()) }}" target="_blank" class="link_file block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
+                                                        <span class="name_link_file">{{ $attach->attach_file_name }}</span>
+                                                    </a>
+                                                    <p class="text-xs text-slate-500 mt-0.5">{{ $attach->created_at }}</p>
+                                                </div>
+                                                <button type="button"
+                                                        class="del-attach inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-danger-50 hover:text-danger-700 shrink-0"
+                                                        data-attach-url="{{ route('file_delete', ['id' => $attach->id]) }}"
+                                                        aria-label="Delete file">
+                                                    <x-ui.icon name="trash-2" size="sm" />
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
@@ -348,6 +418,38 @@
 <span id="services_name" data-service-name='Client' data-history-route="{{ route('services_history', ['id' => $client->id]) }}"></span>
 @endsection
 
+@push('styles')
+<style>
+    /* Tone down bootstrap-fileinput's Browse / Cancel / Upload buttons so the
+       legacy widget doesn't fight the Tailwind theme on the comments box.
+       Scoped to #form_comment so we don't bleed onto other forms. */
+    #form_comment .file-input .btn-primary {
+        background-color: #0d9488; border-color: #0d9488; color: #fff;
+    }
+    #form_comment .file-input .btn-primary:hover {
+        background-color: #0f766e; border-color: #0f766e;
+    }
+    #form_comment .file-input .btn-default {
+        background-color: #fff; border-color: #cbd5e1; color: #475569;
+    }
+    #form_comment .file-input .btn-default:hover {
+        background-color: #f8fafc;
+    }
+    #form_comment .file-caption, #form_comment .file-input input.form-control,
+    #form_comment .file-caption .form-control {
+        border-color: #cbd5e1;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+    /* CKEditor is loaded by ckeditor.js — give its container a clean border so
+       it doesn't sit naked inside the comments card. */
+    #form_comment .cke, #form_comment .cke_chrome {
+        border-color: #cbd5e1 !important;
+        border-radius: 0.375rem !important;
+    }
+</style>
+@endpush
+
 @section('post_scripts')
     <script src="{{ asset('js/comment.js') }}"></script>
     <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
@@ -356,6 +458,32 @@
             if (typeof initializeBootstrapTable === 'function') {
                 initializeBootstrapTable('transactions-table');
             }
+
+            // Magnific Popup gallery on the inline files panel — preserved from
+            // the original `component.files` partial we replaced with Tailwind.
+            if ($.fn.magnificPopup) {
+                $('.image').magnificPopup({
+                    delegate: 'a',
+                    type: 'image',
+                    gallery: { enabled: true }
+                });
+            }
+
+            // Inline attachment delete (also preserved from component.files).
+            $('.del-attach').on('click', function (e) {
+                e.preventDefault();
+                var btn = this;
+                var url = $(btn).attr('data-attach-url');
+                if (!url) return;
+                if (!confirm("Are you sure you want to delete this attachment?")) return;
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: { "_token": "{{ csrf_token() }}" },
+                    success: function () { $(btn).closest('.del-container').hide(); },
+                    error: function (res) { console.log(res); }
+                });
+            });
         });
 
         // Search the transactions table (Billing tab). Mirrors the original.

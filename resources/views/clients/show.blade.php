@@ -183,16 +183,33 @@
                                 <p class="mt-1 text-xs text-slate-500">Attach documents from the Edit page.</p>
                             </div>
                         @else
-                            {{-- Image gallery — Magnific Popup binds via .image > a --}}
-                            @if(count($images))
+                            @php
+                                // Side-panel preview limits — keep the panel scannable.
+                                $imagePreviewLimit = 4;
+                                $attachPreviewLimit = 5;
+                                $previewImages   = $images->take($imagePreviewLimit);
+                                $previewAttach   = $attachments->take($attachPreviewLimit);
+                                $hiddenImages    = max(0, $images->count() - $imagePreviewLimit);
+                                $hiddenAttach    = max(0, $attachments->count() - $attachPreviewLimit);
+                            @endphp
+
+                            {{-- Image gallery preview — first N images.
+                                 Magnific Popup binds via .image > a so users can
+                                 lightbox-preview without opening the full modal. --}}
+                            @if($images->count())
                                 <div class="px-4 pt-4">
-                                    <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Photos') !!}</h3>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                                            {!! trans('main.Photos') !!}
+                                            <span class="ml-1 text-slate-400 normal-case font-normal">({{ $images->count() }})</span>
+                                        </h3>
+                                    </div>
                                     <div class="image grid grid-cols-2 gap-2">
-                                        @foreach($images as $image)
+                                        @foreach($previewImages as $image)
                                             @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
                                             <div class="del-container relative group rounded overflow-hidden border border-slate-200 bg-slate-50">
                                                 <a href="{{ $imgUrl }}" class="block">
-                                                    <img src="{{ $imgUrl }}" alt="" class="w-full h-24 object-cover" />
+                                                    <img src="{{ $imgUrl }}" alt="" class="w-full h-24 object-cover" loading="lazy" />
                                                 </a>
                                                 <button type="button"
                                                         class="del-attach absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-danger-600 shadow-subtle opacity-0 group-hover:opacity-100 transition-opacity"
@@ -204,18 +221,27 @@
                                             </div>
                                         @endforeach
                                     </div>
+                                    @if($hiddenImages > 0)
+                                        <button type="button" onclick="filesModalOpen('images')"
+                                                class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
+                                            View all photos ({{ $images->count() }})
+                                            <x-ui.icon name="arrow-right" size="xs" />
+                                        </button>
+                                    @endif
                                 </div>
                             @endif
 
-                            {{-- Attachments list --}}
-                            @if(count($attachments))
+                            {{-- Attachments list preview --}}
+                            @if($attachments->count())
                                 <div class="px-4 pt-4 pb-4">
-                                    <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">{!! trans('main.Files') !!}</h3>
+                                    <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                                        {!! trans('main.Files') !!}
+                                        <span class="ml-1 text-slate-400 normal-case font-normal">({{ $attachments->count() }})</span>
+                                    </h3>
                                     <ul class="divide-y divide-slate-100 list-none pl-0 m-0">
-                                        @foreach($attachments as $attach)
+                                        @foreach($previewAttach as $attach)
                                             @php
-                                                $fileUrl = asset('storage/' . $attach->attach_file_name);
-                                                // Show just the basename, not "uploads/xxx".
+                                                $fileUrl     = asset('storage/' . $attach->attach_file_name);
                                                 $displayName = basename($attach->attach_file_name);
                                             @endphp
                                             <li class="del-container py-2 flex items-center gap-3">
@@ -237,6 +263,13 @@
                                             </li>
                                         @endforeach
                                     </ul>
+                                    @if($hiddenAttach > 0)
+                                        <button type="button" onclick="filesModalOpen('attachments')"
+                                                class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
+                                            View all files ({{ $attachments->count() }})
+                                            <x-ui.icon name="arrow-right" size="xs" />
+                                        </button>
+                                    @endif
                                 </div>
                             @endif
                         @endif
@@ -437,6 +470,137 @@
 </div>
 
 <span id="services_name" data-service-name='Client' data-history-route="{{ route('services_history', ['id' => $client->id]) }}"></span>
+
+{{-- ============================================================ --}}
+{{-- "View all" files modal — opened by the panel buttons.        --}}
+{{-- Renders the full set in a Tailwind grid + list.               --}}
+{{-- ============================================================ --}}
+@if($images->count() > 0 || $attachments->count() > 0)
+<div id="filesModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="filesModalTitle">
+    <div class="absolute inset-0 bg-slate-900/60" onclick="filesModalClose()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="relative w-full max-w-4xl max-h-[90vh] rounded-md bg-white shadow-overlay pointer-events-auto flex flex-col">
+
+            {{-- Modal header --}}
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <h3 id="filesModalTitle" class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <x-ui.icon name="paperclip" size="sm" class="text-slate-400" />
+                    <span data-files-modal-title>All files</span>
+                </h3>
+                <button type="button" onclick="filesModalClose()" class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
+                    <x-ui.icon name="x" />
+                </button>
+            </div>
+
+            {{-- Modal body — scrolls --}}
+            <div class="overflow-y-auto px-5 py-5 flex-1">
+
+                {{-- All images grid. .image-modal-gallery wrapper gets its own
+                     Magnific Popup binding (separate from the panel grid). --}}
+                @if($images->count())
+                    <section data-files-modal-section="images" class="mb-6">
+                        <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-3">
+                            {!! trans('main.Photos') !!}
+                            <span class="ml-1 text-slate-400 normal-case font-normal">({{ $images->count() }})</span>
+                        </h4>
+                        <div class="image-modal-gallery grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            @foreach($images as $image)
+                                @php $imgUrl = asset('storage/' . $image->attach_file_name); @endphp
+                                <a href="{{ $imgUrl }}"
+                                   class="block group rounded overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
+                                    <img src="{{ $imgUrl }}" alt="" loading="lazy"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                </a>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
+                {{-- All attachments list --}}
+                @if($attachments->count())
+                    <section data-files-modal-section="attachments">
+                        <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-3">
+                            {!! trans('main.Files') !!}
+                            <span class="ml-1 text-slate-400 normal-case font-normal">({{ $attachments->count() }})</span>
+                        </h4>
+                        <ul class="divide-y divide-slate-100 list-none pl-0 m-0 rounded border border-slate-200">
+                            @foreach($attachments as $attach)
+                                @php
+                                    $fileUrl     = asset('storage/' . $attach->attach_file_name);
+                                    $displayName = basename($attach->attach_file_name);
+                                @endphp
+                                <li class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50">
+                                    <span class="flex h-9 w-9 items-center justify-center rounded bg-slate-100 text-slate-500 shrink-0">
+                                        <x-ui.icon name="paperclip" size="sm" />
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{{ $fileUrl }}" target="_blank" class="block text-sm font-medium text-slate-700 hover:text-primary-700 truncate">
+                                            {{ $displayName }}
+                                        </a>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            {{ $attach->created_at }}
+                                            @if(!empty($attach->attach_file_size))
+                                                · {{ round($attach->attach_file_size / 1024, 1) }} KB
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <a href="{{ $fileUrl }}" download class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Download">
+                                        <x-ui.icon name="download" size="sm" />
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Open the modal scrolled to either the images or attachments section.
+    // mode = 'images' | 'attachments'
+    window.filesModalOpen = function (mode) {
+        var modal = document.getElementById('filesModal');
+        if (!modal) return;
+        var title = modal.querySelector('[data-files-modal-title]');
+        if (title) title.textContent = mode === 'attachments' ? 'All files' : 'All photos';
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Scroll the focused section into view inside the modal body.
+        var section = modal.querySelector('[data-files-modal-section="' + mode + '"]');
+        if (section) {
+            requestAnimationFrame(function () {
+                section.scrollIntoView({ block: 'start', behavior: 'auto' });
+            });
+        }
+
+        // Magnific Popup needs to be re-bound to the modal's gallery, since
+        // it was initialized on the panel's .image container at DOM ready.
+        if (window.jQuery && jQuery.fn.magnificPopup) {
+            jQuery('#filesModal .image-modal-gallery').magnificPopup({
+                delegate: 'a',
+                type: 'image',
+                gallery: { enabled: true }
+            });
+        }
+    };
+    window.filesModalClose = function () {
+        var modal = document.getElementById('filesModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !document.getElementById('filesModal').classList.contains('hidden')) {
+            window.filesModalClose();
+        }
+    });
+</script>
+@endif
 @endsection
 
 @push('styles')

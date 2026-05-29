@@ -97,7 +97,7 @@
          dropdowns, showLandingPageModal() for the public landing button. --}}
     <header class="d-print-none mb-4">
         <nav aria-label="Breadcrumb" class="mb-2">
-            <ol class="flex items-center gap-1 text-xs text-slate-500">
+            <ol class="flex items-center gap-1 text-xs text-slate-500 list-none pl-0 m-0">
                 <li><a href="{{ url('/home') }}" class="hover:text-slate-700">Home</a></li>
                 <li><x-ui.icon name="chevron-right" size="xs" class="text-slate-300" /></li>
                 <li><a href="{{ route('tour.index') }}" class="hover:text-slate-700">Tours</a></li>
@@ -292,7 +292,7 @@
          that JS to write into. --}}
     <div class="rounded border border-slate-200 bg-white">
         <div class="border-b border-slate-200 px-1" role="tablist">
-            <ul class="nav nav-tabs -mb-px flex flex-nowrap gap-6 overflow-x-auto border-0 px-3 [&_.nav-link]:cursor-pointer" data-bs-toggle="tabs" role="tablist">
+            <ul class="nav nav-tabs -mb-px flex flex-nowrap gap-6 overflow-x-auto border-0 px-3 list-none pl-0 m-0 [&_.nav-link]:cursor-pointer" data-bs-toggle="tabs" role="tablist">
                 @php
                     $tabBase = 'group inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-1 pb-3 pt-3 text-sm transition-colors border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300';
                     $tabActive = '[&.active]:border-primary-600 [&.active]:text-primary-700 [&.active]:font-medium';

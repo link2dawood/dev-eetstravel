@@ -37,7 +37,7 @@
 <header class="mb-6">
     @if(!empty($breadcrumbs))
         <nav aria-label="Breadcrumb" class="mb-2">
-            <ol class="flex items-center gap-1 text-xs text-slate-500">
+            <ol class="flex items-center gap-1 text-xs text-slate-500 list-none pl-0 m-0">
                 @foreach($breadcrumbs as $i => $crumb)
                     <li class="flex items-center gap-1">
                         @if(isset($crumb['href']) && $i < count($breadcrumbs) - 1)

@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
        if (config('app.env') !== 'local' || request()->server('HTTP_X_FORWARDED_PROTO') === 'https') {
            URL::forceScheme('https');
        }
+
     }
     
 

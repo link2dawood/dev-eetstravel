@@ -399,7 +399,9 @@ class SupplierSearchController extends Controller
         $id = $model->id;
         $low = strtolower($type);
         if (strtolower($type) == 'flight') $low .= 's';
-        $link = route("{$low}.show", ['id' => $model->id]);
+        // Route::resource('event', ...) generates URI param {event}, not {id}.
+        // Pass scalar so Laravel auto-binds to whatever the first param is named.
+        $link = route("{$low}.show", $model->id);
         $btn = "";
         if ($can){
             $btn .= "<button class='btn btn-success tourAdd' hidden data-id=$id data-type=$type data-service_name=\"{$model->name}\" id='service-property'>Tour</button>" .

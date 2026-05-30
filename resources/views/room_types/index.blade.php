@@ -44,10 +44,10 @@
             <table id="room-types-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'room-types-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'room-types-table')">{{ trans('main.Name') }} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'room-types-table')">{{ trans('main.Code') }} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'room-types-table')">{{ trans('main.Sortorder') }} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'room-types-table')">ID <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'room-types-table')">{{ trans('main.Name') }} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'room-types-table')">{{ trans('main.Code') }} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'room-types-table')">{{ trans('main.Sortorder') }} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
                         <th class="px-4 py-3 text-right">{{ trans('main.Actions') }}</th>
                     </tr>
                 </thead>

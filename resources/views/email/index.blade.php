@@ -31,7 +31,7 @@
 
                             <a href="#compose" data-bs-toggle="modal"
                                class="inline-flex w-full items-center justify-center gap-1.5 rounded bg-primary-600 px-4 h-10 text-sm font-medium text-white hover:bg-primary-700">
-                                <x-ui.icon name="pencil-plus" size="sm" /> Compose
+                                <x-ui.icon name="square-pen" size="sm" /> Compose
                             </a>
 
                             <ul class="nav nav-tabs nav-tabs-vertical list-none m-0 p-0 space-y-1" id="myTab" role="tablist">
@@ -147,7 +147,7 @@
                                     </div>
                                     <div class="btn-group relative">
                                         <button type="button" class="btn px-2 inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <x-ui.icon name="dots-vertical" size="sm" />
+                                            <x-ui.icon name="more-vertical" size="sm" />
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end hidden absolute right-0 mt-1 min-w-[160px] rounded border border-slate-200 bg-white shadow-lg p-1">
                                             <li><button class="dropdown-item block w-full text-left rounded px-3 py-1.5 text-sm hover:bg-slate-50" type="button">Action</button></li>

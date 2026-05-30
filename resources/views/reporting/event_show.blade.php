@@ -40,7 +40,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 <div class="rounded border border-slate-200 bg-white">
                     <div class="border-b border-slate-200 px-4 py-3 flex items-center gap-2">
-                        <x-ui.icon name="calendar-event" size="sm" class="text-slate-400" />
+                        <x-ui.icon name="calendar-clock" size="sm" class="text-slate-400" />
                         <h2 class="text-sm font-medium text-slate-700">Identity</h2>
                     </div>
                     <dl class="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">

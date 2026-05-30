@@ -34,17 +34,17 @@
             <table id="current-bookings-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff; min-width: 1000px;">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(0, 'current-bookings-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(6, 'current-bookings-table')">SIN <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(7, 'current-bookings-table')">DOU <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(8, 'current-bookings-table')">TRI <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 150px;" onclick="sortTable(9, 'current-bookings-table')">{!! trans('Cancellation Policy') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 200px;" onclick="sortTable(10, 'current-bookings-table')">{!! trans('Payments Made') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(0, 'current-bookings-table')">ID <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(6, 'current-bookings-table')">SIN <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(7, 'current-bookings-table')">DOU <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(8, 'current-bookings-table')">TRI <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 150px;" onclick="sortTable(9, 'current-bookings-table')">{!! trans('Cancellation Policy') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 200px;" onclick="sortTable(10, 'current-bookings-table')">{!! trans('Payments Made') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
                         <th class="px-4 py-3 text-right actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
                     </tr>
                 </thead>

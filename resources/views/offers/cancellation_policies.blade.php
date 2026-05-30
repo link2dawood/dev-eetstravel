@@ -34,18 +34,18 @@
             <table id="cancellation-policies-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff; min-width: 1200px;">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'cancellation-policies-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'cancellation-policies-table')">{!! trans('Policy') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'cancellation-policies-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'cancellation-policies-table')">{!! trans('City') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'cancellation-policies-table')">{!! trans('Status') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'cancellation-policies-table')">{!! trans('Date of stay') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(6, 'cancellation-policies-table')">SIN <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(7, 'cancellation-policies-table')">DOU <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(8, 'cancellation-policies-table')">TRI <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(9, 'cancellation-policies-table')">{!! trans('Offer Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(10, 'cancellation-policies-table')">{!! trans('Option Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
-                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(11, 'cancellation-policies-table')">{!! trans('Tour Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'cancellation-policies-table')">ID <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'cancellation-policies-table')">{!! trans('Policy') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'cancellation-policies-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'cancellation-policies-table')">{!! trans('City') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'cancellation-policies-table')">{!! trans('Status') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'cancellation-policies-table')">{!! trans('Date of stay') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(6, 'cancellation-policies-table')">SIN <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(7, 'cancellation-policies-table')">DOU <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(8, 'cancellation-policies-table')">TRI <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(9, 'cancellation-policies-table')">{!! trans('Offer Date') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(10, 'cancellation-policies-table')">{!! trans('Option Date') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(11, 'cancellation-policies-table')">{!! trans('Tour Name') !!} <x-ui.icon name="arrow-up-down" size="xs" class="text-slate-400" /></th>
                         <th class="px-4 py-3 text-right actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
                     </tr>
                 </thead>

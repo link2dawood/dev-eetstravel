@@ -30,7 +30,7 @@
         <aside class="lg:col-span-3 space-y-3">
             <button type="button" v-show="false" @click="openNewEmailModal()"
                     class="inline-flex w-full items-center justify-center gap-1.5 rounded bg-primary-600 px-4 h-10 text-sm font-medium text-white hover:bg-primary-700">
-                <x-ui.icon name="pencil-plus" size="sm" /> New email
+                <x-ui.icon name="square-pen" size="sm" /> New email
             </button>
 
             @include('email.parts.foldersList')
@@ -87,7 +87,7 @@
 
                 <div v-if="tour" class="flex items-center justify-center text-slate-500" style="min-height: 240px;">
                     <div class="text-center">
-                        <x-ui.icon name="mail-off" class="mx-auto mb-2 text-slate-300" />
+                        <x-ui.icon name="mail-x" class="mx-auto mb-2 text-slate-300" />
                         <p class="text-sm">You don't have any emails for this tour yet.</p>
                     </div>
                 </div>

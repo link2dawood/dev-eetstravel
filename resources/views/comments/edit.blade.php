@@ -21,7 +21,7 @@
 
     <div class="rounded border border-slate-200 bg-white">
         <div class="border-b border-slate-200 px-5 py-3 flex items-start gap-3">
-            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="message" size="sm" /></div>
+            <div class="flex h-8 w-8 items-center justify-center rounded bg-primary-50 text-primary-600 shrink-0"><x-ui.icon name="message-square" size="sm" /></div>
             <div class="flex-1 min-w-0">
                 <h2 class="text-sm font-medium text-slate-700">Comment</h2>
             </div>

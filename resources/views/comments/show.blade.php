@@ -21,7 +21,7 @@
 
 <div class="rounded border border-slate-200 bg-white">
     <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
-        <x-ui.icon name="messages" size="sm" class="text-slate-400" />
+        <x-ui.icon name="messages-square" size="sm" class="text-slate-400" />
         <h3 class="text-sm font-medium text-slate-700">{!! trans('main.Comments') !!}</h3>
     </div>
     <div class="px-5 py-4">

@@ -248,6 +248,15 @@
                                             <x-ui.icon name="edit" />
                                         </a>
                                     @endif
+                                    @if ($user->can('tour.create'))
+                                        {{-- Clone: opens the date-picker modal, posts GET /tour/{id}/clone?departure_date=… --}}
+                                        <button type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-400 hover:bg-success-50 hover:text-success-600"
+                                                title="Clone tour"
+                                                onclick="window.tourCloneConfirm('{{ addslashes($tour->name) }}', '{{ url('/tour/' . $tour->id . '/clone') }}')">
+                                            <x-ui.icon name="copy" />
+                                        </button>
+                                    @endif
                                     @if ($user->can('tour.destroy'))
                                         {{-- Alpine-driven confirm. data-tour-delete-url tells the modal which URL
                                              to navigate to on confirm; data-tour-name shows in the modal copy. --}}
@@ -391,6 +400,110 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                 window.tourDeleteCancel();
+            }
+        });
+    })();
+</script>
+
+{{-- Clone-tour modal. GET /tour/{id}/clone?departure_date=YYYY-MM-DD →
+     TourController@cloneTour replicates the tour + tour_days, then redirects
+     to the edit page of the new tour. --}}
+<div id="tour-clone-modal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="tour-clone-title">
+    <div class="w-full max-w-md rounded-md border border-slate-200 bg-white shadow-overlay">
+        <form id="tour-clone-form" method="GET" action="#" onsubmit="return window.tourCloneSubmit(event)">
+            <header class="flex items-start gap-4 px-6 py-4 border-b border-slate-200">
+                <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-50 text-success-600">
+                    <x-ui.icon name="copy" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="tour-clone-title" class="text-base font-semibold text-slate-900">Clone tour</h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Cloning <strong id="tour-clone-name" class="text-slate-900"></strong>. Pick the new departure date — retirement date is calculated automatically from the original tour's length.
+                    </p>
+                </div>
+                <button type="button"
+                        class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                        onclick="window.tourCloneCancel()"
+                        aria-label="Close">
+                    <x-ui.icon name="x" />
+                </button>
+            </header>
+
+            <div class="px-6 py-4">
+                <label for="tour-clone-departure-date" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+                    Departure date <span class="text-danger-600">*</span>
+                </label>
+                <input type="date"
+                       id="tour-clone-departure-date"
+                       name="departure_date"
+                       required
+                       class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+                <p id="tour-clone-error" class="hidden mt-2 text-sm text-danger-700"></p>
+            </div>
+
+            <footer class="flex items-center justify-end gap-2 px-6 py-3 border-t border-slate-200 bg-slate-50/40 rounded-b-md">
+                <x-ui.button type="button" variant="secondary" onclick="window.tourCloneCancel()">Cancel</x-ui.button>
+                <x-ui.button type="submit" variant="primary" icon="copy">Clone tour</x-ui.button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal   = document.getElementById('tour-clone-modal');
+        var nameEl  = document.getElementById('tour-clone-name');
+        var form    = document.getElementById('tour-clone-form');
+        var dateEl  = document.getElementById('tour-clone-departure-date');
+        var errEl   = document.getElementById('tour-clone-error');
+        if (!modal || !nameEl || !form || !dateEl) return;
+
+        window.tourCloneConfirm = function (name, url) {
+            nameEl.textContent = name || 'this tour';
+            form.setAttribute('action', url);
+            dateEl.value = '';
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            // Slight delay so the input is focusable after the modal becomes visible
+            setTimeout(function () { dateEl.focus(); }, 50);
+        };
+
+        window.tourCloneCancel = function () {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            form.setAttribute('action', '#');
+            dateEl.value = '';
+            errEl.classList.add('hidden');
+        };
+
+        window.tourCloneSubmit = function (e) {
+            if (!dateEl.value) {
+                e.preventDefault();
+                errEl.textContent = 'Please pick a departure date.';
+                errEl.classList.remove('hidden');
+                return false;
+            }
+            // Let the native form submission proceed → GET /tour/{id}/clone?departure_date=…
+            return true;
+        };
+
+        // Click on backdrop closes the modal.
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) window.tourCloneCancel();
+        });
+
+        // ESC closes the modal.
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                window.tourCloneCancel();
             }
         });
     })();

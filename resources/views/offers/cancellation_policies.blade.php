@@ -1,165 +1,185 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Cancellation policies')
+
 @section('content')
-    @include('layouts.title',
-           ['title' => 'Cancellation Policies', 'sub_title' => 'Policies List',
-           'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Cancellation Policies', 'icon' => null, 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="cancellation-search" class="form-control" placeholder="Search cancellation policies..." onkeyup="filterTable('cancellation-policies-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('cancellation-policies-table', 'cancellation_policies_export.csv')">
-                                <i class="ti ti-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 1200px;'>
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($processedOffers as $offer)
-                            <tr>
-                                <td>{{ $offer->id }}</td>
-                                <td data-delete-label>{{ $offer->cancel_policy }}</td>
-                                <td>{{ $offer->hotel_name }}</td>
-                                <td>{{ $offer->city_name }}</td>
-                                <td>{{ $offer->status }}</td>
-                                <td>{{ $offer->stay_date }}</td>
-                                <td>{{ $offer->SIN }}</td>
-                                <td>{{ $offer->DOU }}</td>
-                                <td>{{ $offer->TRI }}</td>
-                                <td>{{ $offer->offer_date ? \Carbon\Carbon::parse($offer->offer_date)->format('Y-m-d') : '' }}</td>
-                                <td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
-                                <td>{{ $offer->tour_name }}</td>
-                                <td onclick="event.stopPropagation();">
-                                    @if(!empty($offer->tour))
-                                        @include('component.action_buttons', [
-                                            'item' => $offer->tour,
-                                            'routePrefix' => 'tour'
-                                        ])
-                                    @else
-                                        <span class="text-muted small">No tour linked</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="13" class="text-center">No cancellation policies found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+<x-ui.page-header
+    title="Cancellation policies"
+    description="Hotel cancellation terms and payment milestones for booked offers."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Cancellation policies'],
+    ]"
+/>
+
+@if(empty($processedOffers) || count($processedOffers) === 0)
+    <div class="rounded border border-slate-200 bg-white">
+        <x-ui.empty-state icon="file-text" title="No cancellation policies" message="When an offer has a cancellation policy on file it will appear here." />
+    </div>
+@else
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-b border-slate-200">
+            <div class="w-full sm:max-w-xs">
+                <input type="text" id="cancellation-search" placeholder="Search cancellation policies…"
+                       onkeyup="filterTable('cancellation-policies-table', this.value)"
+                       class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+            </div>
+            <div>
+                <button type="button" onclick="exportTableToCSV('cancellation-policies-table', 'cancellation_policies_export.csv')"
+                        class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50 shadow-subtle">
+                    <x-ui.icon name="download" size="sm" /> Export CSV
+                </button>
             </div>
         </div>
-
-        <!-- Clone Modal -->
-        <div class="modal fade" id="tour-clone-modal" tabindex="-1" role='dialog' aria-labelledby='tour-clone-label'>
-            <div class="modal-dialog" role='document'>
-                <div class="modal-content">
-                    <div class="box box-body" style="border-top: none">
-                        <div class="alert alert-info block-error" style="text-align: center; display: none;"></div>
-                        <form id="tour-clone-modal-form">
-                            <div class="form-group">
-                                <label for="tour_id">{{ trans('main.Tour') }}</label>
-                                <input name="offer_date" id="offer_date" type="hidden" value="">
-                                <input name="option_date" id="option_date" type="hidden" value="">
-                                <select name="tour_id" id="tour_id" class="form-control tour_dropdown" required>
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}">{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group" id="services" style="display:none"></div>
-                            <div class="form-group" id="service_div"></div>
-                            <button type="submit" class="btn btn-success pre-loader-func" id="clone_tour_send">{!!trans('main.Submit')!!}</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Templates Modal -->
-    <div class="modal fade" id="TemplatesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="padding-left: 17px;padding-right: 17px;">
-        <div class="modal-dialog modal-lg" style="width: 90%;">
-            <form class="modal-content" id="templateSendForm" enctype="multipart/form-data" action="/templates/api/send" method="POST">
-                <input name="_token" type="hidden" value="{{ csrf_token() }}">
-                <input name="id" id="id" type="hidden" value="">
-                <input name="package_id" id="package_id" type="hidden" value="">
-                <input name="tour_id" id="tour_id" type="hidden" value="">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">{!! trans('main.SendTemplate') !!}</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="form-group">
-                            <div class="input-group">
-                                <input name="email" id="email" class="form-control" placeholder="E-mail:" required="" value="">
-                                <span class="input-group-addon"> {!! trans('main.Template') !!}</span>
-                                <span class="input-group-addon" style="width:0px; padding-left:0px; padding-right:0px; border:none;"></span>
-                                <select id="template_selector" name="template_selector" class="form-control"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <input name="subject" id="subject" class="form-control" placeholder="Subject:" value="" style="pointer-events: none;">
-                        </div>
-                        <div class="form-group">
-                            <textarea name="templatesContent" id="templatesContent" placeholder="Non required Field" class="form-control" style="height: 400px; visibility: hidden; display: none;"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <div class="btn btn-default btn-file">
-                                <i class="ti ti-paperclip"></i> {!! trans('main.Attachment') !!}
-                                <input type="file" name="attachment[]" multiple="" name="file" id="file">
-                            </div>
-                            <div id="file_name"></div>
-                            <script>
-                                document.getElementById('file').onchange = function() {
-                                    $('#file_name').html('Selected files: <br/>');
-                                    $.each(this.files, function(i, file) {
-                                        $('#file_name').append(file.name + ' <br/>');
-                                    });
-                                };
-                            </script>
-                            <p class="help-block">Max. 32MB</p>
-                        </div>
-                    </div>
-                    <div class="box-footer">
-                        <div class="pull-right">
-                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="ti ti-file-code"></i> {!! trans('main.Send') !!}</button>
-                        </div>
-                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="ti ti-x"></i> {!! trans('main.Discard') !!}</button>
-                    </div>
-                </div>
-            </form>
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <table id="cancellation-policies-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff; min-width: 1200px;">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'cancellation-policies-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'cancellation-policies-table')">{!! trans('Policy') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'cancellation-policies-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'cancellation-policies-table')">{!! trans('City') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'cancellation-policies-table')">{!! trans('Status') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'cancellation-policies-table')">{!! trans('Date of stay') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(6, 'cancellation-policies-table')">SIN <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(7, 'cancellation-policies-table')">DOU <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(8, 'cancellation-policies-table')">TRI <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(9, 'cancellation-policies-table')">{!! trans('Offer Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(10, 'cancellation-policies-table')">{!! trans('Option Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(11, 'cancellation-policies-table')">{!! trans('Tour Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 text-right actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($processedOffers as $offer)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">#{{ $offer->id }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-700 max-w-[16rem] whitespace-normal break-words" data-delete-label>{{ $offer->cancel_policy }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->hotel_name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->city_name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->status }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600 whitespace-nowrap">{{ $offer->stay_date }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->SIN }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->DOU }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->TRI }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ $offer->offer_date ? \Carbon\Carbon::parse($offer->offer_date)->format('Y-m-d') : '' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $offer->tour_name }}</td>
+                            <td class="px-4 py-3" onclick="event.stopPropagation();">
+                                @if(!empty($offer->tour))
+                                    <div class="flex items-center justify-end gap-1">
+                                        @include('component.action_buttons', ['item' => $offer->tour, 'routePrefix' => 'tour'])
+                                    </div>
+                                @else
+                                    <span class="block text-right text-xs text-slate-400">No tour linked</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
+@endif
 
-    @include('component.delete_modal_simple')
+{{-- Clone tour modal — kept Bootstrap selectors (#tour-clone-modal,
+     #tour-clone-modal-form, #tour_id, .tour_dropdown, #services,
+     #service_div, #offer_date, #option_date) for the dropdown_ajax +
+     .change-tour-button JS below. --}}
+<div class="modal fade" id="tour-clone-modal" tabindex="-1" role="dialog" aria-labelledby="tour-clone-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content rounded border border-slate-200 bg-white shadow-lg">
+            <div class="modal-header border-b border-slate-200 px-5 py-3">
+                <h4 class="text-sm font-medium text-slate-700" id="tour-clone-label">Assign offer to a tour</h4>
+            </div>
+            <div class="modal-body px-5 py-4 space-y-3">
+                <div class="alert alert-info block-error hidden rounded border border-info-200 bg-info-50 px-3 py-2 text-center text-sm text-info-700"></div>
+                <form id="tour-clone-modal-form" class="space-y-3">
+                    <div class="form-group">
+                        <label for="tour_id" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{{ trans('main.Tour') }}</label>
+                        <input name="offer_date" id="offer_date" type="hidden" value="">
+                        <input name="option_date" id="option_date" type="hidden" value="">
+                        <select name="tour_id" id="tour_id" required
+                                class="form-control tour_dropdown block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                            @foreach($tours as $tour)
+                                <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" id="services" style="display:none"></div>
+                    <div class="form-group" id="service_div"></div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="pre-loader-func inline-flex items-center gap-1.5 rounded bg-success-600 px-4 h-9 text-sm text-white hover:bg-success-700" id="clone_tour_send">{!! trans('main.Submit') !!}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Templates / send email modal — kept selectors (#TemplatesModal,
+     #templateSendForm, #template_selector, #templatesContent, #subject,
+     #email, #file, #file_name, #id, #package_id, #tour_id) for
+     loadtemplate.js / sendTemplate(). --}}
+<div class="modal fade" id="TemplatesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
+    <div class="modal-dialog modal-lg" style="width: 90%;">
+        <form class="modal-content rounded border border-slate-200 bg-white shadow-lg" id="templateSendForm" enctype="multipart/form-data" action="/templates/api/send" method="POST">
+            <input name="_token" type="hidden" value="{{ csrf_token() }}">
+            <input name="id" id="id" type="hidden" value="">
+            <input name="package_id" id="package_id" type="hidden" value="">
+            <input name="tour_id" id="tour_id" type="hidden" value="">
+
+            <div class="border-b border-slate-200 px-5 py-3">
+                <h3 class="text-sm font-medium text-slate-700">{!! trans('main.SendTemplate') !!}</h3>
+            </div>
+
+            <div class="px-5 py-4 space-y-3">
+                <div class="form-group">
+                    <div class="input-group flex items-stretch gap-2">
+                        <input name="email" id="email" required placeholder="E-mail:" value=""
+                               class="form-control flex-1 block h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        <span class="input-group-addon inline-flex items-center px-3 h-9 rounded border border-slate-300 bg-slate-50 text-xs text-slate-500">{!! trans('main.Template') !!}</span>
+                        <select id="template_selector" name="template_selector"
+                                class="form-control h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input name="subject" id="subject" placeholder="Subject:" value="" style="pointer-events: none;"
+                           class="form-control block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                </div>
+                <div class="form-group">
+                    <textarea name="templatesContent" id="templatesContent" placeholder="Non required Field"
+                              class="form-control" style="height: 400px; visibility: hidden; display: none;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="inline-flex cursor-pointer items-center gap-1.5 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50">
+                        <x-ui.icon name="paperclip" size="sm" /> {!! trans('main.Attachment') !!}
+                        <input type="file" name="attachment[]" multiple id="file" class="hidden">
+                    </label>
+                    <div id="file_name" class="mt-2 text-xs text-slate-500"></div>
+                    <script>
+                        document.getElementById('file').onchange = function () {
+                            $('#file_name').html('Selected files: <br/>');
+                            $.each(this.files, function (i, file) { $('#file_name').append(file.name + ' <br/>'); });
+                        };
+                    </script>
+                    <p class="mt-1 text-xs text-slate-500">Max. 32MB</p>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 bg-slate-50 px-5 py-3 flex items-center justify-between">
+                <button type="reset" class="modal-close inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50" data-dismiss="modal">
+                    <x-ui.icon name="x" size="sm" /> {!! trans('main.Discard') !!}
+                </button>
+                <button id="send" type="button" onclick="sendTemplate();"
+                        class="inline-flex items-center gap-1.5 rounded bg-primary-600 px-4 h-9 text-sm text-white hover:bg-primary-700">
+                    <x-ui.icon name="send" size="sm" /> {!! trans('main.Send') !!}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@include('component.delete_modal_simple')
 @endsection
 
 @push('scripts')
@@ -167,12 +187,11 @@
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
     $(document).ready(function () {
-        // Initialize Bootstrap table
-        initializeBootstrapTable('cancellation-policies-table');
-
+        if (typeof initializeBootstrapTable === 'function') {
+            initializeBootstrapTable('cancellation-policies-table');
+        }
         $('#tour-clone-modal-form').submit(function (e) {
-            var userConfirmed = confirm('Are you sure? Do you really want to submit the form?');
-            if (!userConfirmed) {
+            if (!confirm('Are you sure? Do you really want to submit the form?')) {
                 e.preventDefault();
                 location.reload();
             }
@@ -180,17 +199,12 @@
     });
 
     function dropdown_ajax(tour_id, offer_date, option_date) {
-        $.ajaxSetup({
-            headers: { 'X-CSRF-TOKEN': $('meta[name=csrf-token]').attr('content') }
-        });
+        $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name=csrf-token]').attr('content') } });
         $.ajax({
             type: "POST",
             url: `/offer/${tour_id}/days_dropdown`,
-            data: {
-                offer_date: offer_date,
-                option_date: option_date,
-            },
-            success: function(result) {
+            data: { offer_date: offer_date, option_date: option_date },
+            success: function (result) {
                 if (result[0] === "") {
                     $("#service_div").show();
                     $("#services").hide();
@@ -201,21 +215,15 @@
                     $("#services").html(result);
                 }
             },
-            error: function(result) {
-                console.log(result);
-            }
+            error: function (result) { console.log(result); }
         });
     }
 
-    // Attach event handlers directly - no setTimeout delay needed
-    $('.tour_dropdown').on('change', function(){
-        let offer_date = $('#offer_date').val();
-        let option_date = $('#option_date').val();
-        dropdown_ajax($(this).val(), offer_date, option_date);
+    $('.tour_dropdown').on('change', function () {
+        dropdown_ajax($(this).val(), $('#offer_date').val(), $('#option_date').val());
     });
 
-    $('.change-tour-button').show();
-    $('.change-tour-button').on('click', function(){
+    $('.change-tour-button').show().on('click', function () {
         let id = $(this).data('id');
         let tour_id = $(this).data('tour');
         let offer_date = $(this).data('offer_date');
@@ -223,10 +231,8 @@
 
         $('#offer_date').val(offer_date);
         $('#option_date').val(option_date);
-
         dropdown_ajax(tour_id, offer_date, option_date);
         $('#tour_id').val(tour_id).trigger('change');
-
         $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
     });
 </script>

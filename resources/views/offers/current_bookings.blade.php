@@ -1,191 +1,98 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Current bookings')
+
 @section('content')
-    @include('layouts.title',
-        ['title' => 'Current Bookings', 'sub_title' => 'Booking List',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Current Bookings', 'icon' => null, 'route' => null]
-        ]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="current-bookings-search" class="form-control" placeholder="Search current bookings..." onkeyup="filterTable('current-bookings-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('current-bookings-table', 'current_bookings_export.csv')">
-                                <i class="ti ti-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="current-bookings-table" class="table table-striped table-bordered table-hover bootstrap-table" style="background:#fff; width: 100%; min-width: 1000px;">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0, 'current-bookings-table')" style="width: 60px;">ID <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(6, 'current-bookings-table')" style="width: 60px;">SIN <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(7, 'current-bookings-table')" style="width: 60px;">DOU <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(8, 'current-bookings-table')" style="width: 60px;">TRI <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(9, 'current-bookings-table')" style="width: 150px;">{!! trans('Cancellation Policy') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(10, 'current-bookings-table')" style="width: 200px;">{!! trans('Payments Made') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th class="actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($processedBookings as $booking)
-                            <tr>
-                                <td>{{ $booking->id }}</td>
-                                <td data-delete-label>{{ $booking->tour_name }}</td>
-                                <td>{{ $booking->hotel_name }}</td>
-                                <td>{{ $booking->city_name }}</td>
-                                <td>{{ $booking->status_name }}</td>
-                                <td>{{ $booking->stay_date }}</td>
-                                <td class="text-center">-</td>
-                                <td class="text-center">-</td>
-                                <td class="text-center">-</td>
-                                <td>
-                                    <div style="max-width: 150px; white-space: normal; word-wrap: break-word;">
-                                        {{ $booking->cancel_policy }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="max-width: 200px; white-space: normal; word-wrap: break-word;">
-                                        {{ $booking->payment_policy }}
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    @if(!empty($booking->model))
-                                        @include('component.action_buttons', [
-                                            'item' => $booking->model,
-                                            'routePrefix' => 'tour_package'
-                                        ])
-                                    @else
-                                        <span class="text-muted small">No booking record linked</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="12" class="text-center">No current bookings found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+<x-ui.page-header
+    title="Current bookings"
+    description="Hotel bookings linked to active tours, with payment and cancellation status."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Current bookings'],
+    ]"
+/>
+
+@if(empty($processedBookings) || count($processedBookings) === 0)
+    <div class="rounded border border-slate-200 bg-white">
+        <x-ui.empty-state icon="bed" title="No current bookings" message="When a hotel booking is confirmed for an active tour, it will appear here." />
+    </div>
+@else
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-b border-slate-200">
+            <div class="w-full sm:max-w-xs">
+                <input type="text" id="current-bookings-search" placeholder="Search current bookings…"
+                       onkeyup="filterTable('current-bookings-table', this.value)"
+                       class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
+            </div>
+            <div>
+                <button type="button" onclick="exportTableToCSV('current-bookings-table', 'current_bookings_export.csv')"
+                        class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50 shadow-subtle">
+                    <x-ui.icon name="download" size="sm" /> Export CSV
+                </button>
             </div>
         </div>
-    </section>
-    @include('component.delete_modal_simple')
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <table id="current-bookings-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff; min-width: 1000px;">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(0, 'current-bookings-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(6, 'current-bookings-table')">SIN <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(7, 'current-bookings-table')">DOU <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 60px;" onclick="sortTable(8, 'current-bookings-table')">TRI <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 150px;" onclick="sortTable(9, 'current-bookings-table')">{!! trans('Cancellation Policy') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" style="width: 200px;" onclick="sortTable(10, 'current-bookings-table')">{!! trans('Payments Made') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 text-right actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($processedBookings as $booking)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">#{{ $booking->id }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-900" data-delete-label>{{ $booking->tour_name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $booking->hotel_name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $booking->city_name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $booking->status_name }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600 whitespace-nowrap">{{ $booking->stay_date }}</td>
+                            <td class="px-4 py-3 text-center text-slate-500">-</td>
+                            <td class="px-4 py-3 text-center text-slate-500">-</td>
+                            <td class="px-4 py-3 text-center text-slate-500">-</td>
+                            <td class="px-4 py-3 text-xs text-slate-700">
+                                <div class="max-w-[150px] whitespace-normal break-words leading-snug">{{ $booking->cancel_policy }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-xs text-slate-700">
+                                <div class="max-w-[200px] whitespace-normal break-words leading-snug">{{ $booking->payment_policy }}</div>
+                            </td>
+                            <td class="px-4 py-3" onclick="event.stopPropagation();">
+                                @if(!empty($booking->model))
+                                    <div class="flex items-center justify-end gap-1">
+                                        @include('component.action_buttons', ['item' => $booking->model, 'routePrefix' => 'tour_package'])
+                                    </div>
+                                @else
+                                    <span class="block text-right text-xs text-slate-400">No booking record linked</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
+@include('component.delete_modal_simple')
 @endsection
-
-@push('styles')
-<style>
-/* Action Buttons Container */
-.action-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-/* Individual Action Button */
-.btn-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border: 2px solid;
-    border-radius: 8px;
-    background-color: transparent;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0;
-    text-decoration: none;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-}
-
-.btn-action svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* Edit Button */
-.edit-action {
-    color: #f9a825;
-    border-color: #f9a825;
-}
-
-.edit-action:hover {
-    background-color: #f9a825;
-    color: white;
-}
-
-/* Delete Button */
-.delete-action {
-    color: #ef5350;
-    border-color: #ef5350;
-}
-
-.delete-action:hover {
-    background-color: #ef5350;
-    color: white;
-}
-
-/* Table Cell Text Wrapping */
-.table td {
-    vertical-align: middle;
-}
-
-/* Improved column width control */
-#current-bookings-table th:nth-child(11),
-#current-bookings-table td:nth-child(11) {
-    min-width: 200px;
-    max-width: 250px;
-}
-
-#current-bookings-table th:nth-child(10),
-#current-bookings-table td:nth-child(10) {
-    min-width: 150px;
-    max-width: 180px;
-}
-
-/* Better text display in long columns */
-.table td > div {
-    line-height: 1.4;
-}
-
-/* Actions column */
-#current-bookings-table th:nth-child(12),
-#current-bookings-table td:nth-child(12) {
-    text-align: center;
-}
-
-.actions-cell {
-    padding: 12px 8px !important;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-$(document).ready(function() {
-    initializeBootstrapTable('current-bookings-table');
+$(document).ready(function () {
+    if (typeof initializeBootstrapTable === 'function') {
+        initializeBootstrapTable('current-bookings-table');
+    }
 });
 </script>
 @endpush

@@ -1,93 +1,94 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Past offers')
+
 @section('content')
-@include('layouts.title',
-       ['title' => 'Past Offers', 'sub_title' => 'Offer List',
-       'breadcrumbs' => [
-       ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-       ['title' => 'Past Offers', 'icon' => null, 'route' => null]]])
-<section class="content">
-    <div class="box box-primary">
-        <div class="box-body">
-            <br><br>
-            <div class="mb-3">
-                <div class="row">
-                    <div class="col-md-6">
-                        {{-- Note: This client-side search will only search the 10 records currently visible on this page --}}
-                        <input type="text" id="past-offers-search" class="form-control" placeholder="Search past offers..." onkeyup="filterTable('past-offers-table', this.value)">
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <button class="btn btn-success btn-sm" onclick="exportTableToCSV('past-offers-table', 'past_offers_export.csv')">
-                            <i class="ti ti-download"></i> Export CSV
-                        </button>
-                    </div>
-                </div>
+<x-ui.page-header
+    title="Past offers"
+    description="Archived tour offers — no longer active."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Past offers'],
+    ]"
+/>
+
+@if($tours->isEmpty())
+    <div class="rounded border border-slate-200 bg-white">
+        <x-ui.empty-state icon="archive" title="No past offers" message="When offers expire or are archived they will appear here." />
+    </div>
+@else
+    <div class="rounded border border-slate-200 bg-white">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-b border-slate-200">
+            <div class="w-full sm:max-w-xs">
+                {{-- This client-side search only filters the visible page. --}}
+                <input type="text" id="past-offers-search" placeholder="Search past offers…"
+                       onkeyup="filterTable('past-offers-table', this.value)"
+                       class="block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600" />
             </div>
-            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                <table id="past-offers-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 900px;'>
-                    <thead>
-                        <tr>
-                            {{-- Note: These client-side sort functions will only sort the 10 visible records --}}
-                            <th onclick="sortTable(0, 'past-offers-table')">ID <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(1, 'past-offers-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(2, 'past-offers-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(3, 'past-offers-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(4, 'past-offers-table')">{!!trans('Departure Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(5, 'past-offers-table')">{!!trans('Return Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(6, 'past-offers-table')">{!!trans('PAX')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(7, 'past-offers-table')">{!!trans('Created At')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tours as $tour)
-                        <tr>
-                            <td>{{ $tour->id }}</td>
-                            <td data-delete-label>{{ $tour->name }}</td>
-                            <td>{{ $tour->city ? $tour->city->name : '' }}</td>
-                            <td>
-                                <span class="badge badge-primary" style="background-color: {{ $tour->getStatusColor() }}">
+            <div>
+                <button type="button" onclick="exportTableToCSV('past-offers-table', 'past_offers_export.csv')"
+                        class="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50 shadow-subtle">
+                    <x-ui.icon name="download" size="sm" /> Export CSV
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto" style="-webkit-overflow-scrolling: touch;">
+            <table id="past-offers-table" class="min-w-full divide-y divide-slate-200 text-sm bootstrap-table" style="background:#fff; min-width: 900px;">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(0, 'past-offers-table')">ID <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(1, 'past-offers-table')">{!! trans('Tour Name') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(2, 'past-offers-table')">{!! trans('City') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(3, 'past-offers-table')">{!! trans('Status') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(4, 'past-offers-table')">{!! trans('Departure Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(5, 'past-offers-table')">{!! trans('Return Date') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(6, 'past-offers-table')">{!! trans('PAX') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 cursor-pointer select-none" onclick="sortTable(7, 'past-offers-table')">{!! trans('Created At') !!} <x-ui.icon name="arrows-sort" size="xs" class="text-slate-400" /></th>
+                        <th class="px-4 py-3 text-right actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($tours as $tour)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">#{{ $tour->id }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-900" data-delete-label>{{ $tour->name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $tour->city ? $tour->city->name : '' }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium text-white" style="background-color: {{ $tour->getStatusColor() }}">
                                     {{ $tour->getStatusName() }}
                                 </span>
                             </td>
-                            <td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</td>
-                            <td>{{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '' }}</td>
-                            <td>{{ $tour->pax }}</td>
-                            <td>{{ $tour->created_at ? $tour->created_at->format('Y-m-d H:i') : '' }}</td>
-                            <td onclick="event.stopPropagation();">
-                                @include('component.action_buttons', [
-                                    'item' => $tour,
-                                    'routePrefix' => 'tour'
-                                ])
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $tour->pax }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ $tour->created_at ? $tour->created_at->format('Y-m-d H:i') : '' }}</td>
+                            <td class="px-4 py-3" onclick="event.stopPropagation();">
+                                <div class="flex items-center justify-end gap-1">
+                                    @include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])
+                                </div>
                             </td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="9" class="text-center">No past offers found</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
-            {{-- Pagination Links --}}
-            <div class="d-flex justify-content-end mt-4">
-                {{ $tours->withQueryString()->links() }}
-            </div>
-
+        {{-- Laravel server-side pagination --}}
+        <div class="flex justify-end px-4 py-3 border-t border-slate-200">
+            {{ $tours->withQueryString()->links() }}
         </div>
     </div>
-</section>
+@endif
+
 @include('component.delete_modal_simple')
 @endsection
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // If your initializeBootstrapTable function interferes with standard Laravel pagination
-        // you might need to disable it, but try keeping it first.
-        initializeBootstrapTable('past-offers-table');
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof initializeBootstrapTable === 'function') {
+            initializeBootstrapTable('past-offers-table');
+        }
     });
 </script>
 @endpush

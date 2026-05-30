@@ -148,7 +148,7 @@ class OfficeController extends Controller {
 		foreach($tour_expenses as $tour_expense){
 			$total_tour_expense = $total_tour_expense + $tour_expense->tour_expenses;
 			// Add action buttons
-			$url = ['edit' => route('tour_expenses.edit', ['id' => $tour_expense->id]), 'delete_msg' => "/tour_expenses/{$tour_expense->id}/deleteMsg"];
+			$url = ['edit' => route('tour_expenses.edit', ['tour_expense' => $tour_expense->id]), 'delete_msg' => "/tour_expenses/{$tour_expense->id}/deleteMsg"];
 			$tour_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
@@ -156,7 +156,7 @@ class OfficeController extends Controller {
 		foreach($utility_expenses as $utility_expense){
 			$total_utility_expense = $total_utility_expense + $utility_expense->monthly_expense;
 			// Add action buttons
-			$url = ['edit' => route('utility_expenses.edit', ['id' => $utility_expense->id]), 'delete_msg' => "/utility_expenses/{$utility_expense->id}/deleteMsg"];
+			$url = ['edit' => route('utility_expenses.edit', ['utility_expense' => $utility_expense->id]), 'delete_msg' => "/utility_expenses/{$utility_expense->id}/deleteMsg"];
 			$utility_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
@@ -164,7 +164,7 @@ class OfficeController extends Controller {
 		foreach($employee_salaries as $employee_salary){
 			$total_employee_salary = $total_employee_salary + $employee_salary->employe_salary;
 			// Add action buttons
-			$url = ['edit' => route('employes-salary.edit', ['id' => $employee_salary->id]), 'delete_msg' => "/employes-salary/{$employee_salary->id}/deleteMsg"];
+			$url = ['edit' => route('employes-salary.edit', ['employes_salary' => $employee_salary->id]), 'delete_msg' => "/employes-salary/{$employee_salary->id}/deleteMsg"];
 			$employee_salary->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
@@ -172,7 +172,7 @@ class OfficeController extends Controller {
 		foreach($office_earnings as $office_earning){
 			$total_office_earning = $total_office_earning + $office_earning->profit;
 			// Add action buttons
-			$url = ['edit' => route('office_earning.edit', ['id' => $office_earning->id]), 'delete_msg' => "/office_earning/{$office_earning->id}/deleteMsg"];
+			$url = ['edit' => route('office_earning.edit', ['office_earning' => $office_earning->id]), 'delete_msg' => "/office_earning/{$office_earning->id}/deleteMsg"];
 			$office_earning->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
@@ -180,7 +180,7 @@ class OfficeController extends Controller {
 		foreach($balances as $balance){
 			$total_balance = $total_balance + $balance->total_amount;
 			// Add action buttons
-			$url = ['edit' => route('office_balance.edit', ['id' => $balance->id]), 'delete_msg' => "/office_balance/{$balance->id}/deleteMsg"];
+			$url = ['edit' => route('office_balance.edit', ['office_balance' => $balance->id]), 'delete_msg' => "/office_balance/{$balance->id}/deleteMsg"];
 			$balance->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 

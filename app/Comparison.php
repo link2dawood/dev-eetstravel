@@ -7,7 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Comparison extends Model
 {
     //
-	protected $guarded = [];
+	/**
+	 * AUDIT.md CC5 — block mass-assignment of identity / FK columns.
+	 * Amount / status / business-data fields stay editable so existing
+	 * update flows (Model::update($request->except(['attach']))) still work,
+	 * but the FK and identity columns can't be reassigned via a tampered
+	 * payload.
+	 */
+	protected $guarded = ['id', 'created_at', 'updated_at'];
 
 	public function comparison_rows()
 	{

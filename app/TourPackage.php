@@ -87,7 +87,26 @@ class TourPackage extends Model
 
     protected $table = 'tour_packages';
 
-    protected $guarded = [];
+    /**
+
+     * AUDIT.md CC5 — block mass-assignment of identity / FK columns.
+
+
+     * Amount / status / business-data fields stay editable so existing
+
+
+     * update flows (Model::update($request->except(['attach']))) still work,
+
+
+     * but the FK and identity columns can't be reassigned via a tampered
+
+
+     * payload.
+
+
+     */
+
+    protected $guarded = ['id', 'created_at', 'updated_at', 'tour_id', 'parent_id'];
 
     /**
     * tour day.

@@ -1,143 +1,119 @@
 @extends('email.layout')
-@section('title','Index')
+@section('title','Inbox (legacy)')
+
 @section('main-content')
-    @if(!$imapConnected)
-    @else
-    <!-- /.box-header -->
-    <div class="box-body no-padding">
+@if(!$imapConnected)
+@else
+{{-- Legacy non-Vue email list. .moveToFolder / .reply / .delete with
+     data-link / data-message-id / data-reply-* selectors are wired by
+     surrounding code; preserve. --}}
+<div class="px-0">
 
+    <div class="mailbox-controls border-b border-slate-200 px-5 py-3 flex items-center justify-end">
+        @if($mails)
+            <div class="text-xs text-slate-500 mr-3">
+                {{ ($page-1) * $per_page + 1 }} - {{ ($page-1) * $per_page + count($mails) }} / {{ $mailsCount }}
+            </div>
 
-        <div class="mailbox-controls">
-            <div class="pull-right">
-                @if ($mails)
-                {{($page-1) * $per_page + 1}}-{{($page-1) * $per_page + count($mails)}} / {{$mailsCount}}
-
-                <div class="btn-group">
-
-                    @if($page != 1)
-                        @if (Route::getCurrentRoute()->getName() == 'email.index')
-                            <a href="{{route('email.index', ['page' => $page-1] )}}">
-                        @endif
-                                @if (Route::getCurrentRoute()->getName() == 'email.search_result' || Route::getCurrentRoute()->getName() == 'email.search')
-                                    <a href="{{route('email.search', ['page' => $page-1,"searched" => $search ] )}}">
-                                        @endif
-
-                        @if (Route::getCurrentRoute()->getName() == 'email.folder')
-                            <a href="{{route('email.folder', ['page' => $page-1, 'currentFolder'=> $currentFolder] )}}">
-                        @endif
+            <div class="btn-group flex items-center gap-1">
+                @if($page != 1)
+                    @if(Route::getCurrentRoute()->getName() == 'email.index')
+                        <a href="{{ route('email.index', ['page' => $page-1]) }}">
                     @endif
-                        <button type="button" class="btn btn-default btn-sm"><i class="fa fa-chevron-left"></i></button></a>
+                    @if(Route::getCurrentRoute()->getName() == 'email.search_result' || Route::getCurrentRoute()->getName() == 'email.search')
+                        <a href="{{ route('email.search', ['page' => $page-1, 'searched' => $search]) }}">
+                    @endif
+                    @if(Route::getCurrentRoute()->getName() == 'email.folder')
+                        <a href="{{ route('email.folder', ['page' => $page-1, 'currentFolder' => $currentFolder]) }}">
+                    @endif
+                @endif
+                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <x-ui.icon name="chevron-left" size="sm" />
+                    </button>
+                </a>
 
-
-
-                        @if (Route::getCurrentRoute()->getName() == 'email.index')
-                            <a href="{{route('email.index', ['page' => $page+1] )}}">
-                        @endif
-
-                                @if (Route::getCurrentRoute()->getName() == 'email.search_result' || Route::getCurrentRoute()->getName() == 'email.search')
-                                    <a href="{{route('email.search', ['page' => $page+1,"searched" => $search] )}}">
-                                        @endif
-
-                        @if (Route::getCurrentRoute()->getName() == 'email.folder')
-                            <a href="{{route('email.folder', ['page' => $page+1, 'currentFolder'=> $currentFolder] )}}">
-                        @endif
-                                @if (Route::getCurrentRoute()->getName() == 'email.search_result' || Route::getCurrentRoute()->getName() == 'email.search')
-                                    <a href="{{route('email.search', ['page' => $page+1, "searched" => $search] )}}">
-                                        @endif
-                        <button type="button" class="btn btn-default btn-sm"><i class="fa fa-chevron-right"></i></button></a>
-
-                </div>
-
+                @if(Route::getCurrentRoute()->getName() == 'email.index')
+                    <a href="{{ route('email.index', ['page' => $page+1]) }}">
+                @endif
+                @if(Route::getCurrentRoute()->getName() == 'email.search_result' || Route::getCurrentRoute()->getName() == 'email.search')
+                    <a href="{{ route('email.search', ['page' => $page+1, 'searched' => $search]) }}">
+                @endif
+                @if(Route::getCurrentRoute()->getName() == 'email.folder')
+                    <a href="{{ route('email.folder', ['page' => $page+1, 'currentFolder' => $currentFolder]) }}">
+                @endif
+                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                        <x-ui.icon name="chevron-right" size="sm" />
+                    </button>
+                </a>
             </div>
         @endif
-                <!-- /.btn-group -->
-            </div>
-            <!-- /.pull-right -->
-        </div>
-        <div class="table-responsive mailbox-messages">
+    </div>
 
-            <table class="table table-hover table-striped finder-disable">
-                <tbody>
-                @if (!$mails)
-                    <tr class="row">
-                        <td class="col-md-12">
-                            @if(!isset($search))
-                            <h2 >The folder is empty</h2>
-                            @else
-                            <h2 >No search result</h2>
-                            @endif
+    <div class="overflow-x-auto">
+        <table class="finder-disable min-w-full divide-y divide-slate-200 text-sm">
+            <tbody class="divide-y divide-slate-100">
+                @if(!$mails)
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center">
+                            <h2 class="text-base font-medium text-slate-700">
+                                @if(!isset($search))The folder is empty@else No search result @endif
+                            </h2>
                         </td>
                     </tr>
-
                 @endif
-                @foreach ($mails as $mail)
-                    <tr style="cursor: pointer" data-link="{{route('email.mail', ['id'   => $mail->message_id, 'folder' => $currentFolder])}}">
-                        <!--<td><div class="icheckbox_flat-blue" aria-checked="false" aria-disabled="false" style="position: relative;"><input type="checkbox" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div></td>-->
-                        <td class="mailbox-star onclick_redirect">
-
-                            {{--<a href="#"><i class="fa fa-star text-yellow"></i></a>--}}
-                        </td>
-
-                        <td class="mailbox-name onclick_redirect"><a href="{{route('email.mail', ['id'   => $mail->getNumber(), 'folder' => $currentFolder])}}">
+                @foreach($mails as $mail)
+                    <tr class="cursor-pointer hover:bg-slate-50" data-link="{{ route('email.mail', ['id' => $mail->message_id, 'folder' => $currentFolder]) }}">
+                        <td class="mailbox-star onclick_redirect px-3 py-2 text-slate-300 w-6"></td>
+                        <td class="mailbox-name onclick_redirect px-3 py-2 max-w-[14rem] truncate">
+                            <a href="{{ route('email.mail', ['id' => $mail->getNumber(), 'folder' => $currentFolder]) }}" class="text-slate-700 hover:text-primary-600">
                                 @if(\App\Helper\AdminHelper::emailCheck($mail))
-                                @if($currentFolder == 'INBOX.Sent')
-                                    @php
-                                    $addresses = [];
-                                    $toArray = $mail->getTo();
-                                    array_walk($toArray, function($to) use (&$addresses){
-                                         $addresses[] = $to->getAddress();
-                                    })
-
-                                    @endphp
-                                    {{implode(', ', $addresses)}}
-                                @else
-                                    {{$mail->getFrom()}}
-                                @endif
+                                    @if($currentFolder == 'INBOX.Sent')
+                                        @php
+                                            $addresses = [];
+                                            $toArray = $mail->getTo();
+                                            array_walk($toArray, function ($to) use (&$addresses) { $addresses[] = $to->getAddress(); });
+                                        @endphp
+                                        {{ implode(', ', $addresses) }}
+                                    @else
+                                        {{ $mail->getFrom() }}
                                     @endif
-                            </a></td>
-                        <td class="mailbox-subject onclick_redirect">{{$mail->getSubject()}}
+                                @endif
+                            </a>
                         </td>
-                        <td class="mailbox-attachment onclick_redirect"></td>
-                        <td class="mailbox-date onclick_redirect">
-                            @if ($mail->getDate())
-                                {{\Carbon\Carbon::createFromTimestamp($mail->getDate()->getTimestamp())->diffForHumans()}}</td>
+                        <td class="mailbox-subject onclick_redirect px-3 py-2 text-slate-800 max-w-md truncate">{{ $mail->getSubject() }}</td>
+                        <td class="mailbox-attachment onclick_redirect px-3 py-2 w-8"></td>
+                        <td class="mailbox-date onclick_redirect px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                            @if($mail->getDate())
+                                {{ \Carbon\Carbon::createFromTimestamp($mail->getDate()->getTimestamp())->diffForHumans() }}
                             @endif
-                        <td style="width: 150px;">
-                            <div class="btn-group pull-right">
-                                <a href="#" class="btn btn-sm btn-default moveToFolder"
-                                   data-message-id="{{$mail->getNumber()}}"
-                                   data-message-folder="{{$currentFolder}}"
-                                   data-link="{{route('email.getMoveToForm', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false)}}">
-                                    <i class="fa fa-folder-open" aria-hidden="true"></i></a>
-                                <a class="btn  btn-default btn-sm reply"
-                                   data-reply-message="{{$mail->getNumber()}}"
-                                   data-reply-folder="{{$currentFolder}}"
-                                   data-to="
-                                        @if($currentFolder == 'INBOX.Sent')
-                                   {{implode(',', $addresses)}}
-
-                                        @else
-                                            {{$mail->getFrom()}}
-                                        @endif
-                                           "
-                                   data-link="{{route('email.getComposeForm', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false)}}"><i class="fa fa-reply" aria-hidden="true"></i></a>
-                                <a data-toggle="modal" data-target="#myModal" class="btn btn-danger btn-sm delete" data-link="{{route('email.deleteMsg', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false)}}"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+                        </td>
+                        <td class="px-3 py-2 w-[150px]">
+                            <div class="btn-group flex items-center justify-end gap-1">
+                                <a href="#" class="moveToFolder inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                                   data-message-id="{{ $mail->getNumber() }}"
+                                   data-message-folder="{{ $currentFolder }}"
+                                   data-link="{{ route('email.getMoveToForm', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false) }}">
+                                    <x-ui.icon name="folder-open" size="sm" />
+                                </a>
+                                <a class="reply inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
+                                   data-reply-message="{{ $mail->getNumber() }}"
+                                   data-reply-folder="{{ $currentFolder }}"
+                                   data-to="@if($currentFolder == 'INBOX.Sent'){{ implode(',', $addresses) }}@else{{ $mail->getFrom() }}@endif"
+                                   data-link="{{ route('email.getComposeForm', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false) }}">
+                                    <x-ui.icon name="corner-up-left" size="sm" />
+                                </a>
+                                <a data-toggle="modal" data-target="#myModal"
+                                   class="delete inline-flex h-8 w-8 items-center justify-center rounded border border-danger-300 bg-white text-danger-600 hover:bg-danger-50 cursor-pointer"
+                                   data-link="{{ route('email.deleteMsg', ['id' => $mail->getNumber(), 'folder' => $currentFolder], false) }}">
+                                    <x-ui.icon name="trash" size="sm" />
+                                </a>
                             </div>
                         </td>
-
                     </tr>
                 @endforeach
-                </tbody>
-            </table>
-            <!-- /.table -->
-        </div>
-        <!-- /.mail-box-messages -->
-    <div class="box-footer no-padding">
-        <div class="mailbox-controls">
-
-            <!-- /.pull-right -->
-        </div>
+            </tbody>
+        </table>
     </div>
-    </div>
-    @endif
+</div>
+@endif
 @stop

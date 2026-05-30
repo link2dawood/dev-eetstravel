@@ -1,50 +1,44 @@
-		
+{{-- Tour list rendered inside #tour_box. All Vue directives preserved. --}}
+<div id="emailList" class="px-0">
+    <div class="mailbox-controls"></div>
 
-    <div class="box-body no-padding" id="emailList">
-
-        <div class="mailbox-controls">
-            <div class="pull-right">
-            </div>
+    <div class="table-responsive overflow-x-auto mailbox-messages" id="emaillists">
+        <div v-if="view">
+            @include('email.parts.viewEmail')
         </div>
-		
-        <div class="table-responsive mailbox-messages"   id="emaillists">
-            <div  v-if="view">
-                @include('email.parts.viewEmail')
-            </div>
-            <table class="table table-hover table-striped finder-disable" v-if="toursArray">
-                <tbody>
-                <tr v-if="toursArray" style="cursor: pointer" v-for="(tour) in toursArray" >
-                    <td class="mailbox-star onclick_redirect">
+
+        <table class="finder-disable min-w-full divide-y divide-slate-200 text-sm" v-if="toursArray">
+            <tbody class="divide-y divide-slate-100">
+                <tr v-if="toursArray" v-for="(tour) in toursArray"
+                    class="cursor-pointer hover:bg-slate-50">
+                    <td class="mailbox-star onclick_redirect px-3 py-2 text-slate-300 w-6"></td>
+
+                    <td class="mailbox-name px-3 py-2" @click="viewTourEmails('', tour.name)">
+                        <a class="text-slate-700 hover:text-primary-600 font-mono text-xs">@{{ tour.id }}</a>
                     </td>
 
-                    <td class="mailbox-name" @click="viewTourEmails('',tour.name)">
-                        <a >
-                            <div>@{{tour.id}}</div>
-                        </a></td>
-                    <td class="mailbox-subject onclick_redirect" @click="viewTourEmails('',tour.name)">
-                        <b >@{{tour.name}}</b>
-                        <span v-else>@{{tour.name}}</span>
+                    <td class="mailbox-subject onclick_redirect px-3 py-2 text-slate-800 max-w-md truncate" @click="viewTourEmails('', tour.name)">
+                        <b>@{{ tour.name }}</b>
                     </td>
-                    <td class="mailbox-date onclick_redirect">
-                        @{{tour.departure_date}}
-                    </td>
-                  
 
+                    <td class="mailbox-date onclick_redirect px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                        @{{ tour.departure_date }}
+                    </td>
                 </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="box-footer no-padding">
-            <div class="mailbox-controls">
-                <div class="pull-right">
-                    <ul class="pagination" v-if="!loading">
-
-                        <li :class="{active: (page+1) === pageNumber, last: (pageNumber == totalPages && Math.abs(pageNumber - page) > 3), first:(pageNumber == 1 && Math.abs(pageNumber - page) > 3)}" v-for="pageNumber in totalPages" v-if="Math.abs(pageNumber - page) < 5 || pageNumber == totalPages || pageNumber == 1">
-                            <a :key="pageNumber" href="#" @click="changePage(pageNumber)" >@{{ pageNumber }}</a>
-                        </li>
-
-                    </ul>
-                </div>
-            </div>
-        </div>
+            </tbody>
+        </table>
     </div>
+
+    <div class="border-t border-slate-200 px-4 py-3 flex items-center justify-end">
+        <ul class="pagination list-none m-0 p-0 flex items-center gap-1" v-if="!loading">
+            <li v-for="pageNumber in totalPages"
+                v-if="Math.abs(pageNumber - page) < 5 || pageNumber == totalPages || pageNumber == 1"
+                :class="{ active: (page+1) === pageNumber, last: (pageNumber == totalPages && Math.abs(pageNumber - page) > 3), first: (pageNumber == 1 && Math.abs(pageNumber - page) > 3) }">
+                <a :key="pageNumber" href="#" @click="changePage(pageNumber)"
+                   class="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50 [&.active]:bg-primary-600 [&.active]:text-white [&.active]:border-primary-600">
+                    @{{ pageNumber }}
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

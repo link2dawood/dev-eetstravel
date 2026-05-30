@@ -1,120 +1,115 @@
 @extends('scaffold-interface.layouts.tabler-app')
 
 @section('content')
-    @include('layouts.title',
-    ['title' => 'Email', 'sub_title' => 'Inbox',
-    'breadcrumbs' => [
-    ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-    ['title' => 'Emails', 'icon' => 'map-signs', 'route' => null]]])
-    <section class="content py-3">
-        @if(!$imapConnected)
-            <div class="alert alert-warning d-flex align-items-center" role="alert">
-                <i class="ti ti-alert-triangle me-2"></i>
-                <div>
-                    Your mailbox is not connected.
-                    <a href="{{ route('snappymail.configure') }}" class="alert-link">Configure your mailbox credentials</a>
-                    to receive mail here, or
-                    <a href="{{ route('snappymail.sso') }}" class="alert-link" target="_blank">open SnappyMail webmail</a>.
+<x-ui.page-header
+    title="Email"
+    description="Legacy in-app webmail — backed by IMAP credentials configured per user."
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Emails'],
+    ]"
+/>
+
+@if(!$imapConnected)
+    <div class="mb-4 flex items-start gap-3 rounded border border-warning-600/20 bg-warning-50 px-4 py-3 text-sm text-warning-800">
+        <x-ui.icon name="alert-triangle" class="mt-0.5 text-warning-600 shrink-0" />
+        <div class="flex-1">
+            Your mailbox is not connected.
+            <a href="{{ route('snappymail.configure') }}" class="font-medium underline hover:no-underline">Configure your mailbox credentials</a>
+            to receive mail here, or
+            <a href="{{ route('snappymail.sso') }}" target="_blank" class="font-medium underline hover:no-underline">open SnappyMail webmail</a>.
+        </div>
+    </div>
+@else
+    {{-- Vue 2 / Vuex root. All directives (v-show / v-if / v-model / @click /
+         @keyup.enter) and the @{{ }} Blade-escape for Vue mustache MUST stay
+         intact — the <script> block below wires this Vue instance up. --}}
+    <div id="emailsfolders" class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {{-- Sidebar: New-email button + folder lists --}}
+        <aside class="lg:col-span-3 space-y-3">
+            <button type="button" v-show="false" @click="openNewEmailModal()"
+                    class="inline-flex w-full items-center justify-center gap-1.5 rounded bg-primary-600 px-4 h-10 text-sm font-medium text-white hover:bg-primary-700">
+                <x-ui.icon name="pencil-plus" size="sm" /> New email
+            </button>
+
+            @include('email.parts.foldersList')
+            @include('email.parts.tourfolders')
+        </aside>
+
+        {{-- Tours box (visible when browsing a tour bucket). #tour_box toggled
+             by changeTourFolder() / viewTourEmails() — keep the ID. --}}
+        <section class="lg:col-span-9" id="tour_box" style="display:none">
+            <div class="rounded border border-slate-200 bg-white shadow-subtle">
+                <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+                    <x-ui.icon name="map-pin" size="sm" class="text-primary-600" />
+                    <h3 class="text-sm font-medium text-slate-700 flex-1">Tours</h3>
+                    <a href="javascript:history.back()" class="inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-3 h-8 text-xs text-slate-700 hover:bg-slate-50">
+                        <x-ui.icon name="arrow-left" size="xs" /> Back
+                    </a>
+                </div>
+                <div class="p-5">
+                    @include('email.tour_index')
                 </div>
             </div>
-        @else
-        <div class="row g-3" id="emailsfolders">
-            <div class="col-lg-3 col-md-4">
-                <button type="button"
-                        class="btn btn-primary w-100 mb-3"
-                        v-show="false"
-                        @click="openNewEmailModal()">
-                    <i class="ti ti-pencil-plus me-2"></i>New email
-                </button>
+        </section>
 
-                @include('email.parts.foldersList')
-				@include('email.parts.tourfolders')
-            </div>
-            <div class="col-lg-9 col-md-8" id="tour_box" style="display:none">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex align-items-center">
-                        <h3 class="card-title mb-0 flex-grow-1">
-                            <i class="ti ti-route me-2 text-primary"></i>Tours
-                        </h3>
-                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
-                            <i class="ti ti-arrow-left me-1"></i>Back
+        {{-- Email box (default visible). #email_box toggled by the same handlers. --}}
+        <section class="lg:col-span-9" id="email_box">
+            <div class="rounded border border-slate-200 bg-white shadow-subtle">
+                <div class="border-b border-slate-200 px-5 py-3 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <x-ui.icon name="mail" size="sm" class="text-primary-600" />
+                        <h3 class="text-sm font-medium text-slate-700 flex-1 uppercase tracking-wide">@{{ currentFolder }}</h3>
+                        <a href="javascript:history.back()" class="inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-3 h-8 text-xs text-slate-700 hover:bg-slate-50">
+                            <x-ui.icon name="arrow-left" size="xs" /> Back
                         </a>
                     </div>
-                    <div class="card-body">
-                        @include('email.tour_index')
-                    </div>
-                    
 
-
-
-
-
-                </div>
-            </div>
-            <!-- /.col -->
-            <div class="col-lg-9 col-md-8" id="email_box">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <div class="d-flex align-items-center w-100">
-                            <h3 class="card-title mb-0 flex-grow-1 text-uppercase">
-                                <i class="ti ti-mail me-2 text-primary"></i>@{{ currentFolder }}
-                            </h3>
-                            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
-                                <i class="ti ti-arrow-left me-1"></i>Back
-                            </a>
-                        </div>
-
-                        <div class="input-group mt-3">
-                            <span class="input-group-text">
-                                <i class="ti ti-search"></i>
-                            </span>
-                            <input type="text" id="search" name="search" class="form-control"
+                    <div class="input-group flex items-stretch gap-2">
+                        <div class="relative flex-1">
+                            <span class="input-group-text absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><x-ui.icon name="search" size="sm" /></span>
+                            <input type="text" id="search" name="search"
                                    v-model="search" placeholder="Search emails…"
-                                   @keyup.enter="getListEmailsByUser">
-                            <button class="btn btn-primary" @click="getListEmailsByUser">
-                                <i class="ti ti-search me-1"></i>Search
-                            </button>
-                            <button type="button" class="btn btn-outline-danger"
-                                    @click="ClearSearchForm()"
-                                    v-if="search != null && search !== ''">
-                                <i class="ti ti-x me-1"></i>Clear
-                            </button>
+                                   @keyup.enter="getListEmailsByUser"
+                                   class="form-control block w-full h-9 rounded border border-slate-300 bg-white pl-8 pr-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
                         </div>
+                        <button @click="getListEmailsByUser"
+                                class="inline-flex items-center gap-1 rounded bg-primary-600 px-3 h-9 text-sm text-white hover:bg-primary-700">
+                            <x-ui.icon name="search" size="sm" /> Search
+                        </button>
+                        <button type="button" v-if="search != null && search !== ''" @click="ClearSearchForm()"
+                                class="inline-flex items-center gap-1 rounded border border-danger-300 bg-white px-3 h-9 text-sm text-danger-600 hover:bg-danger-50">
+                            <x-ui.icon name="x" size="sm" /> Clear
+                        </button>
                     </div>
+                </div>
 
-                    <div v-if="tour"
-                         class="d-flex align-items-center justify-content-center text-muted"
-                         style="min-height: 240px; font-size: 1.1rem;">
-                        <div class="text-center">
-                            <i class="ti ti-mail-off d-block mb-2" style="font-size: 2.5rem;"></i>
-                            You don't have any emails for this tour yet.
+                <div v-if="tour" class="flex items-center justify-center text-slate-500" style="min-height: 240px;">
+                    <div class="text-center">
+                        <x-ui.icon name="mail-off" class="mx-auto mb-2 text-slate-300" />
+                        <p class="text-sm">You don't have any emails for this tour yet.</p>
+                    </div>
+                </div>
+
+                @yield('main-content')
+
+                <div v-if="loading" class="flex items-center justify-center" style="min-height: 240px;">
+                    <div class="text-center text-slate-500">
+                        <div class="spinner-border text-primary-600 mb-2" role="status">
+                            <span class="visually-hidden">Loading…</span>
                         </div>
+                        <div class="text-sm">Connecting to mail server…</div>
                     </div>
-
-                    @yield('main-content')
-
-                    <div v-if="loading" class="d-flex align-items-center justify-content-center" style="min-height: 240px;">
-                        <div class="text-center text-muted">
-                            <div class="spinner-border text-primary mb-2" role="status">
-                                <span class="visually-hidden">Loading…</span>
-                            </div>
-                            <div>Connecting to mail server…</div>
-                        </div>
-                    </div>
-
-                   
-
-
-
-
                 </div>
             </div>
-            @include('email.modals.createFolder')
-            @include('email.modals.changeFolder')
-            @include('email.modals.message')
-        </div>
-    </section>
-    @endif
+        </section>
+
+        @include('email.modals.createFolder')
+        @include('email.modals.changeFolder')
+        @include('email.modals.message')
+    </div>
+@endif
 
     {{--<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>--}}
 
@@ -314,8 +309,6 @@
 
 
 
-
-
                             $.toast({
                                 heading: 'Success',
                                 text: "Send message",
@@ -425,14 +418,14 @@
 						    url = `/api/v1/getArchiveTours`;
 					   }
                             axios.post(url,{
-                               
+
                                 page: this.page,
                                 search: this.search
                             })
                                 .then((result)=>{
 									this.toursArray = result.data.tour;
 								   console.log(this.toursArray);
-									
+
 
                                     // this.$store.commit('setEmails',{'folder':this.currentFolder, data:result.data})
 
@@ -448,7 +441,7 @@
                                 });
                                 this.loading = false;
                             });
-                        
+
 
 
                     },
@@ -461,7 +454,7 @@
 
                         let emails = JSON.parse(localStorage.getItem(`emails[${this.currentFolder}]`));
                         // let emails = this.$store.state.emails[this.currentFolder];
-                      
+
                             axios.post(`/api/v1/users/${userId}/touremails`,{
                                 folder: (folder)?folder:this.currentFolder,
                                 page: this.page,
@@ -474,7 +467,7 @@
                                     this.count = result.data.count;
                                     this.perpage = result.data.perpage;
 									this.search = "";
-								
+
 									if(this.emailsArray.length === 0){
 									$('#email_box').css("display","none");
 									$('#tour_box').css("display","none");
@@ -482,7 +475,7 @@
 									}
                                     localStorage.setItem(`emails[${(folder)?folder:this.currentFolder}]`,JSON.stringify(result.data));
 
-									
+
                                     // this.$store.commit('setEmails',{'folder':this.currentFolder, data:result.data})
 
 
@@ -497,13 +490,13 @@
                                 });
                                 this.loading = false;
                             });
-                        
+
 
 
                     },
 
                     getListEmailsByUser( get = false, folder=false){
-					
+
                         let userId = $('meta[name="user-id"]').attr('content');
                         this.emailsArray = [];
                         this.loading = true;
@@ -571,7 +564,7 @@
 								}
 
                         localStorage.setItem(`emails[${this.currentFolder}]`,JSON.stringify(emails));
-						
+
                         axios.post(`/api/v1/users/${userId}/email/${email.header.uid}/get`,{
                             folder:this.currentFolder
                         })
@@ -584,7 +577,7 @@
 						.catch(function (error) {
 							console.log(error);
 						  });
-					
+
 
                     },
 
@@ -609,13 +602,13 @@
 					viewTourEmails(folder,tour){
 						$('#email_box').css("display","block");
 						$('#tour_box').css("display","none");
-						
+
 						this.currentFolder = folder;
                         this.view = false;
 						this.search = tour;
 						this.tour = false;
                         this.getListEmailsUser();
-                         
+
                     },
 					changeTourFolder(name){
 						$('#email_box').css("display","none");
@@ -651,7 +644,7 @@
 								name: 'Error message',
 								message: 'Email not moved',
 							});
-                            
+
 
                         });
                     },

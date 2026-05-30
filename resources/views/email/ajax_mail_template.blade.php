@@ -1,91 +1,77 @@
+{{-- AJAX-loaded single mail view. .reply / .delete data-link selectors
+     are wired by surrounding code; keep them intact. --}}
 @if($imapConnected)
-    <div class="mailbox-controls with-border text-center">
-        {{--@if(\App\Helper\AdminHelper::emailCheck($mail))--}}
-        {{--@php--}}
-        {{--$addresses = [];--}}
-        {{--$toArray = $mail->getTo();--}}
-        {{--array_walk($toArray, function($to) use (&$addresses){--}}
-        {{--$addresses[] = $to->getAddress();--}}
-        {{--})--}}
-
-        {{--@endphp--}}
-        <button
-                type="button"
-                class="btn btn-default reply"
-                data-reply-message="{{$mail->message_id}}"
-                data-reply-folder="{{$currentFolder}}"
-                data-to="
-                    @if($currentFolder == 'INBOX.Sent')
-                {{$mail->to}}
-                @else
-                {{$mail->from}}
-                @endif
-                        "
-                data-link="{{route('email.getComposeForm', ['id' => $mail->message_id, 'folder' => $currentFolder], false)}}">
-            <i class="fa fa-reply"></i> Reply
+    <div class="mailbox-controls border-b border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
+        <button type="button"
+                class="reply inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-3 h-9 text-sm text-slate-700 hover:bg-slate-50"
+                data-reply-message="{{ $mail->message_id }}"
+                data-reply-folder="{{ $currentFolder }}"
+                data-to="@if($currentFolder == 'INBOX.Sent'){{ $mail->to }}@else{{ $mail->from }}@endif"
+                data-link="{{ route('email.getComposeForm', ['id' => $mail->message_id, 'folder' => $currentFolder], false) }}">
+            <x-ui.icon name="corner-up-left" size="sm" /> Reply
         </button>
-        <a data-toggle="modal" data-target="#myModal" class="btn-sm delete" data-link="{{route('email.deleteMsg', ['id' => $mail->message_id, 'folder' => $currentFolder], false)}}"><button type="button" class="btn btn-default"><i class="fa fa-trash-o"></i> Delete</button></a>
-        {{--@endif--}}
+        <a data-toggle="modal" data-target="#myModal"
+           class="delete inline-flex items-center gap-1 rounded border border-danger-300 bg-white px-3 h-9 text-sm text-danger-600 hover:bg-danger-50 cursor-pointer"
+           data-link="{{ route('email.deleteMsg', ['id' => $mail->message_id, 'folder' => $currentFolder], false) }}">
+            <x-ui.icon name="trash" size="sm" /> Delete
+        </a>
     </div>
-    <!-- /.box-header -->
-    <div class="box-body no-padding">
-        <div class="mailbox-read-info">
-            <h3>
+
+    <div class="px-5 py-4">
+        <div class="mailbox-read-info border-b border-slate-200 pb-3">
+            <h3 class="text-base font-semibold text-slate-900 m-0">
                 @if(\App\Helper\AdminHelper::emailCheck($mail))
-                    {{$mail->subject}}</h3>
-            @endif
-            <h5>From:
-                @if(\App\Helper\AdminHelper::emailCheck($mail))
-                    {{$mail->from}}
+                    {{ $mail->subject }}
                 @endif
-                <span class="mailbox-read-time pull-right">
+            </h3>
+            <h5 class="mt-2 text-xs text-slate-500 flex items-center justify-between gap-2 m-0">
+                <span>
+                    From:
                     @if(\App\Helper\AdminHelper::emailCheck($mail))
-                        {{$mail->date}}
+                        <span class="font-medium text-slate-700">{{ $mail->from }}</span>
                     @endif
-                </span></h5>
+                </span>
+                <span class="mailbox-read-time">
+                    @if(\App\Helper\AdminHelper::emailCheck($mail))
+                        {{ $mail->date }}
+                    @endif
+                </span>
+            </h5>
         </div>
-        <!-- /.mailbox-read-info -->
-        <div class="mailbox-read-message">
+
+        <div class="mailbox-read-message prose prose-sm max-w-none mt-4 text-slate-800">
             @if($mail->body_html)
                 {!! $mail->body_html !!}
             @else
-                {!! $mail->body_text  !!}
+                {!! $mail->body_text !!}
             @endif
         </div>
-        <!-- /.mailbox-read-message -->
     </div>
-    <!-- /.box-body -->
 
-    <div class="attach-block" style="padding: 20px; margin-top: 30px">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3>Attachments</h3>
+    <div class="attach-block px-5 pb-4 mt-4">
+        <div class="rounded border border-slate-200 bg-white relative">
+            <div class="border-b border-slate-200 px-4 py-2 flex items-center gap-2">
+                <x-ui.icon name="paperclip" size="sm" class="text-slate-400" />
+                <h3 class="text-sm font-medium text-slate-700 m-0">Attachments</h3>
             </div>
-            <div class="box box-body" style="border-top: none">
-                <ul class="mailbox-attachments clearfix">
-
-                </ul>
-            </div>
-
-            <div class="overlay" id="overlay_attach">
-                <i class="fa fa-refresh fa-spin"></i>
+            <ul class="mailbox-attachments list-none m-0 p-0"></ul>
+            <div class="overlay absolute inset-0 flex items-center justify-center bg-white/70" id="overlay_attach">
+                <x-ui.icon name="loader" size="md" class="text-primary-600 animate-spin" />
             </div>
         </div>
     </div>
+
     <script>
-        $(document).ready(function(){
+        $(document).ready(function () {
             $.ajax({
                 method: "GET",
-                url: "/email/attachmentList/{{$currentFolder}}/{{$mail->message_id}}",
-                data: {
-                }
-            }).done(function(data){
+                url: "/email/attachmentList/{{ $currentFolder }}/{{ $mail->message_id }}",
+                data: {}
+            }).done(function (data) {
                 $('.mailbox-attachments').html(data);
                 $('#overlay_attach').remove();
             });
             $('.mailbox-read-message').find('style').remove();
         });
-
     </script>
-    <!-- /.box-footer -->
 @endif

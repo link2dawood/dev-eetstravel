@@ -58,7 +58,7 @@ class TourExpenseController extends Controller {
                      'id'         => $id);
 
         $action =
-            "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+            "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
         $action .= "</div>";
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);

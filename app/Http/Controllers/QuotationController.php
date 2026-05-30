@@ -136,7 +136,7 @@ class QuotationController extends Controller {
             $buttons .= "<a href='{$url['show']}' class='btn btn-primary btn-xs' title='Show'><i class='fa fa-eye'></i></a> ";
         }
         if (Auth::user()->can('tour.edit')) {
-            $buttons .= "<a href='{$url['edit']}' class='btn btn-info btn-xs' title='Edit'><i class='fa fa-edit'></i></a>";
+            $buttons .= "<a href='{$url['edit']}' class='btn btn-info btn-xs' title='Edit'><i class='ti ti-edit'></i></a>";
         }
 
         return $buttons;

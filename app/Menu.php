@@ -26,7 +26,7 @@ class Menu extends Model
 	public function getParentRoute()
 	{
 		if ($this->restaurant_id) {
-			return route('restaurant.show', ['id' => $this->restaurant_id]);
+			return route('restaurant.show', ['restaurant' => $this->restaurant_id]);
 		}
 		if ($this->hotel_id) {
 			return route('hotel.show', ['hotel' => $this->hotel_id]);

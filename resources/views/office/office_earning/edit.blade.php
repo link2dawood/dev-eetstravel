@@ -22,7 +22,7 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('office_earning.update', ['office_earning' => $office_earnings->id]) }}" enctype="multipart/form-data" class="space-y-4">
+<form method="POST" action="{{ route('office_earning.update', ['id' => $office_earnings->id]) }}" enctype="multipart/form-data" class="space-y-4">
     {{ csrf_field() }}
     <input type="hidden" name="office_id" value="1">
 

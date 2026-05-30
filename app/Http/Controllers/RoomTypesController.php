@@ -19,8 +19,8 @@ class RoomTypesController extends Controller
 
     public function getButton($id, $room_types)
     {
-        $url = array('show'       => route('room_types.show', ['id' => $id]),
-            'edit'       => route('room_types.edit', ['id' => $id]),
+        $url = array('show'       => route('room_types.show', ['room_type' => $id]),
+            'edit'       => route('room_types.edit', ['room_type' => $id]),
             'delete_msg' => "/room_types/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $room_types);

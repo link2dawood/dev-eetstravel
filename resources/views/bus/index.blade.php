@@ -94,7 +94,7 @@
                             <td class="px-4 py-3 font-mono text-xs text-slate-500">#{{ $bus->id }}</td>
                             <td class="px-4 py-3">
                                 @if(Auth::user()->can('bus.show'))
-                                    <a href="{{ route('bus.show', ['bus' => $bus->id]) }}" class="font-medium text-slate-900 hover:text-primary-700">
+                                    <a href="{{ route('bus.show', ['bu' => $bus->id]) }}" class="font-medium text-slate-900 hover:text-primary-700">
                                         {{ $bus->license_plate ?? '—' }}
                                     </a>
                                 @else
@@ -107,14 +107,14 @@
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-1">
                                     @if(Auth::user()->can('bus.show'))
-                                        <a href="{{ route('bus.show', ['bus' => $bus->id]) }}"
+                                        <a href="{{ route('bus.show', ['bu' => $bus->id]) }}"
                                            class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                                            title="View">
                                             <x-ui.icon name="eye" size="sm" />
                                         </a>
                                     @endif
                                     @if(Auth::user()->can('bus.edit'))
-                                        <a href="{{ route('bus.edit', ['bus' => $bus->id]) }}"
+                                        <a href="{{ route('bus.edit', ['bu' => $bus->id]) }}"
                                            class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700"
                                            title="Edit">
                                             <x-ui.icon name="edit" size="sm" />
@@ -144,7 +144,7 @@
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         @if(Auth::user()->can('bus.show'))
-                            <a href="{{ route('bus.show', ['bus' => $bus->id]) }}" data-card-name class="block font-medium text-slate-900 hover:text-primary-700 truncate">
+                            <a href="{{ route('bus.show', ['bu' => $bus->id]) }}" data-card-name class="block font-medium text-slate-900 hover:text-primary-700 truncate">
                                 {{ $bus->license_plate ?? $bus->name ?? '—' }}
                             </a>
                         @else
@@ -154,7 +154,7 @@
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         @if(Auth::user()->can('bus.edit'))
-                            <a href="{{ route('bus.edit', ['bus' => $bus->id]) }}"
+                            <a href="{{ route('bus.edit', ['bu' => $bus->id]) }}"
                                class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700"
                                aria-label="Edit">
                                 <x-ui.icon name="edit" size="sm" />

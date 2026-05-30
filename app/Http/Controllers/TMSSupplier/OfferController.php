@@ -17,7 +17,7 @@ class OfferController extends Controller
 {
 	public function getShowButton($id, $isQuotation = false, $dataArray, array $perm)
     {
-        //$url = array('show'       => route('TMS-Client-tours.show', ['id' => $id]));
+        //$url = array('show'       => route('TMS-Client-tours.show', ['TMS_Client_tour' => $id]));
 
         return '<div class="d-flex align-items-center gap-2">
                       <a href="'.$dataArray->supplier_url.'" class="action-link btn-primary" >

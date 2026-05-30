@@ -132,7 +132,7 @@ class SettingController extends Controller
      */
     public function getButton($id)
     {
-        $url = ['edit'       => route('settings.edit', ['id' => $id])];
+        $url = ['edit'       => route('settings.edit', ['setting' => $id])];
 
         return DatatablesHelperController::getEditButton($url);
     }

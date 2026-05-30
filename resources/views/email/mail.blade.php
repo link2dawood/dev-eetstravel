@@ -3,7 +3,7 @@
 @section('main-content')
     <div id="mail">
 
-        <a href="{{ route('email.ajaxMail', ['id'   => $mail->message_id, 'folder' => $currentFolder]) }}" id="url" style="display: block"></a>
+        <a href="{{ route('email.ajaxMail', ['id'   => $mail->message_id, 'currentFolder' => $currentFolder]) }}" id="url" style="display: block"></a>
     </div>
 
     <script>

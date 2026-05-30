@@ -56,8 +56,8 @@ class BusController extends Controller
 
     public function getButton($id, $bus)
     {
-        $url = array('show'       => route('bus.show', ['id' => $id]),
-            'edit'       => route('bus.edit', ['id' => $id]),
+        $url = array('show'       => route('bus.show', ['bu' => $id]),
+            'edit'       => route('bus.edit', ['bu' => $id]),
             'delete_msg' => "/bus/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $bus);

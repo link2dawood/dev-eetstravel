@@ -24,8 +24,8 @@ class TransactionController extends Controller
 	public function getShowButton($id, $isQuotation = false, $tour, array $perm)
 	{
 		$url = array(
-			'show'       => route('transaction.show', ['id' => $id]),
-			'edit'       => route('transaction.edit', ['id' => $id]),
+			'show'       => route('transaction.show', ['transaction' => $id]),
+			'edit'       => route('transaction.edit', ['transaction' => $id]),
 			'delete_msg' => "/transaction/{$id}/deleteMsg",
 			'id'         => $id
 		);

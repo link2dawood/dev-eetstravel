@@ -379,7 +379,7 @@
                                                     </a>
                                                 @endif
                                                 @if(Auth::user()->can('menu.destroy_menu'))
-                                                    <a href="{{ route('menu.delete', ['menu' => $menu->id], false) }}"
+                                                    <a href="{{ route('menu.delete', ['id' => $menu->id], false) }}"
                                                        class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-danger-50 hover:text-danger-700"
                                                        title="Delete">
                                                         <x-ui.icon name="trash-2" size="sm" />

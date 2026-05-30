@@ -148,8 +148,8 @@ class Guide extends Model
 
     public function getButton($id)
     {
-        $url = array('show'       => route('guide.show', ['id' => $id]),
-                     'edit'       => route('guide.edit', ['id' => $id]),
+        $url = array('show'       => route('guide.show', ['guide' => $id]),
+                     'edit'       => route('guide.edit', ['guide' => $id]),
                      'delete_msg' => "/guide/{$id}/deleteMsg");
         return DatatablesHelperController::getActionButton($url, false, $this);
     }

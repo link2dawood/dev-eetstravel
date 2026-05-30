@@ -23,7 +23,7 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('office.update', ['office' => $offices->id]) }}" enctype="multipart/form-data" class="space-y-4">
+<form method="POST" action="{{ route('office.update', ['id' => $offices->id]) }}" enctype="multipart/form-data" class="space-y-4">
     {{ csrf_field() }}
     <input type="hidden" name="_token" value="{{ Session::token() }}">
 

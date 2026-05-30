@@ -55,8 +55,8 @@ class UtilityExpenseController extends Controller {
     }
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office.show', ['id' => $id]),
-                     'edit'       => route('utility_expenses.edit', ['id' => $id]),
+        $url = array('show'       => route('office.show', ['office' => $id]),
+                     'edit'       => route('utility_expenses.edit', ['utility_expense' => $id]),
                      'delete_msg' => "/utility_expenses/{$id}/deleteMsg",
                      'id'         => $id);
 

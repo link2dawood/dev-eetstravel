@@ -197,8 +197,8 @@ class DriverController extends Controller
 
     public function getButton($id, $driver)
 	{
-		$url = array('show'       => route('driver.show', ['id' => $id]),
-		             'edit'       => route('driver.edit', ['id' => $id]),
+		$url = array('show'       => route('driver.show', ['driver' => $id]),
+		             'edit'       => route('driver.edit', ['driver' => $id]),
 		             'delete_msg' => "/driver/{$id}/delete_msg");
 
 		return DatatablesHelperController::getActionButton($url, false, $driver);

@@ -24,7 +24,7 @@
                         <a href="{{ route('email.search', ['page' => $page-1, 'searched' => $search]) }}">
                     @endif
                     @if(Route::getCurrentRoute()->getName() == 'email.folder')
-                        <a href="{{ route('email.folder', ['page' => $page-1, 'currentFolder' => $currentFolder]) }}">
+                        <a href="{{ route('email.folder', ['name' => $page-1, 'page' => $currentFolder]) }}">
                     @endif
                 @endif
                     <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
@@ -39,7 +39,7 @@
                     <a href="{{ route('email.search', ['page' => $page+1, 'searched' => $search]) }}">
                 @endif
                 @if(Route::getCurrentRoute()->getName() == 'email.folder')
-                    <a href="{{ route('email.folder', ['page' => $page+1, 'currentFolder' => $currentFolder]) }}">
+                    <a href="{{ route('email.folder', ['name' => $page+1, 'page' => $currentFolder]) }}">
                 @endif
                     <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
                         <x-ui.icon name="chevron-right" size="sm" />
@@ -62,10 +62,10 @@
                     </tr>
                 @endif
                 @foreach($mails as $mail)
-                    <tr class="cursor-pointer hover:bg-slate-50" data-link="{{ route('email.mail', ['id' => $mail->message_id, 'folder' => $currentFolder]) }}">
+                    <tr class="cursor-pointer hover:bg-slate-50" data-link="{{ route('email.mail', ['id' => $mail->message_id, 'currentFolder' => $currentFolder]) }}">
                         <td class="mailbox-star onclick_redirect px-3 py-2 text-slate-300 w-6"></td>
                         <td class="mailbox-name onclick_redirect px-3 py-2 max-w-[14rem] truncate">
-                            <a href="{{ route('email.mail', ['id' => $mail->getNumber(), 'folder' => $currentFolder]) }}" class="text-slate-700 hover:text-primary-600">
+                            <a href="{{ route('email.mail', ['id' => $mail->getNumber(), 'currentFolder' => $currentFolder]) }}" class="text-slate-700 hover:text-primary-600">
                                 @if(\App\Helper\AdminHelper::emailCheck($mail))
                                     @if($currentFolder == 'INBOX.Sent')
                                         @php

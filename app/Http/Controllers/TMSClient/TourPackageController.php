@@ -846,7 +846,7 @@ class TourPackageController extends Controller
 
         // Root fix: Use 'tour' parameter name instead of 'id'
         return redirect(route('tour.show', ['tour' => $tourId]));
-//        return redirect(route('tour_package.edit', ['id' => $id]));
+//        return redirect(route('tour_package.edit', ['tour_package' => $id]));
     }
 
     public function checkDriverBusy($driver_id, $id){

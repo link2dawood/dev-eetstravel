@@ -52,8 +52,8 @@ class OfficeEarningController extends Controller {
  
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office.show', ['id' => $id]),
-                     'edit'       => route('office_earning.edit', ['id' => $id]),
+        $url = array('show'       => route('office.show', ['office' => $id]),
+                     'edit'       => route('office_earning.edit', ['office_earning' => $id]),
                      'delete_msg' => "/office_earning/{$id}/deleteMsg",
                      'id'         => $id);
 		$action =

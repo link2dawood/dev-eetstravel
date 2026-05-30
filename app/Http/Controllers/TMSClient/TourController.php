@@ -35,7 +35,7 @@ class TourController extends Controller
 	*/
 	public function getShowButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('TMS-Client-tours.show', ['id' => $id]));
+        $url = array('show'       => route('TMS-Client-tours.show', ['TMS_Client_tour' => $id]));
 
         return '<div class="d-flex align-items-center gap-2">
                       <a href="'.$url["show"].'" class="action-link btn-primary" >

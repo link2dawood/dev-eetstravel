@@ -190,7 +190,7 @@ class OfficeController extends Controller {
 			$to_office = Offices::find($office_invoice->to_office);
 			$office_invoice->officeName = $to_office->office_name ?? '';
 			// Add action buttons
-			$url = ['show' => route('office_invoices_detail.show', ['officeinvoice_dataId' => $office_invoice->officeinvoice_dataId])];
+			$url = ['show' => route('office_invoices_detail.show', ['id' => $office_invoice->officeinvoice_dataId])];
 			$office_invoice->action_buttons = DatatablesHelperController::getShowButton($url);
 		}
 

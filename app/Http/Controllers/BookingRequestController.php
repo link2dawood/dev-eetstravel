@@ -50,8 +50,8 @@ class BookingRequestController extends Controller
 	public function getShowButton($offer, array $perm,$supplier)
 	{
 		$url = array(
-			'show'       => route('taxes.show', ['id' => $offer->id]),
-			'edit'       => route('taxes.edit', ['id' => $offer->id]),
+			'show'       => route('taxes.show', ['tax' => $offer->id]),
+			'edit'       => route('taxes.edit', ['tax' => $offer->id]),
 			'delete_msg' => "/offer/{$offer->id}/deleteMsg",
 			'id'         => $offer->id
 		);

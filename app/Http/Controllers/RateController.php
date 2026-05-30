@@ -24,8 +24,8 @@ class RateController extends Controller
 
     public function getButton($id, $rate)
     {
-        $url = array('show'       => route('rate.show', ['id' => $id]),
-            'edit'       => route('rate.edit', ['id' => $id]),
+        $url = array('show'       => route('rate.show', ['rate' => $id]),
+            'edit'       => route('rate.edit', ['rate' => $id]),
             'delete_msg' => "/rate/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $rate);

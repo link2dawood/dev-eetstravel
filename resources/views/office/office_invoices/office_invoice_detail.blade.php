@@ -16,7 +16,7 @@
     ]"
 >
     <x-slot name="actions">
-        <x-ui.button as="a" href="{{ route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'type' => 'short']) }}" variant="secondary" icon="file-text">
+        <x-ui.button as="a" href="{{ route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'pdf_type' => 'short']) }}" variant="secondary" icon="file-text">
             Invoice PDF
         </x-ui.button>
     </x-slot>

@@ -133,8 +133,8 @@ class Restaurant extends Model
 
     public function getButton($id)
     {
-        $url = array('show'       => route('restaurant.show', ['id' => $id]),
-                     'edit'       => route('restaurant.edit', ['id' => $id]),
+        $url = array('show'       => route('restaurant.show', ['restaurant' => $id]),
+                     'edit'       => route('restaurant.edit', ['restaurant' => $id]),
                      'delete_msg' => "/restaurant/{$id}/deleteMsg");
         return DatatablesHelperController::getActionButton($url, false, $this);
     }

@@ -52,8 +52,8 @@ class BalanceAmountController extends Controller {
  
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office.show', ['id' => $id]),
-                     'edit'       => route('office_balance.edit', ['id' => $id]),
+        $url = array('show'       => route('office.show', ['office' => $id]),
+                     'edit'       => route('office_balance.edit', ['office_balance' => $id]),
                      'delete_msg' => "/office_balance/{$id}/deleteMsg",
                      'id'         => $id);
 

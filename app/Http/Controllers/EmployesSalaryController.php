@@ -55,8 +55,8 @@ class EmployesSalaryController extends Controller {
     }
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office.show', ['id' => $id]),
-                     'edit'       => route('employes-salary.edit', ['id' => $id]),
+        $url = array('show'       => route('office.show', ['office' => $id]),
+                     'edit'       => route('employes-salary.edit', ['employes_salary' => $id]),
                      'delete_msg' => "/employes-salary/{$id}/deleteMsg",
                      'id'         => $id);
 

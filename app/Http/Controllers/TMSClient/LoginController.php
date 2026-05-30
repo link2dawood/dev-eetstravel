@@ -125,7 +125,7 @@ public function Clientauth(Request $request)
         $toursData = $tours->map(function ($tour) {
             // Add action buttons
             $tour->action_buttons = '<div class="d-flex align-items-center gap-2">
-                                        <a href="'.route('TMS-Client-tours.show', ['id' => $tour->id]).'" class="action-link btn-primary">
+                                        <a href="'.route('TMS-Client-tours.show', ['TMS_Client_tour' => $tour->id]).'" class="action-link btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </div>';

@@ -190,7 +190,7 @@ class CommentController extends Controller
         $this->addFile($request, $comment);
 
         LaravelFlashSessionHelper::setFlashMessage("Comment $comment->content edited", 'success');
-        // return redirect(route('announcements.show', ['id' => $id]));
-        return response()->json($data = ['route' => route('comment.show', ['id' => $id])]);
+        // return redirect(route('announcements.show', ['announcement' => $id]));
+        return response()->json($data = ['route' => route('comment.show', ['comment' => $id])]);
     }
 }

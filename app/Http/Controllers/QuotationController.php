@@ -74,7 +74,7 @@ class QuotationController extends Controller {
             }
 
             // Add comparison link
-            $comparison_link = route('comparison.show', ['id' => $quotation->id]);
+            $comparison_link = route('comparison.show', ['comparison' => $quotation->id]);
             if (Auth::user()->can('comparison.show')) {
                 $quotation->comparison = "<a href='{$comparison_link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
             } else {
@@ -117,7 +117,7 @@ class QuotationController extends Controller {
     public function getButton($id, $quotation)
     {
         $url = [
-            'edit' => route('quotation.edit', ['id' => $id]),
+            'edit' => route('quotation.edit', ['quotation' => $id]),
             'print' => route('quotation.pdf', ['id' => $id])
         ];
 
@@ -228,7 +228,7 @@ class QuotationController extends Controller {
 		LaravelFlashSessionHelper::setFlashMessage("Quotation #$quotation->name edited");
 		$route = route('tour.show', ['tour' => $quotation->tour_id]);
        //return "$route?tab=quotation_tab";
-		return route( 'quotation.edit', [ 'id' => $quotation->id ] );
+		return route( 'quotation.edit', ['quotation' => $quotation->id] );
 	}
 
 	/**
@@ -265,7 +265,7 @@ class QuotationController extends Controller {
 
         LaravelFlashSessionHelper::setFlashMessage("Quotation #{$quotation->name} created", 'success');
 
-		return route( 'quotation.edit', [ 'id' => $quotation->id ] );
+		return route( 'quotation.edit', ['quotation' => $quotation->id] );
 	}
 
 	public function pdf( Request $request, $id ) {

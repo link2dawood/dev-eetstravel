@@ -26,8 +26,8 @@ class HolidayController extends Controller
 
     public function getButton($id, $holidaycalendarday)
     {
-        $url = array('show'       => route('holiday.show', ['id' => $id]),
-            'edit'       => route('holiday.edit', ['id' => $id]),
+        $url = array('show'       => route('holiday.show', ['holiday' => $id]),
+            'edit'       => route('holiday.edit', ['holiday' => $id]),
             'delete_msg' => "/holiday/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $holidaycalendarday);
@@ -50,7 +50,7 @@ class HolidayController extends Controller
                     'date'  => $h->start_time ? \Carbon\Carbon::parse($h->start_time)->format('Y-m-d') : null,
                     'time'  => $h->start_time ? \Carbon\Carbon::parse($h->start_time)->format('H:i') : null,
                     'color' => $h->backgroundcolor,
-                    'edit_url'   => route('holiday.edit', ['id' => $h->id]),
+                    'edit_url'   => route('holiday.edit', ['holiday' => $h->id]),
                     'delete_url' => "/holiday/{$h->id}/deleteMsg",
                 ];
             })

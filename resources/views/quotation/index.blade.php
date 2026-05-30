@@ -127,7 +127,7 @@
                                 <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ $quotation->formatted_created_at }}</td>
                                 <td class="px-4 py-3">
                                     @if(Auth::user()->can('comparison.show'))
-                                        <a href="{{ route('comparison.show', ['id' => $quotation->id]) }}"
+                                        <a href="{{ route('comparison.show', ['comparison' => $quotation->id]) }}"
                                            class="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800">
                                             <x-ui.icon name="layout-grid" size="xs" />
                                             Front Sheet
@@ -138,7 +138,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-end gap-1">
-                                        <a href="{{ route('quotation.edit', ['id' => $quotation->id]) }}"
+                                        <a href="{{ route('quotation.edit', ['quotation' => $quotation->id]) }}"
                                            class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700"
                                            title="Edit">
                                             <x-ui.icon name="edit" size="sm" />
@@ -167,7 +167,7 @@
                             <p class="text-xs text-slate-500 font-mono mt-0.5">#{{ $quotation->id }}</p>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <a href="{{ route('quotation.edit', ['id' => $quotation->id]) }}"
+                            <a href="{{ route('quotation.edit', ['quotation' => $quotation->id]) }}"
                                class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-primary-700"
                                aria-label="Edit">
                                 <x-ui.icon name="edit" size="sm" />
@@ -204,7 +204,7 @@
                         </div>
                         @if(Auth::user()->can('comparison.show'))
                             <div class="col-span-2">
-                                <a href="{{ route('comparison.show', ['id' => $quotation->id]) }}" class="inline-flex items-center gap-1 text-xs font-medium text-primary-700">
+                                <a href="{{ route('comparison.show', ['comparison' => $quotation->id]) }}" class="inline-flex items-center gap-1 text-xs font-medium text-primary-700">
                                     <x-ui.icon name="layout-grid" size="xs" />Front Sheet
                                 </a>
                             </div>

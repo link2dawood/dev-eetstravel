@@ -28,8 +28,8 @@ class StatusController extends Controller
 
     public function getButton($id, $status)
     {
-        $url = array('show'       => route('status.show', ['id' => $id]),
-            'edit'       => route('status.edit', ['id' => $id]),
+        $url = array('show'       => route('status.show', ['status' => $id]),
+            'edit'       => route('status.edit', ['status' => $id]),
             'delete_msg' => "/status/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $status);

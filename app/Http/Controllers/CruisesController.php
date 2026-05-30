@@ -37,8 +37,8 @@ class CruisesController extends Controller
 
     public function getButton($id, $cruise)
     {
-        $url = array('show' => route('cruises.show', ['id' => $id]),
-            'edit' => route('cruises.edit', ['id' => $id]),
+        $url = array('show' => route('cruises.show', ['cruise' => $id]),
+            'edit' => route('cruises.edit', ['cruise' => $id]),
             'delete_msg' => "/cruises/{$id}/delete_msg");
 
         return DatatablesHelperController::getActionButton($url, false, $cruise);

@@ -135,8 +135,8 @@ class Event extends Model
 
     public function getButton($id)
     {
-        $url = ['show'       => route('event.show', ['id' => $id]),
-                'edit'       => route('event.edit', ['id' => $id]),
+        $url = ['show'       => route('event.show', ['event' => $id]),
+                'edit'       => route('event.edit', ['event' => $id]),
                 'delete_msg' => "/event/{$id}/deleteMsg"];
 
         return DatatablesHelperController::getActionButton($url, false, $this);

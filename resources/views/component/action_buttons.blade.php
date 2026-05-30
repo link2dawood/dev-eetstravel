@@ -58,12 +58,12 @@
                 $delete_route = route('transfer.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'bus') {
                 try {
-                    $show_route = route('bus.show', ['bus' => $entity->id]);
+                    $show_route = route('bus.show', ['bu' => $entity->id]);
                 } catch (Exception $e) {
                     $show_route = "/bus/{$entity->id}";
                 }
                 try {
-                    $edit_route = route('bus.edit', ['bus' => $entity->id]);
+                    $edit_route = route('bus.edit', ['bu' => $entity->id]);
                 } catch (Exception $e) {
                     $edit_route = "/bus/{$entity->id}/edit";
                 }
@@ -94,12 +94,12 @@
                 $delete_route = route('status.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'room_types') {
                 try {
-                    $show_route = route('room_types.show', ['room_types' => $entity->id]);
+                    $show_route = route('room_types.show', ['room_type' => $entity->id]);
                 } catch (Exception $e) {
                     $show_route = "/room_types/{$entity->id}";
                 }
                 try {
-                    $edit_route = route('room_types.edit', ['room_types' => $entity->id]);
+                    $edit_route = route('room_types.edit', ['room_type' => $entity->id]);
                 } catch (Exception $e) {
                     $edit_route = "/room_types/{$entity->id}/edit";
                 }
@@ -130,12 +130,12 @@
                 $delete_route = route('currency_rate.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'currencies') {
                 try {
-                    $show_route = route('currencies.show', ['currencies' => $entity->id]);
+                    $show_route = route('currencies.show', ['currency' => $entity->id]);
                 } catch (Exception $e) {
                     $show_route = "/currencies/{$entity->id}";
                 }
                 try {
-                    $edit_route = route('currencies.edit', ['currencies' => $entity->id]);
+                    $edit_route = route('currencies.edit', ['currency' => $entity->id]);
                 } catch (Exception $e) {
                     $edit_route = "/currencies/{$entity->id}/edit";
                 }

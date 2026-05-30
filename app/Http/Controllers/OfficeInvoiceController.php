@@ -53,8 +53,8 @@ class OfficeInvoiceController extends Controller {
  
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office_invoices_detail.show', ['officeinvoice_dataId' => $id]),
-                     'edit'       => route('office_earning.edit', ['officeinvoice_dataId' => $id]),
+        $url = array('show'       => route('office_invoices_detail.show', ['id' => $id]),
+                     'edit'       => route('office_earning.edit', ['office_earning' => $id]),
                      'delete_msg' => "/office_earning/{$id}/deleteMsg",
                      'id'         => $id);
 
@@ -64,8 +64,8 @@ class OfficeInvoiceController extends Controller {
     
  	public function getShowButton($id, $isQuotation = false, $tour, array $perm)
     {
-       $url = array('show'       => route('office_invoices_detail.show', ['officeinvoice_dataId' => $id]),
-                     'edit'       => route('office_earning.edit', ['officeinvoice_dataId' => $id]),
+       $url = array('show'       => route('office_invoices_detail.show', ['id' => $id]),
+                     'edit'       => route('office_earning.edit', ['office_earning' => $id]),
                      'delete_msg' => "/office_earning/{$id}/deleteMsg",
                      'id'         => $id);
 

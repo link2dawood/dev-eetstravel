@@ -69,7 +69,7 @@ class MenuController extends Controller
 	    }
 	    if ($request->serviceType == 'restaurant') {
 		    $newMenu->restaurant_id = $request->serviceId;
-		    $route = ['route' => route('restaurant.show', ['id' => $request->serviceId])];
+		    $route = ['route' => route('restaurant.show', ['restaurant' => $request->serviceId])];
 	    }
 	    $newMenu->save();
 	    LaravelFlashSessionHelper::setFlashMessage("Menu $newMenu->name created", 'success');
@@ -124,7 +124,7 @@ class MenuController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Menu $menu->name edited", 'success');;
 
-	    $data = ['route' => route('menu.show', ['id' => $id])];
+	    $data = ['route' => route('menu.show', ['menu' => $id])];
 		return response($data);
     }
 

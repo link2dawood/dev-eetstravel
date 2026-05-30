@@ -108,8 +108,8 @@ class Transfer extends Model
 
     public function getButton($id)
     {
-        $url = array('show'       => route('transfer.show', ['id' => $id]),
-                     'edit'       => route('transfer.edit', ['id' => $id]),
+        $url = array('show'       => route('transfer.show', ['transfer' => $id]),
+                     'edit'       => route('transfer.edit', ['transfer' => $id]),
                      'delete_msg' => "/transfer/{$id}/deleteMsg");
         return DatatablesHelperController::getActionButton($url, false, $this);
     }

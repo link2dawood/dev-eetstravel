@@ -50,8 +50,8 @@ class FlightController extends Controller
      */
     public function getButton($id, $flight)
     {
-        $url = array('show'       => route('flights.show', ['id' => $id]),
-                     'edit'       => route('flights.edit', ['id' => $id]),
+        $url = array('show'       => route('flights.show', ['flight' => $id]),
+                     'edit'       => route('flights.edit', ['flight' => $id]),
                      'delete_msg' => "/flights/{$id}/delete_msg");
         return DatatablesHelperController::getActionButton($url, false, $flight);
     }

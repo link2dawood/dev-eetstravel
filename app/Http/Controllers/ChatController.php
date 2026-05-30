@@ -55,8 +55,8 @@ class ChatController extends Controller {
 
 	public function getActionButtons( $id ) {
 		$url = array(
-			'show'       => route( 'chat.show', [ 'id' => $id ] ),
-			'edit'       => route( 'chat.edit', [ 'id' => $id ] ),
+			'show'       => route( 'chat.show', ['chat' => $id] ),
+			'edit'       => route( 'chat.edit', ['chat' => $id] ),
 			'delete_msg' => "/chat/{$id}/deleteMsg"
 		);
 

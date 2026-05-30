@@ -78,8 +78,8 @@ class DashboardController
             ->select('announcements.*', 'users.name as sender')
             ->where('announcements.parent_id', null)->orderBy('announcements.created_at', 'desc')->limit(5)->get();
         foreach ($announcements as $announcement) {
-            $routes['show'] = route('announcements.show', ['id' => $announcement->id]);
-            $routes['edit'] = route('announcements.edit', ['id' => $announcement->id]);
+            $routes['show'] = route('announcements.show', ['announcement' => $announcement->id]);
+            $routes['edit'] = route('announcements.edit', ['announcement' => $announcement->id]);
             $routes['delete_msg'] = "/announcement/$announcement->id/delete_msg";
             $announcement['routes'] = $routes;
         }
@@ -110,7 +110,7 @@ class DashboardController
         $check_email_server = $user->email_server == 0 ? false : true;
         $items = $mails->items();
         foreach ($items as &$mail) {
-            $mail->click_redirect = route('email.mail', ['id' => $mail->message_id, 'folder' => self::INBOX_FOLDER]);
+            $mail->click_redirect = route('email.mail', ['id' => $mail->message_id, 'currentFolder' => self::INBOX_FOLDER]);
             $mail->move_to_form = route('email.getMoveToForm', ['id' => $mail['message_id'], 'folder' => self::INBOX_FOLDER], false);
             $mail->compose_form = route('email.getComposeForm', ['id' => $mail['message_id'], 'folder' => self::INBOX_FOLDER], false);
             $mail->delete_msg = route('email.deleteMsg', ['id' => $mail['message_id'], 'folder' => self::INBOX_FOLDER], false);

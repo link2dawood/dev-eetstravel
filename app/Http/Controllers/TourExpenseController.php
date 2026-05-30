@@ -52,8 +52,8 @@ class TourExpenseController extends Controller {
     
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office.show', ['id' => $id]),
-                     'edit'       => route('tour_expenses.edit', ['id' => $id]),
+        $url = array('show'       => route('office.show', ['office' => $id]),
+                     'edit'       => route('tour_expenses.edit', ['tour_expense' => $id]),
                      'delete_msg' => "/tour_expenses/{$id}/deleteMsg",
                      'id'         => $id);
 

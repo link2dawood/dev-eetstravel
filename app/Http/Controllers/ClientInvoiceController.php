@@ -120,6 +120,61 @@ class ClientInvoiceController extends Controller
     }
 
 
+    /**
+     * Server-side DataTables endpoint for the payments table on the
+     * client-invoice and supplier-invoice show pages.
+     *
+     * Route: GET accountingServiceTransaction/api/data/{pay_to}/{invoice_id}
+     *   pay_to = 1  → Client invoice  (App\ClientInvoices)
+     *   pay_to = 2  → Supplier invoice (App\Invoices)
+     */
+    public function serviceTransactionData($pay_to, $invoice_id, Request $request)
+    {
+        if ($pay_to == 2) {
+            $transactions = Transaction::where('invoice_id', $invoice_id)->where('pay_to', 'Supplier')->get();
+        } else {
+            $transactions = Transaction::where('invoice_id', $invoice_id)->where('pay_to', 'Client')->get();
+        }
+
+        $perm = [
+            'show'    => Auth::user()->can(PermissionHelper::$relationsPermissionShow['App\ClientInvoices']),
+            'edit'    => Auth::user()->can(PermissionHelper::$relationsPermissionEdit['App\ClientInvoices']),
+            'destroy' => Auth::user()->can(PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices']),
+            'clone'   => Auth::user()->can('accounting.create'),
+        ];
+
+        return Datatables::of($transactions)
+            ->addColumn('invoice_no', function ($transactions) {
+                $invoice = $transactions->pay_to == 'Supplier'
+                    ? Invoices::find($transactions->invoice_id)
+                    : ClientInvoices::find($transactions->invoice_id);
+                return $invoice ? $invoice->invoice_no : '';
+            })
+            ->addColumn('total_amount', function ($transactions) {
+                if ($transactions->pay_to == 'Supplier') {
+                    $invoice = Invoices::find($transactions->invoice_id);
+                    return $invoice ? $invoice->total_amount : 0;
+                }
+                $invoice = ClientInvoices::find($transactions->invoice_id);
+                return $invoice ? $invoice->amount_receiveable : 0;
+            })
+            ->addColumn('unallocated', function ($transactions) {
+                if ($transactions->pay_to == 'Supplier') {
+                    $invoice = Invoices::find($transactions->invoice_id);
+                    $invoice_amount = $invoice ? $invoice->total_amount : 0;
+                } else {
+                    $invoice = ClientInvoices::find($transactions->invoice_id);
+                    $invoice_amount = $invoice ? $invoice->amount_receiveable : 0;
+                }
+                return $invoice_amount - $transactions->amount;
+            })
+            ->addColumn('action', function ($transactions) use ($perm) {
+                return $this->getButton($transactions->id, false, $transactions, $perm);
+            })
+            ->rawColumns(['select', 'action', 'link'])
+            ->make(true);
+    }
+
     public function serviceTransactionCreate($tourId, Request $request)
     {
         $transactions = ClientInvoices::find($tourId);

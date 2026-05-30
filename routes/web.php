@@ -114,6 +114,7 @@ Route::group(['middleware' => 'web'], function () {
     Route::get('accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
     Route::get('accounting/{id}/deleteMsg', '\App\Http\Controllers\ClientInvoiceController@DeleteMsg');
 	Route::get('accountingServiceTransaction/create/{tour_id}', 'ClientInvoiceController@serviceTransactionCreate')->name('service_transaction_create');
+	Route::get('accountingServiceTransaction/api/data/{pay_to}/{invoice_id}', 'ClientInvoiceController@serviceTransactionData')->name('service_transaction_data');
 	Route::get('/accounting/{id}/export/{pdf_type}', 'ClientInvoiceController@pdfExport')->name('accounting_pdf_export');
 	Route::get('/accounting/{id}/excel', 'ClientInvoiceController@excelExport')->name('accounting_excel_export');
 	Route::get('api/getItemInvoiceView', '\App\Http\Controllers\ClientInvoiceController@getItemInvoiceView');

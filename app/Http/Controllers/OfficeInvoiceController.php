@@ -95,7 +95,7 @@ public function store(Request $request)
             'date' => $request->input('dateoffice'),
         ]);
     } catch (\Exception $e) {
-        dd($e->getMessage());
+        \Log::error('OfficeInvoice payment create failed', ['error' => $e->getMessage()]);
     }
 
     foreach ($data as $row) {
@@ -109,7 +109,7 @@ public function store(Request $request)
                 'officeinvoice_amount' => $row['officeinvoice_amount'],
             ]);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            \Log::error('OfficeInvoice payment-row create failed', ['error' => $e->getMessage()]);
         }
     }
 

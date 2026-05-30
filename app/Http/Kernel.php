@@ -35,6 +35,9 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // CC4 mitigation: stop drive-by / link-prefetch / cross-origin
+            // <img src=…/delete> attacks on the 90+ GET-destructive routes.
+            \App\Http\Middleware\SameOriginDestructive::class,
             \App\Http\Middleware\ErrorHandlingMiddleware::class,
         ],
 

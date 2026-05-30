@@ -3,6 +3,7 @@
 use Closure;
 use Auth;
 use Redirect;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 class PermissionsRequiredMiddleware
 {
@@ -14,6 +15,15 @@ class PermissionsRequiredMiddleware
     ];
 
     /**
+     * Role names that bypass missing-permission failures. When Spatie throws
+     * PermissionDoesNotExist (because the seeder for that module was never
+     * written — see AUDIT.md CC2), we deny by default for ordinary users
+     * but let these elevated roles through so admins can still operate the
+     * unseeded modules.
+     */
+    public static $adminRolesBypass = ['admin', 'Super User'];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -22,70 +32,81 @@ class PermissionsRequiredMiddleware
      */
     public function handle($request, Closure $next)
     {
-        // Get the current route.
         $route = $request->route();
-
-        // Get the current route actions.
         $actions = $route->getAction();
         $routeName = $route->getName();
-        
-        // Root fix: Check ignored routes first before any permission checks
+
+        // Allowlisted routes (login redirect target, home, etc.)
         if ($routeName && in_array($routeName, self::$ignoredRoutes)) {
             return $next($request);
         }
-        
-        // Root fix: Use permissions from route action if specified, otherwise use route name
-        // Don't overwrite existing permissions from route action
+
+        // Don't overwrite explicit `permissions` set on the route action;
+        // fall back to the route name as the permission slug.
         if (!isset($actions['permissions']) && $routeName) {
             $actions['permissions'] = $routeName;
         }
 
-        // Check if a user is logged in.
         if (!$user = $request->user()) {
             return Redirect::route('login');
         }
-        
-        // Check if we have any permissions to check the user has.
-        // Root fix: Check permissions from route action first, then fallback to route name
-        $permissions = isset($actions['permissions']) ? $actions['permissions'] : null;
-        
-        // If no permissions specified, allow access
+
+        $permissions = $actions['permissions'] ?? null;
+
+        // No permission slug → allow.
         if (!$permissions) {
             return $next($request);
         }
 
-        // Root fix: Check if permission is in ignored list (check both route name and permission name)
+        // Defence-in-depth allowlist (matches either by route name or by
+        // permission slug — some legacy routes use different names for each).
         if (in_array($permissions, self::$ignoredRoutes) || in_array($routeName, self::$ignoredRoutes)) {
             return $next($request);
         }
 
-        // if permission not in ignored and
+        // CC1 fix: instead of fail-OPEN on every exception, fail CLOSED by
+        // default. Two narrow exceptions:
+        //
+        //  1. PermissionDoesNotExist — Spatie throws this when the slug isn't
+        //     seeded. Most modules in this codebase have no permission seeder
+        //     (CC2), so denying here would lock everyone out. As a stopgap
+        //     we let elevated roles (`admin`, `Super User`) through so the
+        //     system stays operable while CC2 is being addressed.
+        //  2. Any other exception — log it and deny. We do NOT want a
+        //     transient DB hiccup to silently disarm authorization.
         try {
-            if ($request->user()->hasPermissionTo($permissions)) {
+            if ($user->hasPermissionTo($permissions)) {
                 return $next($request);
             }
-        } catch (\Exception $e) {
-            // Root fix: Log the error but allow access to prevent redirect loops
-            \Log::warning('Permission check failed in PermissionsRequiredMiddleware', [
-                'user_id' => $request->user()->id ?? null,
+        } catch (PermissionDoesNotExist $e) {
+            \Log::warning('Permission slug not seeded — falling back to role check', [
+                'user_id'    => $user->id,
                 'permission' => $permissions,
-                'route' => $routeName,
-                'error' => $e->getMessage()
+                'route'      => $routeName,
             ]);
-            // Allow access to prevent redirect loops - let the application handle authorization
-            return $next($request);
+            if ($user->hasAnyRole(self::$adminRolesBypass)) {
+                return $next($request);
+            }
+            return abort(403, 'You do not have permission to access this resource.');
+        } catch (\Throwable $e) {
+            \Log::error('Permission middleware exception — denying', [
+                'user_id'    => $user->id,
+                'permission' => $permissions,
+                'route'      => $routeName,
+                'error'      => $e->getMessage(),
+                'exception'  => get_class($e),
+            ]);
+            return abort(403, 'You do not have permission to access this resource.');
         }
 
-        // Root fix: Instead of aborting 401 (which causes redirect loops), redirect to a safe page
-        // or show a proper 403 error page
+        // Permission was checked successfully and the user does not have it.
         \Log::warning('User does not have required permission', [
-            'user_id' => $request->user()->id,
+            'user_id'    => $user->id,
             'permission' => $permissions,
-            'route' => $routeName,
-            'url' => $request->fullUrl()
+            'route'      => $routeName,
+            'url'        => $request->fullUrl(),
         ]);
-        
-        // Return 403 Forbidden instead of 401 Unauthorized to prevent redirect loops
+
         return abort(403, 'You do not have permission to access this resource.');
     }
 }

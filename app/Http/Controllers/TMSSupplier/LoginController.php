@@ -41,7 +41,7 @@ class LoginController extends Controller
 		else{
 			 return redirect("TMS-Client/login")->withSuccess('Login details are not valid');
 		}
-		dd();
+        // (formerly: dd() + dead code that was never reached after the redirect above)
         $auth = Auth::user();
        
         $credentials = $req->only('email', 'password');
@@ -92,7 +92,8 @@ public function Supplierauth(Request $request)
             return redirect('TMS-Supplier/login')->with('error', 'Invalid email or password.');
         }
     } catch (\Exception $e) {
-        dd($e->getMessage());
+        \Log::error('TMS-Supplier login failed', ['error' => $e->getMessage()]);
+        return redirect("TMS-Supplier/login")->with('error', 'Login failed. Please try again.');
     }
 }
 

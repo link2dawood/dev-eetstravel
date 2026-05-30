@@ -1449,7 +1449,7 @@ class TourPackageController extends Controller
 
 
     public function supplier_update($id,Request $request){
-        $tourPackage = TourPackage::findOrfail($id);
-        dd($tourPackage);
+        // TODO: implement supplier-update handler. Until then return JSON 501.
+        return response()->json(['error' => 'Not implemented'], 501);
     }
 }

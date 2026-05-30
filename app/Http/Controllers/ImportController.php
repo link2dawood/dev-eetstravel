@@ -484,10 +484,7 @@ class ImportController extends Controller
             
             return $result;
 
-            dd($countryExpl);
-            dd($search['results'][0]['formatted_address']);
-            dd($search['results'][0]['place_id']);
-            $results = $this->google->placeDetails($search['results'][0]['place_id']);
+            // (formerly: dead-code dd() debug + unreachable placeDetails call after return)
             
 //echo "<pre>";
 //print_r($search['results'][0]);
@@ -711,6 +708,6 @@ class ImportController extends Controller
                 }    
         }
         
-        dd("Success");
+        return back()->with('success', 'Import completed.');
     }
 }

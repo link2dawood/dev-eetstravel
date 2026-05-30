@@ -9,7 +9,6 @@ class TourImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
-dd();
         return new Tour([
             'name' => $row['name'],
             'description' => $row['description'],

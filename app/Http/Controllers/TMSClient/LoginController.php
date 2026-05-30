@@ -38,7 +38,7 @@ class LoginController extends Controller
 		else{
 			 return redirect("TMS-Client/login")->withSuccess('Login details are not valid');
 		}
-		dd();
+        // (formerly: dd() + dead code that was never reached after the redirect above)
         $auth = Auth::user();
        
         $credentials = $req->only('email', 'password');
@@ -86,7 +86,8 @@ public function Clientauth(Request $request)
             return redirect('TMS-Client/login')->with('error', 'Invalid email or password.');
         }
     } catch (\Exception $e) {
-        dd($e->getMessage());
+        \Log::error('TMS-Client login failed', ['error' => $e->getMessage()]);
+        return redirect("TMS-Client/login")->with('error', 'Login failed. Please try again.');
     }
 }
 

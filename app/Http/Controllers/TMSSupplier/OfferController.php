@@ -104,7 +104,7 @@ class OfferController extends Controller
 	/*
 	public function data(Request $request)
     {
-		dd();
+        // (formerly: dd() at method entry, which short-circuited every call)
 
         //if (Auth::user()->hasRole('admin')) {
        

@@ -301,7 +301,7 @@ class ClientInvoiceController extends Controller
                         ]);
                     }
                 } catch (\Exception $e) {
-                    dd($e->getMessage());
+                    \Log::error('ClientInvoice payment-row create failed', ['error' => $e->getMessage()]);
                 }
             }
         }
@@ -313,7 +313,8 @@ class ClientInvoiceController extends Controller
         foreach ($payment_methods as $payment_method) {
             // dd($payment_method == "null");
             if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
+                $i += 1;
+                continue;
             } else {
                // dd($payment_method);
                 $transaction = Transaction::create([
@@ -419,7 +420,7 @@ class ClientInvoiceController extends Controller
                         ]);
                     }
                 } catch (\Exception $e) {
-                    dd($e->getMessage());
+                    \Log::error('ClientInvoice payment-row create failed', ['error' => $e->getMessage()]);
                 }
             }
         }
@@ -435,7 +436,8 @@ class ClientInvoiceController extends Controller
 			foreach ($payment_methods as $payment_method) {
 				// dd($payment_method == "null");
 				if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-					dd("ok");
+					$i += 1;
+					continue;
 				} else {
 				   // dd($payment_method);
 				
@@ -721,7 +723,8 @@ class ClientInvoiceController extends Controller
 			foreach ($payment_methods as $payment_method) {
 				// dd($payment_method == "null");
 				if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-					dd("ok");
+					$i += 1;
+					continue;
 				} else {
 				   // dd($payment_method);
 				

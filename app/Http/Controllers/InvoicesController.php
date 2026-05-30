@@ -311,7 +311,9 @@ class  InvoicesController extends Controller
         foreach ($payment_methods as $payment_method) {
             // dd($payment_method == "null");
             if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
+                // No payment row for this index — skip silently.
+                $i += 1;
+                continue;
             } else {
              
                 $transaction = Transaction::create([
@@ -470,7 +472,9 @@ class  InvoicesController extends Controller
         foreach ($payment_methods as $payment_method) {
             // dd($payment_method == "null");
             if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
+                // No payment row for this index — skip silently.
+                $i += 1;
+                continue;
             } else {
             
                 $transaction = Transaction::create([

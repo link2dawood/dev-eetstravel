@@ -587,7 +587,7 @@ class EmailController extends Controller {
 			"sarah@eets.cn",
 			"Qx901102"
 		);
-		dd( $client->getMailboxes() );
+		\Log::debug('EmailController mailboxes', ['mailboxes' => $client->getMailboxes()]);
 
 		return '';
 	}

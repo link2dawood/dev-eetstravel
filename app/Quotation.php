@@ -94,14 +94,42 @@ class Quotation extends Model
 		return (array)json_decode($value);
 	}
 
+	/**
+	 * Store calculation as JSON, not PHP-serialized.
+	 *
+	 * AUDIT.md CC15: the old setter called serialize() and the getter called
+	 * unserialize() on the raw value. That's a classic PHP-object-injection
+	 * vector — anyone with write access to the calculation column (which is
+	 * not restricted by $guarded, see CC5) could inject a serialized object
+	 * graph whose __wakeup / __destruct fires on every read. JSON has no
+	 * such gadget surface.
+	 */
 	public function setCalculationAttribute($value)
 	{
-		$this->attributes['calculation'] = serialize((array)$value);
+		$this->attributes['calculation'] = json_encode((array) $value);
 	}
 
+	/**
+	 * Read calculation back. Try JSON first (the new format) and fall back
+	 * to a HARDENED unserialize() — with `allowed_classes: false` so any
+	 * non-array/scalar payload becomes an inert __PHP_Incomplete_Class
+	 * stub instead of triggering a magic-method gadget. This keeps legacy
+	 * rows readable while neutralising the POI attack on them too.
+	 */
 	public function getCalculationAttribute($value)
 	{
-		return unserialize($value);
+		if ($value === null || $value === '') {
+			return [];
+		}
+
+		$json = json_decode($value, true);
+		if (json_last_error() === JSON_ERROR_NONE) {
+			return (array) $json;
+		}
+
+		// Legacy PHP-serialized row. Block all class instantiation.
+		$decoded = @unserialize($value, ['allowed_classes' => false]);
+		return is_array($decoded) ? $decoded : [];
 	}
 
 	public function getCalculationJson()

@@ -537,7 +537,8 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 
 					 $i += 1;
 				} catch (\Exception $e) {
-					dd($e->getMessage());
+					\Log::error('BookingRequestController loop iteration failed', ['error' => $e->getMessage()]);
+					continue;
 				}
 			}
 			}
@@ -591,7 +592,8 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 					}
 					 $i += 1;
 				} catch (\Exception $e) {
-					dd($e->getMessage());
+					\Log::error('BookingRequestController loop iteration failed', ['error' => $e->getMessage()]);
+					continue;
 				}
 			}
 			}

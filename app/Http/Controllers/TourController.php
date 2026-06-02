@@ -1415,13 +1415,27 @@ public function store(StoreTourRequest $request)
         $dvoTourDates = !empty($locations['dvoTourDates']) ? $locations['dvoTourDates'] : false;
         $routes = !empty($locations['routes']) ? json_encode($locations['routes']) : false;
 
-        // 
-      $id = $tourId;
-        $data = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
+        // **CRITICAL DATA-INTEGRITY FIX.** This block previously ran on
+        // EVERY tour-show request and re-synced `tour_days` based on the
+        // `departureDate` / `retirementDate` query parameters. When those
+        // params are absent (the normal case for a bare GET /tour/{id}),
+        // findDateRange() interprets the nulls as "today", which collapses
+        // the tour to a 1-day range — createUpdateTourDates() then SOFT-
+        // DELETES every day past the first. Every page view of a multi-
+        // day tour silently destroyed its itinerary.
+        //
+        // The sync is only meaningful when the user actually supplied a
+        // new date range (e.g. an inline edit form posted these). Skip
+        // the destructive path otherwise.
+        $id = $tourId;
         $tour = Tour::findOrfail($id);
-        $dateRange = $this->findDateRange($data);
-        if (!$dateRange) return null;
-        $this->createUpdateTourDates($id, $dateRange);
+        if (!empty($request->departureDate) && !empty($request->retirementDate)) {
+            $data      = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
+            $dateRange = $this->findDateRange($data);
+            if ($dateRange) {
+                $this->createUpdateTourDates($id, $dateRange);
+            }
+        }
         $tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $id)->sortBy('date');
         $arr = array();
         $i = 0;

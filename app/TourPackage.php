@@ -265,8 +265,16 @@ class TourPackage extends Model
 
 
     public function getPlaceId(){
+        // Defensive: service() returns null when the FK reference points
+        // at a missing row (e.g. an imported tour whose hotel was later
+        // deleted). Without this guard the Google Places lookup crashes
+        // every itinerary export that contains such a package.
+        $service = $this->service();
+        if (!$service || !isset(GooglePlaces::$services[strtolower($service->service_type ?? '')])) {
+            return null;
+        }
         return GooglePlaces::query()
-            ->where('type', (int) GooglePlaces::$services[strtolower($this->service()->service_type)])
+            ->where('type', (int) GooglePlaces::$services[strtolower($service->service_type)])
             ->where('service_id', $this->reference)
             ->first();
     }
@@ -384,46 +392,71 @@ class TourPackage extends Model
     }
 
     public function getTransferDrivers(){
-        $transfer_id = $this->service()->id;
+        // service() returns null when the package.reference column points
+        // at a missing/deleted Transfer (or any other service model).
+        // Previously dereferencing ->id crashed every HTML/PDF voucher
+        // export that contained such a package (Attempt to read property
+        // "id" on null). Return an empty Driver collection — the export
+        // views iterate this list, so an empty list means "no drivers
+        // listed" instead of a fatal exception.
+        $service = $this->service();
+        if (!$service) {
+            return Driver::query()->whereRaw('1 = 0')->get();
+        }
+        $tour = $this->getTour();
+        if (!$tour) {
+            return Driver::query()->whereRaw('1 = 0')->get();
+        }
         $transfer_drivers = TransferToDrivers::query()
-            ->where('transfer_id', $transfer_id)
+            ->where('transfer_id',     $service->id)
             ->where('tour_package_id', $this->id)
-            ->where('tour_id', $this->getTour()->id)
+            ->where('tour_id',         $tour->id)
             ->get();
 
-        $transfer_drivers_id = collect();
+        $transfer_drivers_id = $transfer_drivers->pluck('driver_id');
 
-        foreach ($transfer_drivers as $driver){
-            $transfer_drivers_id->push($driver->driver_id);
+        return Driver::query()->whereIn('id', $transfer_drivers_id)->get();
+    }
+
+    public function getServiceLinkAttribute() {
+        // Resolve the underlying service model ONCE. service() returns null
+        // when reference points at a missing row — previously the
+        // `$this->service()->service_type??""` idiom crashed (the
+        // null-coalesce only protects the RHS, not the chain).
+        $service = $this->service();
+        if (!$service) {
+            return route('tour.index');
         }
 
-        $drivers = Driver::query()->whereIn('id', $transfer_drivers_id)->get();
+        $serviceType = strtolower($service->service_type ?? '');
+        if ($serviceType === '') {
+            return route('tour.index');
+        }
+        if ($serviceType === 'flight') {
+            $serviceType = 'flights';
+        }
 
-        return $drivers;
-    }
+        // Pick the right URI parameter name. Route::resource generates
+        // {hotel}/{event}/{guide}/{restaurant}/{flight} — passing the
+        // wrong key results in a Missing parameter exception (the same
+        // class of bug we already swept once in the supplier_search fix).
+        $parameterMappings = [
+            'hotel'      => 'hotel',
+            'event'      => 'event',
+            'guide'      => 'guide',
+            'restaurant' => 'restaurant',
+            'flights'    => 'flight',
+        ];
+        $parameterName = $parameterMappings[$serviceType] ?? 'id';
 
-      public function getServiceLinkAttribute() {
-
-    	$serviceType = strtolower($this->service()->service_type??"");
-        if($serviceType != ""){
-    	if($serviceType == 'flight') {
-		    $serviceType  = 'flights';
-	    }
-    	$routeName = '';
-
-    	// Use correct parameter names for different service types
-    	$parameterMappings = [
-    	    'hotel' => 'hotel',
-    	    'event' => 'event',
-    	    'guide' => 'guide',
-    	    'restaurant' => 'restaurant',
-    	    'flights' => 'flight'
-    	];
-
-    	$parameterName = $parameterMappings[$serviceType] ?? 'id';
-    	return route($serviceType.'.show', [$parameterName => $this->service()->id]);
-    }
-    return route('tour.index');
+        try {
+            return route($serviceType . '.show', [$parameterName => $service->id]);
+        } catch (\Throwable $e) {
+            // Unknown route name (e.g. unsupported service type) — fall
+            // back to the tour index instead of fatally crashing the
+            // surrounding view.
+            return route('tour.index');
+        }
     }
 	
 	 public function hotel_offers()

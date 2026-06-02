@@ -34,6 +34,12 @@
     </tr>
     </thead>
     <tbody>
+    @php
+        // Resolve the underlying transfer service ONCE so we can render
+        // address/email/phone safely. service() returns null when the
+        // transfer's reference points at a missing record.
+        $transferService = $tour->transfer ? $tour->transfer->service() : null;
+    @endphp
     <tr>
         <td>
             {{$tour->transfer->name}}
@@ -54,9 +60,9 @@
             {{ ($tour->transfer->paid) ? trans('main.Yes') : trans('main.No') }}
         </td>
         <td>{{ $tour->transfer->pax }} {{$tour->transfer->pax_free}}</td>
-        <td>{{  $tour->transfer->service()->address_first}}</td>
-        <td>{!! $tour->transfer->service()->work_email!!}</td>
-        <td>{!! $tour->transfer->service()->work_phone!!}</td>
+        <td>{{ $transferService->address_first ?? '' }}</td>
+        <td>{!! $transferService->work_email ?? '' !!}</td>
+        <td>{!! $transferService->work_phone ?? '' !!}</td>
         <td class="service-description">{!! $tour->transfer->description !!}</td>
         {{--<td>{!! $tour->transfer->total_amount !!}</td> --}}
     </tr>

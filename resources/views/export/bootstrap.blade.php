@@ -1226,7 +1226,8 @@
 
                                 &nbsp;&nbsp;{!! $package->name !!}
 								<br>
-								@if(@$package->service()->service_type == 'Transfer' || @$package->service()->service_type == 'Guide')
+								@php $svcType = optional($package->service())->service_type; @endphp
+								@if($svcType === 'Transfer' || $svcType === 'Guide')
 										<span> &nbsp;&nbsp;Pickup:{{ $tourDay->date. " " .$package->time_from }}/{{ $package->pickup_des }} at {{ $package->time_to }} Dropoff: {{ $tourDay->date. " " .$package->time_to }}/{{ $package->drop_des }} at {{ $package->time_to }}</span>
 										@endif
                                 <br>

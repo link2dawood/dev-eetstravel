@@ -146,7 +146,8 @@ $hotels = [];
                 <td><b>Pax:</b></td>
                
 				
-				@if(@$package->service()->service_type == 'Transfer' || @$package->service()->service_type == 'Guide')
+				@php $svcType = optional($package->service())->service_type; @endphp
+				@if($svcType === 'Transfer' || $svcType === 'Guide')
 				 <td >{{$package->pax}}</td>
 					<td ><b>{!!trans('Pickup')!!}</b></td>
 										<td style="font-size:9px">{{ $tourDay->date. " " .$package->time_from }}/{{ $package->pickup_des }} at {{ $package->time_to }} </td>
@@ -158,7 +159,8 @@ $hotels = [];
 			 <tr>
                 <td><b>{!!trans('main.Porterage')!!}:</b></td>
                 
-				@if(@$package->service()->service_type == 'Transfer' || @$package->service()->service_type == 'Guide')
+				@php $svcType = optional($package->service())->service_type; @endphp
+				@if($svcType === 'Transfer' || $svcType === 'Guide')
 				 <td ></td>
 					<td ><b>{!!trans('Dropoff')!!}</b></td>
 										<td style="font-size:9px">  {{ $tourDay->date. " " .$package->time_to }}/{{ $package->drop_des }} at {{ $package->time_to }} </td>

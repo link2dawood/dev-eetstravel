@@ -28,6 +28,7 @@ class Kernel extends ConsoleKernel
         '\App\Console\Commands\ParseRequest',
         '\App\Console\Commands\TaskDeadlineNotification',
 		'\App\Console\Commands\RunImport',
+		'\App\Console\Commands\SeedTestTour',
     ];
 
     /**

@@ -48,44 +48,44 @@
         </div>
     </aside>
 
-    {{-- Chat panel --}}
+    {{-- Chat panel. Note: `.direct-chat-messages` is referenced by the JS
+         scroll helpers and Pusher addMessage handler; do not rename. --}}
     <section class="lg:col-span-8">
-        <div class="rounded border border-slate-200 bg-white box box-warning direct-chat direct-chat-warning">
-            <div class="box-header with-border border-b border-slate-200 px-4 py-3 flex items-start justify-between gap-3">
+        <div class="rounded border border-slate-200 bg-white shadow-subtle overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <h3 class="box-title text-sm font-semibold text-slate-900 truncate">{{ $chat->title }}</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 truncate">{{ $chat->title }}</h3>
                     @if(!empty($chat->description))
                         <p class="mt-0.5 text-xs text-slate-500 truncate">{{ $chat->description }}</p>
                     @endif
                 </div>
-                <div class="box-tools shrink-0 flex items-center gap-1">
-                    <span data-toggle="tooltip" title="" data-original-title="3 New Messages"
-                          class="badge inline-flex items-center rounded-full bg-success-600 px-2 py-0.5 text-xs font-medium text-white">3</span>
-                    <button type="button" class="btn btn-box-tool inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                    <button type="button" class="btn btn-box-tool inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" data-toggle="tooltip" title="" data-widget="chat-pane-toggle" data-original-title="Contacts"><i class="fa fa-comments"></i></button>
-                    <button type="button" class="btn btn-box-tool inline-flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" data-widget="remove"><i class="fa fa-times"></i></button>
+                <div class="shrink-0 flex items-center gap-1">
+                    <span class="inline-flex items-center rounded-full bg-success-600 px-2 py-0.5 text-xs font-medium text-white" title="3 New Messages">3</span>
                 </div>
             </div>
 
-            <div class="box-body p-4">
-                <div class="direct-chat-messages min-h-[300px] max-h-[60vh] overflow-y-auto">
+            <div class="p-4">
+                <div class="direct-chat-messages min-h-[300px] max-h-[60vh] overflow-y-auto pr-1 space-y-3">
                     @foreach($chat->messages as $message)
                         @include('chats.component.message')
                     @endforeach
                 </div>
             </div>
 
-            <div class="box-footer border-t border-slate-200 bg-slate-50 px-4 py-3">
-                <form action="#" method="post">
+            <div class="border-t border-slate-200 bg-slate-50 px-4 py-3">
+                {{-- onsubmit:return false prevents the legacy form action="#"
+                     from anchoring on the page after the click handler fires.
+                     `input-group` class is retained because the legacy JS
+                     uses $(this).closest('div.input-group') to find the input. --}}
+                <form action="#" method="post" onsubmit="return false;">
                     {{ csrf_field() }}
                     <div class="input-group flex items-center gap-2">
-                        <input type="text" name="message" placeholder="Type Message …"
-                               class="form-control input-message block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
-                        <span class="input-group-btn shrink-0">
-                            <button type="submit" class="btn btn-success btn-flat send-message inline-flex items-center gap-1.5 rounded bg-success-600 px-4 h-9 text-sm text-white hover:bg-success-700">
-                                <x-ui.icon name="send" size="sm" />{!! trans('main.Send') !!}
-                            </button>
-                        </span>
+                        <input type="text" name="message" placeholder="Type Message …" autocomplete="off"
+                               class="input-message block w-full h-9 rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                        <button type="submit"
+                                class="send-message shrink-0 inline-flex items-center gap-1.5 rounded bg-success-600 px-4 h-9 text-sm text-white hover:bg-success-700">
+                            <x-ui.icon name="send" size="sm" />{!! trans('main.Send') !!}
+                        </button>
                     </div>
                 </form>
             </div>

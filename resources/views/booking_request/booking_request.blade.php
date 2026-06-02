@@ -481,10 +481,10 @@
                             <li class="rounded border border-slate-200 bg-slate-50">
                                 <div class="flex items-center gap-2 px-4 py-2 border-b border-slate-200 bg-white">
                                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-info-100 text-info-700">
-                                        <i class="fa fa-envelope"></i>
+                                        <x-ui.icon name="mail" size="sm" />
                                     </span>
                                     <span class="time inline-flex items-center gap-1 text-xs text-slate-500">
-                                        <i class="fa fa-clock-o"></i> {{ $e['time'] }}
+                                        <x-ui.icon name="clock" size="xs" /> {{ $e['time'] }}
                                     </span>
                                 </div>
                                 <div class="timeline-item px-4 py-3">
@@ -521,10 +521,10 @@
                             <li class="rounded border border-slate-200 bg-slate-50">
                                 <div class="flex items-center gap-2 px-4 py-2 border-b border-slate-200 bg-white">
                                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-info-100 text-info-700">
-                                        <i class="fa fa-envelope"></i>
+                                        <x-ui.icon name="mail" size="sm" />
                                     </span>
                                     <span class="time inline-flex items-center gap-1 text-xs text-slate-500">
-                                        <i class="fa fa-clock-o"></i> {{ $e['time'] }}
+                                        <x-ui.icon name="clock" size="xs" /> {{ $e['time'] }}
                                     </span>
                                 </div>
                                 <div class="timeline-item px-4 py-3">

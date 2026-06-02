@@ -1746,15 +1746,16 @@ public function store(StoreTourRequest $request)
         $diff = $dayFrom->diffInDays($dayTo);
         $tour->tourCode = "$tour->name#$dayFrom->month$dayTo->day-$diff-D";
         $data = $this->prepareTourPackages($tour, $request);
-        if ($request->pdf_type  === 'hotels'){
-            return $pdf = exportPdfHotels($tour, $data,$request);
+        // Both 'hotels' (plural) and 'hotel' (singular) target the same
+        // exporter — the plural branch was previously a bare function
+        // call missing `$this->`, which fatals with "Call to undefined
+        // function exportPdfHotels()".
+        if ($request->pdf_type === 'hotels' || $request->pdf_type === 'hotel') {
+            return $this->exportPdfHotels($tour, $data, $request);
         }
-        if ($request->pdf_type === 'hotel'){
-            return $this->exportPdfHotels($tour, $data,$request);
-        }
-        return $pdf = ($request->pdf_type === 'voucher') ?
-            $this->exportPdfVoucher($tour, $data,$request) :
-            $this->exportPdfShort($tour, $data,$request);
+        return ($request->pdf_type === 'voucher')
+            ? $this->exportPdfVoucher($tour, $data, $request)
+            : $this->exportPdfShort($tour, $data, $request);
     }
 
     public function htmlExport(Request $request, $id)

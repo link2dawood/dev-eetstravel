@@ -104,8 +104,11 @@ trait ExportTrait{
         $exclude_cvh = $request->get('exclude_vch', []);
 
 
-            foreach ($tour->transfers as $id => $transfer){
-                if ($package->vch == 0) {
+            // Drop transfers the operator excluded from the voucher.
+            // (Previously dereferenced $package — undefined in this scope —
+            //  which crashed voucher export on any tour with a transfer.)
+            foreach ($tour->transfers as $id => $transfer) {
+                if (($transfer->vch ?? 0) == 0) {
                     unset($tour->transfers[$id]);
                 }
             }
@@ -216,7 +219,11 @@ $section = $phpWord->addSection();
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
-    $tempFile = storage_path('app/temp.docx');
+    // Per-request temp file. Previously hardcoded to
+    // storage_path('app/temp.docx'), so two concurrent downloads would
+    // race on the same path — one user could end up with another user's
+    // document. tempnam() guarantees a unique name per call.
+    $tempFile = tempnam(sys_get_temp_dir(), 'export_docx_');
     $phpWord->save($tempFile, 'Word2007');
 
     // Define the response to return the Word document
@@ -355,7 +362,11 @@ $section = $phpWord->addSection();
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
-    $tempFile = storage_path('app/temp.docx');
+    // Per-request temp file. Previously hardcoded to
+    // storage_path('app/temp.docx'), so two concurrent downloads would
+    // race on the same path — one user could end up with another user's
+    // document. tempnam() guarantees a unique name per call.
+    $tempFile = tempnam(sys_get_temp_dir(), 'export_docx_');
     $phpWord->save($tempFile, 'Word2007');
 
     // Define the response to return the Word document
@@ -662,7 +673,11 @@ $section = $phpWord->addSection();
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
-    $tempFile = storage_path('app/temp.docx');
+    // Per-request temp file. Previously hardcoded to
+    // storage_path('app/temp.docx'), so two concurrent downloads would
+    // race on the same path — one user could end up with another user's
+    // document. tempnam() guarantees a unique name per call.
+    $tempFile = tempnam(sys_get_temp_dir(), 'export_docx_');
     $phpWord->save($tempFile, 'Word2007');
 
     // Define the response to return the Word document

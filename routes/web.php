@@ -864,11 +864,13 @@ Route::get('TMS-Supplier/login', '\App\Http\Controllers\TMSSupplier\LoginControl
 Route::post('TMS-Supplier/login', '\App\Http\Controllers\TMSSupplier\LoginController@Supplierauth')->name('supplier.login');
 Route::get('TMS-Supplier/logout', '\App\Http\Controllers\TMSSupplier\LoginController@signout')->name('supplier.logout');
 Route::group(['middleware' => 'supplierauth'], function () {
-Route::get('TMS-Supplier/home', '\App\Http\Controllers\TMSSupplier\LoginController@home')->name('TMS-Supplier.home');
-//Route::get('offer_data/api/data', '\App\Http\Controllers\TMSSupplier\OfferController@data_request')->name('offer_data');
-	
+    Route::get('TMS-Supplier/home', '\App\Http\Controllers\TMSSupplier\LoginController@home')->name('TMS-Supplier.home');
+    //Route::get('offer_data/api/data', '\App\Http\Controllers\TMSSupplier\OfferController@data_request')->name('offer_data');
+
+    // add_comment MUST sit inside the supplierauth group; otherwise any
+    // request with a valid CSRF token could post comments as any supplier.
+    Route::post('TMS-Supplier/add_comment/{id}', '\App\Http\Controllers\TMSSupplier\OfferController@addComment')->name('add_comment');
 });
-Route::post('TMS-Supplier/add_comment/{id}', '\App\Http\Controllers\TMSSupplier\OfferController@addComment')->name('add_comment');
 Route::get('city_list/{country_code}', 'TourController@get_cities');
 
 Route::get('check', function(){

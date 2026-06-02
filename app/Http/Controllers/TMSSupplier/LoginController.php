@@ -100,51 +100,51 @@ public function Supplierauth(Request $request)
 
 
 
+    /**
+     * Build the list of TourPackages assigned to the authenticated supplier.
+     *
+     * The previous implementation walked packages → tour_day → tour →
+     * getTourDaysSortedByDate() → packages_tour_days → package and could surface
+     * the same package once per tour day it appeared on. It also ran ~N*M
+     * single-row queries.
+     *
+     * The set of packages we want is exactly: TourPackages whose name equals
+     * the authenticated supplier's name AND which are linked to at least one
+     * tour day. We resolve that set in a single query, then eager-load the
+     * tour name and status name to feed the view.
+     */
     public function home(Request $request)
     {
-        $package_name = $request->session()->get("package_name");
-        $packages = TourPackage::where("name", $package_name)->get();
-        $offers = [];
+        $package_name = $request->session()->get('package_name');
 
-        foreach($packages as $pkg){
-            $tourday = DB::select('select * from packages_tour_days where tour_package_id = :tour_package_id', ['tour_package_id' =>  $pkg->id]);
-            if(!empty($tourday)){
-                $tourday = TourDay::find($tourday[0]->tour_day_id);
-                $tour = Tour::find($tourday->tour);
+        $packages = TourPackage::query()
+            ->where('name', $package_name)
+            ->whereIn('id', function ($q) {
+                $q->select('tour_package_id')->from('packages_tour_days');
+            })
+            ->get();
 
-                if(!empty($tour)){
-                    $tourdates = $tour->getTourDaysSortedByDate() ?? "";
-                    foreach($tourdates as $tourdate){
-                        $tourdays = DB::select('select * from packages_tour_days where tour_day_id = :tour_day_id', ['tour_day_id' => $tourdate->id]);
-                        foreach($tourdays as $tourday_item){
-                            $package = TourPackage::find($tourday_item->tour_package_id);
-                            if(!empty($package) && $package->name == $package_name){
-                                $package->tourName = $tour->name ?? "";
-                                $status = Status::where("id", $package->status)->first();
-                                $package->statusName = $status ? $status->name : "";
-                                $offers[] = $package;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // Eager-load tour name + status name without N+1 lookups inside Blade.
+        $tourDayLinks = DB::table('packages_tour_days')
+            ->whereIn('tour_package_id', $packages->pluck('id'))
+            ->get()
+            ->keyBy('tour_package_id');
+
+        $tourDayIds   = $tourDayLinks->pluck('tour_day_id')->unique()->all();
+        $tourDays     = TourDay::whereIn('id', $tourDayIds)->get()->keyBy('id');
+        $tours        = Tour::whereIn('id', $tourDays->pluck('tour')->unique())->get()->keyBy('id');
+        $statusNames  = Status::whereIn('id', $packages->pluck('status')->unique())->pluck('name', 'id');
+
+        $offers = $packages->map(function ($pkg) use ($tourDayLinks, $tourDays, $tours, $statusNames) {
+            $link    = $tourDayLinks->get($pkg->id);
+            $tourDay = $link ? $tourDays->get($link->tour_day_id) : null;
+            $tour    = $tourDay ? $tours->get($tourDay->tour) : null;
+            $pkg->tourName   = $tour ? ($tour->name ?? '') : '';
+            $pkg->statusName = $statusNames[$pkg->status] ?? '';
+            return $pkg;
+        })->values();
 
 		return view("TMSSupplier.home.index", compact('offers'));
-    }
-
-    public function quotation_requests()
-    {
-
-   
-		
-            return view("TMSSupplier.home.index");
-        if(Auth::check()){
-            $tours = Tour::where("status",46)->get();
-            return view("TMSClient.home.tour.quotation_requests",compact("tours"));
-        }
-  
-        return redirect("TMS-Client/login")->withSuccess('You are not allowed to access');
     }
 	
 	public function signOut() {

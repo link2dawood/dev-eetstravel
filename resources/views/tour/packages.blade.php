@@ -7,9 +7,9 @@
     @foreach($tourDates as $tourDate)
         <?php $countDay++ ?>
 		
-        <div class="box box-solid" >
+        <div class="box box-solid rounded border border-slate-200 bg-white shadow-subtle" >
 			 
-            <div class="box-header with-border">
+            <div class="box-header with-border border-b border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
                 @if(Auth::user()->can('tour_package.create'))
                     <button class="btn btn-flat btn-success pull-right add-service-quick"
                             data-tourDayId="{{$tourDate->id}}"
@@ -23,7 +23,7 @@
                 <h3 class="box-title">{!!trans('main.Day')!!} {{ $countDay }}
                     - {{ (new \Carbon\Carbon($tourDate->date))->formatLocalized('%B %d, %Y (%A)') }}</h3>
                 <br/><br/>
-                <div class="box-body">
+                <div class="box-body p-4">
 					
                     <table class="table table-striped table-bordered table-hover {{ \App\Helper\PermissionHelper::checkPermission('tour_package.edit') ? 'package-service-table' : '' }}"
                            style='background:#fff'>
@@ -404,7 +404,7 @@
                             aria-hidden='true'>&times;</span></button>
                     <h4 class="modal-title">{!! trans('main.Adddescriptionpackage') !!}</h4>
                 </div>
-                <div class="box box-body" style="border-top: none">
+                <div class="box box-body bg-white p-4 rounded border border-slate-200">
                     <form action="{{ route('description_package') }}" method="Post" id="description-service">
 						  {{csrf_field()}}
                         <div class="form-group">
@@ -440,7 +440,7 @@
                 </button>
                 <h4 class="modal-title">{!!trans('main.Changeservice')!!}</h4>
             </div>
-            <div class="box box-body" style="border-top: none">
+            <div class="box box-body bg-white p-4 rounded border border-slate-200">
                 <table id="search-table-service-list" class="table table-striped table-bordered table-hover"
                        style="width: 100%!important;">
                     <thead>
@@ -471,7 +471,7 @@
                                 aria-hidden='true'>&times;</span></button>
                     <h4 class="modal-title">{!!trans('main.Selectdriversandbuses')!!}</h4>
                 </div>
-                <div class="box box-body" style="border-top: none">
+                <div class="box box-body bg-white p-4 rounded border border-slate-200">
 				<div class="form-group">
 
                     <label for="departure_date">{!!trans('Pickup Destination')!!}</label>
@@ -515,7 +515,7 @@
                                 aria-hidden='true'>&times;</span></button>
                     <h4 class="modal-title">Select drivers and buses</h4>
                 </div>
-                <div class="box box-body" style="border-top: none">
+                <div class="box box-body bg-white p-4 rounded border border-slate-200">
                     <div class="list-driver-and-buses_transfer_package"></div>
 
                     <div class="modal-footer">
@@ -593,7 +593,7 @@
                 </button>
                 <h4 class="modal-title">{!!trans('main.SelectDate')!!}</h4>
             </div>
-            <div class="box box-body" style="border-top: none">
+            <div class="box box-body bg-white p-4 rounded border border-slate-200">
 
                 <div class="alert alert-info error_date" style="text-align: center; display: none;">
 
@@ -603,8 +603,8 @@
 
                     <label for="departure_date">{!!trans('main.DateFrom')!!}</label>
 
-                    <div class="input-group date">
-                        <div class="input-group-addon">
+                    <div class="input-group date flex items-center">
+                        <div class="input-group-addon inline-flex h-9 items-center justify-center rounded-l border border-r-0 border-slate-300 bg-slate-50 px-3 text-slate-500">
                             <i class="fa fa-calendar"></i>
                         </div>
                         {!! Form::text('date_service_package', '', ['class' => 'form-control pull-right datepickerDisabledHotelPackage',
@@ -617,8 +617,8 @@
 
                     <label for="departure_date">{!!trans('main.Dateto')!!}</label>
 
-                    <div class="input-group date">
-                        <div class="input-group-addon">
+                    <div class="input-group date flex items-center">
+                        <div class="input-group-addon inline-flex h-9 items-center justify-center rounded-l border border-r-0 border-slate-300 bg-slate-50 px-3 text-slate-500">
                             <i class="fa fa-calendar"></i>
                         </div>
                         {!! Form::text('date_service_retirement_package', '', [
@@ -662,8 +662,8 @@
 
                     <label for="departure_date">{!!trans('main.DateFrom')!!}</label>
 
-                    <div class="input-group date">
-                        <div class="input-group-addon">
+                    <div class="input-group date flex items-center">
+                        <div class="input-group-addon inline-flex h-9 items-center justify-center rounded-l border border-r-0 border-slate-300 bg-slate-50 px-3 text-slate-500">
                             <i class="fa fa-calendar"></i>
                         </div>
                         {!! Form::text('date_service_package', '', ['class' => 'form-control pull-right datepickerDisabledTransferPackage',
@@ -676,8 +676,8 @@
 
                     <label for="departure_date">{!!trans('main.DateTo')!!}</label>
 
-                    <div class="input-group date">
-                        <div class="input-group-addon">
+                    <div class="input-group date flex items-center">
+                        <div class="input-group-addon inline-flex h-9 items-center justify-center rounded-l border border-r-0 border-slate-300 bg-slate-50 px-3 text-slate-500">
                             <i class="fa fa-calendar"></i>
                         </div>
                         {!! Form::text('date_service_retirement_package', '', [
@@ -707,12 +707,12 @@
             <input name="id" id="id" type="hidden" value="">
 			<input name="package_id" id="package_id" type="hidden" value="">
 			<input name="tour_id" id="tour_id" type="hidden" value="">
-            <div class="box box-primary">
-                <div class="box-header with-border">
+            <div class="box box-primary rounded border border-slate-200 bg-white shadow-subtle">
+                <div class="box-header with-border border-b border-slate-200 px-4 py-3 flex items-center justify-between gap-3">
                     <h3 class="box-title">{!!trans('main.SendTemplate')!!}</h3>
                 </div>
                 <!-- /.box-header -->
-                <div class="box-body">
+                <div class="box-body p-4">
 
                     <div class="form-group">
                         <div class="input-group">
@@ -760,7 +760,7 @@
                 </div>
 
                 <!-- /.box-body -->
-                <div class="box-footer">
+                <div class="box-footer border-t border-slate-200 bg-slate-50 px-4 py-3">
                     <div class="pull-right">
                         <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i
                                     class="fa fa-file-code-o"></i> {!!trans('main.Send')!!}</button>

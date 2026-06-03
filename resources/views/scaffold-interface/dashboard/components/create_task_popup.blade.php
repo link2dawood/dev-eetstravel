@@ -22,7 +22,7 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
                 <h4 id="modalCreateLabel" class="modal-title">{{ trans('main.Createtask') }}</h4>
             </div>
 
-            @if (count($errors) > 0)
+            @if (isset($errors) && $errors->any())
             <br>
             <div class="alert alert-danger">
                 <ul>
@@ -35,7 +35,6 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
             @endif
             <form method='POST' action='{!!route("task.store")!!}'>
 
-                <div class="box box-body" style="border-top: none">
                     <div class="modal-body">
                         <input type='hidden' name='_token' value='{{Session::token()}}'>
                         <input type='hidden' name='modal_create' value="1">
@@ -44,29 +43,37 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
                             <textarea name="content" id="content" class="form-control" style="resize: none">{{ old('content') }}</textarea>
                         </div>
 
-                        <div class="form-group col-md-6 col-lg-6" style="padding-left: 0;">
-
-                            <label for="departure_date">{{ trans('main.Deadline') }}</label>
-
-                            <div class="input-group date">
-                                <div class="input-group-addon">
-                                    <i class="fa fa-calendar"></i>
+                        {{-- Deadline + Time side by side. Tailwind grid replaces
+                             the col-md-6 + negative-padding pair. --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="start_date">{{ trans('main.Deadline') }}</label>
+                                <div class="input-group date relative">
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                        <x-ui.icon name="calendar" size="sm" />
+                                    </span>
+                                    {!! Form::text('end_date', Carbon\Carbon::now()->format('Y-m-d'), [
+                                        'class' => 'form-control datepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600',
+                                        'id' => 'start_date',
+                                        'autocomplete' => 'off',
+                                    ]) !!}
                                 </div>
-                                {!! Form::text('end_date', Carbon\Carbon::now()->format('Y-m-d'), ['class' => 'form-control pull-right datepicker', 'id' => 'start_date']) !!}
                             </div>
-                        </div>
 
-                        <div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-
-                            <label for="departure_date">{{ trans('main.Time') }}</label>
-
-                            <div class="input-group date">
-                                <div class="input-group-addon">
-                                    <i class="fa fa-clock-o"></i>
+                            <div class="form-group">
+                                <label for="end_time">{{ trans('main.Time') }}</label>
+                                <div class="input-group date relative">
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                        <x-ui.icon name="clock" size="sm" />
+                                    </span>
+                                    {!! Form::text('end_time', '18:00', [
+                                        'class' => 'form-control timepicker block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600',
+                                        'id' => 'end_time',
+                                        'autocomplete' => 'off',
+                                    ]) !!}
                                 </div>
-                                {!! Form::text('end_time', '18:00', ['class' => 'form-control pull-right timepicker', 'id' => 'end_time']) !!}
+                                <div class="tours"></div>
                             </div>
-                            <div class="tours"></div>
                         </div>
 
                         <div class="form-group" id = "tour_div" style="display:none">
@@ -161,7 +168,6 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
 <div class="modal-footer">
     <a href="close" class='btn btn-warning' data-dismiss="modal">{{ trans('main.Close') }}</a>
     <button class='btn btn-success pre-loader-func' type='submit'>{{ trans('main.Save') }}</button>
-</div>
 </div>
 </form>
 </div>

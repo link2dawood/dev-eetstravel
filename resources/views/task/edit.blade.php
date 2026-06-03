@@ -10,31 +10,21 @@
         }
     @endphp
 
-    <div class="page-header d-print-none">
-        <div class="container-xl">
-            <div class="row g-2 align-items-center">
-                <div class="col">
-                    <div class="page-pretitle">
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ url('/home') }}"><i class="ti ti-home"></i> Home</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('task.index') }}">Tasks</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Edit</li>
-                            </ol>
-                        </nav>
-                    </div>
-                    <h2 class="page-title">Edit Task</h2>
-                </div>
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <a href="javascript:history.back()" class="btn btn-primary">
-                            <i class="ti ti-arrow-left"></i> {!!trans('main.Back')!!}
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-ui.page-header
+        title="Edit task"
+        description="Update task details, schedule, and assignment."
+        :breadcrumbs="[
+            ['label' => 'Home', 'href' => url('/home')],
+            ['label' => 'Tasks', 'href' => route('task.index')],
+            ['label' => 'Edit'],
+        ]"
+    >
+        <x-slot name="actions">
+            <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+                {{ trans('main.Back') }}
+            </x-ui.button>
+        </x-slot>
+    </x-ui.page-header>
 
     <div class="page-body">
         <div class="container-xl">

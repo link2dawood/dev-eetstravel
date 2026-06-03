@@ -58,77 +58,74 @@ class  InvoicesController extends Controller
      * @param  $id Invoices id
      * @return mixed
      */
+    /**
+     * AUDIT.md CC11 — was InvoicesTours::all() (load full pivot table)
+     * followed by Invoices::find / Offices::find / Tour::find / TourPackage::find
+     * / Transaction::where inside the row map — five extra queries per row,
+     * across the entire table.
+     *
+     * Now: paginate(20) so we only process one page worth of rows, and bulk-
+     * load every related model with whereIn so the cost is constant per page
+     * (5 queries total instead of 5N).
+     */
     public function index()
     {
-        // Get all invoices tours data (same as the AJAX data method)
-        $invoices_tours = InvoicesTours::all();
+        $perPage = 20;
 
-        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
+        // Page-bounded slice of the pivot table.
+        $page = InvoicesTours::orderByDesc('id')->paginate($perPage);
 
-        $perm = [];
-        $perm['show'] = Auth::user()->can($permission_show);
-        $perm['edit'] = Auth::user()->can($permission_edit);
-        $perm['destroy'] = Auth::user()->can($permission_destroy);
-        $perm['clone'] = Auth::user()->can('accounting.create');
+        // Bulk-fetch every related model the row map needs.
+        $invoiceIds  = $page->getCollection()->pluck('invoices_id')->filter()->unique();
+        $tourIds     = $page->getCollection()->pluck('invoices_tours_id')->filter()->unique();
+        $packageIds  = $page->getCollection()->pluck('package_id')->filter()->unique();
 
-        // Add computed columns to each invoice tour
-        $invoicesData = $invoices_tours->map(function ($invoices_tours) use ($perm) {
-            $invoices = Invoices::find($invoices_tours->invoices_id);
+        $invoices    = Invoices::whereIn('id', $invoiceIds)->get()->keyBy('id');
+        $officeIds   = $invoices->pluck('office_id')->filter()->unique();
+        $offices     = Offices::whereIn('id', $officeIds)->get()->keyBy('id');
+        $tours       = Tour::whereIn('id', $tourIds)->get(['id', 'name'])->keyBy('id');
+        $packages    = TourPackage::whereIn('id', $packageIds)->get(['id', 'name'])->keyBy('id');
 
-            // Office Name
-            $office_name = "";
-            if (!empty($invoices)) {
-                $office = Offices::find($invoices->office_id);
-                $office_name = $office->office_name ?? "";
-            }
-            $invoices_tours->officeName = $office_name;
+        // Sum supplier payments grouped per invoice — one SUM-aggregate query,
+        // not one per invoice.
+        $paidByInvoice = Transaction::whereIn('invoice_id', $invoiceIds)
+            ->where('pay_to', 'Supplier')
+            ->selectRaw('invoice_id, SUM(amount) AS paid')
+            ->groupBy('invoice_id')
+            ->pluck('paid', 'invoice_id');
 
-            // Invoice data
-            if (!empty($invoices)) {
-                $invoices_tours->invoice_no = $invoices->invoice_no;
-                $invoices_tours->dueDate = $invoices->dueDate;
-                $invoices_tours->receivedDate = $invoices->receivedDate;
-                $invoices_tours->total_amount = $invoices->total_amount;
-                $invoices_tours->extra_amount = $invoices->extra_amount;
-            }
+        // Decorate each row with the computed columns the view expects.
+        $page->getCollection()->transform(function ($row) use ($invoices, $offices, $tours, $packages, $paidByInvoice) {
+            $invoice            = $invoices->get($row->invoices_id);
+            $office             = $invoice ? $offices->get($invoice->office_id) : null;
+            $row->officeName    = $office->office_name ?? '';
 
-            // Tour name
-            $tour = Tour::find($invoices_tours->invoices_tours_id);
-            $invoices_tours->tour = $tour->name ?? "";
+            if ($invoice) {
+                $row->invoice_no   = $invoice->invoice_no;
+                $row->dueDate      = $invoice->dueDate;
+                $row->receivedDate = $invoice->receivedDate;
+                $row->total_amount = $invoice->total_amount;
+                $row->extra_amount = $invoice->extra_amount;
 
-            // Package name
-            $tour_package = TourPackage::find($invoices_tours->package_id);
-            $package_name = "Extra Cost";
-            if (!empty($tour_package)) {
-                $package_name = $tour_package->name;
-            }
-            $invoices_tours->package = $package_name;
-
-            // Status calculation
-            if (!empty($invoices)) {
-                $transaction = Transaction::where("invoice_id", $invoices->id)->where("pay_to", "Supplier");
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoices->total_amount;
-                $remaining_amount = $amount - $sum_amount;
-
-                if ($sum_amount == $amount) {
-                    $result = "Paid";
-                } elseif ($sum_amount == 0) {
-                    $result = "You Owe " . $amount;
+                $paid      = (float) ($paidByInvoice[$invoice->id] ?? 0);
+                $total     = (float) $invoice->total_amount;
+                $remaining = $total - $paid;
+                if (abs($paid - $total) < 0.005) {
+                    $row->status = 'Paid';
+                } elseif ($paid == 0) {
+                    $row->status = 'You Owe ' . $total;
                 } else {
-                    $result = "You Owe " . $remaining_amount;
+                    $row->status = 'You Owe ' . $remaining;
                 }
-                $invoices_tours->status = $result;
             }
 
-            // Action buttons will be generated in the view using the action_buttons component
+            $row->tour    = optional($tours->get($row->invoices_tours_id))->name ?? '';
+            $row->package = optional($packages->get($row->package_id))->name ?? 'Extra Cost';
 
-            return $invoices_tours;
+            return $row;
         });
 
-        return view('invoices.index', compact('invoicesData'));
+        return view('invoices.index', ['invoicesData' => $page]);
     }
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {

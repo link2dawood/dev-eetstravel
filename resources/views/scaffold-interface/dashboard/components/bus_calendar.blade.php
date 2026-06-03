@@ -1,52 +1,46 @@
-<!--  Buses CALENDAR  -->
-<div class="col-md-12">
-    <div class="box box-primary">
-        <div class="box-header">
-            <div class="box-tools pull-right">
+{{-- Buses calendar widget — embedded in bus/calendar.blade.php.
+     #busdiv is populated by the calendar JS, #leggend / #filter_block
+     are JS-toggled popovers (kept by id), #filter / #help are the
+     popover trigger buttons. --}}
+<div class="col-12">
+    <div class="rounded border border-slate-200 bg-white shadow-subtle overflow-hidden">
 
-                <div class="form-inline">
-                    <div class="form-group">
-                        <span id="filter" class="btn btn-box-tool"><i class="fa fa-car" aria-hidden="true"></i></span>
-                        <span id="help" class="btn btn-box-tool"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
-                        <span class="btn btn-box-tool"></span>
-                        <span class="btn btn-box-tool"></span>
-                   <!-- <button type="button" class="btn btn-box-tool" {{--data-widget="collapse"--}}>
-                   <i class="fa fa-minus"></i></button>
-                        <button type="button" class="btn btn-box-tool" {{--data-widget="remove"--}}>
-                        <i class="fa fa-times"></i></button> -->
-                    </div>
-                </div>
+        <div class="border-b border-slate-200 px-5 py-3 flex items-center justify-between gap-3">
+            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <x-ui.icon name="bus" class="text-primary-600" />
+                Buses calendar
+            </h3>
 
+            <div class="form-inline relative flex items-center gap-1">
+                <span id="filter" class="btn btn-box-tool inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Filter">
+                    <x-ui.icon name="filter" size="sm" />
+                </span>
+                <span id="help" class="btn btn-box-tool inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Help">
+                    <x-ui.icon name="help-circle" size="sm" />
+                </span>
+
+                {{-- JS-toggled popovers (legend + filter). The legacy JS sets
+                     `opacity: 1` to show; kept as IDs only so the JS hooks land. --}}
+                <div id="leggend" class="absolute hidden rounded border border-slate-200 bg-white shadow-overlay"
+                     style="width:275px; height:94px; z-index:9999; top:100%; right:0; opacity:0;"></div>
+                <div id="filter_block" class="absolute hidden rounded border border-slate-200 bg-white shadow-overlay"
+                     style="z-index:99999; top:100%; right:0; opacity:0;"></div>
             </div>
+        </div>
 
-            <div id="leggend" style="width: 275px; height: 94px;z-index:9999; position: absolute;top:5%; left: -80%; background-color: rgb(255, 255, 255);opacity: 0;"></div>
-            <div id="filter_block" style="z-index:99999; position: absolute;top:5%; left: -85%; background-color: rgb(255, 255, 255);opacity: 0;">
-            </div>
+        <div class="px-5 py-4">
+            {{-- Calendar canvas — sized exactly as the legacy JS expects. --}}
+            <div id="busdiv" style="width:100%; height:700px; position:relative;"></div>
 
-            <div id="busdiv" style="width: 104%; height: 700px; position: relative; top: 10px;"></div>
-
+            {{-- Hidden colour ↔ status name map used by the calendar JS. --}}
             <div id="leggend_array" class="hidden">
-                @foreach( $bus_statuses as $status)
-                <span id="{{$status->color}}">{{$status->name}}</span>
+                @foreach($bus_statuses as $status)
+                    <span id="{{ $status->color }}">{{ $status->name }}</span>
                 @endforeach
             </div>
-
         </div>
     </div>
-    <span id="trip_edit_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.edit') }}"></span>
-    <span id="trip_create_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.create') }}"></span>
+
+    <span id="trip_edit_permission"   data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.edit') }}"   class="hidden"></span>
+    <span id="trip_create_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.create') }}" class="hidden"></span>
 </div>
-<style>
-
-    #leggend,#filter_block {
-        -webkit-box-shadow: 3px 0px 19px 2px rgba(0, 0, 0, 0.31);
-        -moz-box-shadow: 3px 0px 19px 2px rgba(0, 0, 0, 0.31);
-        box-shadow: 3px 0px 19px 2px rgba(0, 0, 0, 0.31);
-
-        border-radius: 5px 5px 5px 5px;
-        -moz-border-radius: 5px 5px 5px 5px;
-        -webkit-border-radius: 5px 5px 5px 5px;
-        border: 0px solid #ffffff;
-    }
-
-</style>

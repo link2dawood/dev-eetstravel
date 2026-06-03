@@ -8,8 +8,6 @@ use App\Helper\FileTrait;
 use App\Helper\LaravelFlashSessionHelper;
 use App\Helper\PermissionHelper;
 use App\Notification;
-use App\Repository\Contracts\TourRepository;
-use App\Repository\Contracts\TaskRepository;
 use App\Status;
 use App\Task;
 use App\Tour;
@@ -26,16 +24,17 @@ class TaskController extends Controller
 {
     use FileTrait;
 
-    private $repository;
     private $tourRepository;
 
     /**
-     * TaskController constructor.
+     * AUDIT.md CC9 — TaskRepository was injected but never used at
+     * runtime (every reference to $this->repository was commented out).
+     * Removed. TourRepository stays because TaskController::create()
+     * legitimately calls $this->tourRepository->all().
      */
-    public function __construct(TaskRepository $repository, TourRepository $tourRepository)
+    public function __construct(\App\Repository\Contracts\TourRepository $tourRepository)
     {
         $this->middleware('permissions.required');
-        $this->repository = $repository;
         $this->tourRepository = $tourRepository;
         $this->middleware('preventBackHistory');
         $this->middleware('auth');

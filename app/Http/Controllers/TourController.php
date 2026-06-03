@@ -50,8 +50,6 @@ use App\Helper\ExportTrait;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use App\Helper\HelperTrait;
-use App\Repository\Contracts\TourRepository;
-use App\Repository\Contracts\TaskRepository;
 use App\Country;
 use App\City;
 use App\Notification;
@@ -88,10 +86,20 @@ class TourController extends Controller
 
 
 
-    public function __construct(TourRepository $repository, TaskRepository $taskRepository)
+    private $taskRepository;
+
+    /**
+     * AUDIT.md CC9 — TourRepository was injected but never used at
+     * runtime (every $this->repository callsite in this file was
+     * commented out — see lines ~167, 225, 287, 2784). Removed it.
+     *
+     * TaskRepository stays because TourController has one live call to
+     * $this->taskRepository->allForAssignedToTour() in the tour-tasks
+     * fetch path (~line 1222).
+     */
+    public function __construct(\App\Repository\Contracts\TaskRepository $taskRepository)
     {
         $this->middleware('permissions.required');
-        $this->repository = $repository;
         $this->taskRepository = $taskRepository;
         $this->middleware('preventBackHistory', ['except' => 'landingPage']);
         $this->middleware('auth', ['except' => 'landingPage']);

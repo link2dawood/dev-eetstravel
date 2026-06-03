@@ -84,10 +84,6 @@ class TourController extends Controller
         'FF5500', 'FFFF00', 'FFFFAA', 'FFFFF'
     ];
 
-
-
-    private $taskRepository;
-
     /**
      * AUDIT.md CC9 — TourRepository was injected but never used at
      * runtime (every $this->repository callsite in this file was

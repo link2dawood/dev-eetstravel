@@ -76,7 +76,7 @@
             </div>
         </div>
 
-        <div class="border-t border-slate-200 bg-slate-50 px-5 py-3 box-footer">
+        <div class="border-t border-slate-200 bg-slate-50 px-5 py-3">
             <form method="POST" action="{{ route('comment.store') }}" enctype="multipart/form-data" id="form_comment" class="space-y-3">
                 {{ csrf_field() }}
 

@@ -116,6 +116,16 @@
                 </tbody>
             </table>
         </div>
+
+        @if(method_exists($transactionsData, 'hasPages') && $transactionsData->hasPages())
+            <div class="border-t border-slate-200 px-4 py-3 bg-slate-50 flex items-center justify-between gap-3 text-sm text-slate-600">
+                <div>
+                    Showing <span class="font-medium text-slate-900">{{ $transactionsData->firstItem() }}</span>–<span class="font-medium text-slate-900">{{ $transactionsData->lastItem() }}</span>
+                    of <span class="font-medium text-slate-900">{{ $transactionsData->total() }}</span>
+                </div>
+                <div>{{ $transactionsData->onEachSide(1)->links() }}</div>
+            </div>
+        @endif
     </div>
 </div>
 

@@ -34,49 +34,58 @@ class TransactionController extends Controller
 		//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
 	}
 
+	/**
+	 * AUDIT.md CC11 — was Transaction::all() + per-row Invoices::find /
+	 * ClientInvoices::find. Now paginate(20) and bulk-load both invoice
+	 * tables in two whereIn queries per page.
+	 */
 	public function index()
 	{
 		$this->updateDeferredRevenueToSalesRevenue();
 		$this->updatePayableToCash();
-		$transactions = Transaction::all();
-		$accounts = Account::all();
+
+		$perPage = 20;
+		$page = Transaction::orderByDesc('id')->paginate($perPage);
 
 		$permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
-		$permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
-		$permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
+		$permission_edit    = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
+		$permission_show    = PermissionHelper::$relationsPermissionShow['App\Invoices'];
 
-		$perm = [];
-		$perm['show'] = Auth::user()->can($permission_show);
-		$perm['edit'] = Auth::user()->can($permission_edit);
-		$perm['destroy'] = Auth::user()->can($permission_destroy);
-		$perm['clone'] = Auth::user()->can('accounting.create');
+		$perm = [
+			'show'    => Auth::user()->can($permission_show),
+			'edit'    => Auth::user()->can($permission_edit),
+			'destroy' => Auth::user()->can($permission_destroy),
+			'clone'   => Auth::user()->can('accounting.create'),
+		];
 
-		// Add computed columns to each transaction
-		$transactionsData = $transactions->map(function ($transaction) use ($perm) {
-			// Invoice number
-			if ($transaction->pay_to == "Supplier") {
-				$invoice = Invoices::find($transaction->invoice_id);
+		// Bulk-load every invoice referenced by THIS page.
+		$supplierIds = $page->getCollection()->where('pay_to', 'Supplier')->pluck('invoice_id')->filter()->unique();
+		$clientIds   = $page->getCollection()->where('pay_to', '!=', 'Supplier')->pluck('invoice_id')->filter()->unique();
+		$supplierInvoices = Invoices::whereIn('id', $supplierIds)->get(['id', 'invoice_no', 'total_amount'])->keyBy('id');
+		$clientInvoices   = ClientInvoices::whereIn('id', $clientIds)->get(['id', 'invoice_no', 'amount_receiveable'])->keyBy('id');
+
+		$page->getCollection()->transform(function ($transaction) use ($supplierInvoices, $clientInvoices, $perm) {
+			if ($transaction->pay_to === 'Supplier') {
+				$invoice = $supplierInvoices->get($transaction->invoice_id);
+				$invoiceAmount = $invoice->total_amount ?? null;
 			} else {
-				$invoice = ClientInvoices::find($transaction->invoice_id);
+				$invoice = $clientInvoices->get($transaction->invoice_id);
+				// ClientInvoices uses amount_receiveable as its outstanding
+				// total; mirror the legacy arithmetic (invoice - transaction).
+				$invoiceAmount = $invoice->amount_receiveable ?? null;
 			}
-			$transaction->invoice_no = $invoice->invoice_no ?? '';
-
-			// Unallocated amount
-			if ($invoice) {
-				$invoice_amount = $invoice->total_amount;
-				$transaction_amount = $transaction->amount;
-				$transaction->unallocated = $invoice_amount - $transaction_amount;
-			} else {
-				$transaction->unallocated = 0;
-			}
-
-			// Action buttons
+			$transaction->invoice_no  = $invoice->invoice_no ?? '';
+			$transaction->unallocated = $invoiceAmount !== null
+				? ((float) $invoiceAmount - (float) $transaction->amount)
+				: 0;
 			$transaction->action_buttons = $this->getShowButton($transaction->id, false, $transaction, $perm);
-
 			return $transaction;
 		});
 
-		return view('transaction.index', compact('transactionsData', 'accounts'));
+		// Accounts dropdown — small reference table; ::all() is fine.
+		$accounts = Account::all();
+
+		return view('transaction.index', ['transactionsData' => $page, 'accounts' => $accounts]);
 	}
 	public function show($id)
 	{

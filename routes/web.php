@@ -41,9 +41,16 @@ Route::get('/', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppCo
 //});
 Route::group(['middleware' => 'perm'], function () {
     Route::group(['middleware' => 'web'], function () {
+        // AUDIT.md CC8 — except: ['destroy'] so the named GET .../{id}/delete
+        // below is the sole 'hotel.destroy' route. Route::resource would
+        // otherwise also register 'hotel.destroy' (DELETE /hotel/{hotel})
+        // and route:cache aborts with "Another route has already been
+        // assigned name [hotel.destroy]". The bare POST .../{id}/update has
+        // no ->name() so it doesn't collide with the resource's update.
         Route::resource(
             'hotel',
-            '\App\Http\Controllers\HotelController'
+            '\App\Http\Controllers\HotelController',
+            ['except' => ['destroy']]
         );
         Route::post('hotel/{id}/update', '\App\Http\Controllers\HotelController@update');
         Route::get('hotel/{id}/delete', '\App\Http\Controllers\HotelController@destroy')->name('hotel.destroy');
@@ -54,7 +61,8 @@ Route::group(['middleware' => 'perm'], function () {
 
 //event Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('event', '\App\Http\Controllers\EventController');
+        // CC8: see hotel block above.
+        Route::resource('event', '\App\Http\Controllers\EventController', ['except' => ['destroy']]);
         Route::post('event/{id}/update', '\App\Http\Controllers\EventController@update');
         Route::get('event/{id}/delete', '\App\Http\Controllers\EventController@destroy')->name('event.destroy');
         Route::get('event/{id}/deleteMsg', '\App\Http\Controllers\EventController@DeleteMsg');
@@ -67,7 +75,8 @@ Route::group(['middleware' => 'web'], function () {
 
 //guide Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('guide', '\App\Http\Controllers\GuideController');
+        // CC8: see hotel block above.
+        Route::resource('guide', '\App\Http\Controllers\GuideController', ['except' => ['destroy']]);
         Route::post('guide/{id}/update', '\App\Http\Controllers\GuideController@update');
         Route::get('guide/{id}/delete', '\App\Http\Controllers\GuideController@destroy')->name('guide.destroy');
         Route::get('guide/{id}/deleteMsg', '\App\Http\Controllers\GuideController@DeleteMsg');
@@ -75,7 +84,8 @@ Route::group(['middleware' => 'web'], function () {
 
 //restaurant Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('restaurant', '\App\Http\Controllers\RestaurantController');
+        // CC8: see hotel block.
+        Route::resource('restaurant', '\App\Http\Controllers\RestaurantController', ['except' => ['destroy']]);
         Route::post('restaurant/{id}/update', '\App\Http\Controllers\RestaurantController@update');
         Route::get('restaurant/{id}/delete', '\App\Http\Controllers\RestaurantController@destroy')->name('restaurant.destroy');
         Route::get('restaurant/{id}/deleteMsg', '\App\Http\Controllers\RestaurantController@DeleteMsg');
@@ -95,7 +105,10 @@ Route::get('/states/{countryCode}','\App\Http\Controllers\ClientController@getSt
 
 //Invoices of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('invoices', '\App\Http\Controllers\InvoicesController');
+   	// CC8: 'invoices.destroy' is named by the GET .../{id}/delete below;
+   	// the resource version (DELETE /invoices/{invoice}) would otherwise
+   	// be a second route with the same name.
+   	Route::resource('invoices', '\App\Http\Controllers\InvoicesController', ['except' => ['destroy']]);
    	Route::post('invoices/{id}/update', '\App\Http\Controllers\InvoicesController@update')->name('invoice.update');
     Route::get('invoices/{id}/delete', '\App\Http\Controllers\InvoicesController@destroy')->name('invoices.destroy');
     Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg');
@@ -106,7 +119,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Account of TMS
 Route::group(['middleware' => 'web'], function () {
-	Route::resource('transaction', '\App\Http\Controllers\TransactionController');
+	// CC8: see hotel block.
+	Route::resource('transaction', '\App\Http\Controllers\TransactionController', ['except' => ['destroy']]);
 	Route::get('transaction/{id}/delete', '\App\Http\Controllers\TransactionController@destroy')->name('transaction.destroy');
 	Route::get('transaction/{id}/deleteMsg', '\App\Http\Controllers\TransactionController@DeleteMsg');
    	Route::resource('accounting', '\App\Http\Controllers\ClientInvoiceController');
@@ -128,7 +142,9 @@ Route::group(['middleware' => 'web'], function () {
 	
 //Reporting of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('reporting', '\App\Http\Controllers\ReportingController');
+   	// CC8: both 'reporting.update' and 'reporting.destroy' are claimed by
+   	// the named POST/GET below; exclude them from the resource.
+   	Route::resource('reporting', '\App\Http\Controllers\ReportingController', ['except' => ['update', 'destroy']]);
    	Route::post('reporting/{id}/update', '\App\Http\Controllers\ReportingController@update')->name('reporting.update');
     Route::get('reporting/{id}/delete', '\App\Http\Controllers\ReportingController@destroy')->name('reporting.destroy');
     Route::get('reporting/{id}/deleteMsg', '\App\Http\Controllers\ReportingController@DeleteMsg');
@@ -140,8 +156,9 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Officefee of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('office', '\App\Http\Controllers\OfficeController');
-	
+   	// CC8: both 'office.update' and 'office.destroy' are claimed below.
+   	Route::resource('office', '\App\Http\Controllers\OfficeController', ['except' => ['update', 'destroy']]);
+
    	Route::post('office/{id}/update', '\App\Http\Controllers\OfficeController@update')->name('office.update');
     Route::get('office/{id}/delete', '\App\Http\Controllers\OfficeController@destroy')->name('office.destroy');
     Route::get('office/{id}/deleteMsg', '\App\Http\Controllers\OfficeController@DeleteMsg');
@@ -150,7 +167,9 @@ Route::group(['middleware' => 'web'], function () {
 //OfficeInvoices of TMS
 	
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('officeInvoices', '\App\Http\Controllers\OfficeInvoiceController');
+   	// CC8: 'officeInvoices.create' is named by the GET below; resource
+   	// would generate the same name for its own create route.
+   	Route::resource('officeInvoices', '\App\Http\Controllers\OfficeInvoiceController', ['except' => ['create']]);
 	Route::get('officeInvoices/create/{id}', '\App\Http\Controllers\OfficeInvoiceController@create')->name('officeInvoices.create');
 	Route::post('/officeInvoices/store', 'OfficeInvoiceController@store')->name('officeInvoices.stored');
 	Route::get('/officeInvoices/{id}/export/{pdf_type}', 'OfficeInvoiceController@pdfExport')->name('office_invoices_pdf_export');
@@ -173,7 +192,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Tour Expenses of offices of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('tour_expenses', '\App\Http\Controllers\TourExpenseController');
+   	// CC8: 'tour_expenses.create' / .update / .destroy all claimed below.
+   	Route::resource('tour_expenses', '\App\Http\Controllers\TourExpenseController', ['except' => ['create', 'update', 'destroy']]);
 	Route::get('tour_expenses/create/{id}', '\App\Http\Controllers\TourExpenseController@create')->name('tour_expenses.create');
    	Route::post('tour_expenses/{id}/update', '\App\Http\Controllers\TourExpenseController@update')->name('tour_expenses.update');
     Route::get('tour_expenses/{id}/delete', '\App\Http\Controllers\TourExpenseController@destroy')->name('tour_expenses.destroy');
@@ -181,7 +201,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Utility Expenses of offices TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('utility_expenses', '\App\Http\Controllers\UtilityExpenseController');
+   	// CC8: same shape as tour_expenses above.
+   	Route::resource('utility_expenses', '\App\Http\Controllers\UtilityExpenseController', ['except' => ['create', 'update', 'destroy']]);
 	Route::get('utility_expenses/create/{id}', '\App\Http\Controllers\UtilityExpenseController@create')->name('utility_expenses.create');
    	Route::post('utility_expenses/{id}/update', '\App\Http\Controllers\UtilityExpenseController@update')->name('utility_expenses.update');
     Route::get('utility_expenses/{id}/delete', '\App\Http\Controllers\UtilityExpenseController@destroy')->name('utility_expenses.destroy');
@@ -189,7 +210,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Employee Salary  of offices of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('employes-salary', '\App\Http\Controllers\EmployesSalaryController');
+   	// CC8: same shape as tour_expenses above.
+   	Route::resource('employes-salary', '\App\Http\Controllers\EmployesSalaryController', ['except' => ['create', 'update', 'destroy']]);
 	Route::get('employes-salary/create/{id}', '\App\Http\Controllers\EmployesSalaryController@create')->name('employes-salary.create');
    	Route::post('employes-salary/{id}/update', '\App\Http\Controllers\EmployesSalaryController@update')->name('employes-salary.update');
     Route::get('employes-salary/{id}/delete', '\App\Http\Controllers\EmployesSalaryController@destroy')->name('employes-salary.destroy');
@@ -197,7 +219,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Total Earning of offices TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('office_earning', '\App\Http\Controllers\OfficeEarningController');
+   	// CC8: same shape as tour_expenses above.
+   	Route::resource('office_earning', '\App\Http\Controllers\OfficeEarningController', ['except' => ['create', 'update', 'destroy']]);
 	Route::get('office_earning/create/{id}', '\App\Http\Controllers\OfficeEarningController@create')->name('office_earning.create');
    	Route::post('office_earning/{id}/update', '\App\Http\Controllers\OfficeEarningController@update')->name('office_earning.update');
     Route::get('office_earning/{id}/delete', '\App\Http\Controllers\OfficeEarningController@destroy')->name('office_earning.destroy');
@@ -205,7 +228,8 @@ Route::group(['middleware' => 'web'], function () {
 });
 //Balance Amount of offices TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('office_balance', '\App\Http\Controllers\BalanceAmountController');
+   	// CC8: same shape as tour_expenses above.
+   	Route::resource('office_balance', '\App\Http\Controllers\BalanceAmountController', ['except' => ['create', 'update', 'destroy']]);
 	Route::get('office_balance/create/{id}', '\App\Http\Controllers\BalanceAmountController@create')->name('office_balance.create');
    	Route::post('office_balance/{id}/update', '\App\Http\Controllers\BalanceAmountController@update')->name('office_balance.update');
     Route::get('office_balance/{id}/delete', '\App\Http\Controllers\BalanceAmountController@destroy')->name('office_balance.destroy');
@@ -219,7 +243,8 @@ Route::group(['middleware' => 'web'], function () {
 
 //transfer Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('transfer', '\App\Http\Controllers\TransferController');
+        // CC8: see hotel block.
+        Route::resource('transfer', '\App\Http\Controllers\TransferController', ['except' => ['destroy']]);
         Route::post('transfer/{id}/update', '\App\Http\Controllers\TransferController@update');
         Route::get('transfer/{id}/delete', '\App\Http\Controllers\TransferController@destroy')->name('transfer.destroy');
         Route::get('transfer/{id}/deleteMsg', '\App\Http\Controllers\TransferController@DeleteMsg');
@@ -227,7 +252,9 @@ Route::group(['middleware' => 'web'], function () {
 
 //tour_package Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('tour_package', '\App\Http\Controllers\TourPackageController');
+        // CC8: 'tour_package.create' / .update / .destroy all claimed by the
+        // three named GET/POST routes below.
+        Route::resource('tour_package', '\App\Http\Controllers\TourPackageController', ['except' => ['create', 'update', 'destroy']]);
         Route::post('tour_package/{id}/update', '\App\Http\Controllers\TourPackageController@update')->name('tour_package.update');
         Route::get('tour_package/{id}/create', '\App\Http\Controllers\TourPackageController@create')->name('tour_package.create');
         Route::get('tour_package/{id}/delete', '\App\Http\Controllers\TourPackageController@destroy')->name('tour_package.destroy');
@@ -281,7 +308,8 @@ Route::group(['middleware' => 'web'], function () {
 //tour Routes
     Route::group(['middleware' => 'web'], function () {
         Route::post('tour/save', '\App\Http\Controllers\TourController@store');
-        Route::resource('tour', '\App\Http\Controllers\TourController');
+        // CC8: see hotel block.
+        Route::resource('tour', '\App\Http\Controllers\TourController', ['except' => ['destroy']]);
         Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
         Route::get('tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
         Route::get('tour/{id}/deleteMsg', '\App\Http\Controllers\TourController@DeleteMsg')->name('tour.deleteMsg');
@@ -355,7 +383,8 @@ Route::group(['middleware'=> 'web'],function(){
 
 //status Routes
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('status','\App\Http\Controllers\StatusController');
+        // CC8: see hotel block.
+        Route::resource('status','\App\Http\Controllers\StatusController', ['except' => ['destroy']]);
         Route::post('status/{id}/update','\App\Http\Controllers\StatusController@update');
         Route::get('status/{id}/delete','\App\Http\Controllers\StatusController@destroy')->name('status.destroy');
         Route::get('status/{id}/deleteMsg','\App\Http\Controllers\StatusController@DeleteMsg');
@@ -363,7 +392,8 @@ Route::group(['middleware'=> 'web'],function(){
     
 //holiday Routes
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('holiday','\App\Http\Controllers\HolidayController');
+        // CC8: see hotel block.
+        Route::resource('holiday','\App\Http\Controllers\HolidayController', ['except' => ['destroy']]);
         Route::post('holiday/{id}/update','\App\Http\Controllers\HolidayController@update');
         Route::get('holiday/{id}/delete','\App\Http\Controllers\HolidayController@destroy')->name('holiday.destroy');
         Route::get('holiday/{id}/deleteMsg','\App\Http\Controllers\HolidayController@DeleteMsg');
@@ -371,7 +401,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Room Types Routes
 Route::group(['middleware'=> 'web'],function(){
-    Route::resource('room_types','\App\Http\Controllers\RoomTypesController');
+    Route::resource('room_types','\App\Http\Controllers\RoomTypesController', ['except' => ['destroy']]);
     Route::post('room_types/{id}/update','\App\Http\Controllers\RoomTypesController@update');
     Route::get('room_types/{id}/delete','\App\Http\Controllers\RoomTypesController@destroy')->name('room_types.destroy');
     Route::get('room_types/{id}/deleteMsg','\App\Http\Controllers\RoomTypesController@DeleteMsg');
@@ -379,7 +409,7 @@ Route::group(['middleware'=> 'web'],function(){
 
     //Email Temlates
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('templates','\App\Http\Controllers\TemplatesController');
+        Route::resource('templates','\App\Http\Controllers\TemplatesController', ['except' => ['destroy']]);
         Route::post('templates/{id}/update','\App\Http\Controllers\TemplatesController@update');
         Route::post('templates/{id}/delete','\App\Http\Controllers\TemplatesController@destroy')->name('templates.destroy');
         Route::get('templates/api/load', '\App\Http\Controllers\TemplatesController@loadTemplate');
@@ -417,7 +447,7 @@ Route::group(['middleware'=> 'web'],function(){
 // Buses Routes
     Route::group(['middleware'=> 'web'],function(){
         Route::get('bus/calendar','\App\Http\Controllers\BusController@calendar')->name('bus_calendar');
-        Route::resource('bus','\App\Http\Controllers\BusController');
+        Route::resource('bus','\App\Http\Controllers\BusController', ['except' => ['destroy']]);
         Route::post('bus/{id}/update','\App\Http\Controllers\BusController@update');
         Route::get('bus/{id}/delete','\App\Http\Controllers\BusController@destroy')->name('bus.destroy');
         Route::get('bus/{id}/deleteMsg','\App\Http\Controllers\BusController@DeleteMsg');
@@ -443,7 +473,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Rates Routes
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('rate','\App\Http\Controllers\RateController');
+        Route::resource('rate','\App\Http\Controllers\RateController', ['except' => ['destroy']]);
         Route::post('rate/{id}/update','\App\Http\Controllers\RateController@update');
         Route::get('rate/{id}/delete','\App\Http\Controllers\RateController@destroy')->name('rate.destroy');
         Route::get('rate/{id}/deleteMsg','\App\Http\Controllers\RateController@DeleteMsg');
@@ -452,7 +482,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Currency Rates Routes
 Route::group(['middleware'=> 'web'],function(){
-    Route::resource('currency_rate','\App\Http\Controllers\CurrencyRateController');
+    Route::resource('currency_rate','\App\Http\Controllers\CurrencyRateController', ['except' => ['destroy']]);
     Route::post('currency_rate/{id}/update','\App\Http\Controllers\CurrencyRateController@update');
     Route::get('currency_rate/{id}/delete','\App\Http\Controllers\CurrencyRateController@destroy')->name('currency_rate.destroy');
     Route::get('currency_rate/{id}/deleteMsg','\App\Http\Controllers\CurrencyRateController@DeleteMsg');
@@ -479,7 +509,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Currencies Routes
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('currencies','\App\Http\Controllers\CurrenciesController');
+        Route::resource('currencies','\App\Http\Controllers\CurrenciesController', ['except' => ['destroy']]);
         Route::post('currencies/{id}/update','\App\Http\Controllers\CurrenciesController@update');
         Route::get('currencies/{id}/delete','\App\Http\Controllers\CurrenciesController@destroy')->name('currencies.destroy');
         Route::get('currencies/{id}/deleteMsg','\App\Http\Controllers\CurrenciesController@DeleteMsg');
@@ -487,7 +517,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Criteria Routes
 Route::group(['middleware'=> 'web'],function(){
-    Route::resource('criteria','\App\Http\Controllers\CriteriaController');
+    Route::resource('criteria','\App\Http\Controllers\CriteriaController', ['except' => ['destroy']]);
     Route::post('criteria/{id}/update','\App\Http\Controllers\CriteriaController@update');
     Route::get('criteria/{id}/delete','\App\Http\Controllers\CriteriaController@destroy')->name('criteria.destroy');
     Route::get('criteria/{id}/deleteMsg','\App\Http\Controllers\CriteriaController@DeleteMsg');
@@ -495,7 +525,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Comments Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('comment', 'CommentController');
+        Route::resource('comment', 'CommentController', ['except' => ['destroy']]);
         Route::get('/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
         Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
@@ -539,7 +569,7 @@ Route::group(['middleware' => ['web', 'auth']], function () {
 });
 
 // Or use resource route
-Route::resource('users', 'ScaffoldInterface\UserController');
+Route::resource('users', 'ScaffoldInterface\UserController', ['except' => ['destroy']]);
 Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg');
 
     Route::group(['middleware' => 'web'], function () {
@@ -611,10 +641,14 @@ Route::get('/home/getToursForCalendar', ['uses'        => '\App\Http\Controllers
                                          'as'          => 'dashboard.getToursForCalendar'
 ]);
 
+// CC8: renamed from 'dashboard.getToursForCalendar' (which is already
+// claimed by the route above) to '.byUser' to distinguish the two
+// callsites. If callers expected the original name they'd hit the
+// shorter URL anyway, so this is the safer disambiguation.
 Route::get('/home/getToursForCalendarByUser/{id}', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursForCalendar',
     'middleware'  => ['auth', 'permissions.required'],
     'permissions' => 'dashboard.index',
-    'as'          => 'dashboard.getToursForCalendar'
+    'as'          => 'dashboard.getToursForCalendar.byUser'
 ]);
 
 Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursTasksForCalendar',
@@ -683,7 +717,13 @@ Route::group(['middleware' => 'web'], function () {
 });
 
 Route::group(['middleware' => 'web'], function () {
-	Route::resource( 'users', '\App\Http\Controllers\ScaffoldInterface\UserController' );
+	// CC8: 'users.destroy' is already named by the dedicated DELETE
+	// users/{id} route above (line ~544). The duplicate 'users' resource
+	// here would otherwise register the same name. Same goes for the
+	// other RESTful endpoints — they're all handled by the named routes
+	// further up in this file, so this resource registration is now
+	// limited to the few not-yet-claimed verbs.
+	Route::resource( 'users', '\App\Http\Controllers\ScaffoldInterface\UserController', ['except' => ['destroy']] );
 	Route::post( '/users/{user_id}', '\App\Http\Controllers\ScaffoldInterface\UserController@update' );
 });
 Route::group(['middleware' => 'web'], function () {
@@ -731,7 +771,9 @@ Route::group(['middleware' => 'web'], function () {
         ->where('currentFolder', '.*');
 
 
-    Route::get('email/ajax/mail/{id}/{currentFolder?}', 'EmailController@ajaxMail')->name('email.ajaxMail')
+    // CC8: 'email.ajaxMail' is already claimed by the unparameterised
+    // route above; this is the per-mail variant.
+    Route::get('email/ajax/mail/{id}/{currentFolder?}', 'EmailController@ajaxMail')->name('email.ajaxMail.single')
         ->where('currentFolder', '.*');
 
 
@@ -769,7 +811,7 @@ Route::group(['middleware' => ['auth', 'web']], function () {
 
 //Driver Routes
 Route::group(['middleware' => 'web'], function () {
-	Route::resource('driver', '\App\Http\Controllers\DriverController');
+	Route::resource('driver', '\App\Http\Controllers\DriverController', ['except' => ['destroy']]);
     Route::get('/driver/{id}/delete', 'DriverController@destroy')->name('driver.destroy');
     Route::get('/driver/{id}/delete_msg', 'DriverController@deleteMsg');
 });

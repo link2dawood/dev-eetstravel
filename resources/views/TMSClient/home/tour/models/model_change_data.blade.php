@@ -8,58 +8,58 @@
 		   @for($i=1 ; $i <=5 ; $i ++)
 							@if($hotel->rate == 2)
 								@if($i<=2)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							@elseif($hotel->rate == 3)
 								@if($i<=2)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 
 							@elseif($hotel->rate == 4)
 								@if($i<=3)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 				  			@elseif($hotel->rate == 5)
 								@if($i<=3)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>	
+									<span class="text-slate-300" aria-hidden="true">★</span>	
 								@endif
 					
 							@elseif($hotel->rate == 6)
 								@if($i<=4)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 			  				@elseif($hotel->rate == 7)
 								@if($i<=4)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							
 							@elseif($hotel->rate == 8)
 								@if($i<=5)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 		  					@elseif($hotel->rate == 9)
 								@if($i<=5)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							
 							@else	
-								<span class="fa fa-star"></span>
+								<span class="text-slate-300" aria-hidden="true">★</span>
 							@endif
                         @endfor
 						@if($hotel->rate % 2 != 0)

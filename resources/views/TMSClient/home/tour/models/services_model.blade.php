@@ -64,58 +64,58 @@
                         @for($i=1 ; $i <=5 ; $i ++)
 							@if($hotel->rate == 2)
 								@if($i<=2)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							@elseif($hotel->rate == 3)
 								@if($i<=2)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 
 							@elseif($hotel->rate == 4)
 								@if($i<=3)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 				  			@elseif($hotel->rate == 5)
 								@if($i<=3)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>	
+									<span class="text-slate-300" aria-hidden="true">★</span>	
 								@endif
 					
 							@elseif($hotel->rate == 6)
 								@if($i<=4)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 			  				@elseif($hotel->rate == 7)
 								@if($i<=4)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							
 							@elseif($hotel->rate == 8)
 								@if($i<=5)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 		  					@elseif($hotel->rate == 9)
 								@if($i<=5)
-									<span class="fa fa-star checked"></span>
+									<span class="text-warning-500" aria-hidden="true">★</span>
 								@else
-									<span class="fa fa-star "></span>
+									<span class="text-slate-300" aria-hidden="true">★</span>
 								@endif
 							
 							@else	
-								<span class="fa fa-star"></span>
+								<span class="text-slate-300" aria-hidden="true">★</span>
 							@endif
                         @endfor
 						@if($hotel->rate % 2 != 0)
@@ -179,41 +179,43 @@
               </button>
               <h4 class="modal-title">{!!trans('main.SelectDate')!!}</h4>
           </div>
-          <div class="box box-body" style="border-top: none">
+          <div class="px-5 py-4 space-y-4">
 
-              <div class="alert alert-info error_date" style="text-align: center; display: none;">
+              <div class="alert alert-info error_date hidden rounded border border-info-600/20 bg-info-50 px-4 py-2 text-sm text-info-700 text-center"></div>
 
+              <div class="form-group">
+                  <label for="date_service_package" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{!! trans('main.DateFrom') !!}</label>
+                  <div class="input-group date relative">
+                      <span class="input-group-addon pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                          <x-ui.icon name="calendar" size="sm" />
+                      </span>
+                      <input type="text"
+                             name="date_service_package"
+                             id="date_service_package"
+                             autocomplete="off"
+                             class="form-control datepickerDisabledHotelPackage block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
+                  </div>
               </div>
 
               <div class="form-group">
-
-                  <label for="departure_date">{!!trans('main.DateFrom')!!}</label>
-
-                  <div class="input-group date">
-                      <div class="input-group-addon">
-                          <i class="fa fa-calendar"></i>
-                      </div>
-                      
-                        <input type="text" name="date_service_package" id="date_service_package" class="form-control pull-right datepickerDisabledHotelPackage">
+                  <label for="date_service_retirement_package" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">{!! trans('main.Dateto') !!}</label>
+                  <div class="input-group date relative">
+                      <span class="input-group-addon pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                          <x-ui.icon name="calendar" size="sm" />
+                      </span>
+                      <input type="text"
+                             name="date_service_retirement_package"
+                             id="date_service_retirement_package"
+                             autocomplete="off"
+                             class="form-control datepickerDisabledHotelPackage block w-full h-9 rounded border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-subtle focus:outline-none focus:ring-2 focus:ring-primary-600/30 focus:border-primary-600">
                   </div>
-
               </div>
 
-              <div class="form-group">
-
-                  <label for="departure_date">{!!trans('main.Dateto')!!}</label>
-
-                  <div class="input-group date">
-                      <div class="input-group-addon">
-                          <i class="fa fa-calendar"></i>
-                      </div>
-                      
-                      <input type="text" name="date_service_retirement_package" id="date_service_retirement_package" class="form-control pull-right datepickerDisabledHotelPackage">
-                  </div>
-
-              </div>
-              <button class="addHotelPackageWithDate pre-loader-func btn btn-success"
-                      type="button">{!!trans('main.Add')!!}</button>
+              <button type="button"
+                      class="addHotelPackageWithDate pre-loader-func btn btn-success inline-flex items-center gap-1.5 rounded bg-success-600 px-4 h-9 text-sm font-medium text-white hover:bg-success-700">
+                  <x-ui.icon name="plus" size="sm" />
+                  {!! trans('main.Add') !!}
+              </button>
           </div>
       </div>
  

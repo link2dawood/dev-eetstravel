@@ -43,12 +43,17 @@ class GuestListController extends Controller {
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
+	/**
+	 * AUDIT.md CC11 — the legacy method ran \App\GuestList::all() and
+	 * passed the result to the view, but resources/views/guest_list/
+	 * index.blade.php (which I migrated earlier) actually shows the
+	 * QUOTATIONS list AJAX-fed from route('quotation.data') — the
+	 * $guestList variable was never read by the template. Dead full-
+	 * table query removed.
+	 */
 	public function index() {
-        $title = 'Index - guest list';
-        $guestList = \App\GuestList::all();
-                //Quotation::query()->get();
-
-        return view('guest_list.index', compact('guestList', 'title'));
+		$title = 'Index - guest list';
+		return view('guest_list.index', compact('title'));
 	}
 
 

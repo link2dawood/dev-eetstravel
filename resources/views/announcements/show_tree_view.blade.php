@@ -1,134 +1,91 @@
 @extends('scaffold-interface.layouts.tabler-app')
+@section('title', $announcement->title ?? 'Announcement')
 
 @section('content')
-    @include('layouts.title',
-   ['title' => 'Announcement', 'sub_title' => $announcement->title,
-   'breadcrumbs' => [
-   ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-   ['title' => 'Announcements', 'icon' => 'coffee', 'route' => route('announcements.index')],
-   ['title' => 'Show', 'route' => null]]])
-    <section class="content">
-        {{-- <div class="box box-primary">
-            <div class="box-body">
-                <div style="margin-bottom: 10px;">
-                    <a href="javascript:history.back()">
-                        <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                    </a>
-                    <a href="{!! route('announcements.edit', $announcement->id) !!}">
-                        <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                    </a>
-                </div>
-                <div class="chat">
-                    <div class="item">
-                        <div class="chat-details">
-                            <span class="chat-author">
-                                by <b>{{\App\User::find($mainParent->author)->name}}</b>
-                            </span>
-                            <span class="chat-date">
-                               <i>{{$mainParent->created_at}}</i>
-                            </span>
-                        </div>
-                        <div class="chat-content">
-                            {!! $mainParent->content !!}
+<x-ui.page-header
+    title="Announcement"
+    :description="$announcement->title ?? ''"
+    :breadcrumbs="[
+        ['label' => 'Home', 'href' => url('/home')],
+        ['label' => 'Announcements', 'href' => route('announcements.index')],
+        ['label' => 'Show'],
+    ]"
+>
+    <x-slot name="actions">
+        <x-ui.button as="a" href="javascript:history.back()" variant="ghost" icon="arrow-left">
+            {{ trans('main.Back') }}
+        </x-ui.button>
+        @if(\Auth::id() == $announcement->author)
+            <x-ui.button as="a" :href="route('announcements.edit', $announcement->id)" variant="primary" icon="pencil">
+                {{ trans('main.Edit') }}
+            </x-ui.button>
+        @endif
+    </x-slot>
+</x-ui.page-header>
 
-                        </div>
-                        {{-- In show.blade.php, replace the attachments section: --}}
-<div class="chat-attachments">
-    <table class="table">
-        <tbody>
-            @php 
-                try {
-                    $attachments = $announcement->getMedia('announcement_files');
-                } catch (\Exception $e) {
-                    $attachments = collect();
-                }
-            @endphp
-            @if($attachments && $attachments->isNotEmpty())
-                @foreach($attachments as $attachment)
-                    <tr class="del-container">
-                        <td class="td_link_attach">
-                            <div class="td_link_attach__name">
-                                <a class="name_attach" href="{{ $attachment->getUrl() }}" target="_blank">
-                                    <span class="glyphicon glyphicon-paperclip"></span>
-                                    {{ $attachment->file_name }}
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            @else
-                <tr>
-                    <td>No attachments</td>
-                </tr>
-            @endif
-        </tbody>
-    </table>
-</div>
-                            <div class="announcement-actions">
-                                <a href="{{route('announcement_reply', ['id' => $mainParent->id])}}" class="link-black text-sm reply_comment" style="margin-top: 10px"><i class="fa fa-reply margin-r-5"></i> Reply</a>
-                            </div>
+{{-- Hidden flag the legacy comment.js looks for. --}}
+<span id="showPreviewBlock" data-info="{{ true }}" class="hidden"></span>
 
-                            @if(count($mainParent->childs))
-                                @include('announcements.childs',['childs' => $mainParent->childs, 'nesting' => 1])
-                            @endif
-                    </div>
-                </div>
+<div class="rounded border border-slate-200 bg-white shadow-subtle flex flex-col max-h-[75vh]">
 
-            </div>
-        </div> --}}
-        <span id="showPreviewBlock" data-info="{{ true }}"></span>
-        <div class="box box-success" style="position: relative; left: 0px; top: 0px;">
-            <div class="box-header ui-sortable-handle" style="cursor: move;">
-                <i class="fa fa-comments-o"></i>
+    <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+        <x-ui.icon name="messages-square" class="text-success-600" />
+        <h3 class="text-sm font-semibold text-slate-900">{{ trans('main.Announcement') }}</h3>
+    </div>
 
-                <h3 class="box-title">{!!trans('main.Announcement')!!}</h3>
-            </div>
-            <div class="box-body">
-                <div style="margin-bottom: 10px;">
-                    <a href="javascript:history.back()">
-                        <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                    </a>
-                    @if(\Auth::id() == $announcement->author)
-                    <a href="{!! route('announcements.edit', $announcement->id) !!}">
-                        <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                    </a>
-                    @endif
-                </div>
-                <div class="slimScrollDiv" style="position: relative; overflow-y: scroll;  width: auto;">
-                    <div class="box-body box chat" id="chat-box" style="width: auto; height: auto;">
-                        <div id="show_comments"></div>
-                    </div>
-                    <div class="slimScrollRail" style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51) none repeat scroll 0% 0%; opacity: 0.2; z-index: 90; right: 1px;"></div>
-                </div>
-            </div>
-            <!-- /.chat -->
-            <div class="box-footer">
-                <form method='post' action='{{route('announcement_reply', ['id' => $announcement->id])}}' enctype="multipart/form-data" id="form_comment">
-                {{csrf_field()}}
-                    <div class="input-group" style="width: 100%">
-                                        <span id="author_name" class="input-group-addon">
-                                            <span id="name"></span>
-                                            <a href="#" id="reply_close"><i class="fa fa-close"></i></a>
-                                        </span>
-                        {{-- <input type="text" name="title" class="form-control" placeholder="Enter title for comment"> --}}
-                        <textarea class="form-control" id="content" name="content" placeholder="Ctrl + Enter to post comment"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Files</label>
-                        @component('component.file_upload_field')@endcomponent
-                    </div>
-                    <input type="text" id="parent_comment" hidden name="parent_id" value="{{ $announcement->id }}">
-                    {{-- <input type="text" id="default_reference_id" hidden name="parent_id" value="{{ $announcement->parent_id }}"> --}}
-                    {{-- <input type="text" id="default_reference_type" hidden name="reference_type" value="{{ $announcement->reference_type }}"> --}}
-                    <input type="text" id="id_comment" hidden name="id_comment" value="{{ $announcement->id}}">
-
-                    <button type="submit" class="btn btn-success pull-right" {{-- id="btn_send_comment" --}} style="margin-top: 5px;">{!!trans('main.Send')!!}</button>
-                </form>
-            </div>
+    {{-- Scrollable comments region. .slimScrollDiv + #chat-box + #show_comments
+         + .chat class are read by public/js/comment.js. --}}
+    <div class="slimScrollDiv flex-1 overflow-y-auto px-5 py-4">
+        <div class="chat" id="chat-box">
+            <div id="show_comments"></div>
         </div>
-        <span id="announcements" data-announ-id="{{$announcement->id}}"></span>
-    </section>
+    </div>
+
+    <div class="border-t border-slate-200 bg-slate-50 px-5 py-3">
+        <form method="post"
+              action="{{ route('announcement_reply', ['id' => $announcement->id]) }}"
+              enctype="multipart/form-data"
+              id="form_comment"
+              class="space-y-3">
+            {{ csrf_field() }}
+
+            <div class="input-group flex items-stretch rounded border border-slate-300 bg-white shadow-subtle focus-within:ring-2 focus-within:ring-primary-600/30 focus-within:border-primary-600 overflow-hidden">
+                <span id="author_name" class="input-group-addon hidden items-center gap-1 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                    <span id="name"></span>
+                    <a href="#" id="reply_close" class="text-slate-500 hover:text-slate-900 ml-1">
+                        <x-ui.icon name="x" size="xs" />
+                    </a>
+                </span>
+                <textarea class="form-control block w-full px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none border-0"
+                          id="content"
+                          name="content"
+                          rows="3"
+                          placeholder="Ctrl + Enter to post comment"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Files</label>
+                @component('component.file_upload_field')@endcomponent
+            </div>
+
+            <input type="text" id="parent_comment" hidden name="parent_id" value="{{ $announcement->id }}">
+            <input type="text" id="id_comment" hidden name="id_comment" value="{{ $announcement->id }}">
+
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="btn btn-success pull-right inline-flex items-center gap-1.5 rounded bg-success-600 px-4 h-9 text-sm font-medium text-white hover:bg-success-700">
+                    <x-ui.icon name="send" size="sm" />
+                    {{ trans('main.Send') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Announcement id pointer read by comment.js. --}}
+<span id="announcements" data-announ-id="{{ $announcement->id }}" class="hidden"></span>
 @endsection
+
 @push('scripts')
 <script src="{{ asset('js/comment.js') }}"></script>
 @endpush

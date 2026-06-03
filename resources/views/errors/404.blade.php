@@ -1,71 +1,55 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Page Not Found')
+@section('title', 'Page not found')
+
 @section('content')
-<section class="content">
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="box box-danger">
-                <div class="box-header with-border">
-                    <h3 class="box-title">
-                        <i class="fa fa-exclamation-triangle"></i>
-                        404 - Page Not Found
-                    </h3>
-                </div>
-                <div class="box-body text-center">
-                    <div style="font-size: 120px; color: #dd4b39; margin: 20px 0;">
-                        <i class="fa fa-search"></i>
-                    </div>
+<div class="max-w-3xl mx-auto py-12">
+    <div class="rounded border border-slate-200 bg-white shadow-subtle overflow-hidden text-center">
 
-                    <h2>Oops! Page Not Found</h2>
+        <div class="border-b border-slate-200 px-5 py-3 flex items-center justify-center gap-2">
+            <x-ui.icon name="alert-triangle" class="text-danger-600" />
+            <h3 class="text-sm font-semibold text-slate-900">404 — Page not found</h3>
+        </div>
 
-                    @if(isset($message))
-                        <p class="lead">{{ $message }}</p>
-                    @else
-                        <p class="lead">The page you are looking for could not be found.</p>
-                    @endif
+        <div class="px-8 py-12">
+            <div class="mx-auto mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-danger-50 text-danger-600">
+                <x-ui.icon name="search-x" class="h-12 w-12" />
+            </div>
 
-                    <p>Here are some helpful links instead:</p>
+            <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">Oops! Page not found.</h2>
 
-                    <div class="row" style="margin-top: 30px;">
-                        <div class="col-sm-6">
-                            <a href="{{ url('/home') }}" class="btn btn-primary btn-lg">
-                                <i class="fa fa-dashboard"></i>
-                                Go to Dashboard
-                            </a>
-                        </div>
-                        <div class="col-sm-6">
-                            <a href="javascript:history.back()" class="btn btn-default btn-lg">
-                                <i class="fa fa-arrow-left"></i>
-                                Go Back
-                            </a>
-                        </div>
-                    </div>
+            @if(isset($message))
+                <p class="mt-3 text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">{{ $message }}</p>
+            @else
+                <p class="mt-3 text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+                    The page you are looking for could not be found.
+                </p>
+            @endif
 
-                    <hr style="margin: 30px 0;">
+            <p class="mt-8 text-xs uppercase tracking-wide text-slate-400">Here are some helpful links instead</p>
 
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <a href="{{ route('tour.index') }}" class="btn btn-info">
-                                <i class="fa fa-suitcase"></i>
-                                Tours
-                            </a>
-                        </div>
-                        <div class="col-sm-4">
-                            <a href="{{ route('clients.index') }}" class="btn btn-info">
-                                <i class="fa fa-users"></i>
-                                Clients
-                            </a>
-                        </div>
-                        <div class="col-sm-4">
-                            <a href="{{ route('announcements.index') }}" class="btn btn-info">
-                                <i class="fa fa-bullhorn"></i>
-                                Announcements
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <x-ui.button as="a" :href="url('/home')" variant="primary" icon="home">
+                    Dashboard
+                </x-ui.button>
+                <x-ui.button as="a" href="javascript:history.back()" variant="secondary" icon="arrow-left">
+                    Back
+                </x-ui.button>
+            </div>
+
+            <hr class="my-8 border-slate-200">
+
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <x-ui.button as="a" :href="route('tour.index')" variant="ghost" icon="briefcase" size="sm">
+                    Tours
+                </x-ui.button>
+                <x-ui.button as="a" :href="route('clients.index')" variant="ghost" icon="users" size="sm">
+                    Clients
+                </x-ui.button>
+                <x-ui.button as="a" :href="route('announcements.index')" variant="ghost" icon="megaphone" size="sm">
+                    Announcements
+                </x-ui.button>
             </div>
         </div>
     </div>
-</section>
+</div>
 @endsection

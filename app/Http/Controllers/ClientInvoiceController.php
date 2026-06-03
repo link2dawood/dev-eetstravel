@@ -47,51 +47,60 @@ class ClientInvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    /**
+     * AUDIT.md CC11 — was ClientInvoices::with(['client'])->get() (load
+     * full table) + per-row Tour::find + Client::find + Transaction::where
+     * with sum() (5 queries per row). Now paginate(20) + bulk-load.
+     */
     public function index()
     {
-        $clientInvoices = ClientInvoices::with(['client'])->orderBy('date', 'desc')->get();
+        $perPage = 20;
+        $page = ClientInvoices::with(['client'])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->paginate($perPage);
 
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'] ?? 'accounting.edit';
+        $permission_edit    = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices']    ?? 'accounting.edit';
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'] ?? 'accounting.destroy';
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'] ?? 'accounting.show';
+        $permission_show    = PermissionHelper::$relationsPermissionShow['App\ClientInvoices']    ?? 'accounting.show';
 
-        $perm = [];
-        $perm['show'] = Auth::user()->can($permission_show);
-        $perm['edit'] = Auth::user()->can($permission_edit);
-        $perm['destroy'] = Auth::user()->can($permission_destroy);
-        $perm['clone'] = Auth::user()->can('accounting.create') ?? false;
+        $perm = [
+            'show'    => Auth::user()->can($permission_show),
+            'edit'    => Auth::user()->can($permission_edit),
+            'destroy' => Auth::user()->can($permission_destroy),
+            'clone'   => Auth::user()->can('accounting.create') ?? false,
+        ];
 
-        // Process each invoice to add computed fields
-        $accountingData = $clientInvoices->map(function ($invoice) use ($perm) {
-            // Tour name
-            $tour = Tour::find($invoice->tour_id);
-            $invoice->tourName = $tour->name ?? '';
+        // Bulk-load every Tour referenced on this page (Client is already
+        // eager-loaded by ->with(['client'])).
+        $tourIds    = $page->getCollection()->pluck('tour_id')->filter()->unique();
+        $invoiceIds = $page->getCollection()->pluck('id')->filter()->unique();
+        $tours      = Tour::whereIn('id', $tourIds)->get(['id', 'name'])->keyBy('id');
 
-            // Client name
-            $client = Client::find($invoice->client_id);
-            $invoice->clientName = $client->name ?? '';
+        // Aggregate payments per invoice in ONE grouped query.
+        $paidByInvoice = Transaction::whereIn('invoice_id', $invoiceIds)
+            ->where('pay_to', 'Client')
+            ->selectRaw('invoice_id, SUM(amount) AS paid')
+            ->groupBy('invoice_id')
+            ->pluck('paid', 'invoice_id');
 
-            // Status calculation
-            $transaction = Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Client");
-            $sum_amount = $transaction->sum("amount");
-            $amount = $invoice->amount_receiveable ?? 0;
-            $remaining_amount = $amount - $sum_amount;
+        $page->getCollection()->transform(function ($invoice) use ($tours, $paidByInvoice) {
+            $invoice->tourName   = optional($tours->get($invoice->tour_id))->name ?? '';
+            $invoice->clientName = optional($invoice->client)->name ?? '';
 
-            if ($sum_amount == $amount) {
-                $result = "Paid";
-            } elseif ($sum_amount == 0) {
-                $result = "They Owe " . $amount;
+            $paid   = (float) ($paidByInvoice[$invoice->id] ?? 0);
+            $amount = (float) ($invoice->amount_receiveable ?? 0);
+            if (abs($paid - $amount) < 0.005) {
+                $invoice->Status = 'Paid';
+            } elseif ($paid == 0) {
+                $invoice->Status = 'They Owe ' . $amount;
             } else {
-                $result = "They Owe " . $remaining_amount;
+                $invoice->Status = 'They Owe ' . ($amount - $paid);
             }
-            $invoice->Status = $result;
-
-            // Action buttons will be generated in the view using the action_buttons component
-
             return $invoice;
         });
 
-        return view('accounting.index', compact('accountingData'));
+        return view('accounting.index', ['accountingData' => $page]);
     }
     
     public function getButton($id, $isQuotation = false, $tour, array $perm)

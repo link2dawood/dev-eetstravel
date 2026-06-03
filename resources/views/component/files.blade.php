@@ -1,153 +1,158 @@
-<div class="row">
-    <div class="@if(isset($tour)) col-md-6 @else col-md-12 @endif">
+{{-- Attached files component. Renders three blocks:
+       1. Image thumbnails (always)
+       2. Landing-page image picker (when $tour is provided)
+       3. Generic attachments table
+     JS hooks at the bottom — magnificPopup gallery on .image, click
+     handler on .del-attach for AJAX delete, click on .link_file to
+     open a new tab. .del-container is the row/card the JS hides on
+     successful delete. --}}
 
-        <div class="panel panel-info table_photos">
-            <div class="panel-heading">{!!trans('main.Photos')!!}</div>
-            <div class="panel-body image">
-                @foreach($files['image'] as $image)
-                <div class="panel panel-default del-container" style="display: inline-block; height: 325px; width: 350px;">
-                    <div class="panel-heading">
-                        {{-- <form action="{{route('file_delete', ['id' => $image->id])}}" method="post"> --}}
-                            {{-- {{csrf_field()}} --}}
-                            <button class="btn btn-danger btn-xs del-attach" data-attach-id="{{$image->id}}" data-attach-url="{{route('file_delete', ['id' => $image->id])}}">
-                                <span class="glyphicon glyphicon-remove" aria-hidden="true" title="Delete"></span>
-                            </button>
-                            {{-- </form> --}}
+<div class="grid grid-cols-1 {{ isset($tour) ? 'md:grid-cols-2' : '' }} gap-4">
+
+    {{-- Photos block --}}
+    <div class="rounded border border-slate-200 bg-white shadow-subtle overflow-hidden table_photos">
+        <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+            <x-ui.icon name="image" class="text-primary-600" size="sm" />
+            <h3 class="text-sm font-semibold text-slate-900">{{ trans('main.Photos') }}</h3>
+        </div>
+        <div class="image px-5 py-4 flex flex-wrap gap-3">
+            @forelse($files['image'] as $image)
+                <div class="del-container relative rounded border border-slate-200 bg-white overflow-hidden" style="width: 220px;">
+                    <div class="absolute top-2 right-2 z-10">
+                        <button class="del-attach inline-flex h-7 w-7 items-center justify-center rounded bg-danger-600 text-white shadow-overlay hover:bg-danger-700"
+                                data-attach-id="{{ $image->id }}"
+                                data-attach-url="{{ route('file_delete', ['id' => $image->id]) }}"
+                                title="Delete">
+                            <x-ui.icon name="x" size="xs" />
+                        </button>
                     </div>
-                    <div class="panel-body">
-                        <a href="{{'/public'.$image->attach->url()}}"><img src="{{'/public'.$image->attach->url()}}" style="height: 250px; max-width: 325px"></a>
-                    </div>
+                    <a href="{{ '/public' . $image->attach->url() }}" class="block">
+                        <img src="{{ '/public' . $image->attach->url() }}"
+                             class="block w-full"
+                             style="height: 170px; object-fit: cover;"
+                             alt="Photo">
+                    </a>
                 </div>
-                @endforeach
-            </div>
+            @empty
+                <p class="text-sm text-slate-500 italic">No photos uploaded.</p>
+            @endforelse
         </div>
     </div>
+
+    {{-- Landing-page image picker (only when $tour exists) --}}
     @if(isset($tour))
-    <div class="col-md-6">
-        <div class="panel panel-info table_photos">
-            <div class="panel-heading">{!!trans('main.imageforlanding')!!}</div>
-            <div class="panel-body image">
-                <div class="form-group">
-                    <div class="thumbnail text-center">
-                        <img class="pic" style="max-height: 350px;" src="@if($tour->attachments()->first() != null) {{ $tour->attachments()->first()->url }} @endif" alt="Image for landing page" style="width:100%">
-                        <div class="caption">
+        <div class="rounded border border-slate-200 bg-white shadow-subtle overflow-hidden table_photos">
+            <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+                <x-ui.icon name="image-plus" class="text-primary-600" size="sm" />
+                <h3 class="text-sm font-semibold text-slate-900">{{ trans('main.imageforlanding') }}</h3>
+            </div>
+            <div class="image px-5 py-4">
+                <div class="rounded border border-slate-200 bg-slate-50 text-center p-4">
+                    <img class="pic mx-auto"
+                         src="@if($tour->attachments()->first()){{ $tour->attachments()->first()->url }}@endif"
+                         alt="Image for landing page"
+                         style="max-height: 320px; max-width: 100%; object-fit: contain;">
 
-                            <div class="upload-btn-wrapper">
-                                <label for="check" class="btn btn-primary">Change</label>
-                                <input id="check" name="fileToUpload[]" data-model="Tour" data-id="{{ $tour->id }}"class="fileToUpload"type="file"  style="display:none"/>
-                            </div>
-                        </div>
+                    <div class="upload-btn-wrapper inline-block mt-3">
+                        <label for="check"
+                               class="btn btn-primary inline-flex items-center gap-1.5 rounded bg-primary-600 px-3 h-9 text-sm font-medium text-white hover:bg-primary-700 cursor-pointer">
+                            <x-ui.icon name="upload" size="sm" />
+                            Change
+                        </label>
+                        <input id="check"
+                               name="fileToUpload[]"
+                               data-model="Tour"
+                               data-id="{{ $tour->id }}"
+                               class="fileToUpload hidden"
+                               type="file">
                     </div>
-                    {{--        
-                    <div class="thumbnail text-center">
-                        <img class="pic" style="max-height: 350px;" src="@if($tour->attachments()->first() != null) {{ $tour->attachments()->first()->url }} @endif" alt="Image for landing page" style="width:100%">
-                    </div>   
-                    --}}        
                 </div>
             </div>
         </div>
-    </div>
     @endif
 </div>
 
+{{-- Generic attachments table --}}
+<div class="mt-4 rounded border border-slate-200 bg-white shadow-subtle overflow-hidden">
+    <div class="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+        <x-ui.icon name="paperclip" class="text-primary-600" size="sm" />
+        <h3 class="text-sm font-semibold text-slate-900">{{ trans('main.Files') }}</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="table w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <th class="px-4 py-3">{{ trans('main.Name') }}</th>
+                    <th class="px-4 py-3 text-right" style="width: 180px">{{ trans('main.Uploaded') }}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($files['attach'] as $attach)
+                    <tr class="del-container hover:bg-slate-50">
+                        <td class="px-4 py-3">
+                            <div class="link_attach_file inline-flex items-center gap-2">
+                                <a href="{{ url('public/' . $attach->attach->url()) }}" target="_blank" class="link_file inline-flex items-center gap-2 text-primary-700 hover:text-primary-900">
+                                    <x-ui.icon name="paperclip" size="sm" />
+                                    <span class="name_link_file">{{ $attach->attach_file_name }}</span>
+                                </a>
+                            </div>
+                            <button class="del-attach inline-flex h-7 w-7 items-center justify-center rounded bg-danger-600 text-white hover:bg-danger-700 ml-2 align-middle"
+                                    data-attach-url="{{ route('file_delete', ['id' => $attach->id]) }}"
+                                    title="Delete">
+                                <x-ui.icon name="x" size="xs" />
+                            </button>
+                        </td>
+                        <td class="px-4 py-3 text-right text-xs text-slate-500 font-mono">
+                            {{ $attach->created_at }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="2" class="px-4 py-10 text-center text-sm text-slate-500 italic">
+                            No files uploaded.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
-            <div class="panel panel-default">
-                <div class="panel-heading">{!!trans('main.Files')!!}</div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>{!!trans('main.Name')!!}</th>
-                            <th>{!!trans('main.Uploaded')!!}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($files['attach'] as $attach)
-                        <tr class='del-container'>
-                            <td>
-                                <div class="link_attach_file">
-                                    <a href="{{url('public/'.$attach->attach->url())}}" target="_blank" class="link_file">
-                                        <span class="glyphicon glyphicon-paperclip"></span>
-                                        <span class="name_link_file">{{$attach->attach_file_name}}</span>
-                                    </a>
-                                </div>
-                                <div style="display: inline-block" class="pull-right">
-                                    {{-- <form action="{{route('file_delete', ['id' => $attach->id])}}" method="post"> --}}
-                                        {{-- {{csrf_field()}} --}}
-                                        <button class="btn btn-danger btn-xs del-attach" data-attach-url="{{route('file_delete', ['id' => $attach->id])}}">
-                                            <span class="glyphicon glyphicon-remove" aria-hidden="true" title="Delete"></span>
-                                        </button>
-                                        {{-- </form> --}}
-                                </div>
-                            </td>
-                            <td><span>{{$attach->created_at}}</span></td>
-                        </tr>
+@push('scripts')
+<script>
+    $('.link_file').click(function (e) {
+        window.open($(this).attr('href'));
+    });
 
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+    $('.image').magnificPopup({
+        delegate: 'a',
+        type: 'image',
+        gallery: { enabled: true }
+    });
 
-            <style>
-                .link_attach_file {
-                    display: inline-block;
+    $('.del-attach').on('click', function (e) {
+        e.preventDefault();
+        let elem = $(this).context;
+        let deleteUrl = $(elem).attr('data-attach-url');
+
+        // Ask for confirmation before proceeding
+        let confirmDelete = confirm("Are you sure you want to delete this attachment?");
+
+        if (confirmDelete) {
+            $.ajax({
+                url: deleteUrl,
+                method: 'POST',
+                data: { "_token": "{{ csrf_token() }}" },
+                success: (res) => {
+                    $(this).closest('.del-container').hide();
+                },
+                error: (res) => {
+                    console.log(res);
                 }
-
-                .link_attach_file > a {
-                    color: #333;
-                    text-decoration: none;
-                }
-
-                .link_attach_file > a > span {
-                    line-height: 0;
-                    vertical-align: middle;
-                }
-
-                .name_link_file{
-                    margin-left: 10px;
-                }
-
-                .link_attach_file > a:hover .name_link_file{
-                    text-decoration: underline;
-                }
-            </style>
-
-            @push('scripts')
-            <script>
-                $('.link_file').click(function (e) {
-                    window.open($(this).attr('href'));
-                });
-                $('.image').magnificPopup({
-                    delegate: 'a',
-                    type: 'image',
-                    gallery: {enabled: true}
-                });
-               $('.del-attach').on('click', function (e) {
-					e.preventDefault();
-					let elem = $(this).context;
-					let deleteUrl = $(elem).attr('data-attach-url');
-
-					// Ask for confirmation before proceeding
-					let confirmDelete = confirm("Are you sure you want to delete this attachment?");
-
-					if (confirmDelete) {
-						$.ajax({
-							url: deleteUrl,
-							method: 'POST',
-							data: {
-								"_token": "{{csrf_token()}}"
-							},
-							success: (res) => {
-								$(this).closest('.del-container').hide();
-							},
-							error: (res) => {
-								console.log(res);
-							}
-						});
-					} else {
-						// Do nothing if user cancels
-						console.log("Deletion cancelled.");
-					}
-				});
-
-            </script>
-            @endpush
+            });
+        } else {
+            console.log("Deletion cancelled.");
+        }
+    });
+</script>
+@endpush

@@ -12,10 +12,10 @@
             </h3>
 
             <div class="form-inline relative flex items-center gap-1">
-                <span id="filter" class="btn btn-box-tool inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Filter">
+                <span id="filter" class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Filter">
                     <x-ui.icon name="filter" size="sm" />
                 </span>
-                <span id="help" class="btn btn-box-tool inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Help">
+                <span id="help" class="inline-flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 cursor-pointer" title="Help">
                     <x-ui.icon name="help-circle" size="sm" />
                 </span>
 

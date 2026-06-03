@@ -164,8 +164,13 @@ class SeedTestTour extends Command
                     $pkg->pax_free     = 2;
                     $pkg->total_amount = $p['total'];
                     $pkg->currency     = 'EUR';
-                    $pkg->time_from    = $p['time_from'];
-                    $pkg->time_to      = $p['time_to'];
+                    // time_from / time_to are DATETIME columns. If we hand
+                    // MySQL a bare "09:00:00" it parses the "09" as a year
+                    // suffix and stores "2009-00-00 00:00:00". Compose the
+                    // full datetime so the time component lands on the
+                    // package's own day.
+                    $pkg->time_from    = $day->date . ' ' . $p['time_from'];
+                    $pkg->time_to      = $day->date . ' ' . $p['time_to'];
                     $pkg->rate         = '';
                     $pkg->note         = '';
                     $pkg->type         = $p['type'];

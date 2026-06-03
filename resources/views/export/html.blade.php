@@ -834,48 +834,51 @@ header("content-disposition: attachment;filename=". $download_name ."");
                     <td ></td>
                     <td>{!! $tour->phone  !!}</td>
                 </tr>
-                @if(count($tourTransfers) > 0)
-                    @foreach ($tourTransfers as $package)
-					<tr>
-                        <td ></td>
-                        <td >{{--<h4 class="text_color border_up">Driver:</h4>--}}</td>
-                    </tr>
-					<tr>
-                            <td ></td>
-                        <td >{{--$package->name--}}</td>
-                    </tr>
-                    <tr>
-                        <td ></td>
-                        <td >{{--<h4 class="text_color">Mobile:</h4>--}}</td>
-                    </tr>
-					<tr>
-						<td ></td>
-                        <td >
-                            @forelse($package->getTransferDrivers() as $driver)
-                            <h4 class="text_color border_up">{!!trans('main.Driver')!!}:</h4>
-                                {{ $driver->name }}
-                                <h4 class="text_color"><br>{!!trans('main.Mobile')!!}:</h4>
-                                <span style="display: block">{{ $driver->phone }}</span>
-                            @empty
-                            @endforelse
-                        </td>
-                   </tr>
-                    <tr>
-                        <td ></td>
-                        <td ><h4 class="text_color" >Coach Details:</h4></td>
-                    </tr>
-					<tr>
-						<td ></td>
-                        <td >
-                            {{ $package->name }}
-{{--                             @foreach( \App\Status::where('type', 'bus')->get() as $item)
-                                @if($item->id == $package->status ) {{$item->name}} <br>@endif
-                            @endforeach --}}
-                        <br>
-                            {{ \Carbon\Carbon::parse($package->time_from)->format('m-d-Y')}}<br>
-                            {{ \Carbon\Carbon::parse($package->time_to)->format('m-d-Y')}}
-                        </td>
-                   </tr>
+                {{-- $tourTransfers is Tour::transfers() which actually returns ALL
+                     packages on the tour (the relation is misnamed hasMany TourPackage).
+                     Only the type=3 (transfer) packages have driver / coach info to render,
+                     so guard the whole block — without this every hotel / restaurant / event
+                     also rendered an empty "Coach Details" row. Also: time_from / time_to are
+                     stored as DATETIME (date + time-of-day). The original code formatted them
+                     as 'm-d-Y' which produced garbage like '11-30-2008' / '11-30--0001';
+                     the times themselves are what the operator wants on a coach plan. --}}
+                @php
+                    $transferPackages = collect($tourTransfers ?? [])->where('type', 3);
+                @endphp
+                @if($transferPackages->count() > 0)
+                    @foreach ($transferPackages as $package)
+                        <tr>
+                            <td></td>
+                            <td>
+                                @forelse($package->getTransferDrivers() as $driver)
+                                    <h4 class="text_color border_up">{!! trans('main.Driver') !!}:</h4>
+                                    {{ $driver->name }}
+                                    <h4 class="text_color"><br>{!! trans('main.Mobile') !!}:</h4>
+                                    <span style="display: block">{{ $driver->phone }}</span>
+                                @empty
+                                @endforelse
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><h4 class="text_color">Coach Details:</h4></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                {{ $package->name }}<br>
+                                @php
+                                    try {
+                                        $tf = $package->time_from ? \Carbon\Carbon::parse($package->time_from) : null;
+                                        $tt = $package->time_to   ? \Carbon\Carbon::parse($package->time_to)   : null;
+                                    } catch (\Throwable $e) {
+                                        $tf = $tt = null;
+                                    }
+                                @endphp
+                                @if($tf) {{ $tf->format('Y-m-d H:i') }}<br>@endif
+                                @if($tt) {{ $tt->format('Y-m-d H:i') }} @endif
+                            </td>
+                        </tr>
                     @endforeach
                 @endif
                 </tbody>

@@ -15,39 +15,43 @@
 
             </div>
 
-            <div class="box box-body" style="border-top: none">
-                <div class="trip_update">
+            <div class="px-5 py-4 space-y-4">
+                <div class="trip_update"></div>
 
+                <div class="overlay hidden flex items-center justify-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status" aria-label="Loading"></div>
                 </div>
 
+                <span id="showPreviewBlock" data-info="{{ true }}" class="hidden"></span>
 
-                <div class="overlay" style="display: none">
-                    <i class="fa fa-refresh fa-spin"></i>
-                </div>
-
-                <span id="showPreviewBlock" data-info="{{ true }}"></span>
-                <div class="box box-success" style="position: relative; left: 0px; top: 0px;">
-                    <div class="box-header ui-sortable-handle" style="cursor: move;">
-                        <i class="fa fa-comments-o"></i>
-                        <h3 class="box-title">{!!trans('main.Comments')!!}</h3>
+                {{-- Comments panel --}}
+                <div class="rounded border border-slate-200 bg-white shadow-subtle flex flex-col">
+                    <div class="border-b border-slate-200 px-4 py-3 flex items-center gap-2 cursor-move ui-sortable-handle">
+                        <x-ui.icon name="messages-square" class="text-success-600" size="sm" />
+                        <h3 class="text-sm font-semibold text-slate-900">{!! trans('main.Comments') !!}</h3>
                     </div>
-                    <div class="box-body">
-                        <div class="slimScrollDiv" style="position: relative; overflow-y: scroll;  width: auto;">
-                            <div class="box-body box chat" id="chat-box" style="width: auto; height: auto;">
-                                <div id="show_comments" style="max-height: 300px"></div>
+                    <div class="p-4">
+                        <div class="slimScrollDiv max-h-[300px] overflow-y-auto pr-1">
+                            <div class="chat" id="chat-box">
+                                <div id="show_comments"></div>
                             </div>
-                            <div class="slimScrollRail" style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51) none repeat scroll 0% 0%; opacity: 0.2; z-index: 90; right: 1px;"></div>
                         </div>
                     </div>
-                    <!-- /.chat -->
-                    <div class="box-footer">
-                        <form method='POST' action='{{route('comment.store')}}' enctype="multipart/form-data" id="form_comment">
-                            <div class="input-group" style="width: 100%">
-                                    <span id="author_name" class="input-group-addon">
-                                        <span id="name"></span>
-                                        <a href="#" id="reply_close"><i class="fa fa-close"></i></a>
-                                    </span>
-                                <textarea class="form-control" id="content" name="content" placeholder="Ctrl + Enter to post comment"></textarea>
+
+                    <div class="border-t border-slate-200 bg-slate-50 px-4 py-3">
+                        <form method="POST" action="{{ route('comment.store') }}" enctype="multipart/form-data" id="form_comment" class="space-y-3">
+                            <div class="input-group flex items-stretch rounded border border-slate-300 bg-white shadow-subtle focus-within:ring-2 focus-within:ring-primary-600/30 focus-within:border-primary-600 overflow-hidden">
+                                <span id="author_name" class="input-group-addon hidden items-center gap-1 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                                    <span id="name"></span>
+                                    <a href="#" id="reply_close" class="text-slate-500 hover:text-slate-900 ml-1">
+                                        <x-ui.icon name="x" size="xs" />
+                                    </a>
+                                </span>
+                                <textarea class="form-control block w-full px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none border-0"
+                                          id="content"
+                                          name="content"
+                                          rows="3"
+                                          placeholder="Ctrl + Enter to post comment"></textarea>
                             </div>
 
                             <div class="form-group">
@@ -94,7 +98,6 @@
 
                 </div>
 
-                <div class="box box-body">
                     <div class="modal-body">
 
                         <input type='hidden' name='_token' value='{{Session::token()}}'>
@@ -164,9 +167,9 @@
 
                         <div class="form-group">
                             <label for="start_date">{!!trans('main.StartDate')!!}</label>
-                            <div class="input-group date">
-                                <div class="input-group-addon">
-                                    <i class="fa fa-calendar"></i>
+                            <div class="input-group date relative">
+                                <div class="input-group-addon pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <x-ui.icon name="calendar" size="sm" />
                                 </div>
                                 {!! Form::text('start_date', '', ['class' => 'form-control clear_input pull-right datepicker datepicker_bus_day_dep',
                                  'id' => 'start_date' , 'required',
@@ -177,9 +180,9 @@
                         </div>
                         <div class="form-group">
                             <label for="departure_date">{!!trans('main.EndDate')!!}</label>
-                            <div class="input-group date">
-                                <div class="input-group-addon">
-                                    <i class="fa fa-calendar"></i>
+                            <div class="input-group date relative">
+                                <div class="input-group-addon pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                    <x-ui.icon name="calendar" size="sm" />
                                 </div>
                                 {!! Form::text('end_date', '', ['class' => 'form-control clear_input pull-right datepicker datepicker_bus_day_ret',
                                  'id' => 'end_date', 'required',
@@ -238,8 +241,8 @@
                         <!-- Tour Fields -->
                     </div>
 
-                    <div class="overlay" style="display: none">
-                        <i class="fa fa-refresh fa-spin"></i>
+                    <div class="overlay hidden flex items-center justify-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status" aria-label="Loading"></div>
                     </div>
 
                     <div class="modal-footer">
@@ -247,7 +250,6 @@
                         <button class='btn btn-primary trip_btn' type='submit'>{!!trans('main.Add')!!}</button>
                         <button class='btn btn-primary tour_btn' id="tour_add_calendar" onclick="createTransferInTour();" type='button'>{!!trans('main.Add')!!}</button>
                     </div>
-                </div>
 
 
          </form>

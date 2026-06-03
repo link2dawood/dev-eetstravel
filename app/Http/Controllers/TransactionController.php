@@ -41,8 +41,13 @@ class TransactionController extends Controller
 	 */
 	public function index()
 	{
-		$this->updateDeferredRevenueToSalesRevenue();
-		$this->updatePayableToCash();
+		// $this->updateDeferredRevenueToSalesRevenue();
+		// $this->updatePayableToCash();
+		// — removed: the methods these called were deleted from this
+		// controller in an earlier refactor; the callsites were left
+		// behind and triggered "Method does not exist" on every /transaction
+		// hit. If the accounting transitions are needed elsewhere they
+		// should be implemented as services and called from there.
 
 		$perPage = 20;
 		$page = Transaction::orderByDesc('id')->paginate($perPage);

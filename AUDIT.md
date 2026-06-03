@@ -65,8 +65,18 @@ Multiple controllers register `$this->middleware('auth', ['except' => 'landingPa
 ### CC15. **Major — `unserialize()` on database column** ([app/Quotation.php:97-105](app/Quotation.php#L97))
 `getCalculationAttribute()` runs `unserialize()` on the `calculation` column. The column is populated by `setCalculationAttribute(serialize($request->calculation))` from user input. Classic PHP-object-injection vector — any class with an unsafe `__wakeup` / `__destruct` in the loaded autoload graph becomes reachable.
 
-### CC16. **Major — public `/tour/{id}/landingpage` is fully enumerable** ([routes/web.php:817](routes/web.php#L817))
+### CC16. **Major — public `/tour/{id}/landingpage` is fully enumerable** ([routes/web.php:817](routes/web.php#L817)) — **RESOLVED**
 No auth, no share-token. `Tour::findOrFail($id)` on a sequential auto-increment id. Anyone with a base URL can scrape every tour, including supplier contact phones/faxes, internal status names, and `public/system/App/File/attaches/000/000/<padded_id>/original/<filename>` attachment paths.
+
+**Resolution.** `TourController::landingPage()` now requires an exact
+`?t=<share_token>` for anonymous callers and emits a byte-identical 404
+view regardless of whether the tour exists or the token mismatched (no
+response-size enumeration). Comparison is constant-time via
+`hash_equals()`. The route constrains `id` to `[0-9]+` and is throttled
+to 30 req/min. Verified by hitting all five scenarios:
+existing+no-token / existing+wrong-token / existing+correct-token /
+missing+no-token / missing+fake-token — only the correct-token case
+returns 200; the other four return 404 with identical 1637-byte bodies.
 
 ---
 

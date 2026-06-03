@@ -1,1187 +1,1218 @@
-@if(isset($isDoc) and $isDoc)
+@if(isset($isDoc) && $isDoc)
 <?php
 header("Content-Type: application/vnd.ms-word");
 header("Expires: 0");
 header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-header("content-disposition: attachment;filename=". $download_name ."");
+header("content-disposition: attachment; filename=" . ($download_name ?? 'itinerary.doc'));
 ?>
 @endif
+@php
+    // ─── helpers ────────────────────────────────────────────────────────────
+    $serviceTypeMap = [
+        0 => ['letter' => 'H', 'label' => 'Hotel',      'color' => '#8b6f47'],
+        1 => ['letter' => 'E', 'label' => 'Event',      'color' => '#a85432'],
+        2 => ['letter' => 'G', 'label' => 'Guide',      'color' => '#3d5942'],
+        3 => ['letter' => 'T', 'label' => 'Transfer',   'color' => '#3a3f4a'],
+        4 => ['letter' => 'R', 'label' => 'Restaurant', 'color' => '#a05c2c'],
+        5 => ['letter' => 'P', 'label' => 'Package',    'color' => '#3d4d62'],
+        6 => ['letter' => 'C', 'label' => 'Cruise',     'color' => '#2c5560'],
+        7 => ['letter' => 'F', 'label' => 'Flight',     'color' => '#1f3a5f'],
+    ];
 
+    $roman = function ($n) {
+        if ($n < 1) return '';
+        if ($n > 40) return (string) $n;
+        $map = [
+            '', 'I','II','III','IV','V','VI','VII','VIII','IX','X',
+            'XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX',
+            'XXI','XXII','XXIII','XXIV','XXV','XXVI','XXVII','XXVIII','XXIX','XXX',
+            'XXXI','XXXII','XXXIII','XXXIV','XXXV','XXXVI','XXXVII','XXXVIII','XXXIX','XL',
+        ];
+        return $map[(int) $n] ?? (string) $n;
+    };
+
+    $tryParse = function ($v) {
+        if (empty($v)) return null;
+        try { return \Carbon\Carbon::parse($v); }
+        catch (\Throwable $e) { return null; }
+    };
+
+    $fmtTime = function ($v) use ($tryParse) {
+        $c = $tryParse($v);
+        return $c ? $c->format('H:i') : null;
+    };
+
+    // ─── tour metadata ──────────────────────────────────────────────────────
+    $depCarbon = $tryParse($tour->departure_date ?? null);
+    $retCarbon = $tryParse($tour->retirement_date ?? null);
+    $tourLength = ($depCarbon && $retCarbon) ? ($depCarbon->diffInDays($retCarbon) + 1) : null;
+
+    // ─── derived collections ────────────────────────────────────────────────
+    $transferList = collect($tourTransfers ?? [])->where('type', 3)->values();
+
+    // hotels aggregated across days
+    $hotelIndex = [];
+    foreach ($tourDays ?? [] as $day) {
+        foreach ($day->packages ?? [] as $p) {
+            if ((int) ($p->type ?? -1) !== 0) continue;
+            $key = ($p->reference ?? '_') . '|' . ($p->name ?? '');
+            if (!isset($hotelIndex[$key])) {
+                $hotelIndex[$key] = ['name' => $p->name ?? 'Hotel', 'package' => $p, 'dates' => []];
+            }
+            $hotelIndex[$key]['dates'][] = $day->date;
+        }
+    }
+    $totalNights = array_sum(array_map(fn ($h) => count($h['dates']), $hotelIndex));
+
+    // route summary from begin/end cities (falls back to first/last day cities)
+    $route = array_values(array_filter([
+        $tour->city_begin ?? null,
+        $tour->city_end ?? null,
+    ]));
+
+    // doc generation timestamp
+    $issuedAt = \Carbon\Carbon::now();
+
+    // logo lookup (case-insensitive helper)
+    $logoFile = null;
+    foreach (['eets_logo.png', 'Eets_logo.png', 'eets_logo.jpg', 'EETS_logo.png'] as $candidate) {
+        if (is_file(public_path('img/' . $candidate))) { $logoFile = $candidate; break; }
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{!!trans('main.Itinerary')!!} - {{ $tour->name }}</title>
-    <!-- Bootstrap -->
-    <style>
-        /*!
-         * Bootstrap v3.3.7 (http://getbootstrap.com)
-         * Copyright 2011-2016 Twitter, Inc.
-         * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
-         *//*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
-        html {
-            font-family: sans-serif;
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%
-        }
-
-        body {
-            margin: 0;
-        }
-        
-        .page-break{
-            page-break-after: always;
-            margin-top: 30px;
-        }
-
-        .column{
-            width: 50%;
-
-        }
-        * {
-            -webkit-box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            box-sizing: border-box
-        }
-
-        :after, :before {
-            -webkit-box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            box-sizing: border-box
-        }
-
-        html {
-            font-size: 10px;
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0)
-        }
-
-        body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.42857143;
-            color: #333;
-            background-color: #fff
-        }
-
-        button, input, select, textarea {
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit
-        }
-
-        a {
-            color: #337ab7;
-            text-decoration: none
-        }
-
-        a:focus, a:hover {
-            color: #23527c;
-            text-decoration: underline
-        }
-
-        a:focus {
-            outline: 5px auto -webkit-focus-ring-color;
-            outline-offset: -2px
-        }
-        figure {
-            margin: 0
-        }
-
-        img {
-            vertical-align: middle
-        }
-
-        [role=button] {
-            cursor: pointer
-        }
-
-        .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
-            font-family: inherit;
-            font-weight: 500;
-            line-height: 1.1;
-            color: inherit
-        }
-
-        .h1 .small, .h1 small, .h2 .small, .h2 small, .h3 .small, .h3 small, .h4 .small, .h4 small, .h5 .small, .h5 small, .h6 .small, .h6 small, h1 .small, h1 small, h2 .small, h2 small, h3 .small, h3 small, h4 .small, h4 small, h5 .small, h5 small, h6 .small, h6 small {
-            font-weight: 400;
-            line-height: 1;
-            color: #777
-        }
-
-        .h1, .h2, .h3, h1, h2, h3 {
-            margin-top: 20px;
-            margin-bottom: 10px
-        }
-
-        .h1 .small, .h1 small, .h2 .small, .h2 small, .h3 .small, .h3 small, h1 .small, h1 small, h2 .small, h2 small, h3 .small, h3 small {
-            font-size: 65%
-        }
-
-        .h4, .h5, .h6, h4, h5, h6 {
-            margin-top: 10px;
-            margin-bottom: 10px
-        }
-
-        .h4 .small, .h4 small, .h5 .small, .h5 small, .h6 .small, .h6 small, h4 .small, h4 small, h5 .small, h5 small, h6 .small, h6 small {
-            font-size: 75%
-        }
-
-        .h1, h1 {
-            font-size: 36px
-        }
-
-        .h2, h2 {
-            font-size: 30px
-        }
-
-        .h3, h3 {
-            font-size: 24px
-        }
-
-        .h4, h4 {
-            font-size: 18px
-        }
-
-        .h5, h5 {
-            font-size: 14px
-        }
-
-        .h6, h6 {
-            font-size: 12px
-        }
-
-        p {
-            margin: 0 0 10px
-        }
-
-        .lead {
-            margin-bottom: 20px;
-            font-size: 16px;
-            font-weight: 300;
-            line-height: 1.4
-        }
-        .container-fluid {
-            padding-right: 15px;
-            padding-left: 15px;
-            margin-right: auto;
-            margin-left: 15px;
-            max-width: 220mm;
-            text-align: left;
-        }
-
-        .row {
-            margin-right: -15px;
-            margin-left: -15px
-        }
-
-        .col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
-            position: relative;
-            min-height: 1px;
-            padding-right: 15px;
-            padding-left: 15px
-        }
-
-        @media (min-width: 768px) {
-            .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
-                float: left
-            }
-
-            .col-sm-12 {
-                width: 100%
-            }
-
-            .col-sm-11 {
-                width: 91.66666667%
-            }
-
-            .col-sm-10 {
-                width: 83.33333333%
-            }
-
-            .col-sm-9 {
-                width: 75%
-            }
-
-            .col-sm-8 {
-                width: 66.66666667%
-            }
-
-            .col-sm-7 {
-                width: 58.33333333%
-            }
-
-            .col-sm-6 {
-                float: left;
-                width: 50%
-            }
-
-            .col-sm-5 {
-                width: 41.66666667%
-            }
-
-            .col-sm-4 {
-                width: 33.33333333%
-            }
-
-            .col-sm-3 {
-                width: 25%
-            }
-
-            .col-sm-2 {
-                width: 16.66666667%
-            }
-
-            .col-sm-1 {
-                width: 8.33333333%
-            }
-
-            .col-sm-pull-12 {
-                right: 100%
-            }
-
-            .col-sm-pull-11 {
-                right: 91.66666667%
-            }
-
-            .col-sm-pull-10 {
-                right: 83.33333333%
-            }
-
-            .col-sm-pull-9 {
-                right: 75%
-            }
-
-            .col-sm-pull-8 {
-                right: 66.66666667%
-            }
-
-            .col-sm-pull-7 {
-                right: 58.33333333%
-            }
-
-            .col-sm-pull-6 {
-                right: 50%
-            }
-
-            .col-sm-pull-5 {
-                right: 41.66666667%
-            }
-
-            .col-sm-pull-4 {
-                right: 33.33333333%
-            }
-
-            .col-sm-pull-3 {
-                right: 25%
-            }
-
-            .col-sm-pull-2 {
-                right: 16.66666667%
-            }
-
-            .col-sm-pull-1 {
-                right: 8.33333333%
-            }
-
-            .col-sm-pull-0 {
-                right: auto
-            }
-
-            .col-sm-push-12 {
-                left: 100%
-            }
-
-            .col-sm-push-11 {
-                left: 91.66666667%
-            }
-
-            .col-sm-push-10 {
-                left: 83.33333333%
-            }
-
-            .col-sm-push-9 {
-                left: 75%
-            }
-
-            .col-sm-push-8 {
-                left: 66.66666667%
-            }
-
-            .col-sm-push-7 {
-                left: 58.33333333%
-            }
-
-            .col-sm-push-6 {
-                left: 50%
-            }
-
-            .col-sm-push-5 {
-                left: 41.66666667%
-            }
-
-            .col-sm-push-4 {
-                left: 33.33333333%
-            }
-
-            .col-sm-push-3 {
-                left: 25%
-            }
-
-            .col-sm-push-2 {
-                left: 16.66666667%
-            }
-
-            .col-sm-push-1 {
-                left: 8.33333333%
-            }
-
-            .col-sm-push-0 {
-                left: auto
-            }
-
-            .col-sm-offset-12 {
-                margin-left: 100%
-            }
-
-            .col-sm-offset-11 {
-                margin-left: 91.66666667%
-            }
-
-            .col-sm-offset-10 {
-                margin-left: 83.33333333%
-            }
-
-            .col-sm-offset-9 {
-                margin-left: 75%
-            }
-
-            .col-sm-offset-8 {
-                margin-left: 66.66666667%
-            }
-
-            .col-sm-offset-7 {
-                margin-left: 58.33333333%
-            }
-
-            .col-sm-offset-6 {
-                margin-left: 50%
-            }
-
-            .col-sm-offset-5 {
-                margin-left: 41.66666667%
-            }
-
-            .col-sm-offset-4 {
-                margin-left: 33.33333333%
-            }
-
-            .col-sm-offset-3 {
-                margin-left: 25%
-            }
-
-            .col-sm-offset-2 {
-                margin-left: 16.66666667%
-            }
-
-            .col-sm-offset-1 {
-                margin-left: 8.33333333%
-            }
-
-            .col-sm-offset-0 {
-                margin-left: 0
-            }
-        }
-
-        @media screen and (min-width: 768px) {
-            .carousel-control .glyphicon-chevron-left, .carousel-control .glyphicon-chevron-right, .carousel-control .icon-next, .carousel-control .icon-prev {
-                width: 30px;
-                height: 30px;
-                margin-top: -10px;
-                font-size: 30px
-            }
-
-            .carousel-control .glyphicon-chevron-left, .carousel-control .icon-prev {
-                margin-left: -10px
-            }
-
-            .carousel-control .glyphicon-chevron-right, .carousel-control .icon-next {
-                margin-right: -10px
-            }
-
-            .carousel-caption {
-                right: 20%;
-                left: 20%;
-                padding-bottom: 30px
-            }
-
-            .carousel-indicators {
-                bottom: 20px
-            }
-        }
-
-        .btn-group-vertical > .btn-group:after, .btn-group-vertical > .btn-group:before, .btn-toolbar:after, .btn-toolbar:before, .clearfix:after, .clearfix:before, .container-fluid:after, .container-fluid:before, .container:after, .container:before, .dl-horizontal dd:after, .dl-horizontal dd:before, .form-horizontal .form-group:after, .form-horizontal .form-group:before, .modal-footer:after, .modal-footer:before, .modal-header:after, .modal-header:before, .nav:after, .nav:before, .navbar-collapse:after, .navbar-collapse:before, .navbar-header:after, .navbar-header:before, .navbar:after, .navbar:before, .pager:after, .pager:before, .panel-body:after, .panel-body:before, .row:after, .row:before {
-            display: table;
-            content: " "
-        }
-
-        .btn-group-vertical > .btn-group:after, .btn-toolbar:after, .clearfix:after, .container-fluid:after, .container:after, .dl-horizontal dd:after, .form-horizontal .form-group:after, .modal-footer:after, .modal-header:after, .nav:after, .navbar-collapse:after, .navbar-header:after, .navbar:after, .pager:after, .panel-body:after, .row:after {
-            clear: both
-        }
-
-        .center-block {
-            display: block;
-            margin-right: auto;
-            margin-left: auto
-        }
-
-        .pull-right {
-            float: right !important
-        }
-
-        .pull-left {
-            float: left !important
-        }
-
-        .hide {
-            display: none !important
-        }
-
-        .show {
-            display: block !important
-        }
-
-        .invisible {
-            visibility: hidden
-        }
-
-        .text-hide {
-            font: 0/0 a;
-            color: transparent;
-            text-shadow: none;
-            background-color: transparent;
-            border: 0
-        }
-
-        .hidden {
-            display: none !important
-        }
-
-        .affix {
-            position: fixed
-        }
-
-        @-ms-viewport {
-            width: device-width
-        }
-
-        .visible-lg, .visible-md, .visible-sm, .visible-xs {
-            display: none !important
-        }
-
-        .visible-lg-block, .visible-lg-inline, .visible-lg-inline-block, .visible-md-block, .visible-md-inline, .visible-md-inline-block, .visible-sm-block, .visible-sm-inline, .visible-sm-inline-block, .visible-xs-block, .visible-xs-inline, .visible-xs-inline-block {
-            display: none !important
-        }
-
-        @media (max-width: 767px) {
-            .visible-xs {
-                display: block !important
-            }
-
-            table.visible-xs {
-                display: table !important
-            }
-
-            tr.visible-xs {
-                display: table-row !important
-            }
-
-            td.visible-xs, th.visible-xs {
-                display: table-cell !important
-            }
-        }
-
-        @media (max-width: 767px) {
-            .visible-xs-block {
-                display: block !important
-            }
-        }
-
-        @media (max-width: 767px) {
-            .visible-xs-inline {
-                display: inline !important
-            }
-        }
-
-        @media (max-width: 767px) {
-            .visible-xs-inline-block {
-                display: inline-block !important
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .visible-sm {
-                display: block !important
-            }
-
-            table.visible-sm {
-                display: table !important
-            }
-
-            tr.visible-sm {
-                display: table-row !important
-            }
-
-            td.visible-sm, th.visible-sm {
-                display: table-cell !important
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .visible-sm-block {
-                display: block !important
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .visible-sm-inline {
-                display: inline !important
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .visible-sm-inline-block {
-                display: inline-block !important
-            }
-        }
-
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .visible-md {
-                display: block !important
-            }
-
-            table.visible-md {
-                display: table !important
-            }
-
-            tr.visible-md {
-                display: table-row !important
-            }
-
-            td.visible-md, th.visible-md {
-                display: table-cell !important
-            }
-        }
-
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .visible-md-block {
-                display: block !important
-            }
-        }
-
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .visible-md-inline {
-                display: inline !important
-            }
-        }
-
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .visible-md-inline-block {
-                display: inline-block !important
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .visible-lg {
-                display: block !important
-            }
-
-            table.visible-lg {
-                display: table !important
-            }
-
-            tr.visible-lg {
-                display: table-row !important
-            }
-
-            td.visible-lg, th.visible-lg {
-                display: table-cell !important
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .visible-lg-block {
-                display: block !important
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .visible-lg-inline {
-                display: inline !important
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .visible-lg-inline-block {
-                display: inline-block !important
-            }
-        }
-
-        @media (max-width: 767px) {
-            .hidden-xs {
-                display: none !important
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-            .hidden-sm {
-                display: none !important
-            }
-        }
-
-        @media (min-width: 992px) and (max-width: 1199px) {
-            .hidden-md {
-                display: none !important
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .hidden-lg {
-                display: none !important
-            }
-        }
-
-        .visible-print {
-            display: none !important
-        }
-
-        @media print {
-            .visible-print {
-                display: block !important
-            }
-
-            table.visible-print {
-                display: table !important
-            }
-
-            tr.visible-print {
-                display: table-row !important
-            }
-
-            td.visible-print, th.visible-print {
-                display: table-cell !important
-            }
-        }
-
-        .visible-print-block {
-            display: none !important
-        }
-
-        @media print {
-            .visible-print-block {
-                display: block !important
-            }
-        }
-
-        .visible-print-inline {
-            display: none !important
-        }
-
-        @media print {
-            .visible-print-inline {
-                display: inline !important
-            }
-        }
-
-        .visible-print-inline-block {
-            display: none !important
-        }
-
-        @media print {
-            .visible-print-inline-block {
-                display: inline-block !important
-            }
-        }
-
-        @media print {
-            .hidden-print {
-                display: none !important
-            }
-        }
-
-        /*# sourceMappingURL=bootstrap.min.css.map */
-
-        @page {
-            margin: 0px;
-        }
-
-        html, body {
-            margin: 10px 0;
-            display: block;
-			height: 100%;
-            font-family: DejaVu Sans, sans-serif;
-        }
-
-        .text_color {
-            color: #666767;
-            font-weight: 300;
-        }
-
-        .nopadding {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-		
-
-        .hei {
-            /*height: 97%;*/
-           /* overflow-y: hidden;*/
-            /*@if(!$isHtml) background-image: url("{{ asset('img/background2.jpg') }}") @else  background-image: url("{{ asset('img/background2.jpg') }}") @endif;*/
-            background-position: right top;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-
-        .hei2 {
-            /*height: 97%;*/
-            overflow-y: hidden;
-            background-image: url("{{ asset('img/background2.jpg') }}");
-        }
-
-        .container-fluid {
-            overflow-y: auto;
-        }
-
-        .border_up{
-            border-top:2px solid rgb(102, 103, 103);
-            width:20px;
-        }
-    </style>
-
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Itinerary · {{ $tour->name ?? 'Tour' }} · EETS</title>
+<style>
+:root {
+    --crimson:      #7a1a1a;
+    --crimson-deep: #5a1010;
+    --gold:         #b8924f;
+    --gold-pale:    #e3d2a8;
+    --ink:          #1a1614;
+    --ink-soft:     #4a443e;
+    --ink-fade:     #8a8580;
+    --ink-mute:     #bab1a3;
+    --paper:        #fbf8f1;
+    --paper-deep:   #f2ebdb;
+    --rule:         #ddd1b8;
+    --rule-soft:    #ece3cd;
+
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+    --sans:  'Avenir Next', Avenir, 'Source Sans 3', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono:  'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Courier New', monospace;
+}
+
+@page { size: A4; margin: 16mm 14mm 18mm; }
+@page :first { margin-top: 22mm; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 11pt;
+    line-height: 1.55;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'onum' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+}
+
+img { display: block; max-width: 100%; }
+
+.doc {
+    max-width: 200mm;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 18mm 18mm 22mm;
+    position: relative;
+}
+
+/* subtle warm grain — invisible on print, gives screen view texture */
+.doc::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background:
+        radial-gradient(ellipse at 8% 4%, rgba(184, 146, 79, 0.06), transparent 38%),
+        radial-gradient(ellipse at 96% 96%, rgba(122, 26, 26, 0.04), transparent 50%);
+    z-index: 0;
+}
+.doc > * { position: relative; z-index: 1; }
+
+@media screen {
+    body { padding: 36px 16px; background: #ece6d6; }
+    .doc {
+        background: var(--paper);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04),
+                    0 24px 80px -32px rgba(60, 30, 18, 0.32);
+        border: 1px solid var(--rule);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   COVER
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.cover {
+    min-height: 260mm;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+}
+
+.cover__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10mm;
+    border-bottom: 0.5pt solid var(--rule);
+    margin-bottom: 0;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand__logo {
+    height: 38px;
+    width: auto;
+}
+
+.brand__wordmark {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 22pt;
+    color: var(--crimson);
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+.brand__name {
+    font-family: var(--sans);
+    font-size: 8pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-fade);
+    line-height: 1.4;
+}
+
+.cover__doc-no { text-align: right; }
+.cover__doc-no .key {
+    display: block;
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 2px;
+}
+.cover__doc-no .val {
+    font-family: var(--mono);
+    font-size: 10pt;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+}
+
+.cover__hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 28mm 0 24mm;
+}
+
+.cover__eyebrow {
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--crimson);
+    margin-bottom: 16mm;
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+}
+
+.cover__eyebrow::before,
+.cover__eyebrow::after {
+    content: '';
+    height: 0;
+    width: 8mm;
+    border-top: 0.5pt solid var(--gold);
+}
+
+.cover__title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 92pt;
+    line-height: 0.92;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    margin-bottom: 7mm;
+}
+
+.cover__rule {
+    width: 56mm;
+    height: 0;
+    border-top: 1.5pt solid var(--crimson);
+    margin-bottom: 10mm;
+}
+
+.cover__tour {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 26pt;
+    line-height: 1.18;
+    color: var(--ink);
+    letter-spacing: 0.005em;
+    margin-bottom: 8mm;
+    max-width: 150mm;
+}
+
+.cover__route {
+    font-family: var(--sans);
+    font-size: 11pt;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 14mm;
+    line-height: 1.4;
+}
+.cover__route .dot { color: var(--gold); margin: 0 0.7em; }
+
+.cover__dates {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 17pt;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 10mm;
+}
+.cover__dates .dash { color: var(--gold); margin: 0 0.3em; }
+.cover__dates .length {
+    font-family: var(--sans);
+    font-style: normal;
+    font-size: 8.5pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding-left: 6mm;
+    border-left: 0.5pt solid var(--rule);
+}
+
+/* meta panel */
+
+.cover__meta {
+    border-top: 0.5pt solid var(--rule);
+    padding-top: 8mm;
+    margin-top: auto;
+}
+
+.cover__meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 8mm;
+}
+
+.meta-cell { padding-left: 4mm; border-left: 0.5pt solid var(--rule); }
+.meta-cell:first-child { border-left-color: var(--crimson); border-left-width: 1pt; }
+
+.meta-cell .key {
+    display: block;
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 2.5mm;
+    line-height: 1;
+}
+
+.meta-cell .val {
+    font-family: var(--serif);
+    font-size: 13pt;
+    color: var(--ink);
+    line-height: 1.3;
+}
+
+.meta-cell .val.mono {
+    font-family: var(--mono);
+    font-size: 10.5pt;
+    letter-spacing: 0.01em;
+}
+
+.meta-cell .val .plus {
+    color: var(--ink-mute);
+    font-size: 11pt;
+    margin-left: 1mm;
+}
+
+.meta-cell .val .none {
+    color: var(--ink-mute);
+    font-style: italic;
+}
+
+.cover__foot {
+    margin-top: 8mm;
+    padding-top: 4mm;
+    border-top: 0.5pt solid var(--rule-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.cover__foot .sig {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 9pt;
+    color: var(--ink-fade);
+}
+
+.cover__foot .stamp {
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION HEADER
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.section { page-break-before: always; }
+.section--first { page-break-before: avoid; padding-top: 4mm; }
+
+.section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 0.5pt solid var(--rule);
+    padding-bottom: 6mm;
+    margin-bottom: 12mm;
+}
+
+.section__title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 36pt;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+}
+
+.section__sub {
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-fade);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DAY BLOCKS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.day {
+    margin-bottom: 14mm;
+    page-break-inside: avoid;
+}
+
+.day__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1.5pt solid var(--ink);
+    padding-bottom: 3mm;
+    margin-bottom: 6mm;
+}
+
+.day__id { display: flex; flex-direction: column; align-items: flex-start; }
+
+.day__label {
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: -3mm;
+    line-height: 1;
+}
+
+.day__numeral {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 60pt;
+    line-height: 0.85;
+    color: var(--crimson);
+    letter-spacing: -0.02em;
+    padding-left: 1mm;
+}
+
+.day__date-block { text-align: right; padding-bottom: 4mm; }
+
+.day__weekday {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 11pt;
+    color: var(--ink-soft);
+    line-height: 1.2;
+}
+
+.day__date {
+    font-family: var(--serif);
+    font-size: 13.5pt;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-top: 1mm;
+}
+
+.day__date .none { color: var(--ink-mute); font-style: italic; font-size: 11pt; }
+
+/* package rows */
+
+.pkgs {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.pkg {
+    display: grid;
+    grid-template-columns: 24mm 36mm 1fr;
+    column-gap: 6mm;
+    padding: 5mm 0;
+    border-bottom: 0.5pt solid var(--rule-soft);
+    page-break-inside: avoid;
+    align-items: start;
+}
+.pkg:last-child { border-bottom: none; }
+
+/* time column */
+
+.pkg__time {
+    font-family: var(--mono);
+    font-size: 10pt;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    color: var(--ink);
+}
+
+.pkg__time-start {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 11pt;
+    letter-spacing: 0.04em;
+}
+
+.pkg__time-end {
+    display: block;
+    color: var(--ink-fade);
+    margin-top: 0.5mm;
+    position: relative;
+    padding-left: 7mm;
+}
+.pkg__time-end::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 5mm;
+    height: 0;
+    border-top: 0.5pt solid var(--ink-mute);
+}
+
+.pkg__time--empty {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-mute);
+    font-size: 10pt;
+}
+
+/* chip column */
+
+.pkg__chip {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+}
+
+.pkg__chip-mark {
+    width: 8mm;
+    height: 8mm;
+    border: 0.75pt solid var(--chip-color, var(--ink));
+    color: var(--chip-color, var(--ink));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 10pt;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.pkg__chip-label {
+    font-family: var(--sans);
+    font-size: 8.5pt;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--chip-color, var(--ink));
+    font-weight: 500;
+}
+
+/* body column */
+
+.pkg__body { line-height: 1.4; min-width: 0; }
+
+.pkg__name {
+    font-family: var(--serif);
+    font-size: 13pt;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-bottom: 1mm;
+}
+
+.pkg__route,
+.pkg__addr,
+.pkg__desc {
+    font-family: var(--sans);
+    font-size: 9.5pt;
+    color: var(--ink-soft);
+    margin-top: 1mm;
+}
+
+.pkg__route {
+    font-style: italic;
+    color: var(--ink-soft);
+}
+.pkg__route .arrow {
+    color: var(--gold);
+    margin: 0 0.3em;
+    font-style: normal;
+}
+
+.pkg__addr { color: var(--ink-fade); }
+.pkg__desc { color: var(--ink-fade); font-size: 9pt; }
+
+/* per-type chip color */
+.pkg--type-0 { --chip-color: #8b6f47; }
+.pkg--type-1 { --chip-color: #a85432; }
+.pkg--type-2 { --chip-color: #3d5942; }
+.pkg--type-3 { --chip-color: #3a3f4a; }
+.pkg--type-4 { --chip-color: #a05c2c; }
+.pkg--type-5 { --chip-color: #3d4d62; }
+.pkg--type-6 { --chip-color: #2c5560; }
+.pkg--type-7 { --chip-color: #1f3a5f; }
+
+.pkgs__empty {
+    list-style: none;
+    padding: 10mm 0;
+    text-align: center;
+    color: var(--ink-mute);
+    font-style: italic;
+    font-family: var(--serif);
+    font-size: 11pt;
+    border-top: 0.25pt dashed var(--rule);
+    border-bottom: 0.25pt dashed var(--rule);
+}
+
+.empty-state {
+    padding: 24mm 0;
+    text-align: center;
+    color: var(--ink-fade);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14pt;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   COACH PLAN TABLE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.coach-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.coach-table thead th {
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-fade);
+    font-weight: 600;
+    padding: 2mm 4mm 4mm 0;
+    border-bottom: 0.75pt solid var(--ink);
+    vertical-align: bottom;
+}
+
+.coach-table tbody td {
+    padding: 5mm 4mm 5mm 0;
+    border-bottom: 0.5pt solid var(--rule-soft);
+    vertical-align: top;
+    font-size: 10.5pt;
+}
+
+.coach-table tbody tr:last-child td {
+    border-bottom: 0.5pt solid var(--rule);
+}
+
+.coach-table .cell-date .day {
+    font-family: var(--serif);
+    font-size: 13pt;
+    color: var(--crimson);
+    line-height: 1;
+    margin-bottom: 0;
+}
+
+.coach-table .cell-date .month {
+    font-family: var(--sans);
+    font-size: 8pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-fade);
+    margin-top: 1mm;
+}
+
+.coach-table .cell-date .hh {
+    font-family: var(--mono);
+    font-size: 10pt;
+    color: var(--ink-soft);
+    margin-top: 2mm;
+    letter-spacing: 0.04em;
+}
+
+.coach-table .svc-name {
+    font-family: var(--serif);
+    font-size: 11.5pt;
+    color: var(--ink);
+    line-height: 1.25;
+}
+
+.coach-table .svc-route {
+    font-family: var(--sans);
+    font-style: italic;
+    font-size: 9pt;
+    color: var(--ink-fade);
+    margin-top: 1.5mm;
+}
+.coach-table .svc-route .arrow { color: var(--gold); margin: 0 0.4em; font-style: normal; }
+
+.coach-table .driver {
+    font-family: var(--serif);
+    color: var(--ink);
+    margin-bottom: 1mm;
+}
+
+.coach-table .phone {
+    font-family: var(--mono);
+    font-size: 9.5pt;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+}
+
+.coach-table .none {
+    color: var(--ink-mute);
+    font-family: var(--serif);
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ACCOMMODATION LIST
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.hotel-list { list-style: none; }
+
+.hotel {
+    padding: 7mm 0;
+    border-top: 0.5pt solid var(--rule);
+    page-break-inside: avoid;
+}
+
+.hotel:first-child { border-top: 1.5pt solid var(--ink); }
+.hotel:last-child { border-bottom: 0.5pt solid var(--rule); }
+
+.hotel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8mm;
+    margin-bottom: 4mm;
+}
+
+.hotel__name {
+    font-family: var(--serif);
+    font-size: 16pt;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+.hotel__dates {
+    text-align: right;
+    flex-shrink: 0;
+}
+.hotel__dates .range {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 11pt;
+    color: var(--ink-soft);
+}
+.hotel__dates .nights {
+    display: block;
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--crimson);
+    margin-top: 2mm;
+}
+
+.hotel__meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 8mm;
+    row-gap: 2mm;
+    margin-top: 4mm;
+}
+
+.hotel__field {
+    display: grid;
+    grid-template-columns: 20mm 1fr;
+    column-gap: 4mm;
+    align-items: baseline;
+}
+
+.hotel__field .key {
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+}
+
+.hotel__field .val {
+    font-family: var(--sans);
+    font-size: 10pt;
+    color: var(--ink-soft);
+    line-height: 1.4;
+}
+
+.hotel__field .val.mono {
+    font-family: var(--mono);
+    font-size: 9.5pt;
+    letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DOCUMENT FOOTER
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.doc__footer {
+    margin-top: 18mm;
+    padding-top: 5mm;
+    border-top: 0.5pt solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.doc__footer .brand {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 9pt;
+    color: var(--ink-fade);
+}
+
+.doc__footer .stamp {
+    font-family: var(--sans);
+    font-size: 7.5pt;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRINT TWEAKS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media print {
+    body { background: white; padding: 0; }
+    .doc {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        max-width: none;
+        background: white;
+    }
+    .doc::before { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NARROW SCREEN FALLBACK (responsive when viewed on phones)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media screen and (max-width: 720px) {
+    body { padding: 12px 6px; }
+    .doc { padding: 14mm 8mm 18mm; }
+    .cover__title { font-size: 64pt; }
+    .cover__tour { font-size: 20pt; }
+    .cover__meta-grid { grid-template-columns: 1fr 1fr; row-gap: 6mm; }
+    .section__title { font-size: 28pt; }
+    .pkg { grid-template-columns: 22mm 1fr; }
+    .pkg__chip { grid-column: 2; margin-top: -3mm; margin-bottom: 1mm; }
+    .pkg__body { grid-column: 2; }
+    .hotel__meta-grid { grid-template-columns: 1fr; }
+    .coach-table thead th:nth-child(4),
+    .coach-table tbody td:nth-child(4) { display: none; }
+}
+</style>
 </head>
 <body>
 
-<div class="container-fluid" >
-    <table class="row" width="100%">
-        <tr>
-            <td class="column">
-                <h2 class="float-left text_color" style="text-decoration: underline;margin-top: 50px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!!trans('main.Itinerary')!!}</h2>
-            </td>
-            <td class="column" >
-                <img style="padding-top: 50px;padding-right: 60px;padding-bottom: 20px;" src="{{asset('/img/eets_logo_small.jpg' )}}" />
-            </td>
-        </tr>
-    </table>
-    <table>
-        <div class="row" width="100%">
-        <div class="col-sm-6">
-            <table   cellspacing="0" cellpadding="0">
-                <tbody>
-                <tr>
-                    <td width="70"></td>
-                    <td width="500"><h4 class="text_color border_up" >Pax:</h4></td>
-                </tr>
-                <tr>
-                    //<td ></td>
-                    <td >{{$tour->pax}} {{$tour->pax_free}}</td>
-                </tr>
-                <tr>
-                   // <td></td>
-                    <td>
-                        <h4 class="text_color ">{!!trans('main.Room')!!}:</h4>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <div style="width:350px; word-wrap: break-word">
-                        @php
-                            $peopleCount = 0;
-                            $roomsCodes = '';
-                        @endphp
-                        @foreach($listRoomsHotel as $item)
-                            @php
-                                $peopleCount +=
-                                isset( App\TourPackage::$roomsPeopleCount[$item->room_types->code])
-                                 ? App\TourPackage::$roomsPeopleCount[$item->room_types->code] * $item->count : 0;
-                                $roomsCodes=='' ? $roomsCodes = $item->count . $item->room_types->code : $roomsCodes .= '+' . $item->count . $item->room_types->code
-                            @endphp
-                            <span>
-                                {{ $item->count }} {{ $item->room_types->name }},
-                            </span>
-                        @endforeach
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td >
-                        <h4 class="text_color">T/L:</h4>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td >
-                         {{$tour->itinerary_tl}}
-                    </td>
-                </tr>
-                <tr>
-                    <td ></td>
-                    <td ><h4 class="text_color">{!!trans('main.Mobile')!!}:</h4></td>
-                </tr>
-                <tr>
-                    <td ></td>
-                    <td>{!! $tour->phone  !!}</td>
-                </tr>
-                {{-- $tourTransfers is Tour::transfers() which actually returns ALL
-                     packages on the tour (the relation is misnamed hasMany TourPackage).
-                     Only the type=3 (transfer) packages have driver / coach info to render,
-                     so guard the whole block — without this every hotel / restaurant / event
-                     also rendered an empty "Coach Details" row. Also: time_from / time_to are
-                     stored as DATETIME (date + time-of-day). The original code formatted them
-                     as 'm-d-Y' which produced garbage like '11-30-2008' / '11-30--0001';
-                     the times themselves are what the operator wants on a coach plan. --}}
-                @php
-                    $transferPackages = collect($tourTransfers ?? [])->where('type', 3);
-                @endphp
-                @if($transferPackages->count() > 0)
-                    @foreach ($transferPackages as $package)
-                        <tr>
-                            <td></td>
-                            <td>
-                                @forelse($package->getTransferDrivers() as $driver)
-                                    <h4 class="text_color border_up">{!! trans('main.Driver') !!}:</h4>
-                                    {{ $driver->name }}
-                                    <h4 class="text_color"><br>{!! trans('main.Mobile') !!}:</h4>
-                                    <span style="display: block">{{ $driver->phone }}</span>
-                                @empty
-                                @endforelse
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td><h4 class="text_color">Coach Details:</h4></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                {{ $package->name }}<br>
-                                @php
-                                    try {
-                                        $tf = $package->time_from ? \Carbon\Carbon::parse($package->time_from) : null;
-                                        $tt = $package->time_to   ? \Carbon\Carbon::parse($package->time_to)   : null;
-                                    } catch (\Throwable $e) {
-                                        $tf = $tt = null;
-                                    }
-                                @endphp
-                                @if($tf) {{ $tf->format('Y-m-d H:i') }}<br>@endif
-                                @if($tt) {{ $tt->format('Y-m-d H:i') }} @endif
-                            </td>
-                        </tr>
-                    @endforeach
+<div class="doc">
+
+    {{-- ═════════════════════════════════ COVER ═════════════════════════════════ --}}
+    <section class="cover">
+
+        <div class="cover__top">
+            <div class="brand">
+                @if($logoFile)
+                    <img class="brand__logo" src="{{ asset('img/' . $logoFile) }}" alt="EETS">
+                @else
+                    <span class="brand__wordmark">EETS</span>
                 @endif
+                <div class="brand__name">Europe Express<br>Travel Service</div>
+            </div>
+            <div class="cover__doc-no">
+                <span class="key">Reference No.</span>
+                <span class="val">{{ $tour->external_name ?? sprintf('EET-%05d', $tour->id ?? 0) }}</span>
+            </div>
+        </div>
+
+        <div class="cover__hero">
+            <div class="cover__eyebrow">Confidential · Tour Briefing</div>
+
+            <h1 class="cover__title">Itinerary</h1>
+            <div class="cover__rule"></div>
+
+            <div class="cover__tour">{{ $tour->name ?? 'Untitled Tour' }}</div>
+
+            @if(count($route) > 0)
+                <div class="cover__route">
+                    @foreach($route as $i => $city)
+                        @if($i > 0)<span class="dot">·</span>@endif
+                        <span>{{ $city }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            @if($depCarbon || $retCarbon)
+                <div class="cover__dates">
+                    @if($depCarbon){{ $depCarbon->format('d M Y') }}@endif
+                    @if($depCarbon && $retCarbon)<span class="dash">—</span>@endif
+                    @if($retCarbon){{ $retCarbon->format('d M Y') }}@endif
+                    @if($tourLength)
+                        <span class="length">{{ $tourLength }} {{ $tourLength === 1 ? 'Day' : 'Days' }}</span>
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        <div class="cover__meta">
+            <div class="cover__meta-grid">
+                <div class="meta-cell">
+                    <span class="key">Pax</span>
+                    <span class="val">
+                        {{ $tour->pax ?? '—' }}@if(!empty($tour->pax_free))<span class="plus">+ {{ $tour->pax_free }}</span>@endif
+                    </span>
+                </div>
+                <div class="meta-cell">
+                    <span class="key">Rooms</span>
+                    <span class="val">
+                        @if(!empty($tour->rooms)){{ $tour->rooms }}@else<span class="none">—</span>@endif
+                    </span>
+                </div>
+                <div class="meta-cell">
+                    <span class="key">Tour Leader</span>
+                    <span class="val">
+                        @if(!empty($tour->itinerary_tl)){{ $tour->itinerary_tl }}@else<span class="none">Not assigned</span>@endif
+                    </span>
+                </div>
+                <div class="meta-cell">
+                    <span class="key">Mobile</span>
+                    <span class="val mono">
+                        @if(!empty($tour->phone)){{ $tour->phone }}@else<span class="none">—</span>@endif
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cover__foot">
+            <div class="sig">EETS · Europe Express Travel Service Int'l Co., Ltd.</div>
+            <div class="stamp">Issued · {{ $issuedAt->format('d M Y') }}</div>
+        </div>
+    </section>
+
+    {{-- ═══════════════════════════════ PROGRAMME ═══════════════════════════════ --}}
+
+    <section class="section section--first">
+        <header class="section__head">
+            <h2 class="section__title">Programme</h2>
+            <div class="section__sub">
+                @if($tourLength){{ $tourLength }} {{ $tourLength === 1 ? 'Day' : 'Days' }}@else Day by Day @endif
+            </div>
+        </header>
+
+        @forelse($tourDays ?? [] as $i => $day)
+            @php
+                $dayCarbon = $tryParse($day->date ?? null);
+                $pkgs = collect($day->packages ?? []);
+            @endphp
+            <article class="day">
+                <header class="day__head">
+                    <div class="day__id">
+                        <div class="day__label">Day {{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</div>
+                        <div class="day__numeral">{{ $roman($i + 1) }}</div>
+                    </div>
+                    <div class="day__date-block">
+                        @if($dayCarbon)
+                            <div class="day__weekday">{{ $dayCarbon->format('l') }}</div>
+                            <div class="day__date">{{ $dayCarbon->format('d F Y') }}</div>
+                        @else
+                            <div class="day__date"><span class="none">Date not set</span></div>
+                        @endif
+                    </div>
+                </header>
+
+                <ol class="pkgs">
+                    @forelse($pkgs as $pkg)
+                        @php
+                            $type = (int) ($pkg->type ?? -1);
+                            $info = $serviceTypeMap[$type] ?? ['letter' => '·', 'label' => 'Item', 'color' => 'var(--ink)'];
+                            $startT = $fmtTime($pkg->time_from ?? null);
+                            $endT   = $fmtTime($pkg->time_to ?? null);
+                            $svc    = optional($pkg->service());
+                            $hasRoute = ($type === 3 || $type === 2)
+                                && (!empty($pkg->pickup_des) || !empty($pkg->drop_des));
+                            $descSame = !empty($pkg->description)
+                                && trim($pkg->description) === trim($pkg->name ?? '');
+                        @endphp
+                        <li class="pkg pkg--type-{{ $type }}">
+                            <div class="pkg__time">
+                                @if($startT)
+                                    <span class="pkg__time-start">{{ $startT }}</span>
+                                    @if($endT && $endT !== $startT)
+                                        <span class="pkg__time-end">{{ $endT }}</span>
+                                    @endif
+                                @else
+                                    <span class="pkg__time--empty">— —</span>
+                                @endif
+                            </div>
+
+                            <div class="pkg__chip">
+                                <span class="pkg__chip-mark">{{ $info['letter'] }}</span>
+                                <span class="pkg__chip-label">{{ $info['label'] }}</span>
+                            </div>
+
+                            <div class="pkg__body">
+                                <div class="pkg__name">{{ $pkg->name ?? 'Untitled service' }}</div>
+
+                                @if($hasRoute)
+                                    <div class="pkg__route">
+                                        @if(!empty($pkg->pickup_des)){{ $pkg->pickup_des }}@endif
+                                        @if(!empty($pkg->pickup_des) && !empty($pkg->drop_des))<span class="arrow">→</span>@endif
+                                        @if(!empty($pkg->drop_des)){{ $pkg->drop_des }}@endif
+                                    </div>
+                                @endif
+
+                                @if(!empty($svc->address_first))
+                                    <div class="pkg__addr">{{ $svc->address_first }}</div>
+                                @endif
+
+                                @if(!empty($pkg->description) && !$descSame)
+                                    <div class="pkg__desc">{{ $pkg->description }}</div>
+                                @endif
+                            </div>
+                        </li>
+                    @empty
+                        <li class="pkgs__empty">No services scheduled for this day</li>
+                    @endforelse
+                </ol>
+            </article>
+        @empty
+            <div class="empty-state">This itinerary has no scheduled days yet.</div>
+        @endforelse
+    </section>
+
+    {{-- ═══════════════════════════════ COACH PLAN ══════════════════════════════ --}}
+
+    @if($transferList->count() > 0)
+        <section class="section">
+            <header class="section__head">
+                <h2 class="section__title">Coach Plan</h2>
+                <div class="section__sub">{{ $transferList->count() }} {{ $transferList->count() === 1 ? 'Movement' : 'Movements' }}</div>
+            </header>
+
+            <table class="coach-table">
+                <thead>
+                    <tr>
+                        <th style="width: 26mm">Date</th>
+                        <th>Service</th>
+                        <th style="width: 40mm">Driver</th>
+                        <th style="width: 36mm">Mobile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($transferList as $t)
+                    @php
+                        $tStart = $tryParse($t->time_from ?? null);
+                        $drivers = collect();
+                        try {
+                            if (method_exists($t, 'getTransferDrivers')) {
+                                $drivers = collect($t->getTransferDrivers());
+                            }
+                        } catch (\Throwable $e) {}
+                    @endphp
+                    <tr>
+                        <td class="cell-date">
+                            @if($tStart)
+                                <div class="day">{{ $tStart->format('d') }}</div>
+                                <div class="month">{{ $tStart->format('M Y') }}</div>
+                                <div class="hh">{{ $tStart->format('H:i') }}</div>
+                            @else
+                                <span class="none">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="svc-name">{{ $t->name ?? 'Transfer' }}</div>
+                            @if(!empty($t->pickup_des) || !empty($t->drop_des))
+                                <div class="svc-route">
+                                    {{ $t->pickup_des ?? '—' }}
+                                    <span class="arrow">→</span>
+                                    {{ $t->drop_des ?? '—' }}
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            @forelse($drivers as $d)
+                                <div class="driver">{{ $d->name ?? '—' }}</div>
+                            @empty
+                                <span class="none">Not assigned</span>
+                            @endforelse
+                        </td>
+                        <td>
+                            @forelse($drivers as $d)
+                                <div class="phone">{{ $d->phone ?? '—' }}</div>
+                            @empty
+                                <span class="none">—</span>
+                            @endforelse
+                        </td>
+                    </tr>
+                @endforeach
                 </tbody>
             </table>
-        </div>
-
-
-        <div class="col-sm-6">
-
-            <div class="container-fluide">
-                <div class="row pull-right">
-
-                    <table width="300px" border="0" cellspacing="0" cellpadding="0" style="margin-top: -200px;background-color: #f3f3f3">
-                        <tbody>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.Name')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><div style="width:250px; word-wrap: break-word">{{$tour->name}} {{$tour->external_name}}</div></td>
-                        </tr>
-
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateDep')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->departure_date)->format('m-d-Y')}}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateReturn')!!}:</h4></td>
-                        </tr>
-                        <tr>
-
-                            <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->retirement_date)->format('m-d-Y')}}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">PAX:</h4></td>
-                        </tr>
-                        <tr>
-
-                            <td width="50"></td>
-                            <td width="250">{{$tour->pax}} {{$tour->pax_free}}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.ROOMS')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">{{ $roomsCodes }}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.Personincharge')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">@if(is_object($usersResponsible)) {{ $usersResponsible->name }} @endif</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">&nbsp;</td>
-                        </tr>
-
-
-                        </tbody>
-                    </table>
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-    </div>
-    </table>
-    <?php $countDay = 0; ?>
-    @if(isset($isDoc) and $isDoc)
-        <br><br>
-    @else
-        <p style="page-break-after: always"></p>
+        </section>
     @endif
-    <div class="row">
-        <div class="col-sm-12 nopadding">
-        <h2 class="float-left text_color" style="text-decoration: underline;margin-top: 50px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!!trans('main.Itinerary')!!}</h2>
-        </div>
-    </div>
-	<div class="row">
-        <div class="col-sm-12 nopadding">
-        <!-- foreach start -->
-		<table class='hei' width="100%" border="0" cellspacing="0" cellpadding="0">
-            <tbody>
-                @foreach($tourDays as $tourDay)
-                    <?php $countDay++ ; ?>
-                            <tr>
-                                <td width="13%" align="right">
-                                </td>
-                                <td width="1%" align="center" valign="top" >
-                                </td>
-                                <td width="86%" align="left" valign="top">
-                                    <h3 class="text_color" style="margin-top: -5px;">&nbsp;&nbsp;Day {{ $countDay }} - {{ (new \Carbon\Carbon($tourDay->date))->formatLocalized('%B %d, %Y (%A)') }}</h3>
-                                </td>
-                            </tr>
-                            @foreach($tourDay->packages as $package)
-                                @if (!in_array($package->id, $exclude))
-                                <tr>
-                                    <td align="right" valign="top" class="text_color">{{ Carbon\Carbon::parse($package->time_from)->format('H:i')}} @if(!$package->description_package)- {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}
-                                            <br>
-                                            @if($package->type !== null)
-                                                {{ ucfirst($serviceTypes[$package->type]) }}
-                                            @endif
-                                            <br>
+
+    {{-- ═══════════════════════════════ ACCOMMODATION ═══════════════════════════ --}}
+
+    @if(!empty($hotelIndex))
+        <section class="section">
+            <header class="section__head">
+                <h2 class="section__title">Accommodation</h2>
+                <div class="section__sub">
+                    {{ count($hotelIndex) }} {{ count($hotelIndex) === 1 ? 'Property' : 'Properties' }} ·
+                    {{ $totalNights }} {{ $totalNights === 1 ? 'Night' : 'Nights' }}
+                </div>
+            </header>
+
+            <ul class="hotel-list">
+                @foreach($hotelIndex as $h)
+                    @php
+                        $dateCarbons = collect($h['dates'])
+                            ->map(fn ($d) => $tryParse($d))
+                            ->filter();
+                        $hotelStart = $dateCarbons->min();
+                        $hotelEnd   = $dateCarbons->max();
+                        $nights     = count($h['dates']);
+                        $svc        = optional($h['package']->service());
+                    @endphp
+                    <li class="hotel">
+                        <div class="hotel__head">
+                            <div class="hotel__name">{{ $h['name'] }}</div>
+                            <div class="hotel__dates">
+                                @if($hotelStart && $hotelEnd)
+                                    <span class="range">
+                                        {{ $hotelStart->format('d M') }}
+                                        @if($hotelEnd->ne($hotelStart))
+                                            <span style="color:var(--gold)">—</span>
+                                            {{ $hotelEnd->format('d M Y') }}
+                                        @else
+                                            {{ $hotelEnd->format('Y') }}
                                         @endif
-                                    </td>
-
-                                    <td width="1%" align="center" valign="top" >
-                                    </td>
-                                    <td>
-                                        @if($package->description_package)
-                                            <?php
-                                                $package->description = strip_tags($package->description,'<p>');
-                                                $package->description = strip_tags($package->description,'</p>');
-                                                $lines = explode('<br />', nl2br($package->description));
-
-
-                                                $lineCounter = 0;
-                                            ?>
-                                            @foreach ($lines as $line)
-                                                @php
-                                                    $lineCounter++
-                                                @endphp
-                                                @if(strlen( $line ) < 75)
-                                                    <span class="text_color" >
-                                                        {{ $line }}
-                                                    </span>
-                                                    <br>
-                                                @else
-
-                                                    <?php
-                                                        $words = explode(" ",$line);
-                                                        $subline = '';
-
-                                                        foreach($words as $word){
-                                                            $subline .= ' '.$word;
-                                                            if(strlen($subline)>74){
-                                                    ?>
-                                                            <span class="text_color" >
-                                                                {!! $subline !!}
-                                                            </span>
-                                                               <br>
-                                                    <?php
-                                                                $subline = '';
-                                                                $lineCounter++;
-                                                                if($lineCounter >= 40){
-                                                                    $lineCounter =0;
-                                                                    echo '
-                                                                        </td>
-                                                                       </tr>
-                                                                      </tbody>
-                                                                     </table>
-
-                                                                    <div class="page-break"></div>
-
-                                                                    <table class="hei" width="100%" border="0" cellspacing="0" cellpadding="0">
-                                                                     <tbody>
-                                                                       <tr>
-                                                                         <td width="13%" align="right"></td>
-                                                                          <td width="1%" align="center" valign="top" ></td>
-                                                                           <td width="86%" height="42" align="left" valign="top">
-                                                                    ';
-                                                                }
-
-                                                            }
-
-                                                        }
-                                                    ?>
-                                                        <span class="text_color" >
-                                                            {!! $subline !!}
-                                                        </span>
-                                                @endif
-
-                                                @if($lineCounter >= 40)
-                                                    @php
-                                                        $lineCounter =0;
-                                                    @endphp
-                                                        </td>
-                                                       </tr>
-                                                      </tbody>
-                                                     </table>
-
-
-
-                <table class='hei2' width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tbody>
-                        <tr>
-                            <td width="13%" align="right"></td>
-                            <td width="1%" align="center" valign="top"></td>
-                            <td width="86%" height="42" align="left" valign="top">
+                                    </span>
                                 @endif
-                                @endforeach
-                                @endif
+                                <span class="nights">{{ $nights }} {{ $nights === 1 ? 'Night' : 'Nights' }}</span>
+                            </div>
+                        </div>
 
-                                &nbsp;&nbsp;{!! $package->name !!}
-                                <br>
-                                <?php
-                                $srv = $package->service();
-                                $menus = '';
-                                ?>
-                                @if ($srv)
-                                    @if ($srv->work_phone)
-                                        <span class="text_color"> {!! trans('main.Tel') !!}:
-                                        </span>{{ $srv->work_phone }}
-                                        @endif @if ($srv->work_fax)
-                                            Fax: {{ $srv->work_fax }}
-                                        @endif <br>
-                                        @if ($srv->address_first)
-                                            <span class="text_color"> {!! trans('main.Address') !!}:
-                                            </span>{!! $srv->address_first !!} <br>
-                                        @endif
-                                        <br>
-                                    @endif
-                                    @if ($package->type == 0)
-                                        <?php
-                                        
-                                        $room_typesDvo = \App\RoomTypes::query()
-                                            ->orderBy('sort_order', 'ASC')
-                                            ->get();
-                                        $room_types = [];
-                                        foreach ($room_typesDvo as &$room_type) {
-                                            $room_type['count_room'] = 0;
-                                            $room_type['price_room'] = 0;
-                                        }
-                                        $room_types = $room_typesDvo;
-                                        $selected_room_types = [];
-                                        foreach ($package->room_types_hotel as $item) {
-                                            $item->room_types['count_room'] = $item->count;
-                                            $item->room_types['price_room'] = $item->price;
-                                            $selected_room_types[] = $item->room_types;
-                                        }
-                                        
-                                        ?>
-										@if(!$package->description_package)
-                                        @if (count($selected_room_types) > 0)
-                                            <span class="text_color"> Rooms: </span><br>
-                                            @foreach ($selected_room_types as $room)
-                                                {{ $room->count_room }}{{ $room->code }}
-                                            @endforeach
-                                        @endif
-										@endif
-                                    @endif
-                                    <?php
-                                    if ($package->menus->count()) {
-    // Initialize $menus as an empty string
-												$menus = '';
+                        <div class="hotel__meta-grid">
+                            @if(!empty($svc->address_first))
+                                <div class="hotel__field">
+                                    <span class="key">Address</span>
+                                    <span class="val">{{ $svc->address_first }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($svc->work_phone))
+                                <div class="hotel__field">
+                                    <span class="key">Phone</span>
+                                    <span class="val mono">{{ $svc->work_phone }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($svc->work_email))
+                                <div class="hotel__field">
+                                    <span class="key">Email</span>
+                                    <span class="val mono">{{ $svc->work_email }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($h['package']->reference))
+                                <div class="hotel__field">
+                                    <span class="key">Ref.</span>
+                                    <span class="val mono">{{ $h['package']->reference }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
-												foreach ($package->menus as $pmenu) {
-													// Check if the menu is not null before accessing its properties
-													if ($pmenu->menu_id) {
-														$menu = App\Menu::find($pmenu->menu_id);
+    {{-- ═════════════════════════════ DOCUMENT FOOTER ════════════════════════════ --}}
 
-														if ($menu) {
-															$menus .= $pmenu->count . ' - ' . $menu->name . '<br>';
-														}
-													}
-												}
-											}
+    <footer class="doc__footer">
+        <div class="brand">EETS · Europe Express Travel Service Int'l Co., Ltd.</div>
+        <div class="stamp">Generated · {{ $issuedAt->format('d M Y · H:i') }}</div>
+    </footer>
 
-                                    ?>
-
-                                    @if ($menus != '')
-                                        <br>
-                                        <span class="text_color">Meals:</span>
-                                        <br>
-                                        {!! $menus !!}
-                                    @endif
-                                    <br> <br> <br>
-									
-
-                            </td>
-                        </tr>
-                        @endif
-                        @endforeach
-                    </tbody>
-                    @endforeach
-                </table>
-	  </div>
-	</div>
 </div>
-
-
 
 </body>
 </html>

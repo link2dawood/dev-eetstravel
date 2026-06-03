@@ -610,7 +610,12 @@ class EmailController extends Controller {
 		return array("email"=>$email,"users"=>$username);
 		}
 		catch (\Exception $e) {
-            return $e;
+            // CC13: was `return $e` (caller would treat the Exception
+            // object itself as the response, which is meaningless). Log
+            // and return a structured error so the caller can branch on
+            // it instead of dereferencing a thrown object.
+            \Log::warning('EmailController email-lookup failed', ['error' => $e->getMessage()]);
+            return ['email' => null, 'users' => '', 'error' => $e->getMessage()];
         }
 	}
 	public function sendingEmail($userId, Request $request)
@@ -672,7 +677,13 @@ class EmailController extends Controller {
           
             //$this ->setConnectionToServer($userId);
         } catch (\Exception $e) {
-            return $e;
+            // CC13: was `return $e`. Log + bubble null so the caller can
+            // distinguish 'no send' from 'sent successfully'.
+            \Log::warning('EmailController sendingEmail failed', [
+                'user_id' => $userId ?? null,
+                'error'   => $e->getMessage(),
+            ]);
+            return null;
         }
     }
 	public function  deleteEmail($id){

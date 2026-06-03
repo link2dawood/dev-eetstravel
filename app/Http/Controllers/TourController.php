@@ -2128,7 +2128,13 @@ public function store(StoreTourRequest $request)
             } else {
                 $departure_date = Carbon::now();
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            // CC13: was silent. Log so a malformed departure_date doesn't
+            // hide as a name suffix that looks correct (today's md).
+            \Log::warning('Tour departure_date parse failed; defaulting to now()', [
+                'input' => $departure_date ?? null,
+                'error' => $e->getMessage(),
+            ]);
             $departure_date = Carbon::now();
         }
 		$formattedDate = $departure_date->format('md');
@@ -2689,7 +2695,14 @@ public function destroy($id, $tab = null)
                 $endDate = !empty($departure_date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $departure_date)
                     ? Carbon::createFromFormat('Y-m-d', $departure_date)->addDays(29)
                     : Carbon::now()->addDays(29);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
+                // CC13: was silent. Without this log a malformed
+                // departure_date would silently shift the validator's
+                // retirement_date upper bound to "today + 29 days".
+                \Log::warning('Tour validateTour endDate parse failed; defaulting to now+29d', [
+                    'departure_date' => $departure_date,
+                    'error'          => $e->getMessage(),
+                ]);
                 $endDate = Carbon::now()->addDays(29);
             }
         }

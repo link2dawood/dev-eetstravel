@@ -106,6 +106,12 @@ class   ServicesController extends Controller
 			        if ($tour->deleted_at) $tour->deleted = true;
 			        $package->tour = $tour;
 		        } catch (\Exception $e) {
+        			// CC13: skip packages whose tourDay -> tour FK is broken
+        			// but record which package id is orphaned.
+        			\Log::warning('ServicesController skipped orphan package tour FK', [
+        				'package_id' => $package->id ?? null,
+        				'error'      => $e->getMessage(),
+        			]);
         			continue;
 		        }
 	        }

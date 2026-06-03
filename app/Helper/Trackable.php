@@ -327,6 +327,13 @@ trait Trackable{
 		    $link = route( $linkName ? $linkName : strtolower("$className.show"), ['id' => $model->id]);
 		}
 		catch (\Exception $e) {
+			// CC13: log so a missing route name doesn't silently render a
+			// blank link in the activity feed without anyone knowing why.
+			\Log::warning('Trackable link generation failed', [
+				'route' => $linkName ?: strtolower("$className.show"),
+				'id'    => $model->id ?? null,
+				'error' => $e->getMessage(),
+			]);
 			$link ='';
 		}
 		return $link;

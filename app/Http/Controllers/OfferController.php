@@ -818,7 +818,9 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
         return $emails;
   		}
 		 catch (\Exception $e) {
-            return $e;
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('OfferController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
         }
 	  }
 	
@@ -862,8 +864,10 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 			
 			return $emails;
 		} catch (\Exception $e) {
-			return $e;
-		}
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('OfferController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
+        }
 	}
 	public function offer_emails($id){
 		$tour_package = TourPackage::find($id);

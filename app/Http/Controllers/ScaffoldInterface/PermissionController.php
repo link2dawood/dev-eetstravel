@@ -114,6 +114,9 @@ class PermissionController extends Controller
             return redirect('permissions')->with('success', 'Permission deleted successfully');
             
         } catch (\Exception $e) {
+            // CC13: the user gets a flash message but the error never hits
+            // the log — log too so the team knows what broke.
+            \Log::warning('Permission deletion failed', ['error' => $e->getMessage()]);
             return redirect('permissions')->with('error', 'Error deleting permission: ' . $e->getMessage());
         }
     }

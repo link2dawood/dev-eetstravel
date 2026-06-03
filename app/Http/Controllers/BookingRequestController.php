@@ -193,7 +193,9 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
         return $emails;
   		}
 		 catch (\Exception $e) {
-            return $e;
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('BookingRequestController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
         }
 	  }
 		public function tmsEmails($package_id)
@@ -236,8 +238,10 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 			
 			return $emails;
 		} catch (\Exception $e) {
-			return $e;
-		}
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('BookingRequestController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
+        }
 	}
 	public function generated_link($genrated_id,$id){
 		

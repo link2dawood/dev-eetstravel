@@ -52,7 +52,10 @@ class sendMailable extends Mailable
 
             $mail->send();
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            // CC13: was silent. Mail-send failures should at least appear
+            // in the log so the team can correlate user reports.
+            \Log::warning('sendMailable failed', ['error' => $e->getMessage()]);
             return false;
         }
     }

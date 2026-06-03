@@ -395,7 +395,9 @@ public function remove_element($string){
         return response()->json(['result'=>'succes']);
 			
 		}catch (\Exception $e) {
-            return $e;
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('Api\EmailsController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
         }
 		
     }

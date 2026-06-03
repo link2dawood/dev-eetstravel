@@ -64,6 +64,9 @@ class AdminHelper
             }
 
         } catch (\Exception $e) {
+            // CC13: log mail-auth failures so failing IMAP creds aren't
+            // a silent 'false' the caller treats as 'no inbox'.
+            \Log::warning('AdminHelper mail authentication failed', ['error' => $e->getMessage()]);
             return false;
         }
 

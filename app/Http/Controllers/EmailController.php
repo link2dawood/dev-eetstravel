@@ -297,6 +297,13 @@ class EmailController extends Controller {
 		try{
             $this->client->getMailbox( $folder_sent );
         }catch(\Exception $exception){
+            // CC13: getMailbox throws when the folder doesn't exist on
+            // the IMAP server — recover by creating it. Log at debug
+            // since this is expected on the first send.
+            \Log::debug('IMAP sent-folder missing; creating', [
+                'folder' => $folder_sent,
+                'error'  => $exception->getMessage(),
+            ]);
             $this->client->createMailbox( $folder_sent );
         }
 		/** Illuminate\Mail\Message $message */
@@ -400,6 +407,11 @@ class EmailController extends Controller {
         try{
             $this->client->getMailbox( self::TRASH_FOLDER );
         }catch(\Exception $exception){
+            // CC13: same first-use pattern as sent-folder above.
+            \Log::debug('IMAP trash-folder missing; creating', [
+                'folder' => self::TRASH_FOLDER,
+                'error'  => $exception->getMessage(),
+            ]);
             $this->client->createMailbox( self::TRASH_FOLDER );
         }
         if(URL::previous() == route('email.search')){
@@ -750,7 +762,9 @@ class EmailController extends Controller {
         } );
         }
         catch(\Exception $e){
-            return $e;
+            // CC13: was 'return $e;' (returns the Exception object as a response).
+            \Log::warning('EmailController swallowed exception', ['error' => $e->getMessage()]);
+            return null;
         }
 	}
 

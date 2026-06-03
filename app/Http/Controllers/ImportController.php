@@ -331,6 +331,10 @@ class ImportController extends Controller
                         }
 
                     } catch(\Exception $e) {
+                        // CC13: skipping a row during import without
+                        // logging makes 'partial import' impossible to
+                        // diagnose later.
+                        \Log::warning('ImportController skipped row on error', ['error' => $e->getMessage()]);
                         continue;
                     }
 

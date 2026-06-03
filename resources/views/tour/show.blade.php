@@ -542,7 +542,7 @@
                                                                         data-link=" ">
                                                                         <span
                                                                             class="badge bg-yellow">{{ \App\Helper\AdminHelper::getComparisonRowCommentsCount($comparison->comparisonRowByDate($tourDay->date)->id ?? '') }}</span>
-                                                                        <i class="fa fa-comment-o"
+                                                                        <i class="ti ti-message-circle"
                                                                             aria-hidden="true"></i>
                                                                     </a>
                                                                 </td>
@@ -810,7 +810,7 @@
                                             <a data-toggle="modal" data-target="#myModal"
                                                class="delete btn btn-danger btn-xs"
                                                data-link="/tour_package/{{$package->id}}/deleteMsg"
-                                               style="text-align: center"><i class="fa fa-trash-o"
+                                               style="text-align: center"><i class="ti ti-trash"
                                                                              aria-hidden="true"></i></a>
                                         @endif
                                     </td>
@@ -897,9 +897,9 @@
                                     <td>
                                         @if(@$package->service()->service_type??"" === 'Hotel')
                                             @if($package->parent_id)
-                                                <i class="fa fa-star-o text-yellow"></i>
+                                                <i class="ti ti-star text-warning" title="Child hotel"></i>
                                             @else
-                                                <i class="fa fa-star text-yellow"></i>
+                                                <i class="ti ti-star-filled text-warning" title="Parent hotel"></i>
                                             @endif
 
                                         @endif
@@ -1489,7 +1489,7 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
 
                 <div class="row g-3 mb-3">
 
-<div class="col-md-12">
+<div class="col-12">
     <label class="form-label">{!! trans('main.Servicetype') !!}</label>
 
     <div id="service-type-filters" class="d-flex gap-3 flex-wrap">
@@ -1527,7 +1527,7 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
     </div>
 </div>
 
-                    <div class="col-md-12">
+                    <div class="col-12">
                         <label for="service-catalog-search" class="form-label">{!! trans('main.Search') !!}</label>
                         <input type="text" id="service-catalog-search" class="form-control" placeholder="{!! __('Search by name, city or country') !!}">
                     </div>
@@ -1971,7 +1971,7 @@ $(function() {
     $('#send_agree').on('click', function() {
         if (!selectedGuestList) return;
         
-        let overlay = '<div class="overlay"><i class="fa fa-refresh fa-spin"></i></div>';
+        let overlay = '<div class="overlay"><div class="spinner-border spinner-border-sm text-primary" role="status" aria-label="Loading"></div></div>';
         let container = selectedGuestList.closest('.card-body');
         container.append(overlay);
         selectedGuestList.hide();

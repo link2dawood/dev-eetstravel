@@ -35,83 +35,96 @@ class QuotationController extends Controller {
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
+	/**
+	 * AUDIT.md CC11 — was Quotation::with-joins->get() (whole table) +
+	 * per-row Tour::find (N+1). Plus a separate get() on goAheadTours
+	 * (every confirmed-quotation tour, JOIN-bombed).
+	 *
+	 * Both lists now paginate(20). The tour link no longer needs Tour::find
+	 * because the JOIN already selects tours.name as tour_name — we just
+	 * render that and we already have tour_id.
+	 */
 	public function index() {
-        $title = 'Index - quotation';
+		$title   = 'Index - quotation';
+		$perPage = 20;
 
-        // Get quotation data with related tables - same logic from data() method
-        $quotations = Quotation::query()
-            ->leftJoin('tours', 'tours.id', '=', 'quotations.tour_id')
-            ->leftJoin('users', 'users.id', '=', 'quotations.user_id')
-            ->select([
-                'quotations.id',
-                'quotations.name',
-                'quotations.tour_id',
-                'quotations.created_at',
-                'users.name as user_name',
-                'tours.name as tour_name'
-            ])
-            ->get();
+		// ---- Quotations tab -------------------------------------------------
+		$quotations = Quotation::query()
+			->leftJoin('tours', 'tours.id', '=', 'quotations.tour_id')
+			->leftJoin('users', 'users.id', '=', 'quotations.user_id')
+			->select([
+				'quotations.id',
+				'quotations.name',
+				'quotations.tour_id',
+				'quotations.created_at',
+				'users.name as user_name',
+				'tours.name as tour_name',
+			])
+			->orderByDesc('quotations.created_at')
+			->paginate($perPage, ['*'], 'page');
 
-        // Process each quotation to add computed fields
-        $quotations = $quotations->map(function ($quotation) {
-            // Add action buttons
-            $quotation->action = $this->getButton($quotation->id, $quotation);
+		$canShowComparison = Auth::user()->can('comparison.show');
 
-            // Format created_at date
-            $quotation->formatted_created_at = (new Carbon($quotation->created_at))->format('Y-m-d H:s');
+		$quotations->getCollection()->transform(function ($quotation) use ($canShowComparison) {
+			// Action buttons
+			$quotation->action = $this->getButton($quotation->id, $quotation);
 
-            // Add tour link
-            if ($quotation->tour_id) {
-                $tour = Tour::find($quotation->tour_id);
-                if ($tour) {
-                    $link = route('tour.show', ['tour' => $tour->id]);
-                    $quotation->tour_link = "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>{$tour->name}</a>";
-                } else {
-                    $quotation->tour_link = '';
-                }
-            } else {
-                $quotation->tour_link = '';
-            }
+			// Date formatting — the legacy 'Y-m-d H:s' was a typo (seconds
+			// placeholder is :s but the prefix isn't right). Keeping the exact
+			// legacy format so the column doesn't shift.
+			$quotation->formatted_created_at = (new Carbon($quotation->created_at))->format('Y-m-d H:s');
 
-            // Add comparison link
-            $comparison_link = route('comparison.show', ['comparison' => $quotation->id]);
-            if (Auth::user()->can('comparison.show')) {
-                $quotation->comparison = "<a href='{$comparison_link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
-            } else {
-                $quotation->comparison = "<span>No permission</span>";
-            }
+			// Tour link uses the JOIN-selected tour_name; no Tour::find()
+			// needed.
+			if ($quotation->tour_id && $quotation->tour_name) {
+				$link = route('tour.show', ['tour' => $quotation->tour_id]);
+				$quotation->tour_link = "<a href='{$link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>{$quotation->tour_name}</a>";
+			} else {
+				$quotation->tour_link = '';
+			}
 
-            return $quotation;
-        });
+			// Comparison link
+			if ($canShowComparison) {
+				$comparison_link = route('comparison.show', ['comparison' => $quotation->id]);
+				$quotation->comparison = "<a href='{$comparison_link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
+			} else {
+				$quotation->comparison = "<span>No permission</span>";
+			}
 
-        // Get go-ahead tours (tours with confirmed quotations)
-        $goAheadTours = Tour::query()
-            ->leftJoin('quotations', 'quotations.tour_id', '=', 'tours.id')
-            ->leftJoin('status', 'status.id', '=', 'tours.status')
-            ->leftJoin('countries as country_begin', 'country_begin.alias', '=', 'tours.country_begin')
-            ->leftJoin('countries as country_end', 'country_end.alias', '=', 'tours.country_end')
-            ->leftJoin('cities as city_begin', 'city_begin.id', '=', 'tours.city_begin')
-            ->leftJoin('cities as city_end', 'city_end.id', '=', 'tours.city_end')
-            ->where('quotations.is_confirm', 1)
-            ->select([
-                'tours.id',
-                'tours.name',
-                'tours.departure_date',
-                'tours.external_name',
-                'country_begin.name as country_begin',
-                'city_begin.name as city_begin',
-                'status.name as status_name'
-            ])
-            ->distinct()
-            ->get();
+			return $quotation;
+		});
 
-        // Process go-ahead tours to add action buttons
-        $goAheadTours = $goAheadTours->map(function ($tour) {
-            $tour->action = $this->getTourButton($tour->id);
-            return $tour;
-        });
+		// ---- Go-ahead tours tab --------------------------------------------
+		$goAheadTours = Tour::query()
+			->leftJoin('quotations', 'quotations.tour_id', '=', 'tours.id')
+			->leftJoin('status', 'status.id', '=', 'tours.status')
+			->leftJoin('countries as country_begin', 'country_begin.alias', '=', 'tours.country_begin')
+			->leftJoin('countries as country_end',   'country_end.alias',   '=', 'tours.country_end')
+			->leftJoin('cities as city_begin',       'city_begin.id',       '=', 'tours.city_begin')
+			->leftJoin('cities as city_end',         'city_end.id',         '=', 'tours.city_end')
+			->where('quotations.is_confirm', 1)
+			->select([
+				'tours.id',
+				'tours.name',
+				'tours.departure_date',
+				'tours.external_name',
+				'country_begin.name as country_begin',
+				'city_begin.name as city_begin',
+				'status.name as status_name',
+			])
+			->groupBy(
+				'tours.id', 'tours.name', 'tours.departure_date', 'tours.external_name',
+				'country_begin.name', 'city_begin.name', 'status.name'
+			)
+			->orderByDesc('tours.departure_date')
+			->paginate($perPage, ['*'], 'tour_page');
 
-        return view('quotation.index', compact('quotations', 'goAheadTours', 'title'));
+		$goAheadTours->getCollection()->transform(function ($tour) {
+			$tour->action = $this->getTourButton($tour->id);
+			return $tour;
+		});
+
+		return view('quotation.index', compact('quotations', 'goAheadTours', 'title'));
 	}
 
     public function getButton($id, $quotation)

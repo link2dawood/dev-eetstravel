@@ -155,6 +155,16 @@
                     </tbody>
                 </table>
             </div>
+
+            @if(method_exists($quotations, 'hasPages') && $quotations->hasPages())
+                <div class="border-t border-slate-200 px-4 py-3 bg-slate-50 flex items-center justify-between gap-3 text-sm text-slate-600">
+                    <div>
+                        Showing <span class="font-medium text-slate-900">{{ $quotations->firstItem() }}</span>–<span class="font-medium text-slate-900">{{ $quotations->lastItem() }}</span>
+                        of <span class="font-medium text-slate-900">{{ $quotations->total() }}</span>
+                    </div>
+                    <div>{{ $quotations->onEachSide(1)->links() }}</div>
+                </div>
+            @endif
         </div>
 
         {{-- Mobile card list --}}
@@ -315,6 +325,16 @@
                     </tbody>
                 </table>
             </div>
+
+            @if(method_exists($goAheadTours, 'hasPages') && $goAheadTours->hasPages())
+                <div class="border-t border-slate-200 px-4 py-3 bg-slate-50 flex items-center justify-between gap-3 text-sm text-slate-600">
+                    <div>
+                        Showing <span class="font-medium text-slate-900">{{ $goAheadTours->firstItem() }}</span>–<span class="font-medium text-slate-900">{{ $goAheadTours->lastItem() }}</span>
+                        of <span class="font-medium text-slate-900">{{ $goAheadTours->total() }}</span>
+                    </div>
+                    <div>{{ $goAheadTours->onEachSide(1)->links() }}</div>
+                </div>
+            @endif
         </div>
 
         {{-- Mobile card list --}}

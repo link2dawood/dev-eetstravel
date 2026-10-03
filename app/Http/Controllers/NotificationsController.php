@@ -74,7 +74,9 @@ class NotificationsController extends Controller
         $user = Auth::user();
 
         $view = View::make(
-            'component.list-notification-task',
+            $request->get('layout') === 'tabler'
+                ? 'component.list-notification-tabler'
+                : 'component.list-notification-task',
             [
                 'notifications'   => $notifications,
                 'user'   => $user,

@@ -60,31 +60,6 @@ class LoginController extends Controller
     {
         $this->validateLogin($request);
 
-        // Check if user exists and test password
-        $user = \App\User::where('email', $request->input('email'))->first();
-        
-        // TEMPORARY DEBUG - Remove this after testing
-        if (!$user) {
-            return back()->withErrors([
-                'email' => 'DEBUG: User not found in database with email: ' . $request->input('email')
-            ])->withInput($request->only('email', 'remember'));
-        }
-        
-        $receivedPassword = $request->input('password');
-        $passwordCheck = \Illuminate\Support\Facades\Hash::check($receivedPassword, $user->password);
-        
-        if (!$passwordCheck) {
-            // Test with the expected password
-            $test123456 = \Illuminate\Support\Facades\Hash::check('123456', $user->password);
-            
-            return back()->withErrors([
-                'email' => 'DEBUG: Password mismatch! ' .
-                          'Received: "' . $receivedPassword . '" (length: ' . strlen($receivedPassword) . ')' .
-                          ' | Expected "123456" works: ' . ($test123456 ? 'YES' : 'NO') .
-                          ' | User: ' . $user->name . ' (ID: ' . $user->id . ')'
-            ])->withInput($request->only('email', 'remember'));
-        }
-
         // Try authentication
         if (method_exists($this, 'hasTooManyLoginAttempts') &&
             $this->hasTooManyLoginAttempts($request)) {
@@ -96,9 +71,8 @@ class LoginController extends Controller
             return $this->sendLoginResponse($request);
         }
 
-        // If we reach here, Auth::attempt failed even though password matched
-        return back()->withErrors([
-            'email' => 'DEBUG: Password matches but Auth::attempt() failed. This might be due to user status or other constraints.'
-        ])->withInput($request->only('email', 'remember'));
+        $this->incrementLoginAttempts($request);
+
+        return $this->sendFailedLoginResponse($request);
     }
 }

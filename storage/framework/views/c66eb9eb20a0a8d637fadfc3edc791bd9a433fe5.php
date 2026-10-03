@@ -1,9 +1,9 @@
-@auth
-    @php
+<?php if(auth()->guard()->check()): ?>
+    <?php
         $messages = \App\Helper\DashboardHelper::getCountUnreadMailMessage();
         $tasks = \App\Helper\DashboardHelper::getTasks();
-    @endphp
-@endauth
+    ?>
+<?php endif; ?>
 
 <!-- Page header -->
 <header class="navbar navbar-expand-md navbar-light d-print-none tms-header">
@@ -12,7 +12,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-            <a href="{{url('home')}}">
+            <a href="<?php echo e(url('home')); ?>">
                 TMS
             </a>
         </h1>
@@ -36,13 +36,13 @@
             </div>
 
             <!-- Messages -->
-            @auth
+            <?php if(auth()->guard()->check()): ?>
             <div class="nav-item dropdown d-none d-md-flex me-3">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show messages">
                     <i class="ti ti-mail icon"></i>
-                    @if($messages)
-                        <span class="badge bg-red">{{ $messages }}</span>
-                    @endif
+                    <?php if($messages): ?>
+                        <span class="badge bg-red"><?php echo e($messages); ?></span>
+                    <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card header-dropdown">
                     <div class="card">
@@ -50,17 +50,17 @@
                             <h3 class="card-title">Messages</h3>
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable list_notification_email">
-                            <a href="{{route('email.index')}}" class="list-group-item">
+                            <a href="<?php echo e(route('email.index')); ?>" class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col text-truncate">
-                                        <div class="d-block text-body">{{ trans('main.Viewall') }}</div>
+                                        <div class="d-block text-body"><?php echo e(trans('main.Viewall')); ?></div>
                                     </div>
                                 </div>
                             </a>
-                            <a href="{{route('email.readAll')}}" class="list-group-item {{ !$messages ? 'disabled-link' : '' }}">
+                            <a href="<?php echo e(route('email.readAll')); ?>" class="list-group-item <?php echo e(!$messages ? 'disabled-link' : ''); ?>">
                                 <div class="row align-items-center">
                                     <div class="col text-truncate">
-                                        <div class="d-block text-body">{{ trans('main.Readall') }}</div>
+                                        <div class="d-block text-body"><?php echo e(trans('main.Readall')); ?></div>
                                     </div>
                                 </div>
                             </a>
@@ -73,18 +73,18 @@
             <div class="nav-item dropdown d-none d-md-flex me-3">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show tasks">
                     <i class="ti ti-checkbox icon"></i>
-                    @if($tasks)
-                        <span class="badge bg-red">{{ count($tasks) }}</span>
-                    @endif
+                    <?php if($tasks): ?>
+                        <span class="badge bg-red"><?php echo e(count($tasks)); ?></span>
+                    <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card header-dropdown">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{ trans('main.Youhave') }} {{ $tasks ? count($tasks) : 0 }} {{ trans('main.tasks') }}</h3>
+                            <h3 class="card-title"><?php echo e(trans('main.Youhave')); ?> <?php echo e($tasks ? count($tasks) : 0); ?> <?php echo e(trans('main.tasks')); ?></h3>
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
-                            @foreach($tasks as $task)
-                            <a href="{!! route('task.show', ['task' => $task->id]) !!}" class="list-group-item">
+                            <?php $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <a href="<?php echo route('task.show', ['task' => $task->id]); ?>" class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
                                         <span class="avatar">
@@ -92,64 +92,64 @@
                                         </span>
                                     </div>
                                     <div class="col text-truncate">
-                                        <div class="d-block text-body">{!! $task->tourNameNotification() !!}</div>
+                                        <div class="d-block text-body"><?php echo $task->tourNameNotification(); ?></div>
                                         <div class="text-muted mt-1">
-                                            <small>{!! $task->dead_line !!}</small>
+                                            <small><?php echo $task->dead_line; ?></small>
                                         </div>
                                     </div>
                                 </div>
                             </a>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <div class="card-footer text-center">
-                            <a href="/profile/?tab=history-tasks-tab" class="btn btn-link">{{ trans('main.Viewtasks') }}</a>
+                            <a href="/profile/?tab=history-tasks-tab" class="btn btn-link"><?php echo e(trans('main.Viewtasks')); ?></a>
                         </div>
                     </div>
                 </div>
             </div>
-            @endauth
+            <?php endif; ?>
 
             <!-- User Profile -->
-            @auth
+            <?php if(auth()->guard()->check()): ?>
             <div class="nav-item dropdown account-dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open user menu">
                     <span class="avatar avatar-sm account-avatar" aria-hidden="true">
                         <i class="ti ti-user icon"></i>
-                        @if(Auth::user()->avatar_path || Auth::user()->avatar)
-                            <img src="{{ Auth::user()->avatar_path ? Auth::user()->avatar_url : asset(Auth::user()->avatar) }}" alt="" onerror="this.remove()">
-                        @endif
+                        <?php if(Auth::user()->avatar_path || Auth::user()->avatar): ?>
+                            <img src="<?php echo e(Auth::user()->avatar_path ? Auth::user()->avatar_url : asset(Auth::user()->avatar)); ?>" alt="" onerror="this.remove()">
+                        <?php endif; ?>
                     </span>
                     <div class="d-none d-xl-block ps-2">
-                        <div>{{ Auth::user()->name }}</div>
-                        <div class="mt-1 small text-muted">{{ Auth::user()->email }}</div>
+                        <div><?php echo e(Auth::user()->name); ?></div>
+                        <div class="mt-1 small text-muted"><?php echo e(Auth::user()->email); ?></div>
                     </div>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow header-dropdown account-menu">
-                    <a href="{{ url('profile') }}" class="dropdown-item">
+                    <a href="<?php echo e(url('profile')); ?>" class="dropdown-item">
                         <i class="ti ti-user icon dropdown-item-icon"></i>
                         Profile
                     </a>
-                    <a href="{{ url('profile/edit') }}" class="dropdown-item">
+                    <a href="<?php echo e(url('profile/edit')); ?>" class="dropdown-item">
                         <i class="ti ti-settings icon dropdown-item-icon"></i>
                         Settings
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a href="{{ route('logout') }}" class="dropdown-item account-logout"
+                    <a href="<?php echo e(route('logout')); ?>" class="dropdown-item account-logout"
                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="ti ti-logout icon dropdown-item-icon"></i>
                         Logout
                     </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                        @csrf
+                    <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" style="display: none;">
+                        <?php echo csrf_field(); ?>
                     </form>
                 </div>
             </div>
-            @endauth
+            <?php endif; ?>
         </div>
     </div>
 </header>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <style>
 .tms-header {
     background: #ffffff;
@@ -350,4 +350,5 @@
     background: #b91c1c !important;
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php /**PATH F:\dev-eetstravel\resources\views/scaffold-interface/layouts/tabler-header.blade.php ENDPATH**/ ?>

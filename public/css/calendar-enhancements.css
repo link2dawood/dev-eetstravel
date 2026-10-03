@@ -567,6 +567,58 @@
     float: right;
 }
 
+.calendar-compact .box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+}
+
+.calendar-compact .box-header h4 {
+    line-height: 1.2;
+}
+
+.calendar-compact .box-header .box-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    float: none !important;
+    margin-top: 0 !important;
+}
+
+.calendar-compact .box-header .btn-box-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff !important;
+    line-height: 1;
+    opacity: 1;
+}
+
+.calendar-compact .box-header .btn-box-tool:hover,
+.calendar-compact .box-header .btn-box-tool:focus {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #4f46e5 !important;
+}
+
+.calendar-compact .box-header .btn-box-tool .fa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1;
+}
+
 /* Make sure table styling is applied correctly */
 .calendar-compact .table {
     margin-bottom: 0;
@@ -604,10 +656,16 @@
 
 /* FullCalendar toolbar customization */
 .calendar-compact .fc-toolbar {
-    padding: 16px 24px;
+    padding: 18px 24px;
     margin: 0;
     background: #f8fafc;
     border-bottom: 1px solid #e5e7eb;
+    gap: 16px;
+}
+
+.calendar-compact .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
 }
 
 .calendar-compact .fc-toolbar-title {
@@ -618,21 +676,78 @@
 }
 
 .calendar-compact .fc-button-primary {
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
     font-weight: 500 !important;
-    padding: 6px 12px !important;
+    line-height: 1 !important;
+    padding: 8px 14px !important;
     transition: all 0.2s ease !important;
 }
 
 .calendar-compact .fc-button-primary:hover:not(:disabled) {
-    background-color: #2563eb !important;
-    border-color: #2563eb !important;
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
 }
 
 .calendar-compact .fc-button-primary:focus {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.calendar-compact .fc-button-primary:disabled {
+    background-color: #bfdbfe !important;
+    border-color: #bfdbfe !important;
+    color: #1e3a8a !important;
+    opacity: 1 !important;
+}
+
+.calendar-compact .fc-button-group {
+    gap: 6px;
+}
+
+.calendar-compact .fc-button-group > .fc-button {
+    border-radius: 8px !important;
+    margin-left: 0 !important;
+}
+
+.calendar-compact .fc-prev-button,
+.calendar-compact .fc-next-button {
+    width: 42px;
+    min-width: 42px;
+    padding: 0 !important;
+}
+
+.calendar-compact .fc-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.calendar-compact .fc-today-button {
+    margin-left: 10px !important;
+    min-width: 58px;
+    text-transform: capitalize;
+}
+
+.calendar-compact .fc-view-harness {
+    padding: 18px 24px 24px;
+    background: #ffffff;
+}
+
+.calendar-compact .fc-scrollgrid {
+    overflow: hidden;
+    border-radius: 10px;
 }
 
 /* Day grid styling */
@@ -771,7 +886,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .calendar-compact .fc-toolbar {
-        padding: 12px 16px;
+        padding: 14px 16px;
         flex-direction: column;
         gap: 12px;
     }
@@ -790,8 +905,19 @@
     }
 
     .calendar-compact .fc-button {
-        padding: 4px 8px !important;
+        padding: 7px 10px !important;
         font-size: 0.8rem !important;
+    }
+
+    .calendar-compact .fc-prev-button,
+    .calendar-compact .fc-next-button {
+        width: 38px;
+        min-width: 38px;
+        padding: 0 !important;
+    }
+
+    .calendar-compact .fc-view-harness {
+        padding: 12px 16px 16px;
     }
 }
 

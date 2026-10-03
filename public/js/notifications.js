@@ -5,7 +5,9 @@ let notifications = {
         notifications.generateNotificationsTasks();
     },
     bindEvents: () => {
-        $(document).on('click', '.delete-notification-task', function () {
+        $(document).on('click', '.delete-notification-task', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             notifications.deleteNotificationTask($(this));
         });
 
@@ -50,7 +52,11 @@ let notifications = {
     },
 
     deleteNotificationTask: (_this) => {
+        if (_this.prop('disabled')) {
+            return;
+        }
         let id_notification = $(_this).attr('data-notif-id');
+        _this.prop('disabled', true);
 
         $.ajax({
             method: 'POST',
@@ -60,18 +66,53 @@ let notifications = {
                 id: id_notification
             }
         }).done((res) => {
-            notifications.generateNotificationsTasks();
-        })
+            if (res === true) {
+                notifications.generateNotificationsTasks();
+            }
+        }).always(() => {
+            _this.prop('disabled', false);
+        });
     },
 
     generateNotificationsTasks : () => {
-        $.ajax({
-            method: 'GET',
-            url: '/getNotifications',
-            data: {}
-        }).done((res) => {
-            $(document).find('.notifications-content').html(res);
-        })
+        let containers = $('.notifications-content');
+        if (!containers.length) {
+            return;
+        }
+
+        containers.each(function () {
+            let container = $(this);
+            let requestVersion = (container.data('notifications-request-version') || 0) + 1;
+            container.data('notifications-request-version', requestVersion);
+            $.ajax({
+                method: 'GET',
+                url: '/getNotifications',
+                cache: false,
+                data: { layout: container.attr('data-notifications-layout') || 'legacy' }
+            }).done((res) => {
+                if (container.data('notifications-request-version') !== requestVersion) {
+                    return;
+                }
+                if (container.attr('data-notifications-layout') === 'tabler') {
+                    // Keep Bootstrap's toggle and menu nodes so an open dropdown stays open.
+                    let content = $('<div>').html(res);
+                    let menu = container.children('.dropdown-menu');
+                    let scrollTop = menu.find('[data-notifications-list]').scrollTop();
+                    container.children('[data-bs-toggle="dropdown"]').html(
+                        content.children('[data-bs-toggle="dropdown"]').html()
+                    );
+                    menu.html(content.children('.dropdown-menu').html());
+                    menu.find('[data-notifications-list]').scrollTop(scrollTop);
+                } else {
+                    container.html(res);
+                }
+            }).fail(() => {
+                if (container.data('notifications-request-version') !== requestVersion) {
+                    return;
+                }
+                container.find('[data-notifications-list]').text('Unable to load notifications. Please refresh to try again.');
+            });
+        });
     }
 };
 

@@ -1398,3 +1398,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH F:\dev-eetstravel\resources\views/scaffold-interface/dashboard/components/tasks_list.blade.php ENDPATH**/ ?>

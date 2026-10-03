@@ -178,6 +178,7 @@
         .monday-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         .monday-table-header {
@@ -185,7 +186,7 @@
         }
 
         .monday-table-header th {
-            padding: 12px 16px;
+            padding: 12px 18px;
             text-align: left;
             font-size: 11px;
             font-weight: 600;
@@ -214,7 +215,7 @@
         }
 
         .monday-table-cell {
-            padding: 8px 16px;
+            padding: 10px 18px;
             vertical-align: middle;
             border-bottom: 1px solid var(--monday-border);
         }
@@ -222,6 +223,20 @@
         .monday-table-cell-task {
             min-width: 200px;
             max-width: 400px;
+        }
+
+        .monday-table-header th:first-child,
+        .monday-table-row td:first-child {
+            padding-left: 18px;
+        }
+
+        .monday-table-header th:last-child,
+        .monday-table-row td:last-child {
+            padding-right: 18px;
+        }
+
+        .monday-table-header th:last-child {
+            text-align: right;
         }
 
         .monday-task-content {
@@ -250,7 +265,9 @@
             padding: 6px 8px;
             border-radius: 4px;
             cursor: pointer !important;
-            transition: all 0.2s ease;
+            outline: none;
+            box-shadow: none;
+            transition: background-color 0.2s ease;
             min-height: 32px;
             display: flex;
             align-items: center;
@@ -258,8 +275,14 @@
 
         .monday-editable:hover {
             background: var(--monday-background-hover);
-            outline: 2px solid rgba(0, 115, 234, 0.3);
-            box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+            outline: none;
+            box-shadow: none;
+        }
+
+        .monday-editable:focus,
+        .monday-editable:active {
+            outline: none;
+            box-shadow: none;
         }
 
         .monday-editable-input {
@@ -280,7 +303,7 @@
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             min-width: 85px;
             gap: 4px;
         }
@@ -292,9 +315,8 @@
         }
 
         .monday-status-clickable:hover {
-            transform: scale(1.05);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            filter: brightness(1.05);
+            filter: brightness(0.98);
         }
 
         .monday-person {
@@ -353,9 +375,10 @@
         .monday-actions {
             display: flex;
             gap: 4px;
-            justify-content: center;
+            justify-content: flex-end;
             opacity: 0;
             transition: opacity 0.2s ease;
+            width: 100%;
         }
 
         .monday-table-row:hover .monday-actions {
@@ -363,48 +386,115 @@
         }
 
         .monday-action-btn {
-            padding: 5px;
-            border-radius: 6px;
+            padding: 6px;
+            border-radius: 8px;
             background: white;
             border: 1px solid #d1d5db;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
         }
 
         .monday-action-btn:hover {
-            background: white;
+            background: #f8fafc;
         }
 
         .monday-action-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
+            color: currentColor !important;
+            stroke: currentColor !important;
         }
 
         .monday-action-btn.edit {
-            color: #f59e0b;
+            color: #d97706;
             border-color: #fed7aa;
             background: #fff7ed;
         }
 
         .monday-action-btn.edit:hover {
-            color: #d97706;
-            border-color: #fb923c;
+            color: #b45309 !important;
+            border-color: #fdba74 !important;
+            background: #fffbeb !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+        }
+
+        .monday-action-btn.edit svg,
+        .monday-action-btn.edit:hover svg,
+        .monday-action-btn.edit:focus svg,
+        .monday-action-btn.edit:active svg {
+            color: #b45309 !important;
+            stroke: #b45309 !important;
         }
 
         .monday-action-btn.delete {
-            color: var(--monday-danger);
+            color: #e2445c;
             border-color: #fecaca;
             background: #fef2f2;
         }
 
         .monday-action-btn.delete:hover {
-            color: #b91c1c;
-            border-color: #ef4444;
+            color: #be123c !important;
+            border-color: #fda4af !important;
+            background: #fff1f2 !important;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+        }
+
+        .monday-action-btn.delete svg,
+        .monday-action-btn.delete:hover svg,
+        .monday-action-btn.delete:focus svg,
+        .monday-action-btn.delete:active svg {
+            color: #be123c !important;
+            stroke: #be123c !important;
+        }
+
+        .task-toast-container {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 1080;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .task-toast {
+            min-width: 280px;
+            max-width: min(360px, calc(100vw - 36px));
+            padding: 12px 14px;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid var(--monday-primary);
+            border-radius: 10px;
+            background: #ffffff;
+            color: var(--monday-text-primary);
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            pointer-events: auto;
+        }
+
+        .task-toast.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .task-toast-title {
+            margin-bottom: 3px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f4fb8;
+        }
+
+        .task-toast-message {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #475569;
         }
 
         .monday-badge {
@@ -515,11 +605,11 @@
             margin: 3px 0;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         .monday-dropdown-item:hover {
-            transform: translateX(4px);
+            transform: none;
         }
 
         .text-muted {
@@ -875,6 +965,47 @@
     <script>
         let currentEditingElement = null;
 
+        function showTaskToast(message, heading = 'Tasks', icon = 'info') {
+            if (window.jQuery && typeof jQuery.toast === 'function') {
+                jQuery.toast({
+                    heading: heading,
+                    text: message,
+                    icon: icon,
+                    position: 'top-right',
+                    showHideTransition: 'fade',
+                    hideAfter: 2500,
+                    loaderBg: '#0073ea'
+                });
+                return;
+            }
+
+            let container = document.querySelector('.task-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'task-toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'task-toast';
+            toast.innerHTML = '<div class="task-toast-title"></div><div class="task-toast-message"></div>';
+            toast.querySelector('.task-toast-title').textContent = heading;
+            toast.querySelector('.task-toast-message').textContent = message;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+            setTimeout(() => {
+                toast.classList.remove('is-visible');
+                setTimeout(() => toast.remove(), 220);
+            }, 2500);
+        }
+
+        function showAddPersonToast(event) {
+            event.stopPropagation();
+            showTaskToast('Add person is not available yet.', 'People', 'info');
+        }
+
         function toggleGroup(groupName) {
             const group = document.querySelector(`[data-group="${groupName}"]`);
             const content = document.getElementById(`group-${groupName}`);
@@ -961,10 +1092,10 @@
             document.querySelectorAll('.monday-dropdown-menu').forEach(menu => menu.remove());
 
             const statuses = [
-                { name: 'Pending', color: '#fdab3d' },
-                { name: 'In Progress', color: '#0073ea' },
-                { name: 'Completed', color: '#00c875' },
-                { name: 'Aborted', color: '#e2445c' }
+                { name: 'Pending', color: '#b45309', bg: '#ffedd5', hoverBg: '#fed7aa' },
+                { name: 'In Progress', color: '#075985', bg: '#dbeafe', hoverBg: '#bfdbfe' },
+                { name: 'Completed', color: '#047857', bg: '#d1fae5', hoverBg: '#a7f3d0' },
+                { name: 'Aborted', color: '#be123c', bg: '#ffe4e6', hoverBg: '#fecdd3' }
             ];
 
             const dropdown = document.createElement('div');
@@ -977,23 +1108,21 @@
             statuses.forEach(status => {
                 const item = document.createElement('div');
                 item.className = 'monday-dropdown-item';
-                item.style.backgroundColor = status.color + '20';
+                item.style.backgroundColor = status.bg;
                 item.style.color = status.color;
                 item.textContent = status.name;
 
                 item.onmouseover = () => {
-                    item.style.backgroundColor = status.color + '30';
-                    item.style.transform = 'translateX(4px)';
+                    item.style.backgroundColor = status.hoverBg;
                 };
                 item.onmouseout = () => {
-                    item.style.backgroundColor = status.color + '20';
-                    item.style.transform = 'translateX(0)';
+                    item.style.backgroundColor = status.bg;
                 };
 
                 item.onclick = (e) => {
                     e.stopPropagation();
                     element.querySelector('span').textContent = status.name;
-                    element.style.backgroundColor = status.color + '20';
+                    element.style.backgroundColor = status.bg;
                     element.style.color = status.color;
                     dropdown.remove();
                 };
@@ -1044,11 +1173,11 @@
         }
 
         function previousPage(group) {
-            alert('Previous page for ' + group);
+            showTaskToast('Previous ' + group + ' tasks page is not available yet.');
         }
 
         function nextPage(group) {
-            alert('Next page for ' + group);
+            showTaskToast('Next ' + group + ' tasks page is not available yet.');
         }
 
         document.getElementById('taskSearch')?.addEventListener('input', function(e) {
@@ -1067,3 +1196,4 @@
     </script>
 </body>
 </html>
+

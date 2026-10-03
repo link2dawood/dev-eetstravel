@@ -414,11 +414,11 @@
 
 .monday-action-btn {
     padding: 6px;
-    border-radius: 4px;
-    background: transparent;
-    border: none;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -428,17 +428,42 @@
     background: var(--monday-background-hover);
 }
 
+.monday-action-btn:focus,
+.monday-action-btn:active {
+    outline: none;
+}
+
 .monday-action-btn svg {
     width: 18px;
     height: 18px;
+    color: currentColor !important;
+    stroke: currentColor !important;
 }
 
 .monday-action-btn.edit {
-    color: var(--monday-primary);
+    color: #d97706 !important;
+}
+
+.monday-action-btn.edit:hover,
+.monday-action-btn.edit:focus,
+.monday-action-btn.edit:active {
+    color: #b45309 !important;
+    background: #fffbeb;
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
 }
 
 .monday-action-btn.delete {
-    color: var(--monday-danger);
+    color: #e2445c !important;
+}
+
+.monday-action-btn.delete:hover,
+.monday-action-btn.delete:focus,
+.monday-action-btn.delete:active {
+    color: #be123c !important;
+    background: #fff1f2;
+    border-color: #fda4af;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
 }
 
 /* Add Task Row */

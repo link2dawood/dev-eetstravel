@@ -145,6 +145,107 @@ trait ExportTrait{
         return $pdf->download(str_replace(" ","_",$pdfName));
     }
 	
+    private function normalizeHtmlForPhpWord($html)
+    {
+        $html = (string) $html;
+        $html = preg_replace('/<!doctype[^>]*>/i', '', $html);
+        $html = preg_replace('/<head\b[^>]*>.*?<\/head>/is', '', $html);
+        $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+        $html = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html);
+        $html = preg_replace('/<\/?(html|body)\b[^>]*>/i', '', $html);
+        $html = preg_replace('/<meta\b[^>]*>/i', '', $html);
+        $html = preg_replace('/<link\b[^>]*>/i', '', $html);
+        $html = str_replace('&nbsp;', ' ', $html);
+
+        if (!class_exists(\DOMDocument::class)) {
+            return $html;
+        }
+
+        $previousUseInternalErrors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->loadHTML('<?xml encoding="UTF-8"><div id="phpword-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousUseInternalErrors);
+
+        $inlineTags = ['span', 'a', 'b', 'strong', 'i', 'em', 'u', 'font', 'small'];
+        $blockTags = ['p', 'div', 'table', 'tr', 'td', 'th', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+
+        do {
+            $changed = false;
+
+            foreach ($inlineTags as $tag) {
+                $nodes = [];
+                foreach ($dom->getElementsByTagName($tag) as $node) {
+                    $nodes[] = $node;
+                }
+
+                foreach ($nodes as $node) {
+                    if ($this->phpWordNodeContainsBlockTag($node, $blockTags)) {
+                        $this->unwrapPhpWordNode($node);
+                        $changed = true;
+                    }
+                }
+            }
+        } while ($changed);
+
+        $root = $dom->getElementById('phpword-root');
+        if (!$root) {
+            return $html;
+        }
+
+        $normalized = '';
+        foreach ($root->childNodes as $child) {
+            $normalized .= $dom->saveXML($child);
+        }
+
+        return $this->makePhpWordHtmlXmlSafe($normalized);
+    }
+
+    private function makePhpWordHtmlXmlSafe($html)
+    {
+        $html = (string) $html;
+
+        $voidTags = ['br', 'hr', 'img', 'input', 'meta', 'link', 'base', 'area', 'col', 'embed', 'param', 'source', 'track', 'wbr'];
+        foreach ($voidTags as $tag) {
+            $html = preg_replace('/<' . $tag . '\b([^>\/]*?(?:\s+[^>\/]*?)?)>/i', '<' . $tag . '$1 />', $html);
+        }
+
+        $html = preg_replace('/<([a-z0-9]+)\b([^>]*)\/\s*>/i', '<$1$2 />', $html);
+        $html = preg_replace('/<([a-z0-9]+)([^>]*)\/\s+\/>/i', '<$1$2 />', $html);
+        $html = preg_replace('/\s+\/>/', ' />', $html);
+
+        return $html;
+    }
+
+    private function phpWordNodeContainsBlockTag(\DOMNode $node, array $blockTags)
+    {
+        if (!$node instanceof \DOMElement) {
+            return false;
+        }
+
+        foreach ($blockTags as $tag) {
+            if ($node->getElementsByTagName($tag)->length > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function unwrapPhpWordNode(\DOMNode $node)
+    {
+        $parent = $node->parentNode;
+        if (!$parent) {
+            return;
+        }
+
+        while ($node->firstChild) {
+            $parent->insertBefore($node->firstChild, $node);
+        }
+
+        $parent->removeChild($node);
+    }
+
 	 public function exportVoucherdoc($tour, $data, $request)
     {
 		 $office=Offices::where('status',1)->first();
@@ -204,7 +305,7 @@ $config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
-$sanitizedHtml = $purifier->purify($htmlContent);
+$sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent));
     // Create a new PHPWord object
     $phpWord = new PhpWord();
 
@@ -343,7 +444,7 @@ $config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
-$sanitizedHtml = $purifier->purify($htmlContent);
+$sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent));
     // Create a new PHPWord object
     $phpWord = new PhpWord();
 
@@ -650,7 +751,7 @@ $config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
-$sanitizedHtml = $purifier->purify($htmlContent);
+$sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent));
     // Create a new PHPWord object
     $phpWord = new PhpWord();
 
@@ -678,3 +779,4 @@ ini_set('post_max_size', '62M');
 
 
 }
+

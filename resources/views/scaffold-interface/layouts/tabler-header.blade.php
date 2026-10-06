@@ -1,7 +1,11 @@
 @auth
     @php
+        $user = Auth::user();
         $messages = \App\Helper\DashboardHelper::getCountUnreadMailMessage();
         $tasks = \App\Helper\DashboardHelper::getTasks();
+        $notifications = $user->notifications()->latest()->get();
+        $unreadNotifications = $notifications->where('click', false);
+        $unreadNotificationsCount = $unreadNotifications->count();
     @endphp
 @endauth
 
@@ -18,19 +22,68 @@
         </h1>
         <div class="navbar-nav flex-row order-md-last">
             <!-- Notifications -->
-            <div class="nav-item dropdown d-none d-md-flex me-3">
-                <a href="#" class="nav-link px-0 notifications-content" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+            <div class="nav-item dropdown d-none d-md-flex me-3 tabler-notifications-dropdown">
+                <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" tabindex="-1" aria-label="Show notifications">
                     <i class="ti ti-bell icon"></i>
-                    <span class="badge bg-red"></span>
+                    @auth
+                        @if($unreadNotificationsCount)
+                            <span class="badge bg-red tabler-notifications-badge">{{ $unreadNotificationsCount }}</span>
+                        @endif
+                    @endauth
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Notifications</h3>
+                            <h3 class="card-title">
+                                Notifications
+                                @auth
+                                    @if($unreadNotificationsCount)
+                                        <span class="badge bg-red ms-2 tabler-notifications-badge">{{ $unreadNotificationsCount }}</span>
+                                    @endif
+                                @endauth
+                            </h3>
                         </div>
-                        <div class="list-group list-group-flush list-group-hoverable">
-                            <!-- Notifications will be loaded here dynamically -->
+                        <div class="list-group list-group-flush list-group-hoverable tabler-notifications-list">
+                            @auth
+                                @forelse($notifications->take(8) as $notification)
+                                    <div class="list-group-item tabler-notification-item {{ !$notification->click ? 'bg-blue-lt' : '' }}"
+                                         data-unread="{{ !$notification->click ? '1' : '0' }}">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="status-dot {{ !$notification->click ? 'status-dot-animated bg-red' : 'bg-muted' }} d-block"></span>
+                                            </div>
+                                            <div class="col text-truncate">
+                                                <a href="{{ $notification->link ? url($notification->link) . '?notification_click=' . $notification->id : '#' }}"
+                                                   class="d-block text-reset text-decoration-none">
+                                                    <div class="d-block text-body text-truncate">{{ $notification->content }}</div>
+                                                    @if($notification->created_at)
+                                                        <div class="text-muted mt-1">
+                                                            <small>{{ $notification->created_at->diffForHumans() }}</small>
+                                                        </div>
+                                                    @endif
+                                                </a>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="button" class="delete-notification-task text-muted" data-notif-id="{{ $notification->id }}" title="Delete notification" onclick="return window.deleteTablerNotification ? window.deleteTablerNotification(event, this) : false;">
+                                                    <i class="ti ti-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="list-group-item tabler-notifications-empty">
+                                        <div class="text-muted">You don't have notifications</div>
+                                    </div>
+                                @endforelse
+                            @endauth
                         </div>
+                        @auth
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="/profile?tab=notifications-tab" class="btn btn-link p-0">{{ trans('main.Viewall') }}</a>
+                                <a href="#" id="read_all_notification" class="btn btn-link p-0 {{ !$unreadNotificationsCount ? 'disabled-link' : '' }}">{{ trans('main.Readall') }}</a>
+                                <a href="#" id="delete_all_notification" class="btn btn-link p-0 tabler-delete-all-notifications {{ !$notifications->count() ? 'disabled-link' : '' }}">{{ trans('main.Deleteall') }}</a>
+                            </div>
+                        @endauth
                     </div>
                 </div>
             </div>
@@ -150,5 +203,132 @@
     pointer-events: none;
     opacity: 0.5;
 }
+
+.tabler-notifications-dropdown .dropdown-menu-card {
+    width: 320px;
+    max-width: calc(100vw - 24px);
+}
+
+.tabler-notifications-dropdown .card {
+    width: 100%;
+}
+
+.tabler-notifications-dropdown .card-header {
+    padding: 0.75rem 1rem;
+}
+
+.tabler-notifications-dropdown .card-title {
+    font-size: 0.95rem;
+}
+
+.tabler-notifications-list {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.tabler-notifications-list .list-group-item {
+    padding: 0.65rem 0.85rem;
+}
+
+.tabler-notifications-dropdown .card-footer {
+    padding: 0.65rem 0.85rem;
+    gap: 0.75rem;
+}
+
+.delete-notification-task {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.delete-notification-task:hover,
+.delete-notification-task:focus {
+    background: #fee2e2;
+    color: #dc2626 !important;
+    outline: none;
+}
 </style>
+<script>
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('.tabler-notifications-dropdown .delete-notification-task');
+    if (!button) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (button.dataset.deleting === '1') {
+        return false;
+    }
+    button.dataset.deleting = '1';
+
+    const item = button.closest('.tabler-notification-item');
+    const list = document.querySelector('.tabler-notifications-list');
+
+    if (item) {
+        item.remove();
+    }
+
+    if (item) {
+        const badges = document.querySelectorAll('.tabler-notifications-badge');
+        const current = parseInt((badges[0] && badges[0].textContent) || '0', 10) || 0;
+        const next = Math.max(0, current - 1);
+
+        badges.forEach(function (badge) {
+            if (next > 0) {
+                badge.textContent = next;
+            } else {
+                badge.remove();
+            }
+        });
+
+        if (next === 0) {
+            const readAll = document.getElementById('read_all_notification');
+            if (readAll) {
+                readAll.classList.add('disabled-link');
+            }
+        }
+    }
+
+    if (list && !list.querySelector('.tabler-notification-item')) {
+        list.innerHTML = "<div class='list-group-item tabler-notifications-empty'><div class='text-muted'>You don't have notifications</div></div>";
+        const deleteAll = document.querySelector('.tabler-delete-all-notifications');
+        const readAll = document.getElementById('read_all_notification');
+        if (deleteAll) {
+            deleteAll.classList.add('disabled-link');
+        }
+        if (readAll) {
+            readAll.classList.add('disabled-link');
+        }
+    }
+
+    const token = document.querySelector('meta[name="csrf-token"]');
+    const body = new FormData();
+    body.append('_token', token ? token.content : '');
+    body.append('id', button.dataset.notifId || '');
+
+    fetch('/delete_notifications', {
+        method: 'POST',
+        body: body,
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).catch(function () {});
+
+    return false;
+}, true);
+</script>
 @endpush
+
+
+

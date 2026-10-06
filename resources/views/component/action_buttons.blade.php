@@ -338,55 +338,93 @@
 @once
 @push('scripts')
 <script>
-// Simple confirm and delete function
+function actionButtonToast(message, type, title) {
+    if (typeof window.appToast === 'function') {
+        window.appToast(message, type || 'info', title);
+        return;
+    }
+    console[type === 'error' ? 'error' : 'log'](message);
+}
+
+function actionButtonConfirm(message) {
+    if (typeof window.appConfirm === 'function') {
+        return window.appConfirm(message, {
+            title: 'Confirm delete',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
+        });
+    }
+    return Promise.resolve(true);
+}
+
+function submitDeleteRequest(deleteUrl, deleteMethod, button) {
+    if (deleteMethod === 'GET') {
+        window.location.href = deleteUrl;
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+        actionButtonToast('CSRF token not found. Please refresh the page.', 'error', 'Error');
+        return;
+    }
+
+    if (button) {
+        button.style.opacity = '0.6';
+        button.style.pointerEvents = 'none';
+    }
+
+    fetch(deleteUrl, {
+        method: deleteMethod,
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+        .then(function(response) {
+            return response.json().catch(function() {
+                return { success: response.ok, message: response.ok ? 'Deleted successfully' : 'Error deleting item' };
+            }).then(function(data) {
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || 'Error deleting item');
+                }
+                return data;
+            });
+        })
+        .then(function(data) {
+            try {
+                sessionStorage.setItem('appToastAfterReload', JSON.stringify({
+                    message: data.message || 'Deleted successfully',
+                    type: 'success',
+                    title: 'Success'
+                }));
+            } catch (error) {}
+
+            window.location.reload();
+        })
+        .catch(function(error) {
+            actionButtonToast(error.message || 'Error deleting item. Please try again.', 'error', 'Error');
+            if (button) {
+                button.style.opacity = '1';
+                button.style.pointerEvents = 'auto';
+            }
+        });
+}
+
 function confirmDelete(element) {
     const deleteUrl = element.dataset.deleteUrl;
     const entityName = element.dataset.entityName || 'this item';
-    const deleteMethod = element.dataset.deleteMethod || 'GET';
-    
-    console.log('=== DELETE DEBUG ===');
-    console.log('Delete URL:', deleteUrl);
-    console.log('Entity Name:', entityName);
-    console.log('Method:', deleteMethod);
-    
-    if (confirm(`Are you sure you want to delete "${entityName}"?`)) {
-        console.log('User confirmed, processing delete...');
-        
-        if (deleteMethod === 'GET') {
-            // For GET method, just navigate
-            window.location.href = deleteUrl;
-        } else {
-            // For other methods, use fetch
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            fetch(deleteUrl, {
-                method: deleteMethod,
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message || 'Error deleting item');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting item. Please try again.');
-            });
-        }
-    } else {
-        console.log('User cancelled');
-    }
+    const deleteMethod = (element.dataset.deleteMethod || 'GET').toUpperCase();
+
+    actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
+        if (!confirmed) return;
+        submitDeleteRequest(deleteUrl, deleteMethod, element);
+    });
 }
 
-// Universal delete handler for action buttons (backup method)
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         const deleteBtn = e.target.closest('.action-delete-btn');
@@ -396,48 +434,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
 
         const deleteUrl = deleteBtn.dataset.deleteUrl;
-        const deleteMethod = deleteBtn.dataset.deleteMethod || 'GET';
+        const deleteMethod = (deleteBtn.dataset.deleteMethod || 'GET').toUpperCase();
         const entityName = deleteBtn.dataset.entityName || 'this item';
 
-        if (!confirm(`Are you sure you want to delete "${entityName}"?`)) {
-            return;
-        }
-
-        deleteBtn.style.opacity = '0.6';
-        deleteBtn.style.pointerEvents = 'none';
-
-        if (deleteMethod === 'GET') {
-            window.location.href = deleteUrl;
-            return;
-        }
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        fetch(deleteUrl, {
-            method: deleteMethod,
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`HTTP ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            location.reload();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting item. Please try again.');
-            deleteBtn.style.opacity = '1';
-            deleteBtn.style.pointerEvents = 'auto';
+        actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
+            if (!confirmed) return;
+            submitDeleteRequest(deleteUrl, deleteMethod, deleteBtn);
         });
     });
 });

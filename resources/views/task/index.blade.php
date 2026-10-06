@@ -1111,8 +1111,20 @@
         function confirmDelete(event, url) {
             event.preventDefault();
             event.stopPropagation();
-            
-            if (confirm('Are you sure you want to delete this task?')) {
+
+            var confirmDeleteTask = typeof window.appConfirm === 'function'
+                ? window.appConfirm('Are you sure you want to delete this task?', {
+                    title: 'Confirm delete',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel'
+                })
+                : Promise.resolve(true);
+
+            confirmDeleteTask.then(function(confirmed) {
+                if (!confirmed) {
+                    return;
+                }
+
                 fetch(url, {
                     method: 'DELETE',
                     headers: {
@@ -1123,16 +1135,25 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        location.reload();
+                        if (typeof window.appToast === 'function') {
+                            window.appToast('Task deleted successfully', 'success', 'Success');
+                        }
+                        setTimeout(function() {
+                            location.reload();
+                        }, 700);
                     } else {
-                        alert('Error deleting task');
+                        if (typeof window.appToast === 'function') {
+                            window.appToast('Error deleting task', 'error', 'Error');
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error deleting task');
+                    if (typeof window.appToast === 'function') {
+                        window.appToast('Error deleting task', 'error', 'Error');
+                    }
                 });
-            }
+            });
         }
     </script>
 @endsection

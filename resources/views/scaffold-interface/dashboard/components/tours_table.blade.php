@@ -60,6 +60,7 @@
                     </div>
                 </div>
                 <div v-else>
+                    <div class="dashboard-tours-table-wrap">
                     <table class="table table-striped table-hover clickable-rows" style='background:#fff'>
                         <thead>
                         <th>ID</th>
@@ -128,6 +129,7 @@
                         </tr>
                         </tbody>
                     </table>
+                    </div>
 
                     <!-- Pagination Controls -->
                     <div class="pagination-wrapper" v-if="tours && tours.length > 0">
@@ -330,7 +332,9 @@ $(function () {
                 var self = this;
                 
                 if (!self.tourToDelete || !self.tourToDelete.id) {
-                    alert('Error: No tour selected for deletion');
+                    if (typeof window.appToast === 'function') {
+                        window.appToast('No tour selected for deletion', 'error', 'Error');
+                    }
                     return;
                 }
 
@@ -353,11 +357,14 @@ $(function () {
                         $('#myModal').modal('hide');
                         $('.modal-backdrop').remove();
                         
-                        // Show success message
-                        alert('Tour deleted successfully!');
+                        if (typeof window.appToast === 'function') {
+                            window.appToast('Tour deleted successfully!', 'success', 'Success');
+                        }
                         
                         // Reload the page
-                        window.location.reload();
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 700);
                     },
                     error: function(xhr, status, error) {
                         console.error('Delete error:', xhr, status, error);
@@ -385,7 +392,9 @@ $(function () {
                             errorMsg = 'Server error: ' + error;
                         }
                         
-                        alert(errorMsg);
+                        if (typeof window.appToast === 'function') {
+                            window.appToast(errorMsg, 'error', 'Error');
+                        }
                     }
                 });
             }
@@ -409,6 +418,18 @@ $(function () {
 </script>
 
 <style>
+.dashboard-tours-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-tours-table-wrap > .clickable-rows {
+    width: 100%;
+    min-width: 1120px;
+}
+
 .clickable-rows .clickable-row {
     cursor: pointer;
     transition: background-color 0.2s ease;

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class AnnouncementController extends Controller
 {
@@ -18,18 +19,22 @@ class AnnouncementController extends Controller
         try {
             $announcements = Announcement::where('parent_id', null)
                 ->orderBy('created_at', 'desc')
-                ->with(['author'])
+                ->with(['authorUser'])
                 ->get()
                 ->map(function($announcement) {
-                    $announcement->sender = $announcement->author ? $announcement->author->name : 'Unknown';
+                    $authorUser = $announcement->authorUser;
+                    $announcement->sender = $authorUser ? $authorUser->name : 'Unknown';
                     
-                    $announcement->files = $announcement->getMedia('announcement_files')->map(function($media) {
-                        return (object) [
-                            'id' => $media->id,
-                            'name' => $media->file_name,
-                            'url' => $media->getUrl(),
-                        ];
-                    });
+                    $announcement->files = collect();
+                    if ($this->mediaTableReady()) {
+                        $announcement->files = $announcement->getMedia('announcement_files')->map(function($media) {
+                            return (object) [
+                                'id' => $media->id,
+                                'name' => $media->file_name,
+                                'url' => $media->getUrl(),
+                            ];
+                        });
+                    }
                     
                     return $announcement;
                 });
@@ -38,8 +43,14 @@ class AnnouncementController extends Controller
             return view('announcements.index', compact('announcements', 'title'));
             
         } catch (\Exception $e) {
-            Log::error('Announcement index error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error loading announcements');
+            try {
+                Log::error('Announcement index error: ' . $e->getMessage());
+            } catch (\Exception $logException) {}
+
+            $announcements = collect();
+            $title = 'Announcements';
+            return view('announcements.index', compact('announcements', 'title'))
+                ->with('error', 'Error loading announcements: ' . $e->getMessage());
         }
     }
 
@@ -71,19 +82,21 @@ class AnnouncementController extends Controller
                 'author' => Auth::id(),
                 'parent_id' => $request->parent_id
             ]);
-            
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $file) {
-                    $announcement->addMedia($file)
-                        ->toMediaCollection('announcement_files');
-                }
-            }
-            
+            $filesAttached = $this->attachAnnouncementFiles($announcement, $request);
+
             Log::info('Announcement created: ' . $announcement->id);
-            
-            return redirect()->route('announcements.index')
+
+            $redirect = redirect()->route('announcements.index')
                 ->with('success', 'Announcement created successfully');
+
+            if ($request->hasFile('files') && !$filesAttached) {
+                $redirect->with('warning', 'Announcement created, but files were not attached because the media table is missing.');
+            }
+
+            return $redirect;
                 
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Store announcement error: ' . $e->getMessage());
             return redirect()->back()
@@ -101,7 +114,7 @@ class AnnouncementController extends Controller
     {
         try {
             // Find the model using the passed ID
-            $announcement = Announcement::with(['author', 'childs.author'])
+            $announcement = Announcement::with(['authorUser', 'childs.authorUser'])
                 ->findOrFail($announcement); // <-- CHANGED
             
             return view('announcements.show', compact('announcement'));
@@ -124,7 +137,7 @@ class AnnouncementController extends Controller
             \Log::info('Edit announcement called with ID: ' . $announcement);
             
             // Find the model using the passed ID
-            $announcement = Announcement::with('author')->findOrFail($announcement); // <-- CHANGED
+            $announcement = Announcement::with('authorUser')->findOrFail($announcement); // <-- CHANGED
             
             \Log::info('Announcement found: ' . $announcement->id);
             
@@ -135,10 +148,11 @@ class AnnouncementController extends Controller
             }
             
             $title = 'Edit Announcement';
-            $announcement->author_name = $announcement->author ? $announcement->author->name : 'Unknown';
+            $authorUser = $announcement->authorUser;
+            $announcement->author_name = $authorUser ? $authorUser->name : 'Unknown';
 
             $files = [];
-            if (Schema::hasTable('media')) {
+            if ($this->mediaTableReady()) {
                 $files = $announcement->getMedia('announcement_files')->map(function($media) {
                     return (object) [
                         'id' => $media->id,
@@ -189,15 +203,9 @@ class AnnouncementController extends Controller
                 'title' => $request->title,
                 'content' => $request->content
             ]);
-            
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $file) {
-                    $announcement->addMedia($file)
-                        ->toMediaCollection('announcement_files');
-                }
-            }
+            $filesAttached = $this->attachAnnouncementFiles($announcement, $request);
 
-            if ($request->has('deleted_files')) {
+            if ($this->mediaTableReady() && $request->has('deleted_files')) {
                 $deleted_ids = explode(',', $request->input('deleted_files'));
                 if (count($deleted_ids) > 0) {
                     $mediaItems = $announcement->getMedia('announcement_files');
@@ -208,12 +216,20 @@ class AnnouncementController extends Controller
                     }
                 }
             }
-            
+
             Log::info('Announcement updated: ' . $announcement->id);
-            
-            return redirect()->route('announcements.index')
+
+            $redirect = redirect()->route('announcements.index')
                 ->with('success', 'Announcement updated successfully');
+
+            if ($request->hasFile('files') && !$filesAttached) {
+                $redirect->with('warning', 'Announcement updated, but files were not attached because the media table is missing.');
+            }
+
+            return $redirect;
                 
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Update announcement error: ' . $e->getMessage());
             return redirect()->back()
@@ -228,34 +244,52 @@ class AnnouncementController extends Controller
      * == FIX: Changed $id to $announcement (matches route parameter) ==
      * == FIX: Changed JSON return to a Redirect ==
      */
-    public function destroy($announcement) // <-- CHANGED
+    public function destroy($announcement)
     {
         try {
-            // Find the model using the passed ID
-            $announcement = Announcement::findOrFail($announcement); // <-- CHANGED
-            
+            $announcement = Announcement::findOrFail($announcement);
+            $isAjax = request()->expectsJson() || request()->ajax();
+
             if (Auth::id() != $announcement->author && !Auth::user()->can('announcements.delete')) {
-                // == FIX: Return a redirect with an error ==
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to delete this announcement'
+                    ], 403);
+                }
+
                 return redirect()->route('announcements.index')
                     ->with('error', 'You do not have permission to delete this announcement');
             }
-            
+
             if (Schema::hasTable('media')) {
                 $announcement->clearMediaCollection('announcement_files');
             }
-            
+
+            $announcementId = $announcement->id;
             $announcement->delete();
-            
-            Log::info('Announcement deleted: ' . $announcement->id); // <-- CHANGED
-            
-            // == FIX: Return a redirect with success ==
+
+            Log::info('Announcement deleted: ' . $announcementId);
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Announcement deleted successfully'
+                ]);
+            }
+
             return redirect()->route('announcements.index')
                 ->with('success', 'Announcement deleted successfully');
-            
         } catch (\Exception $e) {
             Log::error('Delete announcement error: ' . $e->getMessage());
-            
-            // == FIX: Return a redirect with an error ==
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error deleting announcement: ' . $e->getMessage()
+                ], 500);
+            }
+
             return redirect()->route('announcements.index')
                 ->with('error', 'Error deleting announcement: ' . $e->getMessage());
         }
@@ -312,16 +346,16 @@ class AnnouncementController extends Controller
                 'author' => Auth::id(),
                 'parent_id' => $id
             ]);
-            
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $file) {
-                    $reply->addMedia($file)
-                        ->toMediaCollection('announcement_files');
-                }
-            }
-            
-            return redirect()->route('announcements.show', $id)
+            $filesAttached = $this->attachAnnouncementFiles($reply, $request);
+
+            $redirect = redirect()->route('announcements.show', $id)
                 ->with('success', 'Reply posted successfully');
+
+            if ($request->hasFile('files') && !$filesAttached) {
+                $redirect->with('warning', 'Reply posted, but files were not attached because the media table is missing.');
+            }
+
+            return $redirect;
                 
         } catch (\Exception $e) {
             Log::error('Reply error: ' . $e->getMessage());
@@ -329,4 +363,37 @@ class AnnouncementController extends Controller
                 ->with('error', 'Error posting reply');
         }
     }
+    private function mediaTableReady()
+    {
+        return Schema::hasTable('media')
+            && Schema::hasColumn('media', 'model_type')
+            && Schema::hasColumn('media', 'model_id')
+            && Schema::hasColumn('media', 'collection_name')
+            && Schema::hasColumn('media', 'file_name')
+            && Schema::hasColumn('media', 'disk')
+            && Schema::hasColumn('media', 'order_column');
+    }
+
+    private function attachAnnouncementFiles(Announcement $announcement, Request $request)
+    {
+        if (!$request->hasFile('files')) {
+            return true;
+        }
+
+        if (!$this->mediaTableReady()) {
+            Log::warning('Announcement files skipped because the media table is missing or incomplete.', [
+                'announcement_id' => $announcement->id,
+            ]);
+
+            return false;
+        }
+
+        foreach ($request->file('files') as $file) {
+            $announcement->addMedia($file)
+                ->toMediaCollection('announcement_files');
+        }
+
+        return true;
+    }
 }
+

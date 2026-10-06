@@ -104,7 +104,7 @@
                         @endif
 
                         @php
-                            $childs = $announcement->childs()->with('author')->get();
+                            $childs = $announcement->childs()->with('authorUser')->get();
                         @endphp
                         @if($childs && $childs->isNotEmpty())
                         <div class="panel panel-default">

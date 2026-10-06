@@ -28,15 +28,44 @@
             });
         },
 
+        showToast: function(message, type, title) {
+            if (typeof window.appToast === 'function') {
+                window.appToast(message, type, title);
+                return;
+            }
+
+            if (typeof $.toast === 'function') {
+                $.toast({
+                    heading: title || (type === 'error' ? 'Error' : 'Success'),
+                    text: message,
+                    icon: type || 'info',
+                    position: 'top-right'
+                });
+            }
+        },
+
+        askConfirm: function(message) {
+            if (typeof window.appConfirm === 'function') {
+                return window.appConfirm(message, {
+                    title: 'Confirm delete',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel'
+                });
+            }
+
+            return Promise.resolve(true);
+        },
+
         confirmDelete: function(url) {
-            if (!confirm('Are you sure you want to delete this item?')) {
+            ActionButtonsHandler.askConfirm('Are you sure you want to delete this item?').then(function(confirmed) {
+            if (!confirmed) {
                 return;
             }
 
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]');
             if (!csrfToken) {
-                alert('CSRF token not found. Please refresh the page.');
+                ActionButtonsHandler.showToast('CSRF token not found. Please refresh the page.', 'error', 'Error');
                 return;
             }
 
@@ -69,15 +98,7 @@
                 }
 
                 if (data.success) {
-                    // Show success message
-                    if (typeof $.toast === 'function') {
-                        $.toast({
-                            heading: 'Success',
-                            text: 'Item deleted successfully',
-                            icon: 'success',
-                            position: 'top-right'
-                        });
-                    }
+                    ActionButtonsHandler.showToast('Item deleted successfully', 'success', 'Success');
 
                     // Reload page after short delay
                     setTimeout(function() {
@@ -95,17 +116,8 @@
 
                 console.error('Delete error:', error);
 
-                // Show error message
-                if (typeof $.toast === 'function') {
-                    $.toast({
-                        heading: 'Error',
-                        text: error.message || 'Error deleting item. Please try again.',
-                        icon: 'error',
-                        position: 'top-right'
-                    });
-                } else {
-                    alert('Error deleting item: ' + error.message);
-                }
+                ActionButtonsHandler.showToast(error.message || 'Error deleting item. Please try again.', 'error', 'Error');
+            });
             });
         }
     };

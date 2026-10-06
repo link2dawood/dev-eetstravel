@@ -21,66 +21,75 @@
     line-height: 40px;
     /* height: 100%; */
 }
-    /* Toggle Switch */
-    .toggle {
-        position: relative;
-        height: 42px;
+    .conversion-alert {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.125rem;
+        border-radius: 10px;
     }
-    
-    .toggle input[type="checkbox"] {
-        position: absolute;
-        left: 0;
-        top: 0;
-        z-index: 10;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        opacity: 0;
-    }
-    
-    .toggle label {
-        position: relative;
+
+    .conversion-alert .alert-title {
         display: flex;
-        height: 100%;
         align-items: center;
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
     }
-    
-    .toggle label:before {
-        content: "Quotations";
-        background: #fff;
-        color: #000;
-        height: 42px;
-        width: 140px;
+
+    .conversion-action-btn {
         display: inline-flex;
         align-items: center;
-        padding-left: 15px;
-        border-radius: 30px;
-        border: 1px solid #eee;
-        box-shadow: inset 140px 0px 0 0px #000;
-        font-size: 10px;
-        transition: 0.2s ease-in;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 42px;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: 1px solid currentColor;
+        font-weight: 700;
+        line-height: 1;
+        white-space: nowrap;
+        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     }
-    
-    .toggle label:after {
-        content: "GoAhead";
-        position: absolute;
-        left: 80px;
-        line-height: 42px;
-        top: 0;
-        color: #FFF;
-        font-size: 10px;
-        transition: 0.2s ease-in;
+
+    .conversion-action-btn.btn-go-ahead {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #ffffff;
     }
-    
-    .toggle input[type="checkbox"]:checked + label:before {
-        color: #000;
-        box-shadow: inset 0px 0px 0 0px #000;
+
+    .conversion-action-btn.btn-go-ahead:hover,
+    .conversion-action-btn.btn-go-ahead:focus {
+        background: #15803d;
+        border-color: #15803d;
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.16);
     }
-    
-    .toggle input[type="checkbox"]:checked + label:after {
-        color: #FFF;
+
+    .conversion-action-btn.btn-quotation {
+        background: #f59e0b;
+        border-color: #f59e0b;
+        color: #111827;
+    }
+
+    .conversion-action-btn.btn-quotation:hover,
+    .conversion-action-btn.btn-quotation:focus {
+        background: #d97706;
+        border-color: #d97706;
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+    }
+
+    @media (max-width: 576px) {
+        .conversion-alert {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .conversion-action-btn {
+            width: 100%;
+        }
     }
 </style>
 @endsection
@@ -243,36 +252,24 @@
 
     {{-- Quotation/Tour Toggle --}}
     @if ($tour->is_quotation)
-        <div class="alert alert-warning" role="alert">
-            <div class="d-flex">
-                <div class="flex-fill">
-                    <h4 class="alert-title">
-                        <i class="ti ti-exchange me-2"></i>Convert Quotation to Tour
-                    </h4>
-                </div>
-                <div>
-                    <div class="toggle">
-                        <input type="checkbox" id="check1" onclick="handleToggleConversion(this, true)" checked />
-                        <label></label>
-                    </div>
-                </div>
-            </div>
+        <div class="alert alert-warning conversion-alert" role="alert">
+            <h4 class="alert-title">
+                <i class="ti ti-exchange me-2"></i>Convert Quotation to Tour
+            </h4>
+            <button type="button" class="conversion-action-btn btn-go-ahead" onclick="handleToggleConversion(true)">
+                <i class="ti ti-check"></i>
+                Go Ahead
+            </button>
         </div>
     @else
-        <div class="alert alert-success" role="alert">
-            <div class="d-flex">
-                <div class="flex-fill">
-                    <h4 class="alert-title">
-                        <i class="ti ti-exchange me-2"></i>Convert Tour to Quotation
-                    </h4>
-                </div>
-                <div>
-                    <div class="toggle">
-                        <input type="checkbox" id="check2" onclick="handleToggleConversion(this, false)" />
-                        <label></label>
-                    </div>
-                </div>
-            </div>
+        <div class="alert alert-success conversion-alert" role="alert">
+            <h4 class="alert-title">
+                <i class="ti ti-exchange me-2"></i>Convert Tour to Quotation
+            </h4>
+            <button type="button" class="conversion-action-btn btn-quotation" onclick="handleToggleConversion(false)">
+                <i class="ti ti-file-invoice"></i>
+                Convert to Quotation
+            </button>
         </div>
     @endif
 
@@ -2033,36 +2030,32 @@ $(function() {
     });
 });
 
-// Handle Toggle Conversion - FIXED VERSION
-function handleToggleConversion(checkbox, isCurrentlyQuotation) {
+// Handle tour/quotation conversion
+function handleToggleConversion(isCurrentlyQuotation) {
     var url;
     var confirmMessage;
     
     if (isCurrentlyQuotation) {
-        // Currently a quotation
-        if (checkbox.checked) {
-            // Convert to Tour (Go Ahead)
-            url = "{{ route('tour.convert_to_tour', ['id' => $tour->id]) }}";
-            confirmMessage = "Are you sure you want to convert this Quotation to Tour (Go Ahead)?";
-        } else {
-            // Stay as Quotation
-            checkbox.checked = true;
-            return;
-        }
+        url = "{{ route('tour.convert_to_tour', ['id' => $tour->id]) }}";
+        confirmMessage = "Are you sure you want to convert this Quotation to Tour (Go Ahead)?";
     } else {
-        // Currently a tour
-        if (checkbox.checked) {
-            // Convert to Quotation
-            url = "{{ route('tour.convertToQuotation', ['id' => $tour->id]) }}";
-            confirmMessage = "Are you sure you want to convert this Tour to Quotation?";
-        } else {
-            // Stay as Tour
-            checkbox.checked = false;
+        url = "{{ route('tour.convertToQuotation', ['id' => $tour->id]) }}";
+        confirmMessage = "Are you sure you want to convert this Tour to Quotation?";
+    }
+
+    var confirmConversion = typeof window.appConfirm === 'function'
+        ? window.appConfirm(confirmMessage, {
+            title: 'Confirm conversion',
+            confirmText: isCurrentlyQuotation ? 'Go Ahead' : 'Convert',
+            cancelText: 'Cancel'
+        })
+        : Promise.resolve(true);
+
+    confirmConversion.then(function(confirmed) {
+        if (!confirmed) {
             return;
         }
-    }
-    
-    if (confirm(confirmMessage)) {
+
         // Show loading indicator
         var loadingHtml = '<div class="position-fixed top-50 start-50 translate-middle" style="z-index: 9999;">' +
                          '<div class="spinner-border text-primary" role="status">' +
@@ -2075,7 +2068,12 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
             url: url,
             success: function(response) {
                 console.log('Conversion successful:', response);
-                location.reload();
+                if (typeof window.appToast === 'function') {
+                    window.appToast(response.message || 'Conversion completed successfully', 'success', 'Success');
+                }
+                setTimeout(function() {
+                    location.reload();
+                }, 700);
             },
             error: function(xhr, status, error) {
                 console.error('Conversion error:', {
@@ -2087,9 +2085,6 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
                 // Remove loading indicator
                 $('.spinner-border').parent().remove();
                 
-                // Revert checkbox state
-                checkbox.checked = !checkbox.checked;
-                
                 // Show error message
                 var errorMessage = 'Error converting tour status.';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -2098,13 +2093,12 @@ function handleToggleConversion(checkbox, isCurrentlyQuotation) {
                     errorMessage += ' ' + xhr.responseText;
                 }
                 
-                alert(errorMessage + ' Please check the console for more details.');
+                if (typeof window.appToast === 'function') {
+                    window.appToast(errorMessage, 'error', 'Error');
+                }
             }
         });
-    } else {
-        // User cancelled, revert checkbox
-        checkbox.checked = !checkbox.checked;
-    }
+    });
 }
 
 // Show Landing Page Modal

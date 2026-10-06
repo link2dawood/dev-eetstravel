@@ -35,6 +35,14 @@ class Announcement extends Model implements HasMedia
     }
 
     /**
+     * Get the author user without conflicting with the author column.
+     */
+    public function authorUser()
+    {
+        return $this->belongsTo('App\\User', 'author');
+    }
+
+    /**
      * Override delete to remove children
      */
     public function delete()

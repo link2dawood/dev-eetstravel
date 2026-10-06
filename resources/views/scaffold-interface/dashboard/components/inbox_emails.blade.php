@@ -515,32 +515,34 @@
                 },
 
                 deleteMail(email, list=false){
-                    if(confirm('Are you sure delete Email?')){
+                    const confirmDelete = typeof window.appConfirm === 'function'
+                        ? window.appConfirm('Are you sure you want to delete this email?', {
+                            title: 'Confirm delete',
+                            confirmText: 'Delete',
+                            cancelText: 'Cancel'
+                        })
+                        : Promise.resolve(true);
+
+                    confirmDelete.then((confirmed) => {
+                        if (!confirmed) {
+                            return;
+                        }
+
                         if(list) this.backToList()
                         let userId = $('meta[name="user-id"]').attr('content');
                         return axios.post(`/api/v1/users/${userId}/email/${email.header.uid}/delete`,{
                             folder:this.currentFolder
                         }).then((result)=>{
-                            $.toast({
-                                heading: 'Success',
-                                text: "Email is deleted",
-                                icon: 'success',
-                                loader: true,
-                                hideAfter : 1500,
-                                position: 'top-right',
-                            });
+                            if (typeof window.appToast === 'function') {
+                                window.appToast('Email is deleted', 'success', 'Success');
+                            }
                             this.fetchData(true);
                         }).catch((err)=>{
-                            $.toast({
-                                heading: 'Error',
-                                text: "Email not deleted",
-                                icon: 'error',
-                                loader: true,
-                                hideAfter : 1500,
-                                position: 'top-right',
-                            });
+                            if (typeof window.appToast === 'function') {
+                                window.appToast('Email not deleted', 'error', 'Error');
+                            }
                         });
-                    }
+                    });
                 },
 
                 getListFolderByUser(get= false){

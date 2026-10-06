@@ -122,8 +122,9 @@ class AppController extends Controller
                         ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'todo_page')
+            ->withQueryString();
 
         $completedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
@@ -131,8 +132,9 @@ class AppController extends Controller
                 $query->where('is_completed', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'completed_page')
+            ->withQueryString();
 
         $abortedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
@@ -140,13 +142,16 @@ class AppController extends Controller
                 $query->where('is_aborted', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'aborted_page')
+            ->withQueryString();
 
         $taskStatuses = \App\Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
 
         // Process all tasks for action buttons
-        $allTasks = $todoTasks->merge($completedTasks)->merge($abortedTasks);
+        $allTasks = $todoTasks->getCollection()
+            ->merge($completedTasks->getCollection())
+            ->merge($abortedTasks->getCollection());
         foreach ($allTasks as $task) {
             $task->tour_name = $task->tourName();
             $task->show_assigned_users = $task->showAssignedUsers();
@@ -520,8 +525,8 @@ class AppController extends Controller
                         ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'todo_page')
+            ->withQueryString();
 
         // Completed Tasks
         $completedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
@@ -530,8 +535,8 @@ class AppController extends Controller
                 $query->where('is_completed', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'completed_page')
+            ->withQueryString();
 
         // Aborted Tasks
         $abortedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
@@ -540,8 +545,8 @@ class AppController extends Controller
                 $query->where('is_aborted', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'aborted_page')
+            ->withQueryString();
 
         $statuses = \App\Status::where('type', 'task')->orderBy('sort_order')->get();
 

@@ -45,7 +45,9 @@ $(document).ready(function() {
         deleteUrl = $(this).data('link');
         
         if (!deleteUrl) {
-            alert('Error: Delete URL not found');
+            if (typeof window.appToast === 'function') {
+                window.appToast('Delete URL not found', 'error', 'Error');
+            }
             return;
         }
 
@@ -61,7 +63,9 @@ $(document).ready(function() {
     // Handle confirm delete button
     $('#confirmTourDeleteBtn').on('click', function() { {{-- <-- ID CHANGED --}}
         if (!deleteUrl) {
-            alert('Error: No delete URL specified');
+            if (typeof window.appToast === 'function') {
+                window.appToast('No delete URL specified', 'error', 'Error');
+            }
             return;
         }
 
@@ -79,10 +83,12 @@ $(document).ready(function() {
             success: function(response) {
                 tourModal.hide();
                 var successMsg = response.message || 'Tour deleted successfully!';
-                alert(successMsg);
+                if (typeof window.appToast === 'function') {
+                    window.appToast(successMsg, 'success', 'Success');
+                }
                 setTimeout(function() {
                     location.reload();
-                }, 500);
+                }, 700);
             },
             error: function(xhr) {
                 $btn.prop('disabled', false).html(originalText);
@@ -105,7 +111,9 @@ $(document).ready(function() {
                     errorMsg = 'Server error. Please try again later.';
                 }
                 
-                alert(errorMsg);
+                if (typeof window.appToast === 'function') {
+                    window.appToast(errorMsg, 'error', 'Error');
+                }
             }
         });
     });

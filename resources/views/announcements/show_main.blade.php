@@ -23,7 +23,7 @@
                         <div class="item">
                             <div class="chat-details">
                                 <span class="chat-author">
-                                    by <b>{{ $announcement->author->name ?? 'Unknown' }}</b>
+                                    by <b>{{ optional($announcement->authorUser)->name ?? 'Unknown' }}</b>
                                 </span>
                                 <span class="chat-date">
                                     <i>{{ $announcement->created_at }}</i>

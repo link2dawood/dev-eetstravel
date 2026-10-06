@@ -1292,31 +1292,47 @@ function editTask(taskId) {
 }
 
 function deleteTask(taskId) {
-    if (!confirm('Are you sure you want to delete this task?')) {
-        return;
-    }
+    var confirmDeleteTask = typeof window.appConfirm === 'function'
+        ? window.appConfirm('Are you sure you want to delete this task?', {
+            title: 'Confirm delete',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
+        })
+        : Promise.resolve(true);
 
-    fetch(`/task/${taskId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
-        if (row) {
-            row.style.opacity = '0';
-            row.style.transform = 'translateX(-20px)';
-            setTimeout(() => {
-                location.reload(); // Reload to update list and counts
-            }, 300);
+    confirmDeleteTask.then(function(confirmed) {
+        if (!confirmed) {
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error deleting task');
+
+        fetch(`/task/${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (typeof window.appToast === 'function') {
+                window.appToast('Task deleted successfully', 'success', 'Success');
+            }
+
+            const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
+            if (row) {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    location.reload(); // Reload to update list and counts
+                }, 700);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (typeof window.appToast === 'function') {
+                window.appToast('Error deleting task', 'error', 'Error');
+            }
+        });
     });
 }
 

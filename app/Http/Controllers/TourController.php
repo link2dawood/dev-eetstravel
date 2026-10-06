@@ -922,6 +922,7 @@ public function store(StoreTourRequest $request)
         DB::commit();
 
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
+//         session()->flash('success', "Tour {$tour->name} created");
 
         if($request->get('modal_create_tour') == 1) {
             if ($request->expectsJson() || $request->ajax()) {
@@ -946,7 +947,7 @@ public function store(StoreTourRequest $request)
             return response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500);
         }
         
-        return back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput();
+        return back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput()->with('error', 'Failed to create tour: ' . $e->getMessage());
     }
 }
 
@@ -1113,6 +1114,7 @@ public function store(StoreTourRequest $request)
 //         DB::commit();
 
 //         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
+//         session()->flash('success', "Tour {$tour->name} created");
 
 //         if ($request->modal_create_tour == 1) {
 //             return $request->ajax()

@@ -54,6 +54,18 @@
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
     }
+
+    .client-validation-error {
+        margin-top: 0.35rem;
+        color: #d63939;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .is-invalid-client {
+        border-color: #d63939 !important;
+        box-shadow: 0 0 0 0.2rem rgba(214, 57, 57, 0.12) !important;
+    }
 </style>
 @endsection
 
@@ -183,7 +195,7 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="name">{!!trans('main.Name')!!}</label>
                                     <input id="name" name="name" type="text" class="form-control"
-                                           value="{!!old('name', $tour->name)!!}">
+                                           value="{!!old('name', $tour->name)!!}" required>
                                 </div>
 
                                 <div class="mb-3">
@@ -199,7 +211,7 @@
                                             <i class="ti ti-calendar"></i>
                                         </span>
                                         {!! Form::text('departure_date', old('departure_date', $tour->departure_date), ['class' => 'form-control datepicker',
-                                         'id' => 'departure_date', 'placeholder' => 'Select date']) !!}
+                                         'id' => 'departure_date', 'placeholder' => 'Select date', 'required' => true]) !!}
                                     </div>
                                 </div>
 
@@ -210,7 +222,7 @@
                                             <i class="ti ti-calendar"></i>
                                         </span>
                                         {!! Form::text('retirement_date', old('retirement_date', $tour->retirement_date), ['class' => 'form-control datepicker',
-                                         'id' => 'retirement_date', 'placeholder' => 'Select date']) !!}
+                                         'id' => 'retirement_date', 'placeholder' => 'Select date', 'required' => true]) !!}
                                     </div>
                                 </div>
 
@@ -242,7 +254,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label" for="responsible_user">{!!trans('main.ResponsibleUser')!!}</label>
-                                    <select name="responsible_user" class="form-select" id="responsible_user">
+                                    <select name="responsible_user" class="form-select" id="responsible_user" data-required="true">
                                         <option value="0">{!!trans('main.Withoutresponsibleuser')!!}</option>
                                         @foreach($users as $user)
                                             <option value="{{$user->id}}" {{$tour->getResponsibleUser() ?
@@ -254,7 +266,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label" for="status">{!!trans('main.Status')!!}</label>
-                                    <select name="status" id="status" class="form-select">
+                                    <select name="status" id="status" class="form-select" required>
                                         @foreach($statuses as $status)
                                             <option value="{{ $status->id }}"
                                                 {{ ($errors != null && count($errors) > 0) ? (old('status') == $status->id ? 'selected' : '') : ($tour->status == $status->id ? 'selected' : '') }}>
@@ -270,7 +282,7 @@
                                 <div class="mb-3">
                                     <label class="form-label" for="pax">Pax</label>
                                     <input id="pax" name="pax" type="number" class="form-control"
-                                           value="{!!old('pax', $tour->pax)!!}">
+                                           value="{!!old('pax', $tour->pax)!!}" required>
                                 </div>
 
                                 <div class="mb-3">
@@ -366,7 +378,7 @@
                                     <label class="form-label" for="files">{!!trans('main.imageforlanding')!!}</label>
 
                                     <div class="card card-sm mb-2">
-                                        <div class="card-body p-2">
+                                        <div class="card-body p-2" id="landing-image-preview">
                                             @if($tour->attachments()->first() != null)
                                                 <img class="img-fluid rounded" src="{{ $tour->attachments()->first()->url }}" style="width:100%; max-height: 300px; object-fit: cover;">
                                             @else
@@ -453,20 +465,139 @@ document.addEventListener('DOMContentLoaded', function() {
     var fileInput = document.getElementById('files');
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
-            var fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-            document.getElementById('file-name-display').value = fileName;
+            var file = e.target.files[0];
+            var fileName = file ? file.name : 'No file chosen';
+            var fileNameDisplay = document.getElementById('file-name-display');
+            var preview = document.getElementById('landing-image-preview');
+
+            if (fileNameDisplay) {
+                fileNameDisplay.value = fileName;
+            }
+
+            if (!preview) {
+                return;
+            }
+
+            if (!file) {
+                preview.innerHTML = '<div class="text-center py-5 text-muted"><i class="ti ti-photo ti-lg mb-2"></i><p>No image uploaded</p></div>';
+                return;
+            }
+
+            if (!file.type || !file.type.match(/^image\//)) {
+                preview.innerHTML = '<div class="text-center py-5 text-danger"><i class="ti ti-alert-circle ti-lg mb-2"></i><p>Please select a valid image file.</p></div>';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                preview.innerHTML = '<img class="img-fluid rounded" src="' + event.target.result + '" style="width:100%; max-height: 300px; object-fit: cover;">';
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    // Prevent multiple form submissions
     var form = document.getElementById('tour_form');
     var submitBtn = document.getElementById('submitBtn');
 
-    if (form && submitBtn) {
+    function getFieldLabel(field) {
+        var label = null;
+
+        if (field.id) {
+            label = form.querySelector('label[for="' + field.id + '"]');
+        }
+
+        if (!label) {
+            var group = field.closest('.mb-3, .form-group, .col-md-6, .col-md-12');
+            label = group ? group.querySelector('label') : null;
+        }
+
+        return label ? label.textContent.trim().replace(/\s+/g, ' ') : (field.name || 'This field');
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('is-invalid-client');
+        var group = field.closest('.mb-3, .form-group, .col-md-6, .col-md-12') || field.parentElement;
+        if (!group) {
+            return;
+        }
+
+        var error = group.querySelector('.client-validation-error[data-for="' + (field.id || field.name) + '"]');
+        if (error) {
+            error.remove();
+        }
+    }
+
+    function showFieldError(field) {
+        clearFieldError(field);
+        field.classList.add('is-invalid-client');
+
+        var group = field.closest('.mb-3, .form-group, .col-md-6, .col-md-12') || field.parentElement;
+        if (!group) {
+            return;
+        }
+
+        var message = document.createElement('div');
+        message.className = 'client-validation-error';
+        message.dataset.for = field.id || field.name;
+        message.textContent = getFieldLabel(field) + ' is required';
+        group.appendChild(message);
+    }
+
+    function isFieldEmpty(field) {
+        if (field.type === 'checkbox' || field.type === 'radio') {
+            return !form.querySelector('[name="' + field.name + '"]:checked');
+        }
+
+        return !String(field.value || '').trim() || field.value === '0' && field.dataset.required === 'true';
+    }
+
+    function validateRequiredFields() {
+        var fields = Array.prototype.slice.call(form.querySelectorAll('[required], [data-required="true"]'));
+        var firstInvalid = null;
+
+        fields.forEach(function(field) {
+            if (field.disabled || field.type === 'hidden' || field.offsetParent === null) {
+                return;
+            }
+
+            if (isFieldEmpty(field)) {
+                showFieldError(field);
+                firstInvalid = firstInvalid || field;
+            } else {
+                clearFieldError(field);
+            }
+        });
+
+        if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid.focus({ preventScroll: true });
+            return false;
+        }
+
+        return true;
+    }
+
+    if (form) {
+        form.querySelectorAll('[required], [data-required="true"]').forEach(function(field) {
+            field.addEventListener('input', function() {
+                clearFieldError(field);
+            });
+            field.addEventListener('change', function() {
+                clearFieldError(field);
+            });
+        });
+
         form.addEventListener('submit', function(e) {
-            // Disable submit button to prevent double submission
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
+            if (!validateRequiredFields()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
+            }
         });
     }
 });

@@ -188,6 +188,20 @@ trait ExportTrait{
             }
         } while ($changed);
 
+        // PHPWord may try to create a TextRun for these wrappers. If they are nested
+        // inside another TextRun, DOC generation fails with "Cannot add TextRun in TextRun".
+        // Unwrapping them preserves text/content while avoiding invalid PHPWord nesting.
+        foreach (['span', 'font', 'a', 'small'] as $tag) {
+            $nodes = [];
+            foreach ($dom->getElementsByTagName($tag) as $node) {
+                $nodes[] = $node;
+            }
+
+            foreach ($nodes as $node) {
+                $this->unwrapPhpWordNode($node);
+            }
+        }
+
         $root = $dom->getElementById('phpword-root');
         if (!$root) {
             return $html;
@@ -246,7 +260,26 @@ trait ExportTrait{
         $parent->removeChild($node);
     }
 
-	 public function exportVoucherdoc($tour, $data, $request)
+	     private function addHtmlToPhpWordSection($section, $html)
+    {
+        try {
+            \PhpOffice\PhpWord\Shared\Html::addHtml($section, $html);
+            return;
+        } catch (\BadMethodCallException $e) {
+            if (strpos($e->getMessage(), 'Cannot add TextRun in TextRun') === false) {
+                throw $e;
+            }
+
+            $plainText = trim(html_entity_decode(strip_tags((string) $html), ENT_QUOTES, 'UTF-8'));
+            foreach (preg_split('/\R{2,}/', $plainText) as $paragraph) {
+                $paragraph = trim(preg_replace('/\s+/', ' ', $paragraph));
+                if ($paragraph !== '') {
+                    $section->addText($paragraph);
+                }
+            }
+        }
+    }
+public function exportVoucherdoc($tour, $data, $request)
     {
 		 $office=Offices::where('status',1)->first();
         $issued_time = Carbon::now()->format('Y-m-d');
@@ -313,7 +346,7 @@ $sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent))
 $section = $phpWord->addSection();
 	 $section->getStyle()->setMarginLeft(1000);
 
-    \PhpOffice\PhpWord\Shared\Html::addHtml($section, $sanitizedHtml);
+    $this->addHtmlToPhpWordSection($section, $sanitizedHtml);
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
@@ -452,7 +485,7 @@ $sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent))
 $section = $phpWord->addSection();
 	 $section->getStyle()->setMarginLeft(1000);
 
-    \PhpOffice\PhpWord\Shared\Html::addHtml($section, $sanitizedHtml);
+    $this->addHtmlToPhpWordSection($section, $sanitizedHtml);
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
@@ -759,7 +792,7 @@ $sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent))
 $section = $phpWord->addSection();
 	 $section->getStyle()->setMarginLeft(1000);
 
-    \PhpOffice\PhpWord\Shared\Html::addHtml($section, $sanitizedHtml);
+    $this->addHtmlToPhpWordSection($section, $sanitizedHtml);
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file

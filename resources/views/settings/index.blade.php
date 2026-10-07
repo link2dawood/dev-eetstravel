@@ -42,8 +42,7 @@
 							<td>{{@$setting->value}}</td>
 							<td>
 								<div class="btn-list flex-nowrap">
-									<!-- EDIT BUTTON -->
-									<a href="{{ route('settings.edit', ['setting' => $setting->id]) }}" class="btn btn-icon btn-ghost-warning" title="Edit">
+<a href="{{ route('settings.edit', ['setting' => $setting->id]) }}" class="btn btn-icon btn-ghost-warning" title="Edit">
 										<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 											<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 											<path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -51,9 +50,7 @@
 											<path d="M16 5l3 3" />
 										</svg>
 									</a>
-
-									<!-- DELETE BUTTON -->
-									<a href="{{ route('settings.destroy', $setting->id) }}"
+<a href="{{ route('settings.destroy', $setting->id) }}"
 									   class="btn btn-icon btn-ghost-danger"
 									   title="Delete"
 									   onclick="event.preventDefault(); confirmDelete('{{ route('settings.destroy', $setting->id) }}', '{{ $setting->id }}');">
@@ -66,9 +63,7 @@
 											<path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
 										</svg>
 									</a>
-
-									<!-- Hidden Delete Form -->
-									<form id="delete-form-{{ $setting->id }}" action="{{ route('settings.destroy', $setting->id) }}" method="POST" style="display: none;">
+<form id="delete-form-{{ $setting->id }}" action="{{ route('settings.destroy', $setting->id) }}" method="POST" style="display: none;">
 										@csrf
 										@method('DELETE')
 									</form>
@@ -98,9 +93,22 @@ $(document).ready(function() {
 });
 
 function confirmDelete(url, settingId) {
-	if (confirm('Are you sure you want to delete this setting?')) {
-		document.getElementById('delete-form-' + settingId).submit();
-	}
+    const submitDelete = function () {
+        document.getElementById('delete-form-' + settingId).submit();
+    };
+
+    if (typeof window.appConfirm === 'function') {
+        window.appConfirm('Are you sure you want to delete this setting?', {
+            title: 'Confirm delete',
+            confirmText: 'Delete',
+            cancelText: 'Cancel'
+        }).then(function (confirmed) {
+            if (confirmed) submitDelete();
+        });
+        return;
+    }
+
+    submitDelete();
 }
 </script>
 @endpush

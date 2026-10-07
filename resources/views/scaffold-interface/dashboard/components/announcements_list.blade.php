@@ -59,8 +59,8 @@
         </table>
         <div class="box-footer clearfix">
             @if(Auth::user()->can('announcements.create'))
-            <a href="{{route('announcements.create')}}" class="btn btn-primary">
-                <i class="fa fa-plus fa-md" aria-hidden="true"></i> New Announcement
+            <a href="{{route('announcements.create')}}" class="btn btn-primary create-action-btn">
+                <span class="create-action-icon" aria-hidden="true">+</span> New Announcement
             </a>
             @endif
             @if(Auth::user()->can('announcements.index'))

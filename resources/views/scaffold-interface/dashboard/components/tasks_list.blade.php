@@ -672,6 +672,56 @@
             color: var(--monday-primary);
             background-color: #eff6ff;
         }
+        .dashboard-task-list .monday-action-btn {
+            border: 0 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        .dashboard-task-list .monday-action-btn svg,
+        .dashboard-task-list .monday-action-btn:hover svg,
+        .dashboard-task-list .monday-action-btn:focus svg,
+        .dashboard-task-list .monday-action-btn:active svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            width: 19px;
+            height: 19px;
+            stroke-width: 2.5px;
+        }
+
+        .dashboard-task-list .monday-action-btn svg path,
+        .dashboard-task-list .monday-action-btn svg line,
+        .dashboard-task-list .monday-action-btn svg polyline {
+            stroke: #ffffff !important;
+        }
+
+        .dashboard-task-list .monday-action-btn.edit,
+        .dashboard-task-list .monday-action-btn.edit:hover,
+        .dashboard-task-list .monday-action-btn.edit:focus,
+        .dashboard-task-list .monday-action-btn.edit:active {
+            background: #066fd1 !important;
+            border-color: #066fd1 !important;
+            color: #ffffff !important;
+        }
+
+        .dashboard-task-list .monday-action-btn.edit:hover,
+        .dashboard-task-list .monday-action-btn.edit:focus {
+            background: #055db0 !important;
+        }
+
+        .dashboard-task-list .monday-action-btn.delete,
+        .dashboard-task-list .monday-action-btn.delete:hover,
+        .dashboard-task-list .monday-action-btn.delete:focus,
+        .dashboard-task-list .monday-action-btn.delete:active {
+            background: #d63939 !important;
+            border-color: #d63939 !important;
+            color: #ffffff !important;
+        }
+
+        .dashboard-task-list .monday-action-btn.delete:hover,
+        .dashboard-task-list .monday-action-btn.delete:focus {
+            background: #b02a2a !important;
+        }
     </style>
 <div class="dashboard-task-list">
     <div class="wrapper">
@@ -681,12 +731,8 @@
 
         <div class="monday-board">
             <div class="monday-toolbar">
-                <button class="monday-btn monday-btn-primary" onclick="newTask()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" style="width: 18px; height: 18px;">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
+                <button class="monday-btn monday-btn-primary create-action-btn" onclick="newTask()">
+                    <span class="create-action-icon" aria-hidden="true">+</span>
                     New Task
                 </button>
 
@@ -1455,3 +1501,7 @@
         });
     </script>
 </div>
+
+
+
+

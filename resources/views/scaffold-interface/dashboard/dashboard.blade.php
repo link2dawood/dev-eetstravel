@@ -355,9 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (task_permission) {
                 var taskBtn = document.createElement('button');
-                taskBtn.className = 'btn btn-box-tool';
+                taskBtn.className = 'btn btn-box-tool create-action-btn';
                 taskBtn.title = 'Add Task';
-                taskBtn.innerHTML = '<i class="fa fa-plus"></i>';
+                taskBtn.innerHTML = '<span class="create-action-icon" aria-hidden="true">+</span>';
                 taskBtn.onclick = function() {
                     var modal = document.getElementById('modalCreate1');
                     if (modal && typeof $(modal).modal === 'function') {

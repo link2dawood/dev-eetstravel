@@ -1,472 +1,313 @@
-{{-- 
-    Tour Index Page - Tabler Design
-    Fully responsive with modern Tabler components
-    Features: Tabs, search, filters, responsive cards/tables
---}}
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Tours')
 
 @section('post_styles')
 <style>
-    /* Responsive table enhancements */
+    .tour-page .page-header { margin-bottom: 1.25rem; }
+    .tour-page .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .tour-page .clickable-row { cursor: pointer; transition: background-color .15s ease, box-shadow .15s ease; }
+    .tour-page .clickable-row:hover { box-shadow: inset 3px 0 0 var(--tblr-primary, #066fd1); }
+    .tour-page .action-cell { white-space: nowrap; width: 1%; }
+    .tour-page .action-cell .btn-list,
+    .tour-page .action-cell .btn-list .btn-list { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: nowrap; gap: .35rem; margin: 0; }
+    .tour-page .action-cell .btn { display: inline-flex; align-items: center; justify-content: center; margin: 0; }
+    .tour-page .empty { padding: 2.5rem 1rem; }
+    .tour-page .empty-icon { font-size: 3rem; color: var(--tblr-muted); margin-bottom: 1rem; }
+    .tour-page .tab-pane-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .tour-page .table-search { max-width: 360px; }
+    .tour-page .pagination-wrap { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
     @media (max-width: 768px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-        
-        .btn-list {
-            flex-wrap: wrap;
-        }
-        
-        .table-responsive {
-            font-size: 0.875rem;
-        }
-    }
-    
-    /* Status badge styling */
-    .status-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 6px;
-    }
-    
-    /* Clickable row hover effect */
-    .clickable-row {
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .clickable-row:hover {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transform: translateY(-1px);
-    }
-    
-    /* Empty state styling */
-    .empty {
-        padding: 3rem 1rem;
-    }
-    
-    .empty-icon {
-        font-size: 3rem;
-        color: var(--tblr-muted);
-        margin-bottom: 1rem;
-    }
-    
-    /* Action buttons in tables */
-    .action-cell .btn-list {
-        gap: 0.25rem;
+        .tour-page .page-title { font-size: 1.4rem; }
+        .tour-page .card-header-tabs { overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; }
+        .tour-page .pagination-wrap { justify-content: center; text-align: center; }
     }
 </style>
 @endsection
 
 @section('content')
-<div class="container-xl">
-    {{-- Page Header --}}
+<div class="container-xl tour-page">
     <div class="page-header d-print-none">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <div class="page-pretitle">
-                    Tour Management
-                </div>
-                <h2 class="page-title">
-                    <i class="ti ti-plane me-2"></i>Tours
-                </h2>
+                <div class="page-pretitle">Tour Management</div>
+                <h2 class="page-title"><i class="ti ti-plane me-2"></i>Tours</h2>
             </div>
-            {{-- Page Actions --}}
             <div class="col-auto ms-auto d-print-none">
-                <div class="btn-list">
+                <div class="btn-list align-items-center">
                     @include('legend.tour_legend')
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('tour.create'), \App\Tour::class, 'btn btn-primary') !!}
+                    {!! \App\Helper\PermissionHelper::getCreateButton(route('tour.create'), \App\Tour::class, 'btn btn-primary create-action-btn') !!}
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Alert Messages --}}
     @if(session('message_buses'))
-        <div class="alert alert-info alert-dismissible" role="alert">
-            <div class="d-flex">
-                <div>
-                    <i class="ti ti-info-circle me-2"></i>
-                </div>
-                <div class="flex-fill">
-                    {{ session('message_buses') }}
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="ti ti-info-circle me-2"></i>{{ session('message_buses') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- Main Content Card with Tabs --}}
     <div class="card">
         <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <a href="#tours-tab" class="nav-link active" data-bs-toggle="tab" aria-selected="true" role="tab">
-                        <i class="ti ti-plane me-1"></i>Tours
-                        <span class="badge bg-blue-lt ms-1">{{ $tours->total() }}</span>
+                    <a href="#tours-tab" class="nav-link active" data-bs-toggle="tab" role="tab" aria-selected="true">
+                        <i class="ti ti-plane me-1"></i>Tours <span class="badge bg-blue-lt ms-1">{{ $tours->total() }}</span>
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#monthly-chart-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-chart-line me-1"></i>Monthly
-                        <span class="badge bg-green-lt ms-1">{{ $monthlyChartTours->total() + $cancelledChartTours->total() }}</span>
+                    <a href="#client-tours-tab" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false">
+                        <i class="ti ti-users me-1"></i>Requested <span class="badge bg-purple-lt ms-1">{{ $clientTours->total() }}</span>
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a href="#archived-tours-tab" class="nav-link" data-bs-toggle="tab" aria-selected="false" role="tab" tabindex="-1">
-                        <i class="ti ti-archive me-1"></i>Archived
-                        <span class="badge bg-secondary-lt ms-1">{{ $archivedTours->total() }}</span>
+                    <a href="#monthly-chart-tab" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false">
+                        <i class="ti ti-chart-line me-1"></i>Monthly <span class="badge bg-green-lt ms-1">{{ $monthlyChartTours->total() + $cancelledChartTours->total() }}</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a href="#archived-tours-tab" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false">
+                        <i class="ti ti-archive me-1"></i>Archived <span class="badge bg-secondary-lt ms-1">{{ $archivedTours->total() }}</span>
                     </a>
                 </li>
             </ul>
         </div>
-        
+
         <div class="card-body">
-            {{-- Search & Filter Toolbar --}}
-            <div class="row mb-3">
-                <div class="col-md-6 col-lg-5 mb-2 mb-md-0">
-                    <div class="input-icon">
-                        <span class="input-icon-addon">
-                            <i class="ti ti-search"></i>
-                        </span>
-                        <input type="text" 
-                               id="tour-search" 
-                               class="form-control" 
-                               placeholder="Search tours by name, date, status..."
-                               data-table="tour-table">
+            <div class="row mb-3 g-2 align-items-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="input-icon table-search">
+                        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                        <input type="text" id="tour-search" class="form-control" placeholder="Search visible table...">
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-7">
-                    <div class="d-flex gap-2 justify-content-md-end">
+                    <div class="d-flex gap-2 justify-content-md-end flex-wrap">
                         <select id="filterDropdown" class="form-select" style="max-width: 200px;">
                             <option value="">All Statuses</option>
-                            <option value="quotations">Quotations</option>
-                            <option value="go_ahead">Go Ahead</option>
+                            <option value="quotation">Quotations</option>
+                            <option value="go ahead">Go Ahead</option>
                         </select>
-                        <button class="btn btn-secondary export-csv"
-                                data-table="tour-table"
-                                data-filename="tours_export.csv">
-                            <i class="ti ti-download me-1"></i>
-                            <span class="d-none d-sm-inline">Export CSV</span>
+                        <button class="btn btn-secondary export-csv" type="button">
+                            <i class="ti ti-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            {{-- Tab Content --}}
             <div class="tab-content">
-                {{-- Tab 1: Tours --}}
                 <div class="tab-pane fade show active" id="tours-tab" role="tabpanel">
                     <div class="table-responsive">
-                        <table id="tour-table" class="table card-table table-vcenter">
+                        <table id="tour-table" class="table card-table table-vcenter tour-data-table">
                             <thead>
-                                <tr>
-                                    <th style="width: 60px;">ID</th>
-                                    <th>{{ trans('main.Name') }}</th>
-                                    <th>{{ trans('main.DepDate') }}</th>
-                                    <th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th>
-                                    <th class="d-none d-xl-table-cell">{{ trans('Assigned Users') }}</th>
-                                    <th>{{ trans('main.Status') }}</th>
-                                    <th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th>
-                                    <th class="text-end">{{ trans('main.Actions') }}</th>
-                                </tr>
+                            <tr>
+                                <th style="width: 70px;">ID</th>
+                                <th>{{ trans('main.Name') }}</th>
+                                <th>{{ trans('main.DepDate') }}</th>
+                                <th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th>
+                                <th class="d-none d-xl-table-cell">{{ trans('Assigned Users') }}</th>
+                                <th>{{ trans('main.Status') }}</th>
+                                <th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th>
+                                <th class="text-end">{{ trans('main.Actions') }}</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                @forelse($tours as $tour)
-                                <tr class="clickable-row"
-                                    style="background: {{ $tour->getRowBackgroundColor() }};"
-                                    data-href="{{ route('tour.show', ['tour' => $tour->id]) }}">
-                                    <td class="clickable-cell"> {{-- Added class --}}
-                                        <span class="text-muted">#{{ $tour->id }}</span>
-                                    </td>
-                                    <td class="clickable-cell"> {{-- Added class --}}
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-bold">{{ $tour->name }}</span>
-                                            <small class="text-muted d-lg-none">
-                                                {{ $tour->responsible_user_names ?? '' }}
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td class="clickable-cell"> {{-- Added class --}}
-                                        <span class="text-muted">
-                                            {{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : 'â€”' }}
-                                        </span>
-                                    </td>
-                                    <td class="d-none d-lg-table-cell clickable-cell"> {{-- Added class --}}
-                                        {{ $tour->responsible_user_names ?? 'â€”' }}
-                                    </td>
-                                    <td class="d-none d-xl-table-cell clickable-cell"> {{-- Added class --}}
-                                        {{ $tour->assigned_user_names ?? 'â€”' }}
-                                    </td>
-                                    <td class="clickable-cell"> {{-- Added class --}}
-                                        <span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">
-                                            <span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>
-                                            {{ $tour->getStatusName() }}
-                                        </span>
-                                    </td>
-                                    <td class="d-none d-md-table-cell clickable-cell"> {{-- Added class --}}
-                                        <span class="text-muted">{{ $tour->external_name ?? 'â€”' }}</span>
-                                    </td>
-                                    <td class="text-end action-cell"> {{-- This cell is NOT clickable --}}
-                                        <div class="btn-list justify-content-end">
-                                            @include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])
-                                        </div>
-                                    </td>
+                            @forelse($tours as $tour)
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}">
+                                    <td><span class="text-muted">#{{ $tour->id }}</span></td>
+                                    <td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted d-lg-none">{{ $tour->responsible_user_names ?? '' }}</small></td>
+                                    <td><span class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</span></td>
+                                    <td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td>
+                                    <td class="d-none d-xl-table-cell">{{ $tour->assigned_user_names ?? '—' }}</td>
+                                    <td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;"><span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>{{ $tour->getStatusName() }}</span></td>
+                                    <td class="d-none d-md-table-cell"><span class="text-muted">{{ $tour->external_name ?? '—' }}</span></td>
+                                    <td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
                                 </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" class="text-center py-5">
-                                        <div class="empty">
-                                            <div class="empty-icon">
-                                                <i class="ti ti-plane icon" style="font-size: 3rem;"></i>
-                                            </div>
-                                            <p class="empty-title">No tours found</p>
-                                            <p class="empty-subtitle text-muted">Get started by creating your first tour</p>
-                                            <div class="empty-action">
-                                                {!! \App\Helper\PermissionHelper::getCreateButton(route('tour.create'), \App\Tour::class, 'btn btn-primary') !!}
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
+                            @empty
+                                <tr><td colspan="8" class="text-center py-5"><div class="empty"><div class="empty-icon"><i class="ti ti-plane"></i></div><p class="empty-title">No tours found</p><p class="empty-subtitle text-muted">Get started by creating your first tour</p></div></td></tr>
+                            @endforelse
                             </tbody>
                         </table>
                     </div>
-                    
-                    {{-- Pagination --}}
-                    @if($tours->hasPages())
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="text-muted">
-                            Showing {{ $tours->firstItem() }} to {{ $tours->lastItem() }} of {{ $tours->total() }} entries
-                        </div>
-                        <div>
-                            {{ $tours->links() }}
-                        </div>
-                    </div>
-                    @endif
+                    @if($tours->hasPages())<div class="pagination-wrap"><div class="text-muted">Showing {{ $tours->firstItem() }} to {{ $tours->lastItem() }} of {{ $tours->total() }} entries</div>{{ $tours->links() }}</div>@endif
                 </div>
 
-                {{-- Tab 2: Monthly Chart --}}
+                <div class="tab-pane fade" id="client-tours-tab" role="tabpanel">
+                    <div class="table-responsive">
+                        <table id="client-tour-table" class="table card-table table-vcenter tour-data-table">
+                            <thead><tr><th style="width:70px;">ID</th><th>{{ trans('main.Name') }}</th><th>Client</th><th>{{ trans('main.DepDate') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
+                            <tbody>
+                            @forelse($clientTours as $tour)
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}">
+                                    <td><span class="text-muted">#{{ $tour->id }}</span></td><td><div class="fw-bold">{{ $tour->name }}</div></td><td>{{ $tour->client_name ?: '—' }}</td><td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;"><span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="7" class="text-center text-muted py-5">No requested tours found.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($clientTours->hasPages())<div class="pagination-wrap"><div class="text-muted">Showing {{ $clientTours->firstItem() }} to {{ $clientTours->lastItem() }} of {{ $clientTours->total() }} entries</div>{{ $clientTours->links() }}</div>@endif
+                </div>
+
                 <div class="tab-pane fade" id="monthly-chart-tab" role="tabpanel">
-                   {{-- (Your code for other tabs is fine) --}}
-                   ...
-                </div>
-
-                {{-- Tab 3: Archived Tours --}}
-                <div class="tab-pane fade" id="archived-tours-tab" role="tabpanel">
-                   {{-- (Your code for other tabs is fine) --}}
-                   ...
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- ================================== --}}
-{{-- == START OF MODAL FIX == --}}
-{{-- We are adding your delete modal HTML directly to this file --}}
-{{-- ================================== --}}
-<div class="modal modal-blur fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            <div class="modal-status bg-danger"></div>
-            <div class="modal-body text-center py-4">
-                <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
-                <h3>Are you sure?</h3>
-                <div class="text-muted" id="delete-message">Do you really want to delete this tour?</div>
-                <small class="text-muted d-block mt-2" id="tour-name-display"></small>
-            </div>
-            <div class="modal-footer">
-                <div class="w-100">
-                    <div class="row">
-                        <div class="col">
-                            <button type="button" class="btn w-100" data-bs-dismiss="modal">
-                                Cancel
-                            </button>
-                        </div>
-                        <div class="col">
-                            <button type="button" id="confirmDeleteBtn" class="btn btn-danger w-100">
-                                Delete
-                            </button>
+                    <div class="tab-pane-title">
+                        <h3 class="card-title mb-0">On Going Projects</h3>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <select id="year-filter" class="form-select" style="max-width: 160px;"><option value="">All Years</option>@foreach($years as $year)<option value="{{ $year }}">{{ $year }}</option>@endforeach</select>
+                            <select id="month-filter" class="form-select" style="max-width: 160px;"><option value="">All Months</option>@foreach($months as $key => $month)<option value="{{ $key }}">{{ $month }}</option>@endforeach</select>
                         </div>
                     </div>
+                    <div class="table-responsive mb-4">
+                        <table id="monthly-chart-table" class="table card-table table-vcenter tour-data-table">
+                            <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
+                            <tbody>
+                            @forelse($monthlyChartTours as $tour)
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                            @empty
+                                <tr><td colspan="6" class="text-center text-muted py-4">No ongoing projects found.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <h3 class="card-title">Cancelled Projects</h3>
+                    <div class="table-responsive">
+                        <table id="cancelled-chart-table" class="table card-table table-vcenter tour-data-table">
+                            <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
+                            <tbody>
+                            @forelse($cancelledChartTours as $tour)
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                            @empty
+                                <tr><td colspan="6" class="text-center text-muted py-4">No cancelled projects found.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="archived-tours-tab" role="tabpanel">
+                    <div class="table-responsive">
+                        <table id="archive-tour-table" class="table card-table table-vcenter tour-data-table">
+                            <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.DepDate') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
+                            <tbody>
+                            @forelse($archivedTours as $tour)
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                            @empty
+                                <tr><td colspan="7" class="text-center text-muted py-5">No archived tours found.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($archivedTours->hasPages())<div class="pagination-wrap"><div class="text-muted">Showing {{ $archivedTours->firstItem() }} to {{ $archivedTours->lastItem() }} of {{ $archivedTours->total() }} entries</div>{{ $archivedTours->links() }}</div>@endif
                 </div>
             </div>
         </div>
     </div>
 </div>
-{{-- ================================== --}}
-{{-- == END OF MODAL FIX == --}}
-{{-- ================================== --}}
 
-
-{{-- Tour Clone Modal --}}
-<div class="modal modal-blur fade" id="tour-clone-modal" ...>
-    {{-- (Your clone modal code is fine) --}}
-    ...
+<div class="modal modal-blur fade" id="tour-clone-modal" tabindex="-1" aria-labelledby="tour-clone-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="tour-clone-modal-form" method="GET">
+                <div class="modal-header"><h5 class="modal-title" id="tour-clone-label">Clone Tour</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    <div class="alert alert-danger block-error" style="display:none;"></div>
+                    <label class="form-label" for="departure_date">{{ trans('main.DepartureDate') }}</label>
+                    {!! Form::text('departure_date', '', ['class' => 'form-control datepicker', 'id' => 'departure_date', 'autocomplete' => 'off', 'placeholder' => 'Select departure date']) !!}
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success pre-loader-func" id="clone_tour_send"><i class="ti ti-copy me-1"></i>{{ trans('main.Submit') }}</button></div>
+            </form>
+        </div>
+    </div>
 </div>
 
-{{-- Tour Status Error Modal --}}
-<div class="modal modal-blur fade" tabindex="-1" id="error_tour" ...>
-    {{-- (Your error modal code is fine) --}}
-    ...
+<div class="modal modal-blur fade" tabindex="-1" id="error_tour" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">{{ trans('main.Warning') }}!</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><h3 class="error_tour_message mb-0"></h3></div><div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button></div></div></div>
 </div>
 
 <span id="permission" data-permission="{{ \App\Helper\PermissionHelper::checkPermission('tour.edit') }}"></span>
-
 @endsection
 
 @section('post_scripts')
 <script src="{{ asset('js/tour-interactions.js') }}"></script>
-
-{{-- ================================== --}}
-{{-- == START OF COMBINED SCRIPT FIX == --}}
-{{-- ================================== --}}
 <script>
-$(document).ready(function() {
-    
-    // --- Script for your Delete Modal ---
-    let deleteUrl = null;
-    let tourModal = new bootstrap.Modal(document.getElementById('myModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
+(function() {
+    function activeTable() {
+        return document.querySelector('.tab-pane.active .tour-data-table');
+    }
 
-    // Handle delete button click for tours
-    $(document).on('click', '.delete', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // <-- This is critical
+    function filterActiveTable() {
+        const table = activeTable();
+        if (!table) return;
+        const searchValue = (document.getElementById('tour-search')?.value || '').toLowerCase().trim();
+        const statusValue = (document.getElementById('filterDropdown')?.value || '').toLowerCase().trim();
+        table.querySelectorAll('tbody tr').forEach(function(row) {
+            const rowText = row.textContent.toLowerCase();
+            const matchesSearch = !searchValue || rowText.includes(searchValue);
+            const matchesStatus = !statusValue || rowText.includes(statusValue);
+            row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+        });
+    }
 
-        deleteUrl = $(this).data('link');
-        
-        if (!deleteUrl) {
-            alert('Error: Delete URL not found');
-            return;
-        }
+    function exportActiveTable() {
+        const table = activeTable();
+        if (!table) return;
+        const rows = Array.from(table.querySelectorAll('tr')).filter(function(row) { return row.style.display !== 'none'; });
+        const csv = rows.map(function(row) {
+            const cells = Array.from(row.querySelectorAll('th,td')).slice(0, -1);
+            return cells.map(function(cell) { return '"' + cell.innerText.replace(/"/g, '""').trim() + '"'; }).join(',');
+        }).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'tours_export.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
+    }
 
-        var $row = $(this).closest('tr');
-        var tourName = $row.find('td:eq(1)').text() || 'Unknown Tour';
-        var tourId = $row.find('td:eq(0)').text() || '';
-        
-        $('#tour-name-display').text('Tour: ' + tourName + (tourId ? ' (ID: ' + tourId + ')' : ''));
-        
-        tourModal.show();
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('click', function(event) {
+            const action = event.target.closest('.action-cell, .action-delete-btn, .clone-tour-button, a.btn, button.btn');
+            if (action) event.stopPropagation();
 
-    // Handle confirm delete button
-    $('#confirmDeleteBtn').on('click', function() {
-        if (!deleteUrl) {
-            alert('Error: No delete URL specified');
-            return;
-        }
+            const row = event.target.closest('.clickable-row');
+            if (row && !event.target.closest('.action-cell')) {
+                const href = row.dataset.href;
+                if (href) window.location.href = href;
+            }
 
-        var $btn = $(this);
-        var originalText = $btn.html();
-        
-        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
-
-        $.ajax({
-            url: deleteUrl,
-            method: 'GET', // Note: This should be 'DELETE' but is matching your script
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                tourModal.hide();
-                var successMsg = response.message || 'Tour deleted successfully!';
-                alert(successMsg);
-                setTimeout(function() {
-                    location.reload();
-                }, 500);
-            },
-            error: function(xhr) {
-                $btn.prop('disabled', false).html(originalText);
-                tourModal.hide();
-                var errorMsg = 'Error deleting tour!';
-                
-                if (xhr.responseJSON) {
-                    if (xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    } else if (xhr.responseJSON.error) {
-                        errorMsg = xhr.responseJSON.error;
-                    }
-                } else if (xhr.status === 404) {
-                    errorMsg = 'Tour not found!';
-                } else if (xhr.status === 403) {
-                    errorMsg = 'You do not have permission to delete this tour!';
-                } else if (xhr.status === 500) {
-                    errorMsg = 'Server error. Please try again later.';
-                }
-                
-                alert(errorMsg);
+            const cloneButton = event.target.closest('.clone-tour-button');
+            if (cloneButton) {
+                event.preventDefault();
+                const form = document.getElementById('tour-clone-modal-form');
+                if (form) form.action = '/tour/' + cloneButton.dataset.id + '/clone';
+                const error = document.querySelector('.block-error');
+                if (error) { error.textContent = ''; error.style.display = 'none'; }
+                const modal = new bootstrap.Modal(document.getElementById('tour-clone-modal'));
+                modal.show();
             }
         });
+
+        document.getElementById('tour-search')?.addEventListener('input', filterActiveTable);
+        document.getElementById('filterDropdown')?.addEventListener('change', filterActiveTable);
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) { tab.addEventListener('shown.bs.tab', filterActiveTable); });
+        document.querySelector('.export-csv')?.addEventListener('click', exportActiveTable);
+
+        document.getElementById('clone_tour_send')?.addEventListener('click', function(event) {
+            const input = document.getElementById('departure_date');
+            const error = document.querySelector('.block-error');
+            if (!input || input.value.trim() !== '') return;
+            event.preventDefault();
+            if (error) { error.textContent = 'Enter Date'; error.style.display = 'block'; }
+        });
     });
-
-    // Reset form when modal is hidden
-    document.getElementById('myModal').addEventListener('hidden.bs.modal', function() {
-        deleteUrl = null;
-        $('#confirmDeleteBtn').prop('disabled', false).html('Delete');
-    });
-    // --- End of Delete Modal Script ---
-
-
-    // --- Script from your original file (Tooltips & Clone) ---
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-
-    $('.clone-tour-button').show();
-    $(document).on('click', '.clone-tour-button', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // <-- Added this
-        let id = $(this).data('id');
-        $('.block-error').text('');
-        $('.block-error').hide();
-        $('#tour-clone-modal-form').attr('action', '/tour/' + id + '/clone');
-        var cloneModal = new bootstrap.Modal(document.getElementById('tour-clone-modal'));
-        cloneModal.show();
-    });
-
-    $('#clone_tour_send').on('click', function (e) {
-        e.preventDefault();
-        $('.block-error').text('');
-        $('.block-error').hide();
-
-        if($('#departure_date').val() === '') {
-            $('.block-error').text('Enter Date');
-            $('.block-error').show();
-        } else {
-            $('#tour-clone-modal-form').submit();
-        }
-    });
-    // --- End of original file script ---
-
-
-    // --- Clickable Row Fix Script ---
-    $(document).on('click', '.clickable-cell', function(e) {
-        // This script now only runs on cells with the 'clickable-cell' class
-        
-        // Find the <tr> parent and get its data-href
-        const href = $(this).closest('tr').data('href');
-        if (href) {
-            window.location.href = href;
-        }
-    });
-
-    // Stop propagation on the action cell (where buttons are)
-    $(document).on('click', '.action-cell', function(e) {
-        e.stopPropagation();
-    });
-
-});
+})();
 </script>
-{{-- ================================== --}}
-{{-- == END OF COMBINED SCRIPT FIX == --}}
-{{-- ================================== --}}
 @endsection
+
+
+
+

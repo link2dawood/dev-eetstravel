@@ -922,7 +922,7 @@ public function store(StoreTourRequest $request)
         DB::commit();
 
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
-//         session()->flash('success', "Tour {$tour->name} created");
+        session()->flash('success', "Tour {$tour->name} created");
 
         if($request->get('modal_create_tour') == 1) {
             if ($request->expectsJson() || $request->ajax()) {

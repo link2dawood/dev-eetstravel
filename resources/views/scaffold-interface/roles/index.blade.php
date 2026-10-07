@@ -49,9 +49,8 @@
 									@endif
 								</td>
 								<td>
-									<div class="btn-list flex-nowrap">
-										<!-- EDIT BUTTON -->
-										<a href="{{url('/roles')}}/{{$role->id}}/edit" class="btn btn-icon btn-ghost-warning" title="Edit">
+									<div class="btn-list flex-nowrap table-actions-inline">
+<a href="{{url('/roles')}}/{{$role->id}}/edit" class="btn btn-icon btn-ghost-warning" title="Edit">
 											<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 												<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 												<path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -59,12 +58,10 @@
 												<path d="M16 5l3 3" />
 											</svg>
 										</a>
-
-										<!-- DELETE BUTTON -->
-										<form action="{{ route('roles.destroy', $role->id) }}" method="POST" style="display: inline-block;">
+<form action="{{ route('roles.destroy', $role->id) }}" method="POST" style="display: inline-block;">
 											@csrf
 											@method('DELETE')
-											<button type="submit" class="btn btn-icon btn-ghost-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this role?')">
+											<button type="submit" class="btn btn-icon btn-ghost-danger js-confirm-delete-form" title="Delete" data-confirm-message="Are you sure you want to delete this role?">
 												<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 													<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 													<path d="M4 7l16 0" />
@@ -94,7 +91,30 @@
 @endsection
 
 <style>
-	.badges-list {
+	
+    .table-actions-inline,
+    .btn-list.table-actions-inline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+
+    .table-actions-inline form {
+        display: inline-flex !important;
+        align-items: center;
+        margin: 0;
+    }
+
+    .table-actions-inline .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        vertical-align: middle;
+    }
+.badges-list {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 6px;
@@ -104,3 +124,24 @@
 		margin: 0;
 	}
 </style>
+@push('scripts')
+<script>
+document.addEventListener('submit', function (event) {
+    const form = event.target;
+    const button = form.querySelector('.js-confirm-delete-form');
+    if (!button || form.dataset.confirmed === 'true') return;
+
+    event.preventDefault();
+    const message = button.dataset.confirmMessage || 'Are you sure you want to delete this item?';
+    const confirmPromise = typeof window.appConfirm === 'function'
+        ? window.appConfirm(message, { title: 'Confirm delete', confirmText: 'Delete', cancelText: 'Cancel' })
+        : Promise.resolve(true);
+
+    confirmPromise.then(function (confirmed) {
+        if (!confirmed) return;
+        form.dataset.confirmed = 'true';
+        form.submit();
+    });
+});
+</script>
+@endpush

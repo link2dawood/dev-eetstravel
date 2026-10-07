@@ -168,8 +168,8 @@
             </div>
             <div class="box-footer clearfix">
                 @if(Auth::user()->can('tour.create'))
-                    <a href="{{route('tour.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus fa-md" aria-hidden="true"></i> {{ trans('main.NewTour') }}
+                    <a href="{{route('tour.create')}}" class="btn btn-primary create-action-btn">
+                        <span class="create-action-icon" aria-hidden="true">+</span> {{ trans('main.NewTour') }}
                     </a>
                 @endif
                 @if(Auth::user()->can('tour.index'))

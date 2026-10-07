@@ -500,19 +500,10 @@ Route::group(['middleware'=> 'web'],function(){
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
-// User Management Routes
 Route::group(['middleware' => ['web', 'auth']], function () {
-    // IMPORTANT: The order matters! More specific routes should come BEFORE generic ones
-    
-    // Delete confirmation modal (GET)
     Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
         ->name('users.deleteMsg');
-    
-    // Actual delete (DELETE) - make sure this is accessible
-    Route::delete('users/{id}', 'ScaffoldInterface\UserController@destroy')
-        ->name('users.destroy');
-    
-    // User role/permission management
+
     Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')
         ->name('user.remove_role');
     Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole')
@@ -523,23 +514,7 @@ Route::group(['middleware' => ['web', 'auth']], function () {
         ->name('users.revokePermission');
 });
 
-// DEBUGGING: Temporarily add this route to test if DELETE works at all
-Route::group(['middleware' => ['web', 'auth']], function () {
-    // Test route - accepts both POST and DELETE
-    Route::match(['post', 'delete'], 'users/test-delete/{id}', function($id) {
-        \Log::info('Test delete route hit for user: ' . $id);
-        \Log::info('Request method: ' . request()->method());
-        return response()->json([
-            'success' => true,
-            'method' => request()->method(),
-            'id' => $id
-        ]);
-    });
-});
 
-// Or use resource route
-Route::resource('users', 'ScaffoldInterface\UserController');
-Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg');
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('cruises', 'CruisesController');
@@ -556,11 +531,9 @@ Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
 
     Route::group(['middleware' => 'web'], function () {
         Route::get('/roles/{id}/deleteMsg', 'ScaffoldInterface\RoleController@deleteMsg');
-        Route::get('/roles/{id}/delete', 'ScaffoldInterface\RoleController@destroy')->name('role.destroy');
     });
     Route::group(['middleware' => 'web'], function () {
         Route::get('/permissions/{id}/deleteMsg', 'ScaffoldInterface\PermissionController@deleteMsg');
-        Route::get('/permissions/{id}/delete', 'ScaffoldInterface\PermissionController@destroy')->name('permission.destroy');
     });
     Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission');
     Route::get('roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission');

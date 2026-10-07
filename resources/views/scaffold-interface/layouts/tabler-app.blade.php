@@ -296,6 +296,37 @@
             color: #ffffff;
         }
 
+        .create-action-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center;
+            gap: 0.45rem;
+            line-height: 1.2;
+        }
+
+        .create-action-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 1rem;
+            height: 1rem;
+            min-width: 1rem;
+            line-height: 1 !important;
+            font-size: 1.15rem;
+            font-weight: 700;
+            transform: none !important;
+            rotate: 0deg !important;
+            margin: 0 !important;
+            flex: 0 0 auto;
+        }
+
+        .create-action-btn .fa,
+        .create-action-btn .icon,
+        .create-action-btn svg {
+            transform: none !important;
+            rotate: 0deg !important;
+            margin: 0 !important;
+        }
         /* Alert Styles */
         .alert-success {
             background-color: rgba(47, 179, 68, 0.1);
@@ -1602,5 +1633,6 @@
     </script>
 </body>
 </html>
+
 
 

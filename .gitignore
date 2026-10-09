@@ -24,6 +24,14 @@ Homestead.json
 
 /public/build
 /storage/pail
+# Environment files at any depth; only sanitized examples may be committed.
+.env.*
+!.env.example
+# Generated reports and diagnostic endpoints previously exposed credentials.
+/ISSUES_RESOLVED_SUMMARY.txt
+/PROJECT_ISSUES_REPORT.txt
+/public/info.php
+/security-recovery/
 .env.backup
 .env.production
 .phpactor.json

@@ -37,7 +37,7 @@ let notifications = {
             url: '/read_all_notifications',
             data: {}
         }).done((res) => {
-            notifications.generateNotificationsTasks();
+            notifications.refreshNotifications();
         })
     },
 
@@ -47,7 +47,7 @@ let notifications = {
             url: '/delete_all_notifications',
             data: {}
         }).done((res) => {
-            notifications.generateNotificationsTasks();
+            notifications.refreshNotifications();
         })
     },
 
@@ -61,6 +61,7 @@ let notifications = {
         $.ajax({
             method: 'POST',
             url: '/delete_notifications',
+            timeout: 8000,
             data: {
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 id: id_notification
@@ -72,6 +73,50 @@ let notifications = {
         }).always(() => {
             _this.prop('disabled', false);
         });
+    },
+
+    removeNotificationFromTabler: (_this) => {
+        if ($(document).find('.notifications-content').length) {
+            notifications.generateNotificationsTasks();
+            return;
+        }
+
+        let item = $(_this).closest('.tabler-notification-item');
+
+        item.slideUp(150, function () {
+            $(this).remove();
+
+            notifications.updateTablerBadge(-1);
+
+            let list = $('.tabler-notifications-list');
+            if (list.find('.tabler-notification-item').length === 0) {
+                list.html("<div class='list-group-item tabler-notifications-empty'><div class='text-muted'>You don't have notifications</div></div>");
+                $('.tabler-delete-all-notifications').addClass('disabled-link');
+                $('#read_all_notification').addClass('disabled-link');
+            }
+        });
+    },
+
+    updateTablerBadge: (change) => {
+        let badges = $('.tabler-notifications-badge');
+        let current = parseInt(badges.first().text(), 10) || 0;
+        let next = Math.max(0, current + change);
+
+        if (next > 0) {
+            badges.text(next);
+        } else {
+            badges.remove();
+            $('#read_all_notification').addClass('disabled-link');
+        }
+    },
+
+    refreshNotifications: () => {
+        if ($(document).find('.notifications-content').length) {
+            notifications.generateNotificationsTasks();
+            return;
+        }
+
+        window.location.reload();
     },
 
     generateNotificationsTasks : () => {
@@ -117,6 +162,19 @@ let notifications = {
 };
 
 notifications.init();
+window.notifications = notifications;
+window.deleteTablerNotification = function (event, element) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === 'function') {
+            event.stopImmediatePropagation();
+        }
+    }
+
+    notifications.deleteNotificationTask($(element));
+    return false;
+};
 
 let chatnotifi  = {
 

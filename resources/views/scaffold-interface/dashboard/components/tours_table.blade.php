@@ -20,6 +20,27 @@
         </div>
     </div>
 </div>
+
+{{-- Delete Confirmation Modal --}}
+<div class="modal fade" tabindex="-1" id="myModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{ trans('main.ConfirmDelete') }}</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ trans('main.AreYouSureDelete') }}</p>
+                <p><strong id="deleteTourName"></strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ trans('main.Cancel') }}</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">{{ trans('main.Delete') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!--  TOUR TABLE  -->
 <div class="box box-primary">
     @if(Auth::user()->can('dashboard.latest_tours'))
@@ -36,10 +57,10 @@
                 <div v-if="loading">
                     <div class="box-body" style="height: 120px;">
                         <div class="loader"></div>
-
                     </div>
                 </div>
                 <div v-else>
+                    <div class="dashboard-tours-table-wrap">
                     <table class="table table-striped table-hover clickable-rows" style='background:#fff'>
                         <thead>
                         <th>ID</th>
@@ -56,61 +77,59 @@
                         <th style="width: 140px">{{ trans('main.Actions') }}</th>
                         </thead>
                         <tbody>
-                        <tr v-for="tour in paginatedTours" @click="showTour(tour)" class="clickable-row">
-                            <td>@{{tour['id']}}</td>
-                            <td>@{{tour['name']}}</td>
-                            <td>@{{tour['departure_date']}}</td>
-                            <td>@{{tour['retirement_date']}}</td>
-                            <td>@{{tour['pax']}} @{{showPaxFree(tour)}}</td>
-                            <td>@{{tour['country_begin']}} -
-                                @{{tour['city_begin']}}
-                            </td>
-                            <td>@{{tour['country_end']}} -
-                                @{{tour['city_end']}}
-                            </td>
-                            <td>@{{tour['ga']}}</td>
-                            <td>@{{tour['invoice']}}</td>
+                        <tr v-for="tour in paginatedTours" :key="tour.id" @click="showTour(tour)" class="clickable-row">
+                            <td>@{{tour.id}}</td>
+                            <td>@{{tour.name}}</td>
+                            <td>@{{tour.departure_date}}</td>
+                            <td>@{{tour.retirement_date}}</td>
+                            <td>@{{tour.pax}} @{{showPaxFree(tour)}}</td>
+                            <td>@{{tour.country_begin}} - @{{tour.city_begin}}</td>
+                            <td>@{{tour.country_end}} - @{{tour.city_end}}</td>
+                            <td>@{{tour.ga}}</td>
+                            <td>@{{tour.invoice}}</td>
                             <td class="{{ \App\Helper\PermissionHelper::checkPermission('tour.edit') ? 'touredit-status' : '' }}"
                                 :data-name-status="tour.status_name" :data-status-link="tour.status_link">
-                                @{{tour['status_name']}}
+                                @{{tour.status_name}}
                             </td>
-                            <td>@{{tour['external_name']}}</td>
+                            <td>@{{tour.external_name}}</td>
                             <td @click.stop>
-                                <div class="btn-list flex-nowrap">
-                                    <!-- EDIT BUTTON -->
-                                    <a v-if="edit" 
-                                       :href="tour.routes.edit"
-                                       class="btn btn-icon btn-ghost-warning" 
-                                       title="Edit">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                            <path d="M16 5l3 3" />
-                                        </svg>
-                                    </a>
+                                @if(isset($useComponent) && $useComponent)
+                                    @include('components.action-buttons', ['model' => $tour, 'routePrefix' => 'tour'])
+                                @else
+                                    <div class="btn-list flex-nowrap">
+                                        <!-- SHOW BUTTON -->
+                                        <a v-if="show" 
+                                           :href="'/tour/' + tour.id"
+                                           class="btn btn-sm btn-warning" 
+                                           title="View">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
 
-                                    <!-- DELETE BUTTON -->
-                                    <a v-if="destroy" 
-                                       :data-link="tour.routes.delete_msg" 
-                                       data-toggle="modal"
-                                       data-target="#myModal"
-                                       class="btn btn-icon btn-ghost-danger delete" 
-                                       title="Delete">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                            <path d="M4 7l16 0" />
-                                            <path d="M10 11l0 6" />
-                                            <path d="M14 11l0 6" />
-                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                            <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                        </svg>
-                                    </a>
-                                </div>
+                                        <!-- EDIT BUTTON -->
+                                        <a v-if="edit" 
+                                           :href="'/tour/' + tour.id + '/edit'"
+                                           class="btn btn-sm btn-primary" 
+                                           title="Edit">
+                                            <i class="ti ti-edit"></i>
+                                        </a>
+
+                                        <!-- DELETE BUTTON -->
+                                        <button v-if="destroy"
+                                                type="button"
+                                                class="btn btn-sm btn-danger delete-tour-btn"
+                                                :data-tour-id="tour.id"
+                                                :data-tour-name="tour.name"
+                                                title="Delete"
+                                                @click="deleteTour(tour)">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                         </tbody>
                     </table>
+                    </div>
 
                     <!-- Pagination Controls -->
                     <div class="pagination-wrapper" v-if="tours && tours.length > 0">
@@ -149,8 +168,8 @@
             </div>
             <div class="box-footer clearfix">
                 @if(Auth::user()->can('tour.create'))
-                    <a href="{{route('tour.create')}}" class="btn btn-primary">
-                        <i class="fa fa-plus fa-md" aria-hidden="true"></i> {{ trans('main.NewTour') }}
+                    <a href="{{route('tour.create')}}" class="btn btn-primary create-action-btn">
+                        <span class="create-action-icon" aria-hidden="true">+</span> {{ trans('main.NewTour') }}
                     </a>
                 @endif
                 @if(Auth::user()->can('tour.index'))
@@ -170,144 +189,247 @@
         </div>
 </div>
 <!--  END TOUR TABLE  -->
+
 <script>
+$(function () {
+    // Vue Instance
+    new Vue({
+        el: '#tours',
 
-    $(function () {
+        data: {
+            tours: null,
+            show: false,
+            edit: false,
+            destroy: false,
+            loading: true,
+            currentPage: 1,
+            perPage: 10,
+            tourToDelete: null
+        },
 
-
-        new Vue({
-
-            el: '#tours',
-
-            data: {
-                tours: null,
-                show: false,
-                edit: false,
-                destroy: false,
-                loading: true,
-                currentPage: 1,
-                perPage: 10
+        computed: {
+            totalPages: function() {
+                if (!this.tours) return 0;
+                return Math.ceil(this.tours.length / this.perPage);
             },
-
-            computed: {
-                totalPages: function() {
-                    if (!this.tours) return 0;
-                    return Math.ceil(this.tours.length / this.perPage);
-                },
+            
+            paginatedTours: function() {
+                if (!this.tours) return [];
+                const start = (this.currentPage - 1) * this.perPage;
+                const end = start + this.perPage;
+                return this.tours.slice(start, end);
+            },
+            
+            visiblePages: function() {
+                const total = this.totalPages;
+                const current = this.currentPage;
+                const pages = [];
                 
-                paginatedTours: function() {
-                    if (!this.tours) return [];
-                    const start = (this.currentPage - 1) * this.perPage;
-                    const end = start + this.perPage;
-                    return this.tours.slice(start, end);
-                },
-                
-                visiblePages: function() {
-                    const total = this.totalPages;
-                    const current = this.currentPage;
-                    const pages = [];
-                    
-                    if (total <= 7) {
-                        for (let i = 1; i <= total; i++) {
+                if (total <= 7) {
+                    for (let i = 1; i <= total; i++) {
+                        pages.push(i);
+                    }
+                } else {
+                    if (current <= 4) {
+                        for (let i = 1; i <= 5; i++) {
+                            pages.push(i);
+                        }
+                        pages.push('...');
+                        pages.push(total);
+                    } else if (current >= total - 3) {
+                        pages.push(1);
+                        pages.push('...');
+                        for (let i = total - 4; i <= total; i++) {
                             pages.push(i);
                         }
                     } else {
-                        if (current <= 4) {
-                            for (let i = 1; i <= 5; i++) {
-                                pages.push(i);
-                            }
-                            pages.push('...');
-                            pages.push(total);
-                        } else if (current >= total - 3) {
-                            pages.push(1);
-                            pages.push('...');
-                            for (let i = total - 4; i <= total; i++) {
-                                pages.push(i);
-                            }
-                        } else {
-                            pages.push(1);
-                            pages.push('...');
-                            for (let i = current - 1; i <= current + 1; i++) {
-                                pages.push(i);
-                            }
-                            pages.push('...');
-                            pages.push(total);
+                        pages.push(1);
+                        pages.push('...');
+                        for (let i = current - 1; i <= current + 1; i++) {
+                            pages.push(i);
                         }
-                    }
-                    
-                    return pages;
-                },
-                
-                startRecord: function() {
-                    if (!this.tours || this.tours.length === 0) return 0;
-                    return (this.currentPage - 1) * this.perPage + 1;
-                },
-                
-                endRecord: function() {
-                    if (!this.tours) return 0;
-                    const end = this.currentPage * this.perPage;
-                    return end > this.tours.length ? this.tours.length : end;
-                }
-            },
-
-            created: function () {
-                this.fetchData();
-            },
-
-            methods: {
-                fetchData: function () {
-                    var self = this;
-                    var userId = $('meta[name="user-id"]').attr('content');
-
-                    $.ajax({
-                        url: '/api/v1/dashboard/tours',
-                        method: 'GET',
-                        data: {
-                            'userId': userId
-                        },
-                        dataType: "json",
-                        success: function (data) {
-                            self.tours = data.tours;
-                            self.show = data.show;
-                            self.edit = data.edit;
-                            self.destroy = data.destroy;
-                            self.loading = false;
-                        },
-                        error: function (error) {
-                            console.log(error);
-                            self.loading = false;
-                        }
-                    });
-
-                },
-                
-                changePage: function(page) {
-                    if (page < 1 || page > this.totalPages || page === '...') return;
-                    this.currentPage = page;
-                    // Scroll to top of table
-                    document.querySelector('#tours').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                },
-                
-                showPaxFree: function (tour) {
-                    if (tour.pax_free !== '') {
-                        return tour.pax_free
-                    }
-                },
-                
-                showTour: function (tour) {
-                    if (this.show) {
-                        window.location.href = tour.routes.show;
-
+                        pages.push('...');
+                        pages.push(total);
                     }
                 }
-
+                
+                return pages;
+            },
+            
+            startRecord: function() {
+                if (!this.tours || this.tours.length === 0) return 0;
+                return (this.currentPage - 1) * this.perPage + 1;
+            },
+            
+            endRecord: function() {
+                if (!this.tours) return 0;
+                const end = this.currentPage * this.perPage;
+                return end > this.tours.length ? this.tours.length : end;
             }
-        });
+        },
 
+        created: function () {
+            this.fetchData();
+        },
+
+        methods: {
+            fetchData: function () {
+                var self = this;
+                var userId = $('meta[name="user-id"]').attr('content');
+
+                $.ajax({
+                    url: '/api/v1/dashboard/tours',
+                    method: 'GET',
+                    data: {
+                        'userId': userId
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        console.log('Tours loaded:', data);
+                        self.tours = data.tours;
+                        self.show = data.show;
+                        self.edit = data.edit;
+                        self.destroy = data.destroy;
+                        self.loading = false;
+                    },
+                    error: function (error) {
+                        console.log('Error loading tours:', error);
+                        self.loading = false;
+                    }
+                });
+            },
+            
+            changePage: function(page) {
+                if (page < 1 || page > this.totalPages || page === '...') return;
+                this.currentPage = page;
+                document.querySelector('#tours').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            },
+            
+            showPaxFree: function (tour) {
+                if (tour.pax_free !== '') {
+                    return tour.pax_free;
+                }
+            },
+            
+            showTour: function (tour) {
+                if (this.show) {
+                    window.location.href = '/tour/' + tour.id;
+                }
+            },
+
+            deleteTour: function(tour) {
+                console.log('Delete tour clicked:', tour);
+                this.tourToDelete = tour;
+                
+                // Set the tour name in modal
+                $('#deleteTourName').text(tour.name + ' (ID: ' + tour.id + ')');
+                
+                // Show the modal
+                $('#myModal').modal('show');
+            },
+
+            confirmDelete: function() {
+                var self = this;
+                
+                if (!self.tourToDelete || !self.tourToDelete.id) {
+                    if (typeof window.appToast === 'function') {
+                        window.appToast('No tour selected for deletion', 'error', 'Error');
+                    }
+                    return;
+                }
+
+                var deleteUrl = '/tour/' + self.tourToDelete.id + '/delete';
+                console.log('Deleting tour at URL:', deleteUrl);
+
+                // Disable button and show loading state
+                $('#confirmDeleteBtn').prop('disabled', true).text('Deleting...');
+
+                $.ajax({
+                    url: deleteUrl,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        console.log('Delete successful:', response);
+                        
+                        // Close modal
+                        $('#myModal').modal('hide');
+                        $('.modal-backdrop').remove();
+                        
+                        if (typeof window.appToast === 'function') {
+                            window.appToast('Tour deleted successfully!', 'success', 'Success');
+                        }
+                        
+                        // Reload the page
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 700);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Delete error:', xhr, status, error);
+                        
+                        // Close modal
+                        $('#myModal').modal('hide');
+                        $('.modal-backdrop').remove();
+                        
+                        // Reset button
+                        $('#confirmDeleteBtn').prop('disabled', false).text('{{ trans("main.Delete") }}');
+                        
+                        var errorMsg = 'Error deleting tour!';
+                        
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.error) {
+                                errorMsg = xhr.responseJSON.error;
+                            }
+                        } else if (xhr.status === 404) {
+                            errorMsg = 'Tour not found!';
+                        } else if (xhr.status === 403) {
+                            errorMsg = 'You do not have permission to delete this tour!';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Server error: ' + error;
+                        }
+                        
+                        if (typeof window.appToast === 'function') {
+                            window.appToast(errorMsg, 'error', 'Error');
+                        }
+                    }
+                });
+            }
+        }
     });
+
+    // Handle confirm delete button click
+    $('#confirmDeleteBtn').on('click', function() {
+        // Get the Vue instance
+        var vueInstance = document.getElementById('tours').__vue__;
+        if (vueInstance && vueInstance.confirmDelete) {
+            vueInstance.confirmDelete();
+        }
+    });
+
+    // Clean up modal when closed
+    $('#myModal').on('hidden.bs.modal', function () {
+        $('#confirmDeleteBtn').prop('disabled', false).text('{{ trans("main.Delete") }}');
+    });
+});
 </script>
 
 <style>
+.dashboard-tours-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-tours-table-wrap > .clickable-rows {
+    width: 100%;
+    min-width: 1120px;
+}
+
 .clickable-rows .clickable-row {
     cursor: pointer;
     transition: background-color 0.2s ease;

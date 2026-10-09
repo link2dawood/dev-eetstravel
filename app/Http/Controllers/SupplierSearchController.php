@@ -51,7 +51,12 @@ class SupplierSearchController extends Controller
         if($request->search['value']) $searchName = $request->search['value'];
 
         if ($request->service === 'Service' || $request->service === 'All') {
+            // Root fix: Use only valid services (existing model classes)
             $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
+            // Ensure we always have an array
+            if (empty($namespace) || !is_array($namespace)) {
+                $namespace = [];
+            }
         }
         else {
             $serv_find = [];
@@ -115,9 +120,22 @@ class SupplierSearchController extends Controller
         }
         ini_set('memory_limit', '800M');
         set_time_limit(0);
-        //@ToDo: change on correct generate response for datatable
-        $namespace = collect($namespace);
-        $services = $namespace->unique()->all();
+        
+        // Root fix: Normalize data structure - ensure we have a valid array
+        if (empty($namespace)) {
+            $services = [];
+        } elseif (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
+            $services = [$namespace];
+        } else {
+            $namespace = collect($namespace);
+            $services = $namespace->unique()->all();
+        }
+        
+        // Ensure we have a valid array for DataTables
+        if (!is_array($services)) {
+            $services = [];
+        }
+        
         $data = Datatables::of($services);
         $can = 0;
         if (\Auth::user()->can('tour_package.create')){
@@ -304,15 +322,21 @@ class SupplierSearchController extends Controller
     public function getCollection($criterias, $rates = null, $cityCode=null, $searchName = null, $countryAlias = null)
     {
         $data = [];
-        foreach ($this->services as $service) {
+        // Root fix: Only process valid services (existing model classes)
+        // This prevents any errors from non-existent classes
+        $validServices = $this->getValidServices();
+        
+        foreach ($validServices as $service) {
         	if ($service == 'Transfer') {
         		continue;
 	        }
-            $services = [];
+            
+            // All services in $validServices have been validated to exist
             $namespace = 'App\\' . $service;
+            $services = [];
             $model_test = $namespace;
             $table_name = $this->getTableName($model_test);
-            $query_builder = $service == 'Cruises' || $service == 'Flight' ?
+                $query_builder = $service == 'Cruises' || $service == 'Flight' ?
 
                 $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country_from")
                     ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city_from") :
@@ -378,7 +402,9 @@ class SupplierSearchController extends Controller
         }
 
         $collection = collect($data)->collapse()->all();
-        return $collection;
+        
+        // Root fix: Ensure we always return a valid array
+        return is_array($collection) ? $collection : [];
     }
 
     public function actionColumn($data, $can)

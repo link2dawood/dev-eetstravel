@@ -29,6 +29,7 @@
                 <th>{!!trans('main.City')!!}</th>
                 <th>{!!trans('main.Address')!!}</th>
                 <th>{!!trans('main.Select')!!}</th>
+                <th class="text-center" style="width:140px">{!!trans('main.Actions')!!}</th>
                 </thead>
                 <tbody>
                 @foreach($services as $service)
@@ -48,6 +49,11 @@
                                     'data-type' => $filterType,
                                     'data-id' => $service->id,
                                     'data-name' => $service->name]) !!}</td>
+                        <td data-delete-label>
+                            <div class="btn-list justify-content-center flex-nowrap">
+                                @include('component.action_buttons', ['item' => $service, 'routePrefix' => 'event'])
+                            </div>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>
@@ -59,3 +65,5 @@
 
     </div>
 </div>
+
+@include('component.delete_modal_simple')

@@ -428,6 +428,11 @@
     background: var(--monday-background-hover);
 }
 
+.monday-action-btn:focus,
+.monday-action-btn:active {
+    outline: none;
+}
+
 .monday-action-btn svg {
     width: 18px;
     height: 18px;

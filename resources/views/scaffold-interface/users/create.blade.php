@@ -6,7 +6,21 @@
    ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
    ['title' => 'Users', 'icon' => 'user', 'route' => url('users')],
    ['title' => 'Create', 'route' => null]]])
-<section class="content">
+<style>
+    .manage-form-actions-top {
+        margin-bottom: 1.5rem;
+    }
+
+    .manage-form-actions-bottom {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+        margin-bottom: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+</style><section class="content">
 	<div class="box box-primary">
 		<div class="box box-body border_top_none">
 			@if (count($errors) > 0)
@@ -20,14 +34,11 @@
 				</div>
 			@endif
 			<form action="{{route('users.store')}}" method = "post" enctype="multipart/form-data">
-				<div class="row">
+				<div class="row manage-form-actions-top">
 					<div class="col-md-12">
-						<div class="margin_button">
-							<a href="javascript:history.back()">
-								<button type="button" class='btn btn-primary back_btn'>{{trans('main.Back')}}</button>
-							</a>
-							<button class='btn btn-success pre-loader-func' type='submit'>{{trans('main.Save')}}</button>
-						</div>
+						<a href="javascript:history.back()" class="btn btn-primary back_btn">
+							<i class="ti ti-arrow-left me-1"></i>{{trans('main.Back')}}
+						</a>
 					</div>
 				</div>
 				<div class="row">
@@ -50,7 +61,14 @@
 							<label for="avatar">{{trans('main.Logo')}}</label>
 							<input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" >
 						</div>
-						<button class = "btn btn-success pre-loader-func" type="submit">{{trans('main.Save')}}</button>
+						<div class="manage-form-actions-bottom">
+							<a href="{{ url('users') }}" class="btn btn-secondary">
+								<i class="ti ti-x me-1"></i>{{trans('main.Cancel')}}
+							</a>
+							<button class="btn btn-success pre-loader-func" type="submit">
+								<i class="ti ti-device-floppy me-1"></i>{{trans('main.Save')}}
+							</button>
+						</div>
 					</div>
 				</div>
 			</form>
@@ -58,3 +76,4 @@
 	</div>
 </section>
 @endsection
+

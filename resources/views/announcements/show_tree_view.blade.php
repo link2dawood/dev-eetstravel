@@ -32,26 +32,38 @@
                             {!! $mainParent->content !!}
 
                         </div>
-                        <div class="chat-attachments">
-                            <table class="table">
-                                <tbody>
-
-
-                            @foreach($mainParent->files as $attach)
-                                <tr class="del-container">
-                                    <td class="td_link_attach">
-                                        <div class="td_link_attach__name">
-                                            <a class="name_attach" href="{{$attach->attach->url()}}" target="_blank">
-                                                <span class="glyphicon glyphicon-paperclip"></span>
-                                                {{$attach->attach_file_name}}
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                        {{-- In show.blade.php, replace the attachments section: --}}
+<div class="chat-attachments">
+    <table class="table">
+        <tbody>
+            @php 
+                try {
+                    $attachments = $announcement->getMedia('announcement_files');
+                } catch (\Exception $e) {
+                    $attachments = collect();
+                }
+            @endphp
+            @if($attachments && $attachments->isNotEmpty())
+                @foreach($attachments as $attachment)
+                    <tr class="del-container">
+                        <td class="td_link_attach">
+                            <div class="td_link_attach__name">
+                                <a class="name_attach" href="{{ $attachment->getUrl() }}" target="_blank">
+                                    <span class="glyphicon glyphicon-paperclip"></span>
+                                    {{ $attachment->file_name }}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td>No attachments</td>
+                </tr>
+            @endif
+        </tbody>
+    </table>
+</div>
                             <div class="announcement-actions">
                                 <a href="{{route('announcement_reply', ['id' => $mainParent->id])}}" class="link-black text-sm reply_comment" style="margin-top: 10px"><i class="fa fa-reply margin-r-5"></i> Reply</a>
                             </div>

@@ -2,10 +2,10 @@
 @section('title','Index')
 @section('content')
     @include('layouts.title',
-           ['title' => 'Cancellation Polices', 'sub_title' => 'Policies Offer List',
+           ['title' => 'Cancellation Policies', 'sub_title' => 'Policies List',
            'breadcrumbs' => [
            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Currencies', 'icon' => null, 'route' => null]]])
+           ['title' => 'Cancellation Policies', 'icon' => null, 'route' => null]]])
     <section class="content">
         <div class="box box-primary">
             <div class="box-body">
@@ -16,27 +16,27 @@
                         </div>
                         <div class="col-md-6 text-right">
                             <button class="btn btn-success btn-sm" onclick="exportTableToCSV('cancellation-policies-table', 'cancellation_policies_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
+                                <i class="ti ti-download"></i> Export CSV
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
+                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 1200px;'>
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="fa fa-sort"></i></th>
-                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="fa fa-sort"></i></th>
+                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="ti ti-arrows-sort"></i></th>
+                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
                                 <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
                             </tr>
                         </thead>
@@ -44,7 +44,7 @@
                             @forelse($processedOffers as $offer)
                             <tr>
                                 <td>{{ $offer->id }}</td>
-                                <td>{{ $offer->cancel_policy }}</td>
+                                <td data-delete-label>{{ $offer->cancel_policy }}</td>
                                 <td>{{ $offer->hotel_name }}</td>
                                 <td>{{ $offer->city_name }}</td>
                                 <td>{{ $offer->status }}</td>
@@ -56,10 +56,14 @@
                                 <td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
                                 <td>{{ $offer->tour_name }}</td>
                                 <td onclick="event.stopPropagation();">
-                                    @include('component.action_buttons', [
-                                        'item' => (object)['id' => $offer->tour_id ?? 0],
-                                        'routePrefix' => 'tour'
-                                    ])
+                                    @if(!empty($offer->tour))
+                                        @include('component.action_buttons', [
+                                            'item' => $offer->tour,
+                                            'routePrefix' => 'tour'
+                                        ])
+                                    @else
+                                        <span class="text-muted small">No tour linked</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -129,7 +133,7 @@
                         </div>
                         <div class="form-group">
                             <div class="btn btn-default btn-file">
-                                <i class="fa fa-paperclip"></i> {!! trans('main.Attachment') !!}
+                                <i class="ti ti-paperclip"></i> {!! trans('main.Attachment') !!}
                                 <input type="file" name="attachment[]" multiple="" name="file" id="file">
                             </div>
                             <div id="file_name"></div>
@@ -146,14 +150,16 @@
                     </div>
                     <div class="box-footer">
                         <div class="pull-right">
-                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="fa fa-file-code-o"></i> {!! trans('main.Send') !!}</button>
+                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="ti ti-file-code"></i> {!! trans('main.Send') !!}</button>
                         </div>
-                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="fa fa-times"></i> {!! trans('main.Discard') !!}</button>
+                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="ti ti-x"></i> {!! trans('main.Discard') !!}</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+
+    @include('component.delete_modal_simple')
 @endsection
 
 @push('scripts')
@@ -201,28 +207,27 @@
         });
     }
 
-    setTimeout(function () {
-        $('.tour_dropdown').on('change', function(){
-            let offer_date = $('#offer_date').val();
-            let option_date = $('#option_date').val();
-            dropdown_ajax($(this).val(), offer_date, option_date);
-        });
+    // Attach event handlers directly - no setTimeout delay needed
+    $('.tour_dropdown').on('change', function(){
+        let offer_date = $('#offer_date').val();
+        let option_date = $('#option_date').val();
+        dropdown_ajax($(this).val(), offer_date, option_date);
+    });
 
-        $('.change-tour-button').show();
-        $('.change-tour-button').on('click', function(){
-            let id = $(this).data('id');
-            let tour_id = $(this).data('tour');
-            let offer_date = $(this).data('offer_date');
-            let option_date = $(this).data('option_date');
+    $('.change-tour-button').show();
+    $('.change-tour-button').on('click', function(){
+        let id = $(this).data('id');
+        let tour_id = $(this).data('tour');
+        let offer_date = $(this).data('offer_date');
+        let option_date = $(this).data('option_date');
 
-            $('#offer_date').val(offer_date);
-            $('#option_date').val(option_date);
+        $('#offer_date').val(offer_date);
+        $('#option_date').val(option_date);
 
-            dropdown_ajax(tour_id, offer_date, option_date);
-            $('#tour_id').val(tour_id).trigger('change');
+        dropdown_ajax(tour_id, offer_date, option_date);
+        $('#tour_id').val(tour_id).trigger('change');
 
-            $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
-        });
-    }, 3000);
+        $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
+    });
 </script>
 @endpush

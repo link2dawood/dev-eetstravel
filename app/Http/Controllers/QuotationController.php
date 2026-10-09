@@ -320,11 +320,18 @@ class QuotationController extends Controller {
 	public function prepareExport($quotation, string $export, $tour  ,$calculations,$listRoomsHotel,$request = null){
         $this->request =$request;
         $excelName = str_replace(" ","_",$quotation->name);
-        return Excel::create('Quotation_'.$excelName, function($excel) use($quotation ,$calculations,$listRoomsHotel){
-              	$excel->sheet('Tour Information', function($sheet) use($quotation ,$calculations,$listRoomsHotel){
-                	$sheet->loadView('quotation.excel', compact('quotation','calculations','listRoomsHotel'));
-            	});
-            	
-            })->export($export);
+        $exportFormat = $export; // Store the original export format (xlsx, csv, etc.)
+        $exportClass = new class($quotation, $calculations, $listRoomsHotel) implements \Maatwebsite\Excel\Concerns\FromView {
+            protected $quotation, $calculations, $listRoomsHotel;
+            public function __construct($quotation, $calculations, $listRoomsHotel) {
+                $this->quotation = $quotation;
+                $this->calculations = $calculations;
+                $this->listRoomsHotel = $listRoomsHotel;
+            }
+            public function view(): \Illuminate\Contracts\View\View {
+                return view('quotation.excel', compact('quotation', 'calculations', 'listRoomsHotel'));
+            }
+        };
+        return Excel::download($exportClass, 'Quotation_'.$excelName.'.'.$exportFormat);
 	}
 }

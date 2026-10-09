@@ -1,5 +1,6 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title','Edit')
+@include('component.datatables_cdn')
 @section('content')
     @include('layouts.title',
            ['title' => 'Tour Package', 'sub_title' => 'Tour Package Edit',
@@ -186,7 +187,7 @@
                                 {!! Form::label('total_amount', 'Price per Person') !!}
                                 {!! Form::text('total_amount', round($tourPackage->total_amount, 2), [
                                 'class' => 'form-control',
-                                strtolower(\App\Helper\TourPackage\TourService::$serviceTypes[$tourPackage->type]) == 'hotel' ?
+                                (isset($packageServiceType) && strtolower($packageServiceType) == 'hotel') ?
                                   :
                                   '' ]
                                  ) !!}
@@ -263,7 +264,7 @@
                                 </div>
                             </div>
 
-							@if(\App\Helper\TourPackage\TourService::$serviceTypes[$tourPackage->type] == 'transfer' || \App\Helper\TourPackage\TourService::$serviceTypes[$tourPackage->type] == 'guide')
+							@if((isset($packageServiceType) && $packageServiceType == 'transfer') || (isset($packageServiceType) && $packageServiceType == 'guide'))
 							<div class="form-group col-md-6 col-lg-6" style="margin-left: -15px;">
                                 {!! Form::label('description', 'Pickup Description') !!}
                                 {!! Form::text('pickup_des', $tourPackage->pickup_des, ['class' => 'form-control']) !!}
@@ -403,7 +404,7 @@
                                 {!! Form::textarea('note', $tourPackage->note, ['class' => 'form-control']) !!}
                             </div>
                             <div class="form-group">
-                                {!! Form::hidden('serviceType', \App\Helper\TourPackage\TourService::$serviceTypes[$tourPackage->type], ['id' => 'tour_package_service_type_value']) !!}
+                                {!! Form::hidden('serviceType', isset($packageServiceType) ? $packageServiceType : '', ['id' => 'tour_package_service_type_value']) !!}
                                 {!! Form::hidden('serviceId', $tourPackage->reference, ['id' => 'tour_package_service_type_id']) !!}
                                 @if($tourPackage->tourDays()->first()    !== null)
                                     {!! Form::hidden('tourDayId', $tourPackage->tourDays()->first()->id, ['id' => 'tour_package_tour_day_id']) !!}
@@ -551,15 +552,15 @@
                 }
             }).done((res) => {
                 $('#list_selected_room_types').append(res);
-                $('.list_room_types').slideUp(200);
+                $('.list_room_types').stop(true, true).slideUp(80);
             })
         });
 
         $('.btn_for_select_room_type').click(function(){
             if($('.list_room_types').css('display') === 'none'){
-                $('.list_room_types').slideDown(200);
+                $('.list_room_types').stop(true, true).slideDown(80);
             }else{
-                $('.list_room_types').slideUp(200);
+                $('.list_room_types').stop(true, true).slideUp(80);
             }
         });
 
@@ -736,4 +737,8 @@
         });
     </script>
 @endsection
+
+
+
+
 

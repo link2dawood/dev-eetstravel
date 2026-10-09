@@ -1,3 +1,10 @@
+if (typeof window.globalSearch === 'undefined') {
+    window.globalSearch = {
+        run: function () {},
+        prepareOptions: function () {},
+        bindEvents: function () {}
+    };
+}
 
 let addService = {
     run: () => {
@@ -5,8 +12,15 @@ let addService = {
         addService.bindEvents();
         addService.clickMainHotel();
 
+        // Root cause fix: Only call addPackages if we're NOT using server-rendered services
+        // Server-rendered view uses #service-days-container, AJAX view uses .tour-packages
+        // This prevents unnecessary AJAX calls when using the new server-rendered view
         if($('#change_service_with_edit').attr('data-info') !== 'change_edit_service'){
-            addService.addPackages();
+            // Only load via AJAX if .tour-packages exists (old AJAX-based view)
+            // If #service-days-container exists, services are already server-rendered
+            if($('.tour-packages').length > 0 && $('#service-days-container').length === 0){
+                addService.addPackages();
+            }
         }
     },
     addOrder: () => {
@@ -216,34 +230,72 @@ let addService = {
     },
     bindEvents: () => {
         $('body').on('click', '.add-service-quick', function(){
-            $('#service-modal').modal();
-            $('#service-modal').on('shown.bs.modal', function(){
-                let target = $(this).find('div.dataTables_filter input');
-                $(target).focus();
-            });
-
-            if ($(this).data('tour_transfer')) {
-                addService.tourTransfer = true;
-                $('#service-select').val('Bus Company').trigger('change').change();
-                $('.modal-title').text('Add Bus Company');
-              //  globalSearch.setOnlyTransferServiceEnabled();
-            } else {
-                $('#service-select').val('All').trigger('change').change();
-                $('.modal-title').text('Add service');
-               // globalSearch.setAllServicesEnabled();
-               // globalSearch.setTransferDisable();
-                addService.tourTransfer = '';
-            }
-
             addService.tourDayId = $(this).data('tourdayid');
             addService.route = $(this).data('link');
-        });
-        $('body').one('click', '.add-service-quick', function(e){
-            globalSearch.run('add-service-column');
+            addService.tour_id = $(this).data('tour_id') || $('#default_reference_id').val();
+            addService.tourTransfer = $(this).data('tour_transfer') ? 'true' : '';
 
+            // Root cause fix: Bootstrap modal compatibility
+            // Handle both Bootstrap 4 (jQuery) and Bootstrap 5 (vanilla JS) APIs
+            const modalEl = document.getElementById('service-modal');
+            if (modalEl) {
+                let modalShown = false;
+                
+                // Try Bootstrap 5 API first (with more defensive checks)
+                if (typeof bootstrap !== 'undefined' && bootstrap && bootstrap.Modal) {
+                    try {
+                        // Check if getOrCreateInstance exists and is actually a function (Bootstrap 5.1+)
+                        if (bootstrap.Modal.getOrCreateInstance && 
+                            typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+                            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                            if (modalInstance && typeof modalInstance.show === 'function') {
+                                modalInstance.show();
+                                modalShown = true;
+                            }
+                        } 
+                        // Check if getInstance exists (Bootstrap 5.0)
+                        else if (bootstrap.Modal.getInstance && 
+                                 typeof bootstrap.Modal.getInstance === 'function') {
+                            let modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (!modalInstance && typeof bootstrap.Modal === 'function') {
+                                modalInstance = new bootstrap.Modal(modalEl);
+                            }
+                            if (modalInstance && typeof modalInstance.show === 'function') {
+                                modalInstance.show();
+                                modalShown = true;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Bootstrap 5 modal API failed, falling back to jQuery:', e);
+                        modalShown = false;
+                    }
+                }
+                
+                // Fallback to jQuery/Bootstrap 4 if Bootstrap 5 didn't work
+                if (!modalShown) {
+                    try {
+                        $('#service-modal').modal('show');
+                    } catch (e) {
+                        console.error('Failed to show modal with both Bootstrap 5 and jQuery:', e);
+                    }
+                }
+            }
+
+            const typeFilter = document.getElementById('service-type-filter');
+            const searchInput = document.getElementById('service-catalog-search');
+            if (typeFilter) {
+                typeFilter.value = 'all';
+                typeFilter.dispatchEvent(new Event('change'));
+            }
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+                searchInput.focus();
+            }
         });
         $('body').on('click', '.add-service-button', function(e){
             e.preventDefault();
+            
             addService.service_type = $(this).data('service_type');
             addService.service_id = $(this).data('service_id');
             addService.service_name = $(this).data('service_name');
@@ -636,7 +688,10 @@ let addService = {
         })
     },
     addPackages: () => {
-        if(addService.tour_id){
+        // Root cause fix: Only load packages via AJAX if .tour-packages element exists
+        // The new tour.show view uses server-rendered #service-days-container instead
+        // This prevents unnecessary AJAX calls when using the new server-rendered view
+        if(addService.tour_id && $('.tour-packages').length > 0){
             $.ajax({
                 method: "POST",
                 url: "/tour/" + addService.tour_id + "/generatePackages",
@@ -691,33 +746,96 @@ let addService = {
         }
     },
     generateDataTableServicesType : (check = 'false') => {
-        // Load service list via AJAX for Bootstrap table
-        $.ajax({
-            url: "/table_service_list",
-            data: {
-                service_type_id: addService.service_type_id,
-                service_id: addService.service_id
-            },
-            success: function(response) {
-                // Update table content with response data
-                let tableBody = $('#search-table-service-list tbody');
-                tableBody.empty();
+        // Root fix: Ensure DataTables is loaded before initialization
+        const tableEl = $('#search-table-service-list');
+        if (!tableEl.length) {
+            console.warn('Table #search-table-service-list not found');
+            return;
+        }
+        
+        // Check if DataTables is already initialized and destroy it
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#search-table-service-list')) {
+            $('#search-table-service-list').DataTable().destroy();
+        }
+        
+        // Load DataTables if not available
+        const loadDataTables = window.loadDataTables || function() {
+            return Promise.resolve();
+        };
+        
+        loadDataTables().then(() => {
+            // Load service list via AJAX
+            $.ajax({
+                url: "/table_service_list",
+                data: {
+                    service_type_id: addService.service_type_id,
+                    service_id: addService.service_id
+                },
+                success: function(response) {
+                    // Update table content with response data
+                    let tableBody = $('#search-table-service-list tbody');
+                    tableBody.empty();
 
-                if(response.data && response.data.length > 0) {
-                    response.data.forEach(function(item) {
-                        let row = `<tr>
-                            <td>${item.name || ''}</td>
-                            <td>${item.address_first || ''}</td>
-                            <td>${item.country || ''}</td>
-                            <td>${item.city || ''}</td>
-                            <td>${item.work_phone || ''}</td>
-                            <td>${item.contact_name || ''}</td>
-                            <td>${item['action-change-service'] || ''}</td>
-                        </tr>`;
-                        tableBody.append(row);
-                    });
+                    if(response.data && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            let row = `<tr>
+                                <td>${item.name || ''}</td>
+                                <td>${item.address_first || ''}</td>
+                                <td>${item.country || ''}</td>
+                                <td>${item.city || ''}</td>
+                                <td>${item.work_phone || ''}</td>
+                                <td>${item.contact_name || ''}</td>
+                                <td>${item['action-change-service'] || ''}</td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    }
+                    
+                    // Initialize DataTables if available
+                    if (typeof $.fn.DataTable !== 'undefined') {
+                        $('#search-table-service-list').DataTable({
+                            responsive: true,
+                            pageLength: 25,
+                            order: [[0, 'asc']],
+                            language: {
+                                search: "Search:",
+                                lengthMenu: "Show _MENU_ entries"
+                            }
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading service list:', error);
                 }
-            }
+            });
+        }).catch(function(error) {
+            console.error('Failed to load DataTables:', error);
+            // Fallback: Load data without DataTables
+            $.ajax({
+                url: "/table_service_list",
+                data: {
+                    service_type_id: addService.service_type_id,
+                    service_id: addService.service_id
+                },
+                success: function(response) {
+                    let tableBody = $('#search-table-service-list tbody');
+                    tableBody.empty();
+                    if(response.data && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            let row = `<tr>
+                                <td>${item.name || ''}</td>
+                                <td>${item.address_first || ''}</td>
+                                <td>${item.country || ''}</td>
+                                <td>${item.city || ''}</td>
+                                <td>${item.work_phone || ''}</td>
+                                <td>${item.contact_name || ''}</td>
+                                <td>${item['action-change-service'] || ''}</td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    }
+                }
+            });
         });
 
         if(check === 'false'){

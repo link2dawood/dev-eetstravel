@@ -7,7 +7,44 @@
    ['title' => 'Users', 'icon' => 'user', 'route' => url('users')],
    ['title' => 'Edit', 'route' => null]]])
    <style>
-	.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+
+.user-edit-actions-top {
+    margin-bottom: 1.5rem;
+}
+
+.user-edit-actions-bottom {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.user-avatar-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #eaf3ff;
+    border: 1px solid #cfe3fb;
+    color: #066fd1;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.user-avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     background: #f5f5f5!important;
     border: none;
     border-right: 1px solid #aaa;
@@ -40,14 +77,11 @@
 				</div>
 			@endif
 			<form action="{{url('/users/'.$user->id)}}" method="post" enctype="multipart/form-data">
-				<div class="row">
+				<div class="row user-edit-actions-top">
 					<div class="col-md-12">
-						<div class="margin_button">
-							<a href="javascript:history.back()">
-								<button class='btn btn-primary back_btn' type="button">{{trans('main.Back')}}</button>
-							</a>
-							<button class='btn btn-success' type='submit'>{{trans('main.Save')}}</button>
-						</div>
+						<a href="javascript:history.back()" class="btn btn-primary back_btn">
+							<i class="ti ti-arrow-left me-1"></i>{{trans('main.Back')}}
+						</a>
 					</div>
 				</div>
 				{!! csrf_field() !!}
@@ -65,23 +99,31 @@
 					<input type="password" name = "password" class = "form-control" placeholder = "password">
 				</div>
                 <div class="form-group">
-                    <label for="">Avatar</label>
-                    <div style="margin-bottom: 10px;">
-                        @if($user->avatar)
-                            <img src="{{ asset('storage/' . $user->avatar) }}" alt="Current Avatar" style="max-width: 100px; height: auto;">
-                        @elseif($user->avatar)
-                            <img src="{{ asset('storage/' . $user->avatar) }}" alt="Current Avatar" style="max-width: 100px; height: auto;">
-                        @else
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="Default Avatar" style="max-width: 100px; height: auto;">
-                        @endif
+                    <label for="avatar">Avatar</label>
+                    @php
+                        $avatarPath = $user->avatar && file_exists(public_path($user->avatar)) ? asset($user->avatar) : null;
+                        $avatarInitials = collect(explode(' ', trim($user->name ?: $user->email)))->filter()->take(2)->map(function ($part) { return strtoupper(substr($part, 0, 1)); })->implode('');
+                    @endphp
+                    <div>
+                        <div class="user-avatar-preview">
+                            @if($avatarPath)
+                                <img src="{{ $avatarPath }}" alt="{{ $user->name ?: 'User' }} avatar">
+                            @else
+                                <span>{{ $avatarInitials ?: 'U' }}</span>
+                            @endif
+                        </div>
                     </div>
                     <input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*">
                     <small class="form-text text-muted">Upload a new avatar image (optional)</small>
                 </div>
-				<button class = "btn btn-success" type="submit">{{trans('main.Save')}}</button>
-				<a href="{{\App\Helper\AdminHelper::getBackButton(route('users.index'))}}">
-					<button class='btn btn-warning' type='button'>{{trans('main.Cancel')}}</button>
-				</a>
+				<div class="user-edit-actions-bottom">
+					<a href="{{\App\Helper\AdminHelper::getBackButton(route('users.index'))}}" class="btn btn-secondary">
+						<i class="ti ti-x me-1"></i>{{trans('main.Cancel')}}
+					</a>
+					<button class="btn btn-success" type="submit">
+						<i class="ti ti-device-floppy me-1"></i>{{trans('main.Save')}}
+					</button>
+				</div>
 			</form>
 		</div>
 	</div>
@@ -185,3 +227,4 @@
 		});
 	});
 </script>
+

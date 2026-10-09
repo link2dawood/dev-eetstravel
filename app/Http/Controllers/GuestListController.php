@@ -52,19 +52,18 @@ class GuestListController extends Controller {
 	}
 
 
+/**
+ * Show the form for creating a new resource.
+ *
+ * @return \Illuminate\Http\Response
+ */
+public function create($tourId)
+{
+    $tour = Tour::findOrFail($tourId);
+    $hotels = Hotel::all();
 
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
-	public function create( $tourId ) {
-	
-		$tour = Tour::findOrFail( $tourId );
-
-		return view( 'guest_list.create', compact( 'tour') );
-	}
-	
+    return view('guest_list.create', compact('tour', 'hotels'));
+}
 
 	/**
 	 * Store a newly created resource in storage.

@@ -75,12 +75,12 @@
                                         <td>{{ $client->work_phone }}</td>
                                         <td>{{ $client->work_email }}</td>
                                         <td>
-                                            @include('component.action_buttons', [
-                                                'show_route' => route('clients.show', $client->id),
-                                                'edit_route' => route('clients.edit', $client->id),
-                                                'delete_route' => route('clients.destroy', $client->id),
-                                                'model' => $client
-                                            ])
+                                            <div class="btn-list flex-nowrap">
+                                                @include('component.action_buttons', [
+                                                    'item' => $client,
+                                                    'routePrefix' => 'clients'
+                                                ])
+                                            </div>
                                         </td>
                                     </tr>
                                     @empty
@@ -101,6 +101,8 @@
     </div>
     <span id="service-name" hidden data-service-name='Event'></span>
 @endsection
+
+@include('component.delete_modal_simple')
 
 
 @push('scripts')

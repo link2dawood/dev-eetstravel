@@ -27,18 +27,12 @@
                 @include('scaffold-interface.dashboard.components.inbox_emails')
                 @include('scaffold-interface.dashboard.components.announcements_list')
                 
-                {{-- ================================== --}}
-                {{-- == THIS IS THE CORRECTED LINE == --}}
-                {{-- ================================== --}}
                 @include('scaffold-interface.dashboard.components.tasks_list', [
                     'todoTasks' => $todoTasks,
                     'completedTasks' => $completedTasks,
                     'abortedTasks' => $abortedTasks,
                     'statuses' => $statuses
                 ])
-                {{-- ================================== --}}
-                {{-- == END OF FIX == --}}
-                {{-- ================================== --}}
 
                 </div>
             </div>
@@ -78,6 +72,11 @@
 @section('post_styles')
     <link href="{{URL::asset('css/jquery-jvectormap-2.0.3.css')}}" rel="stylesheet"/>
     <link href="{{URL::asset('css/calendar-enhancements.css')}}" rel="stylesheet"/>
+    <style>
+        .page-body .box-tools .btn-box-tool {
+            display: none !important;
+        }
+    </style>
 @endsection
 @section('post_scripts_calendar')
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
@@ -356,9 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (task_permission) {
                 var taskBtn = document.createElement('button');
-                taskBtn.className = 'btn btn-box-tool';
+                taskBtn.className = 'btn btn-box-tool create-action-btn';
                 taskBtn.title = 'Add Task';
-                taskBtn.innerHTML = '<i class="fa fa-plus"></i>';
+                taskBtn.innerHTML = '<span class="create-action-icon" aria-hidden="true">+</span>';
                 taskBtn.onclick = function() {
                     var modal = document.getElementById('modalCreate1');
                     if (modal && typeof $(modal).modal === 'function') {

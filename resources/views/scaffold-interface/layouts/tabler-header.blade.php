@@ -1,7 +1,11 @@
 @auth
     @php
+        $user = Auth::user();
         $messages = \App\Helper\DashboardHelper::getCountUnreadMailMessage();
         $tasks = \App\Helper\DashboardHelper::getTasks();
+        $notifications = $user->notifications()->latest()->get();
+        $unreadNotifications = $notifications->where('click', false);
+        $unreadNotificationsCount = $unreadNotifications->count();
     @endphp
 @endauth
 
@@ -21,16 +25,34 @@
             <div class="nav-item dropdown d-none d-md-flex me-3 notifications-content" data-notifications-layout="tabler">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Show notifications">
                     <i class="ti ti-bell icon"></i>
-                    <span class="badge bg-red"></span>
+                    @auth
+                        @if($unreadNotificationsCount)
+                            <span class="badge bg-red tabler-notifications-badge">{{ $unreadNotificationsCount }}</span>
+                        @endif
+                    @endauth
                 </a>
                 <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card notification-dropdown">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Notifications</h3>
+                            <h3 class="card-title">
+                                Notifications
+                                @auth
+                                    @if($unreadNotificationsCount)
+                                        <span class="badge bg-red ms-2 tabler-notifications-badge">{{ $unreadNotificationsCount }}</span>
+                                    @endif
+                                @endauth
+                            </h3>
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable" data-notifications-list>
                             <div class="list-group-item text-muted">Loading notifications...</div>
                         </div>
+                        @auth
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="/profile?tab=notifications-tab" class="btn btn-link p-0">{{ trans('main.Viewall') }}</a>
+                                <a href="#" id="read_all_notification" class="btn btn-link p-0 {{ !$unreadNotificationsCount ? 'disabled-link' : '' }}">{{ trans('main.Readall') }}</a>
+                                <a href="#" id="delete_all_notification" class="btn btn-link p-0 tabler-delete-all-notifications {{ !$notifications->count() ? 'disabled-link' : '' }}">{{ trans('main.Deleteall') }}</a>
+                            </div>
+                        @endauth
                     </div>
                 </div>
             </div>
@@ -84,7 +106,7 @@
                         </div>
                         <div class="list-group list-group-flush list-group-hoverable">
                             @foreach($tasks as $task)
-                            <a href="{!! route('task.show', ['task' => $task->id]) !!}" class="list-group-item">
+                            <a href="{!! route('task.show', ['id' => $task->id]) !!}" class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-auto">
                                         <span class="avatar">

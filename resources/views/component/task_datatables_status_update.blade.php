@@ -1,4 +1,4 @@
-<select name="status" class="task-status form-control" data-update-link='{{route('task.update', ['task' => $task->id])}}'>
+<select name="status" class="task-status form-control" data-update-link='{{route('task.update', ['id' => $task->id])}}'>
 	@foreach($taskStatuses as $status)
 	<option value="{{$status->id}}" {{$status->id == $task->status ? 'selected="selected"' : ''}}>{{$status->name}}</option>
     @endforeach

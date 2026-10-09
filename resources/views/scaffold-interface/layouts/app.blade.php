@@ -104,7 +104,7 @@
                                     <ul class="menu menuTasks">
                                         @foreach($tasks as $task)
                                             <li>
-                                                <a href="{!! route('task.show', ['task' => $task->id]) !!}"
+                                                <a href="{!! route('task.show', ['id' => $task->id]) !!}"
                                                    class="my_notif_tasks">
                                                     <div class="image_tasks_notif">
                                                         <i class="fa fa-users text-aqua"></i>

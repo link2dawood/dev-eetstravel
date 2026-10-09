@@ -40,18 +40,21 @@ $('.select_room_type').click(function(){
           //  $('#agreement_id').val('');
         //}
 
-        $('.list_room_types').slideUp(200);
+        $('.list_room_types').stop(true, true).slideUp(80);
     })
 });
 
 $('.btn_for_select_room_type').click(function(){
     if($('.list_room_types').css('display') === 'none'){
-        $('.list_room_types').slideDown(200);
+        $('.list_room_types').stop(true, true).slideDown(80);
     }else{
-        $('.list_room_types').slideUp(200);
+        $('.list_room_types').stop(true, true).slideUp(80);
     }
 });
 
 $(document).on('click', '.icon_delete_room_type', function(){
     $(this).closest('.item_selected_room_type').remove();
 });
+
+
+

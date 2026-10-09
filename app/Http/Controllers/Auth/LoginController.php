@@ -49,30 +49,55 @@ class LoginController extends Controller
     }
 
     /**
-     * Handle a login request to the application.
+     * Attempt to log the user into the application.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * @return bool
      */
-    public function login(\Illuminate\Http\Request $request)
+    protected function attemptLogin(\Illuminate\Http\Request $request)
     {
-        $this->validateLogin($request);
+        return $this->guard()->attempt(
+            $this->credentials($request), 
+            $request->filled('remember')
+        );
+    }
 
-        // Try authentication
-        if (method_exists($this, 'hasTooManyLoginAttempts') &&
-            $this->hasTooManyLoginAttempts($request)) {
-            $this->fireLockoutEvent($request);
-            return $this->sendLockoutResponse($request);
+    /**
+     * Get the needed authorization credentials from the request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    protected function credentials(\Illuminate\Http\Request $request)
+    {
+        return $request->only($this->username(), 'password');
+    }
+
+    /**
+     * The user has been authenticated.
+     * Root fix: Override to check permissions before redirecting to prevent redirect loops
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        // Check if user has permission to access dashboard
+        try {
+            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('dashboard.index')) {
+                return redirect()->intended($this->redirectPath());
+            }
+        } catch (\Exception $e) {
+            // If permission check fails, log and redirect anyway to prevent loops
+            \Log::warning('Permission check failed during login redirect', [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage()
+            ]);
         }
 
-        if ($this->attemptLogin($request)) {
-            return $this->sendLoginResponse($request);
-        }
-
-        $this->incrementLoginAttempts($request);
-
-        return $this->sendFailedLoginResponse($request);
+        // Root fix: Redirect to home even if permission check fails to prevent redirect loops
+        // The middleware will handle showing appropriate error if needed
+        return redirect()->intended($this->redirectPath());
     }
 }

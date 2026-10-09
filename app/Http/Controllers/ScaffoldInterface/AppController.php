@@ -59,8 +59,7 @@ class AppController extends Controller
         $this->taskRepository = $taskRepository;
     }
 
-
-    /**
+/**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -78,9 +77,9 @@ class AppController extends Controller
             $room_type['count_room'] = null;
             $room_type['price_room'] = null;
             $room_types[] = $room_type;
-			
+            
         }
-	
+    
 
         $check_email_server = $user->email_server == 0 ? false : true;
 
@@ -90,24 +89,42 @@ class AppController extends Controller
             ->select('announcements.*', 'users.name as sender')
             ->where('announcements.parent_id', null)->orderBy('announcements.created_at', 'desc')->limit(5)->get();
 
+        // ==========================================
+        // == START OF FIX ==========================
+        // ==========================================
+        
+        // Replace the old button-generating logic with the new component.
+        // This ensures the dashboard buttons are identical to the main page buttons.
         foreach ($announcements as $announcement) {
-            $routes['show'] = route('announcements.show', ['announcement' => $announcement->id]);
-            $routes['edit'] = route('announcements.edit', ['announcement' => $announcement->id]);
-            $routes['delete_msg'] = "/announcement/$announcement->id/delete_msg";
-            $announcement->routes = $routes;
-            $announcement->action_buttons = $this->generateActionButtons($announcement, $routes);
+            // This 'try' block prevents errors if the view file is missing
+            try {
+                $announcement->action_buttons = view('component.action_buttons', [
+                    'item' => $announcement,
+                    'routePrefix' => 'announcements',
+                    'model' => $announcement // Pass 'model' as well, as the component might use it
+                ])->render();
+            } catch (\Exception $e) {
+                // Fallback or error logging if the component fails
+                \Log::error('Error rendering action_buttons component in dashboard: ' . $e->getMessage());
+                $announcement->action_buttons = 'Error: Buttons could not be rendered. A';
+            }
         }
+        // ==========================================
+        // == END OF FIX ============================
+        // ==========================================
+
 
         // Get tasks data - split by status flags
         $todoTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
-                      ->where('is_aborted', false);
+                        ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'todo_page')
+            ->withQueryString();
 
         $completedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
@@ -115,8 +132,9 @@ class AppController extends Controller
                 $query->where('is_completed', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'completed_page')
+            ->withQueryString();
 
         $abortedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
@@ -124,26 +142,45 @@ class AppController extends Controller
                 $query->where('is_aborted', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->simplePaginate(10, ['*'], 'aborted_page')
+            ->withQueryString();
 
         $taskStatuses = \App\Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
 
         // Process all tasks for action buttons
-        $allTasks = $todoTasks->merge($completedTasks)->merge($abortedTasks);
+        $allTasks = $todoTasks->getCollection()
+            ->merge($completedTasks->getCollection())
+            ->merge($abortedTasks->getCollection());
         foreach ($allTasks as $task) {
             $task->tour_name = $task->tourName();
             $task->show_assigned_users = $task->showAssignedUsers();
-            $task->task_type = \App\Task::$taskTypes[$task->task_type];
+            // Check if task_type exists before accessing
+            if (isset(\App\Task::$taskTypes[$task->task_type])) {
+                $task->task_type = \App\Task::$taskTypes[$task->task_type];
+            } else {
+                $task->task_type = 'Unknown'; // Or some default
+            }
             $task->tour_link_show = $task->tourLinkShow();
-            $task->data_update_link = route('task.update', ['task' => $task->id]);
-
-            $routes['show'] = route('task.show', ['task' => $task->id]);
-            $routes['edit'] = route('task.edit', ['task' => $task->id]);
+            $task->data_update_link = route('task.update', ['id' => $task->id]);
+            
+            // NOTE: This task loop still uses the old `generateActionButtons` method.
+            $routes = []; // Reset routes array
+            $routes['show'] = route('task.show', ['id' => $task->id]);
+            $routes['edit'] = route('task.edit', ['id' => $task->id]);
             $routes['delete_msg'] = "/task/$task->id/deleteMsg";
             $task->routes = $routes;
             $task->action_buttons = $this->generateActionButtons($task, $routes);
         }
+
+        // Get users with their tour counts
+        $tourUsers = \App\User::withCount('tours')
+            ->having('tours_count', '>', 0)
+            ->orderBy('tours_count', 'desc')
+            ->get()
+            ->map(function($user) {
+                return ['name' => $user->name, 'count' => $user->tours_count];
+            });
 
         return view('scaffold-interface.dashboard.dashboard',
             [
@@ -155,7 +192,8 @@ class AppController extends Controller
                 'todoTasks' => $todoTasks,
                 'completedTasks' => $completedTasks,
                 'abortedTasks' => $abortedTasks,
-                'statuses' => $taskStatuses
+                'statuses' => $taskStatuses,
+                'tourUsers' => $tourUsers
             ]);
     }
 
@@ -477,18 +515,18 @@ class AppController extends Controller
 
     public function getTasksBlock()
     {
-		    $user = Auth::user();
+            $user = Auth::user();
 
         // To-Do Tasks (not completed and not aborted)
         $todoTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
             ->where('assign', $user->id)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
-                      ->where('is_aborted', false);
+                        ->where('is_aborted', false);
             })
             ->orderBy('dead_line', 'asc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'todo_page')
+            ->withQueryString();
 
         // Completed Tasks
         $completedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
@@ -497,8 +535,8 @@ class AppController extends Controller
                 $query->where('is_completed', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'completed_page')
+            ->withQueryString();
 
         // Aborted Tasks
         $abortedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
@@ -507,8 +545,8 @@ class AppController extends Controller
                 $query->where('is_aborted', true);
             })
             ->orderBy('dead_line', 'desc')
-            ->take(10)
-            ->get();
+            ->simplePaginate(10, ['*'], 'aborted_page')
+            ->withQueryString();
 
         $statuses = \App\Status::where('type', 'task')->orderBy('sort_order')->get();
 

@@ -16,7 +16,7 @@
           <th>{!!trans('main.UserCreated')!!}</th>
           {{-- <th>Action</th> --}}
           <th>{!!trans('main.Description')!!}</th>
-          <th class="actions-button"></th>
+          <th class="actions-button" style="width: 140px">{!!trans('main.Actions')!!}</th>
         </tr>
         </thead>
         <tbody>
@@ -24,8 +24,16 @@
           <tr>
             <td>{{ $activity->created_at }}</td>
             <td>{{ $activity->causer }}</td>
-            <td>{{ $activity->formatted_description }}</td>
-            <td>{!! $activity->link_button !!}</td>
+            <td data-delete-label>{{ $activity->formatted_description }}</td>
+            <td>
+              <div class="btn-list flex-nowrap">
+                @if(!empty($activity->link_button))
+                  {!! $activity->link_button !!}
+                @else
+                  <span class="text-muted">-</span>
+                @endif
+              </div>
+            </td>
           </tr>
         @endforeach
         </tbody>

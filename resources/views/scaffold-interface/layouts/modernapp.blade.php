@@ -237,7 +237,6 @@
 
 
 
-    <script src="{{asset('assets/js/jquery-3.6.0.min.js')}}"></script>
     <script src="{{asset('assets/js/jquery-ui.min.js')}}"></script>
     <script src="{{asset('assets/js/bootstrap.bundle.min.js')}}"></script>
     <script src="{{asset('assets/js/slick.min.js')}}"></script>
@@ -247,9 +246,13 @@
     <script src="{{asset('assets/js/custom.js')}}"></script>
 
     <script>
-        var editor1 = new RichTextEditor("#div_editor1");
-        var editor2 = new RichTextEditor("#div_editor2");
-        var editor3 = new RichTextEditor("#div_editor3");
+        document.addEventListener('DOMContentLoaded', function () {
+            ['#div_editor1', '#div_editor2', '#div_editor3'].forEach(function(selector) {
+                if (document.querySelector(selector)) {
+                    new RichTextEditor(selector);
+                }
+            });
+        });
     </script>
 
 </body>

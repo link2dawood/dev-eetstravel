@@ -13,8 +13,8 @@
         <div class="box box-primary">
             <div class="box-body">
                 {!! \App\Helper\PermissionHelper::getCreateButton(route('announcements.create'), \App\Announcement::class) !!}
-                <br/><br/>
-                <div class="mb-3">
+                
+                <div class="mb-3 mt-3">
                     <div class="row">
                         <div class="col-md-6">
                             <input type="text" id="announcements-search" class="form-control" placeholder="Search announcements..." onkeyup="filterTable('announcements-table', this.value)">
@@ -44,9 +44,9 @@
                             <tr>
                                 <td>{{ $announcement->id }}</td>
                                 <td>{{ $announcement->title }}</td>
-                                <td>{{ Str::limit($announcement->content, 100) }}</td>
+                                <td>{{ \Illuminate\Support\Str::limit($announcement->content, 100) }}</td>
                                 <td>{{ $announcement->created_at ? $announcement->created_at->format('Y-m-d H:i') : '' }}</td>
-                                <td>{{ $announcement->sender->name ?? '' }}</td>
+                                <td>{{ $announcement->sender ?? 'Unknown' }}</td>
                                 <td>
                                     @if($announcement->files && $announcement->files->count() > 0)
                                         @foreach($announcement->files as $file)

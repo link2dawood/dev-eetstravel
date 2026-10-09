@@ -279,6 +279,7 @@ Route::group(['middleware' => 'web'], function () {
 	});
 //tour Routes
     Route::group(['middleware' => 'web'], function () {
+        Route::post('tour/save', '\App\Http\Controllers\TourController@store');
         Route::resource('tour', '\App\Http\Controllers\TourController');
         Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
         Route::get('tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
@@ -310,19 +311,44 @@ Route::group(['middleware' => 'web'], function () {
 
 
 //task Routes
+// In your routes/web.php file
+
 Route::group(['middleware'=> 'web'],function(){
-	Route::get('/task/getTasksBlock', '\App\Http\Controllers\ScaffoldInterface\AppController@getTasksBlock');
-	Route::resource('task','\App\Http\Controllers\TaskController');
-	Route::post('task/{id}/update','\App\Http\Controllers\TaskController@update');
-	Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
-	Route::get('task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
+
+    // Keep your non-task routes
+    Route::get('/task/getTasksBlock', '\App\Http\Controllers\ScaffoldInterface\AppController@getTasksBlock');
+    Route::get('/getallhollydaycalendars', '\App\Http\Controllers\ScaffoldInterface\AppController@getAllHollydayCalendars');
+    Route::post('/checkHollydayCalendarById/{id}', '\App\Http\Controllers\ScaffoldInterface\AppController@checkHollydayCalendarById');
+
+    // -----------------------------------------------------------------
+    // REPLACED TASK ROUTES
+    // -----------------------------------------------------------------
+    
+    // We remove Route::resource('task', ...) to define routes manually and avoid conflicts
+
+    // Standard task routes
+    Route::get('task', '\App\Http\Controllers\TaskController@index')->name('task.index');
+    Route::get('task/create', '\App\Http\Controllers\TaskController@create')->name('task.create');
+    Route::post('task', '\App\Http\Controllers\TaskController@store')->name('task.store'); // For NEW tasks
+    Route::get('task/{id}', '\App\Http\Controllers\TaskController@show')->name('task.show');
+    Route::get('task/{id}/edit', '\App\Http\Controllers\TaskController@edit')->name('task.edit');
+
+    // This is the custom route your edit form uses. We give it the correct name.
+    Route::post('task/{id}/update','\App\Http\Controllers\TaskController@update')->name('task.update'); 
+
+    // Your other custom task routes
+    Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
+    Route::get('task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
     Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
     Route::get('task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
     Route::get('task/{id}/deleteMsg/{tab}','\App\Http\Controllers\TaskController@DeleteMsg');
-	Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
-	Route::get('/task/statuses/list', 'TaskController@statusesList');
-	Route::get('/getallhollydaycalendars', '\App\Http\Controllers\ScaffoldInterface\AppController@getAllHollydayCalendars');
-	Route::post('/checkHollydayCalendarById/{id}', '\App\Http\Controllers\ScaffoldInterface\AppController@checkHollydayCalendarById');
+    Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
+    Route::get('/task/statuses/list', 'TaskController@statusesList');
+    
+    // -----------------------------------------------------------------
+    // END OF TASK ROUTES
+    // -----------------------------------------------------------------
+
 });
 
 
@@ -474,16 +500,21 @@ Route::group(['middleware'=> 'web'],function(){
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
+Route::group(['middleware' => ['web', 'auth']], function () {
+    Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
+        ->name('users.deleteMsg');
 
-    Route::group(['middleware' => 'web', 'prefix' => 'users'], function () {
-        Route::get('/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg');
-        Route::get('/{id}/delete', 'ScaffoldInterface\UserController@destroy')->name('user.destroy');
-        Route::post('/removeRole', '\App\Http\Controllers\ScaffoldInterface\UserController@revokeRole')->name('user.remove_role');
-        Route::post('/addRole', '\App\Http\Controllers\ScaffoldInterface\UserController@addRole');
-        Route::post('/addPermission', '\App\Http\Controllers\ScaffoldInterface\UserController@addPermission');
-        Route::get('/removePermission/{user_id}/{key}', '\App\Http\Controllers\ScaffoldInterface\UserController@revokePermission');
+    Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')
+        ->name('user.remove_role');
+    Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole')
+        ->name('users.addRole');
+    Route::post('users/addPermission', 'ScaffoldInterface\UserController@addPermission')
+        ->name('users.addPermission');
+    Route::get('users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
+        ->name('users.revokePermission');
+});
 
-    });
+
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('cruises', 'CruisesController');
@@ -500,11 +531,9 @@ Route::group(['middleware'=> 'web'],function(){
 
     Route::group(['middleware' => 'web'], function () {
         Route::get('/roles/{id}/deleteMsg', 'ScaffoldInterface\RoleController@deleteMsg');
-        Route::get('/roles/{id}/delete', 'ScaffoldInterface\RoleController@destroy')->name('role.destroy');
     });
     Route::group(['middleware' => 'web'], function () {
         Route::get('/permissions/{id}/deleteMsg', 'ScaffoldInterface\PermissionController@deleteMsg');
-        Route::get('/permissions/{id}/delete', 'ScaffoldInterface\PermissionController@destroy')->name('permission.destroy');
     });
     Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission');
     Route::get('roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission');
@@ -590,12 +619,18 @@ Route::post('chat/message', ['uses'        => '\App\Http\Controllers\ChatControl
                     'as'          => 'chat.post'
 ]);
 
+
 Route::group(['middleware' => 'web'], function () {
+    
+    // Resource routes - this creates all 7 RESTful routes
     Route::resource('announcements', 'AnnouncementController');
-    Route::get('/announcement/{id}/delete', 'AnnouncementController@destroy')->name('announcement.destroy');
-    Route::get('/announcement/{id}/delete_msg', 'AnnouncementController@deleteMsg')->name('announcement.deleteMsg');
-    Route::post('/announcement/{id}/reply', 'AnnouncementController@reply')->name('announcement_reply');
-    Route::get('/announcement/{id}/generate-announcements', 'AnnouncementController@generateAnnouncements')->name('announcements_generate');
+    
+    // Additional custom routes (these should be after resource routes)
+    Route::post('announcements/{announcement}/reply', 'AnnouncementController@reply')
+        ->name('announcements.reply');
+    
+    Route::get('announcements/{announcement}/generate', 'AnnouncementController@generateAnnouncements')
+        ->name('announcements.generate');
 });
 
 Route::group(['middleware' => 'web'], function () {

@@ -48,6 +48,7 @@ use URL;
 use View;
 use App\Helper\ExportTrait;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use App\Helper\HelperTrait;
 use App\Repository\Contracts\TourRepository;
 use App\Repository\Contracts\TaskRepository;
@@ -66,6 +67,7 @@ class TourController extends Controller
     use FileTrait;
     use ExportTrait;
     use HelperTrait;
+    
     /**
      * tour repository
      */
@@ -95,22 +97,19 @@ class TourController extends Controller
         $this->middleware('auth', ['except' => 'landingPage']);
     }
 
-    /**
-     * get action buttons
-     * @param  $id tour id
-     * @return mixed
-     */
-    public function getButton($id, $isQuotation = false, $tour, array $perm)
-    {
-        $url = array('show'        => route('tour.show', ['tour' => $id]),
-                     'edit'        => route('tour.edit', ['tour' => $id]),
-                     'delete_msg' => "/tour/{$id}/deleteMsg",
-                     'id'          => $id);
-
-        return DatatablesHelperController::getActionButtonTours($url, $isQuotation, $perm);
-//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
-    }
-    
+   /**
+ * get action buttons
+ * @param  $id tour id
+ * @return mixed
+ */
+public function getButton($id, $isQuotation = false, $tour, array $perm)
+{
+    return view('component.action-button', [
+        'model' => $tour,
+        'item' => $tour,
+        'routePrefix' => 'tour'
+    ])->render();
+}
     public function getQuotationButton($id, $isQuotation = false, $tour)
     {
         $url = array('show'        => route('tour.show', ['tour' => $id]),
@@ -122,8 +121,8 @@ class TourController extends Controller
 
     public function getButtonForTasks($id, $tour, $task)
     {
-        $url = array('show'        => route('task.show', ['task' => $id]),
-             'edit'        => route('task.edit', ['task' => $id]),
+        $url = array('show'        => route('task.show', ['id' => $id]),
+             'edit'        => route('task.edit', ['id' => $id]),
              'delete_msg' => "/task/{$id}/deleteMsg/{$tour}");
 
         return DatatablesHelperController::getActionButton($url, false, $task);
@@ -784,6 +783,7 @@ private function handleLandingPageImage($request, $tour)
  */
 public function store(StoreTourRequest $request)
 {
+    
     $request['pax'] = $request->get('pax') == null ? 0 : $request->get('pax', 0);
     $request['pax_free'] = $request->get('pax_free') == null ? 0 : $request->get('pax_free', 0);
 
@@ -794,12 +794,12 @@ public function store(StoreTourRequest $request)
     $dateRange = $this->findDateRange($data);
     if (!$dateRange) return back();
 
-    if($request->assigned_user == 'null' && !$request->is_quotation){
-        $requestData = $request;
-        $requestData['assigned_user'] = '';
-        $this->validate($requestData, [
-            'assigned_user' => 'required'
-        ]);
+    // Validate assigned users
+    if (!$request->is_quotation) {
+        $assignedUsers = $request->assigned_user;
+        if (empty($assignedUsers) || (is_array($assignedUsers) && count($assignedUsers) == 0) || $assignedUsers == 'null') {
+            return back()->withErrors(['assigned_user' => 'At least one assigned user is required.'])->withInput();
+        }
     }
 
     $request = CitiesHelper::setCityBegin($request);
@@ -887,7 +887,12 @@ public function store(StoreTourRequest $request)
 
         // Handle assigned users
         if ($request->assigned_user) {
-            $a_users = explode(',',$request->assigned_user);
+            // Handle both array and comma-separated string formats
+            if (is_array($request->assigned_user)) {
+                $a_users = $request->assigned_user;
+            } else {
+                $a_users = explode(',', $request->assigned_user);
+            }
             $tour->users()->sync($a_users);
 
             foreach ($a_users as $user) {
@@ -917,20 +922,224 @@ public function store(StoreTourRequest $request)
         DB::commit();
 
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
+        session()->flash('success', "Tour {$tour->name} created");
 
         if($request->get('modal_create_tour') == 1) {
-            $data = ['route' => url('home')];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['route' => url('home')]);
+            }
+            return redirect()->to('home');
         } else {
-            $data = ['route' => route('tour.show', ['tour' => $tour->id])];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['route' => route('tour.show', ['tour' => $tour->id])]);
+            }
+            return redirect()->route('tour.show', ['tour' => $tour->id]);
         }
-
-        return response()->json($data);
         
     } catch (\Exception $e) {
         DB::rollback();
-        return response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500);
+        \Log::error('Tour creation error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+            'request_data' => $request->except(['password', '_token'])
+        ]);
+        
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500);
+        }
+        
+        return back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput()->with('error', 'Failed to create tour: ' . $e->getMessage());
     }
 }
+
+// public function store(StoreTourRequest $request)
+// {
+//     dd('aaaa');
+//     // Default values for pax and pax_free
+//     $request['pax'] = $request->get('pax', 0) ?? 0;
+//     $request['pax_free'] = $request->get('pax_free', 0) ?? 0;
+
+//     // Manual Validation (extra business rules) -------------------------
+//     $request->validate([
+//         'name'              => 'required|string|max:255',
+//         'overview'          => 'nullable|string',
+//         'remark'            => 'nullable|string',
+//         'departure_date'    => 'required|date|before_or_equal:retirement_date',
+//         'retirement_date'   => 'required|date|after_or_equal:departure_date',
+//         'country_begin'     => 'required|integer|exists:countries,id',
+//         'country_end'       => 'required|integer|exists:countries,id',
+//         'city_begin'        => 'required|integer|exists:cities,id',
+//         'city_end'          => 'required|integer|exists:cities,id',
+//         'status'            => 'required|integer',
+//         'is_quotation'      => 'required|boolean',
+//         'responsible_user'  => 'nullable|integer|exists:users,id',
+
+//         // Child fields
+//         'child_count'       => 'nullable|integer|min:0',
+//         'ages.*'            => 'nullable|integer|min:0|max:17',
+//         'prices.*'          => 'nullable|numeric|min:0',
+
+//         // Room types
+//         'room_types_qty.*'  => 'nullable|integer|min:0',
+
+//         // Assigned users only if NOT a quotation
+//         'assigned_user'     => $request->is_quotation ? 'nullable' : 'required',
+//     ]);
+
+//     // Check Date Range
+//     $dateRange = $this->findDateRange([
+//         'departure_date' => $request->departure_date,
+//         'retirement_date' => $request->retirement_date
+//     ]);
+
+//     if (!$dateRange) {
+//         return back()->withErrors(['date' => 'Invalid date range.'])->withInput();
+//     }
+
+//     // Check assigned users business rule
+//     if (!$request->is_quotation) {
+//         $assignedUsers = $request->assigned_user;
+//         if (empty($assignedUsers) || (is_array($assignedUsers) && count($assignedUsers) == 0)) {
+//             return back()
+//                 ->withErrors(['assigned_user' => 'At least one assigned user is required.'])
+//                 ->withInput();
+//         }
+//     }
+
+//     // Set city begin/end automatically
+//     $request = CitiesHelper::setCityBegin($request);
+//     $request = CitiesHelper::setCityEnd($request);
+
+//     // Create safe tour name based on date -------------------------
+//     try {
+//         if (!empty($request->departure_date) &&
+//             preg_match('/^\d{4}-\d{2}-\d{2}$/', $request->departure_date)) {
+
+//             $formattedDate = Carbon::parse($request->departure_date)->format('md');
+//         } else {
+//             $formattedDate = Carbon::now()->format('md');
+//         }
+//     } catch (\Exception $e) {
+//         $formattedDate = Carbon::now()->format('md');
+//     }
+
+//     $tour_name = $request->name . " #" . $formattedDate;
+
+//     // Begin DB Transaction
+//     DB::beginTransaction();
+
+//     try {
+//         // Create tour
+//         $tour = new Tour();
+//         $tour->name = $tour_name;
+//         $tour->overview = $request->overview;
+//         $tour->remark = $request->remark;
+//         $tour->departure_date = $request->departure_date;
+//         $tour->retirement_date = $request->retirement_date;
+//         $tour->pax = $request->pax;
+//         $tour->pax_free = $request->pax_free;
+//         $tour->total_amount = $request->total_amount ?? 0;
+//         $tour->price_for_one = $request->price_for_one ?? 0;
+//         $tour->itinerary_tl = $request->itinerary_tl;
+//         $tour->country_begin = $request->country_begin;
+//         $tour->city_begin = $request->city_begin;
+//         $tour->country_end = $request->country_end;
+//         $tour->city_end = $request->city_end;
+//         $tour->invoice = $request->invoice;
+//         $tour->ga = $request->ga;
+//         $tour->author = Auth::id();
+//         $tour->status = $request->status;
+//         $tour->is_quotation = $request->is_quotation;
+//         $tour->responsible = $request->responsible_user ?? 0;
+//         $tour->phone = $request->phone ?? '';
+//         $tour->save();
+
+//         // Set external name after saving
+//         $tour->external_name = $this->generateExternalName($request->country_begin, $tour->id);
+//         $tour->save();
+
+//         // ---------------- CHILDREN ----------------
+//         $childCount = $request->input('child_count', 0);
+//         if ($childCount > 0) {
+//             foreach (range(0, $childCount - 1) as $i) {
+//                 Childrens::create([
+//                     'tour_id' => $tour->id,
+//                     'age' => $request->ages[$i] ?? 0,
+//                     'price' => $request->prices[$i] ?? 0,
+//                 ]);
+//             }
+//         }
+
+//         // ---------------- ROOM TYPES ----------------
+//         if ($request->room_types_qty) {
+//             foreach ($request->room_types_qty as $roomTypeId => $qty) {
+//                 if ($qty > 0) {
+//                     TourRoomTypeHotel::create([
+//                         'tour_id' => $tour->id,
+//                         'room_type_id' => $roomTypeId,
+//                         'count' => $qty,
+//                     ]);
+//                 }
+//             }
+//         }
+
+//         // ---------------- ASSIGNED USERS ----------------
+//         if ($request->assigned_user) {
+//             $assigned = is_array($request->assigned_user)
+//                 ? $request->assigned_user
+//                 : explode(',', $request->assigned_user);
+
+//             $tour->users()->sync($assigned);
+
+//             foreach ($assigned as $userId) {
+//                 $notification = Notification::create([
+//                     'content' => "New tour {$tour->name}",
+//                     'link' => '/tour/' . $tour->id
+//                 ]);
+
+//                 User::find($userId)?->notifications()->attach($notification);
+//             }
+//         }
+
+//         // ---------------- DATES ----------------
+//         $this->createUpdateTourDates($tour->id, $dateRange);
+
+//         // ---------------- FILE UPLOADS ----------------
+//         if ($request->hasFile('attach')) {
+//             $this->addFile($request, $tour);
+//         }
+//         if ($request->hasFile('files')) {
+//             $this->handleLandingPageImage($request, $tour);
+//         }
+
+//         DB::commit();
+
+//         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} created", 'success');
+//         session()->flash('success', "Tour {$tour->name} created");
+
+//         if ($request->modal_create_tour == 1) {
+//             return $request->ajax()
+//                 ? response()->json(['route' => url('home')])
+//                 : redirect('home');
+//         }
+
+//         return $request->ajax()
+//             ? response()->json(['route' => route('tour.show', $tour->id)])
+//             : redirect()->route('tour.show', $tour->id);
+
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+
+//         \Log::error('Tour creation error: ' . $e->getMessage(), [
+//             'trace' => $e->getTraceAsString(),
+//             'request_data' => $request->except(['password', '_token'])
+//         ]);
+
+//         return $request->ajax()
+//             ? response()->json(['error' => 'Failed to create tour: ' . $e->getMessage()], 500)
+//             : back()->withErrors(['error' => 'Failed to create tour: ' . $e->getMessage()])->withInput();
+//     }
+// }
+
 
     public function generateExternalName($country_code, $id){
         return 'EETS' . $country_code . (100 + $id);
@@ -945,18 +1154,52 @@ public function store(StoreTourRequest $request)
      */
     public function show($tourId, Request $request)
     {
-        if ($request->notification_click){
-            $notification = Notification::find($request->notification_click);
-            $notification->click = true;
-            $notification->save();
-        }
+        try {
+            if ($request->notification_click){
+                $notification = Notification::find($request->notification_click);
+                if ($notification) {
+                    $notification->click = true;
+                    $notification->save();
+                }
+            }
 
+            if ($request->ajax()) {
+                return URL::to('tour/' . $tourId);
+            }
 
-        if ($request->ajax()) {
-            return URL::to('tour/' . $tourId);
-        }
-
-        $tour = Tour::findOrfail($tourId);
+            // Root fix: Handle route parameter binding - Laravel resource routes use {tour} parameter
+            // Get tour ID from route parameter (could be bound as 'tour' or passed as first argument)
+            if (empty($tourId)) {
+                $tourId = $request->route('tour') ?? $request->route('id') ?? $request->get('tour') ?? $request->get('id');
+            }
+            
+            if (!$tourId || (!is_numeric($tourId) && !is_object($tourId))) {
+                \Log::error('Invalid tour ID in show method', [
+                    'tour_id' => $tourId,
+                    'route_params' => $request->route()->parameters() ?? [],
+                    'url' => $request->fullUrl()
+                ]);
+                return abort(404, 'Tour ID is required');
+            }
+            
+            // Handle if $tourId is already a Tour model (route model binding)
+            if (is_object($tourId) && $tourId instanceof Tour) {
+                $tour = $tourId;
+            } else {
+                // Root fix: Add eager loading to prevent N+1 queries
+                $tour = Tour::with([
+                'status:id,name,color',
+                'client:id,name',
+                'tour_days.packages',
+                'quotations'
+                ])->findOrfail($tourId);
+            }
+            
+            // Ensure tour is loaded with relationships
+            if (!$tour->relationLoaded('status')) {
+                $tour->load(['status:id,name,color', 'client:id,name', 'tour_days.packages', 'quotations']);
+            }
+            
 	    $title = $tour->is_quotation ? 'Quotation' :  'Tour';
         if($tour == null){
             return abort(404);
@@ -987,7 +1230,8 @@ public function store(StoreTourRequest $request)
             $status->name = 'Unknown Status';
         }
         $files = $this->parseAttach($tour);
-        $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
+        $tourPackagesData = $this->prepareTourPackages($tour, $request);
+        $tourDates = $tourPackagesData['tourDates'];
 
         $listIdServices = array();
         //$this->services = array("Event","Guide","Hotel","Restaurant","Transfer");
@@ -1006,108 +1250,437 @@ public function store(StoreTourRequest $request)
             }
         }
 
-            $quotation_id = $tour->quotations()->first()->id??0;
+            // Root fix: Safely get quotation ID without causing fatal error if none exists
+            $quotation = $tour->quotations()->first();
+            $quotation_id = $quotation ? $quotation->id : 0;
         
 
-        $quotation = Quotation::find($quotation_id);
+        $quotation = $quotation ?: ($quotation_id > 0 ? Quotation::find($quotation_id) : null);
 
-        $comparison = Comparison::where(['id' => $quotation_id])->first();
+        // Root fix: Only create comparison if quotation exists
+        $comparison = null;
+        if ($quotation_id > 0) {
+            $comparison = Comparison::where(['id' => $quotation_id])->first();
 
-        if (!$comparison) {
-            $newComparison = new Comparison();
-            $newComparison->id = $quotation_id;
-            $newComparison->save();
-            $comparison = $newComparison;
+            if (!$comparison) {
+                $newComparison = new Comparison();
+                $newComparison->id = $quotation_id;
+                $newComparison->save();
+                $comparison = $newComparison;
+            }
+            $this->syncComparisonRows($comparison);
         }
-       $this->syncComparisonRows($comparison);
         
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
-$select_office=Offices::where('status',1)->first();
-		 $offices=Offices::all();
-
-        // Fetch invoices data directly for Bootstrap table
-        $invoice_tours = \App\InvoicesTours::where("invoices_tours_id", $tour->id)->get();
+        // Root fix: Only load active offices, not all offices
+        // Handle case where offices table might not exist or query fails
+        $select_office = null;
+        $offices = collect([]);
+        try {
+            $select_office = Offices::where('status', 1)->first();
+            $offices = Offices::where('status', 1)->get();
+        } catch (\Exception $e) {
+            \Log::warning('Failed to load offices', ['error' => $e->getMessage()]);
+            // Continue with empty offices collection
+        }
+        // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
+        // Root fix: Use correct table name 'office_fees' instead of 'offices'
+        $invoice_tours = collect([]);
+        try {
+            $invoice_tours_query = \App\InvoicesTours::where("invoices_tours_id", $tour->id)
+                ->join('supplier_invoices as invoices', 'invoices.id', '=', 'invoices_tours.invoices_id')
+                ->leftJoin('office_fees as offices', 'offices.id', '=', 'invoices.office_id')
+                ->leftJoin('tour_packages as packages', 'packages.id', '=', 'invoices_tours.package_id')
+                ->select(
+                    'invoices.id',
+                    'invoices.invoice_no',
+                    'invoices.dueDate',
+                    'invoices.receivedDate',
+                    'invoices.total_amount',
+                    'invoices.extra_amount',
+                    'invoices.amount_payable',
+                    'offices.office_name',
+                    'packages.name as package_name',
+                    'invoices_tours.invoices_id'
+                );
+            
+            $invoice_tours = $invoice_tours_query->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Failed to load invoice tours data', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A'
+            ]);
+            // Continue with empty collection - page will still load without invoice data
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error loading invoice tours', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage()
+            ]);
+            // Continue with empty collection
+        }
+        
+        // Pre-load all transaction sums in one query to avoid N+1
+        $invoiceIds = $invoice_tours->pluck('invoices_id')->filter()->unique()->toArray();
+        $transactionSums = empty($invoiceIds) ? [] : \App\Transaction::whereIn("invoice_id", $invoiceIds)
+            ->where("pay_to", "Supplier")
+            ->selectRaw('invoice_id, SUM(amount) as total_amount')
+            ->groupBy('invoice_id')
+            ->pluck('total_amount', 'invoice_id')
+            ->toArray();
+        
         $invoicesData = [];
         foreach ($invoice_tours as $invoice_tour) {
-            $invoice = \App\Invoices::find($invoice_tour->invoices_id);
-            if ($invoice) {
-                $office = \App\Offices::find($invoice->office_id);
-                $package = \App\TourPackage::find($invoice_tour->package_id);
-
-                // Calculate invoice status
-                $transaction = \App\Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Supplier");
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoice->total_amount;
-                $remaining_amount = $amount - $sum_amount;
-                if ($sum_amount == $amount) {
-                    $invoiceStatus = "Paid";
-                } elseif ($sum_amount == 0) {
-                    $invoiceStatus = "You Owe " . $amount;
-                } else {
-                    $invoiceStatus = "You Owe " . $remaining_amount;
-                }
-
-                $invoicesData[] = [
-                    'id' => $invoice->id,
-                    'office_name' => $office->office_name ?? '',
-                    'invoice_no' => $invoice->invoice_no ?? '',
-                    'due_date' => $invoice->dueDate ?? '',
-                    'received_date' => $invoice->receivedDate ?? '',
-                    'total_amount' => $invoice->total_amount ?? '',
-                    'extra_amount' => $invoice->extra_amount ?? '',
-                    'amount_payable' => $invoice->amount_payable ?? '',
-                    'tour_name' => $tour->name,
-                    'package_name' => $package->name ?? 'Extra Cost',
-                    'status' => $invoiceStatus
-                ];
+            // Get transaction sum from pre-loaded array
+            $sum_amount = $transactionSums[$invoice_tour->invoices_id] ?? 0;
+            $amount = $invoice_tour->total_amount ?? 0;
+            $remaining_amount = $amount - $sum_amount;
+            
+            if ($sum_amount == $amount) {
+                $invoiceStatus = "Paid";
+            } elseif ($sum_amount == 0) {
+                $invoiceStatus = "You Owe " . $amount;
+            } else {
+                $invoiceStatus = "You Owe " . $remaining_amount;
             }
+
+            $invoicesData[] = [
+                'id' => $invoice_tour->id,
+                'office_name' => $invoice_tour->office_name ?? '',
+                'invoice_no' => $invoice_tour->invoice_no ?? '',
+                'due_date' => $invoice_tour->dueDate ?? '',
+                'received_date' => $invoice_tour->receivedDate ?? '',
+                'total_amount' => $invoice_tour->total_amount ?? '',
+                'extra_amount' => $invoice_tour->extra_amount ?? '',
+                'amount_payable' => $invoice_tour->amount_payable ?? '',
+                'tour_name' => $tour->name,
+                'package_name' => $invoice_tour->package_name ?? 'Extra Cost',
+                'status' => $invoiceStatus
+            ];
         }
 
-        // Fetch billing data directly for Bootstrap table
-        $transactions = \App\ClientInvoices::where("tour_id", $tour->id)->get();
+        // Root fix: Use joins to prevent N+1 queries - single query instead of multiple
+        // Root fix: Use correct table name 'office_fees' instead of 'offices'
+        $transactions = collect([]);
+        try {
+            $transactions = \App\ClientInvoices::where("client_invoices.tour_id", $tour->id)
+                ->leftJoin('office_fees as offices', 'offices.id', '=', 'client_invoices.office_id')
+                ->select(
+                    'client_invoices.id',
+                    'client_invoices.total_amount',
+                    'client_invoices.created_at',
+                    'client_invoices.date',
+                    'offices.office_name',
+                    'tours.name as tour_name'
+                )
+                ->leftJoin('tours', 'tours.id', '=', 'client_invoices.tour_id')
+                ->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Failed to load billing transactions data', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A'
+            ]);
+            // Continue with empty collection - page will still load without billing data
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error loading billing transactions', [
+                'tour_id' => $tour->id,
+                'error' => $e->getMessage()
+            ]);
+            // Continue with empty collection
+        }
+        
         $billingData = [];
         foreach ($transactions as $transaction) {
-            $office = \App\Offices::find($transaction->office_id);
-            $tour_obj = \App\Tour::find($transaction->tour_id);
-
-            // Calculate total amount for this tour
-            $transactions_cust = \App\ClientInvoices::where("tour_id", $transaction->tour_id)->get();
-            $total = 0;
-            foreach ($transactions_cust as $transaction_cust) {
-                $total = $transaction_cust->total_amount + $total;
-            }
-
             $billingData[] = [
                 'id' => $transaction->id,
-                'office_name' => $office->office_name ?? '',
-                'tour_name' => $tour_obj->name ?? '',
-                'total_amount' => $total,
+                'office_name' => $transaction->office_name ?? '',
+                'tour_name' => $transaction->tour_name ?? '',
+                'total_amount' => $transaction->total_amount ?? 0,
                 'date' => $transaction->created_at ?? $transaction->date ?? now()
             ];
         }
+
+        // Packages are linked to Tour through TourDays (Tour -> TourDays -> Packages)
+        // We use packages from $tourDates which are already loaded via with('packages')
+        $serviceDays = $this->buildServiceDays($tour, $tourDates);
+        $tourDayLookup = collect($serviceDays)->mapWithKeys(function ($day) {
+            return [$day['date_key'] => $day['tour_day_id']];
+        });
+        
+        // Root fix: Don't load ALL services on every page load - this is extremely slow
+        // Service catalog will be loaded lazily via AJAX when the modal is opened
+        // This improves initial page load time significantly
+        $serviceCatalog = collect([]); // Empty collection, loaded on-demand
+        
+        // Root fix: Initialize $locations variable to prevent undefined variable error
+        $locations = $tourPackagesData['locations'] ?? [];
+        $dvoTourDates = !empty($locations['dvoTourDates']) ? $locations['dvoTourDates'] : false;
+        $routes = !empty($locations['routes']) ? json_encode($locations['routes']) : false;
+
+        // 
+      $id = $tourId;
+        $data = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
+        $tour = Tour::findOrfail($id);
+        $dateRange = $this->findDateRange($data);
+        if (!$dateRange) return null;
+        $this->createUpdateTourDates($id, $dateRange);
+        $tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $id)->sortBy('date');
+        $arr = array();
+        $i = 0;
+        foreach ($tourDates as $tourDate){
+            $tour_packages = collect();
+            foreach ($tourDate->packages as $package_item){
+                $package_item['time_from_new'] = (new Carbon($package_item->time_from))->format('H:i:s');
+                $tour_packages->push($package_item);
+            }
+            // dd($tourDate->packages->sortBy('time_from'));
+            $tourDate->packages = $tour_packages->sortBy('time_from_new');
+            foreach ($tourDate->packages as $package){
+                $arr[] = $package->status;
+                $package->time_from = $this->convertDateToHoursMinute($package->time_from);
+                $package->time_to = $this->convertDateToHoursMinute($package->time_to);
+            }
+        }
+        $statusPackages = Status::query()->whereIn('id', $arr)->orderBy('sort_order')->get();
+        $statusesTransfers = Status::query()->orderBy('sort_order', 'asc')->where('type', 'bus')->orderBy('sort_order')->get();
+
+       
 
         return view('tour.show', [
 			'select_office'=>$select_office,
 			'offices'=>$offices,
             'title' => $title,
+            'id'=> $tourId,
             'tour' => $tour,
+            'statusPackage' => $statusPackages,
             'files' => $files,
             'status' => $status,
+            'statusesTransfers' =>$statusesTransfers,
             'listIdTasks' => $tasksId,
             'tasksData' => $tasksData,
             'tourDates' => $tourDates,
             'options' => $this->services,
             'listRoomsHotel' => $listRoomsHotel,
-            'dvoTourDates' => empty($locations['dvoTourDates']) ? false : $locations['dvoTourDates'],
-            'routes' => empty($locations['routes']) ? false : json_encode($locations['routes']),
+            'dvoTourDates' => $dvoTourDates,
+            'routes' => $routes,
             'quotation' => $quotation,
             'comparison'  => $comparison,
             'invoicesData' => $invoicesData,
-            'billingData' => $billingData
+            'billingData' => $billingData,
+            'serviceDays' => $serviceDays,
+            'serviceCatalog' => $serviceCatalog,
+            'tourDayLookup' => $tourDayLookup
         ]);
+        
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Tour not found in show method', [
+                'tour_id' => $tourId ?? 'unknown',
+                'message' => $e->getMessage(),
+                'url' => $request->fullUrl()
+            ]);
+            return abort(404, 'Tour not found');
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database query error in tour show method', [
+                'tour_id' => $tourId ?? 'unknown',
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A',
+                'bindings' => $e->getBindings() ?? [],
+                'url' => $request->fullUrl(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            // Root fix: Return proper error response instead of redirecting
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Database error occurred. Please contact support if this persists.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+            
+            // For non-AJAX, show error page with helpful message
+            $errorMessage = config('app.debug') 
+                ? 'Database error: ' . $e->getMessage() 
+                : 'A database error occurred while loading the tour. Please try again or contact support.';
+            
+            return response()->view('errors.500', [
+                'message' => $errorMessage
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error in tour show method', [
+                'tour_id' => $tourId ?? 'unknown',
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'url' => $request->fullUrl()
+            ]);
+            
+            // Root fix: Return proper error response instead of redirecting
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An unexpected error occurred. Please try again or contact support.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+            
+            // For non-AJAX, show error page
+            $errorMessage = config('app.debug') 
+                ? 'Error: ' . $e->getMessage() 
+                : 'An unexpected error occurred. Please try again or contact support.';
+            
+            return response()->view('errors.500', [
+                'message' => $errorMessage
+            ], 500);
+        }
     }
 
+
+    /**
+     * Build service days structure from tour dates and their packages
+     * 
+     * Root cause: Packages are NOT directly related to Tour.
+     * They are linked through TourDays (Tour -> TourDays -> Packages via many-to-many).
+     * Therefore, we use packages from $tourDates which are already loaded correctly.
+     * 
+     * @param Tour $tour
+     * @param Collection $tourDates TourDays with packages already loaded
+     * @return array
+     */
+    protected function buildServiceDays(Tour $tour, $tourDates)
+    {
+        if (empty($tour->departure_date) || empty($tour->retirement_date)) {
+            return [];
+        }
+
+        $start = Carbon::parse($tour->departure_date);
+        $end = Carbon::parse($tour->retirement_date);
+
+        if ($start->gt($end)) {
+            return [];
+        }
+
+        $period = new CarbonPeriod($start, '1 day', $end);
+        
+        // Create a map of TourDay by date for quick lookup
+        $tourDayMap = collect($tourDates)->keyBy(function ($tourDay) {
+            return Carbon::parse($tourDay->date)->format('Y-m-d');
+        });
+
+        // Create a map of packages by TourDay date
+        // Packages are linked to TourDays through many-to-many relationship
+        $packagesByDate = [];
+        foreach ($tourDates as $tourDay) {
+            $dateKey = Carbon::parse($tourDay->date)->format('Y-m-d');
+            if (!isset($packagesByDate[$dateKey])) {
+                $packagesByDate[$dateKey] = collect();
+            }
+            // Add packages from this TourDay
+            if ($tourDay->packages && $tourDay->packages->count() > 0) {
+                foreach ($tourDay->packages as $package) {
+                    $packagesByDate[$dateKey]->push($package);
+                }
+            }
+        }
+
+        $dayNumber = 1;
+        $days = [];
+
+        foreach ($period as $date) {
+            $dateKey = $date->format('Y-m-d');
+            $tourDay = $tourDayMap->get($dateKey);
+            
+            // Get packages for this date from the packagesByDate map
+            $dayPackages = isset($packagesByDate[$dateKey]) ? $packagesByDate[$dateKey] : collect();
+
+            $days[] = [
+                'day_number' => $dayNumber++,
+                'date' => $date->copy(),
+                'date_key' => $dateKey,
+                'day_name' => $date->format('l'),
+                'tour_day_id' => $tourDay ? $tourDay->id : null,
+                'packages' => $dayPackages,
+            ];
+        }
+
+        return $days;
+    }
+
+    protected function buildServiceCatalog()
+    {
+        $supplierSearch = app(SupplierSearchController::class);
+        $rawServices = collect($supplierSearch->getCollection([], null, null, null, null));
+
+        $formatted = $rawServices->map(function ($service) {
+            return $this->formatServiceRecord($service);
+        })->filter(function ($service) {
+            return !empty($service);
+        })->unique(function ($service) {
+            return $service['type'] . '-' . $service['id'];
+        });
+
+        $transferRecords = Transfer::select('id', 'name', 'address_first', 'address_second', 'country', 'city', 'work_phone', 'contact_name', 'contact_phone')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($transfer) {
+                return [
+                    'id' => $transfer->id,
+                    'type' => 'transfer',
+                    'type_label' => 'Transfer',
+                    'name' => $transfer->name,
+                    'address' => $this->resolveServiceField($transfer, ['address_first', 'address_second', 'address']),
+                    'city' => $this->resolveServiceField($transfer, ['city']),
+                    'country' => $this->resolveServiceField($transfer, ['country']),
+                    'phone' => $this->resolveServiceField($transfer, ['work_phone', 'contact_phone']),
+                    'contact' => $this->resolveServiceField($transfer, ['contact_name']),
+                ];
+            });
+
+        return $formatted->merge($transferRecords)->sortBy('name')->values();
+    }
+
+    protected function formatServiceRecord($service)
+    {
+        if (!$service || !isset($service->id)) {
+            return null;
+        }
+
+        $typeLabel = class_basename($service);
+        $type = strtolower($typeLabel);
+
+        $name = $this->resolveServiceField($service, ['name', 'title', 'company_name']);
+
+        return [
+            'id' => $service->id,
+            'type' => $type,
+            'type_label' => $typeLabel,
+            'name' => $name,
+            'address' => $this->resolveServiceField($service, ['address_first', 'address_second', 'address']),
+            'city' => $this->resolveServiceField($service, ['city', 'city_name']),
+            'country' => $this->resolveServiceField($service, ['country', 'country_name']),
+            'phone' => $this->resolveServiceField($service, ['work_phone', 'phone', 'contact_phone']),
+            'contact' => $this->resolveServiceField($service, ['contact_name', 'contactperson', 'contact']),
+        ];
+    }
+
+    protected function resolveServiceField($service, array $fields)
+    {
+        foreach ($fields as $field) {
+            if (is_object($service) && isset($service->{$field}) && $service->{$field} !== null && $service->{$field} !== '') {
+                return $service->{$field};
+            }
+
+            if (is_array($service) && array_key_exists($field, $service) && $service[$field] !== null && $service[$field] !== '') {
+                return $service[$field];
+            }
+        }
+
+        return '';
+    }
 
     public function prepareTourPackages($tour, Request $request)
     {
@@ -1263,9 +1836,14 @@ $select_office=Offices::where('status',1)->first();
      * @param  string $export document type
      * @return \Illuminate\Http\Response
      */
-    public function export(int $id, string $export, string $type = null, Request $request )
+    public function export(int $id, string $export, string $type = null, Request $request = null)
     {
         $tour = Tour::findOrFail($id);
+        
+        // Get request if not provided (for backward compatibility)
+        if ($request === null) {
+            $request = request();
+        }
 
         // dd($tour);
         if ($export == 'csv') {
@@ -1360,7 +1938,6 @@ $select_office=Offices::where('status',1)->first();
      */
     public function update($tour, UpdateTourRequest $request)
     {
-
         if($request->ajax() && $request->cityName){
             $city = City::where('code', $request->fieldValue)->first() ?? City::create([ 'code' => $request->fieldValue, 'name' => $request->cityName, 'country' => $request->countryAlias]);
 
@@ -1414,7 +1991,8 @@ $select_office=Offices::where('status',1)->first();
 					
                     $status = Status::query()->where('id', $tour->status)->first();
                     $status_name = $status ? $status->name : '';
-                    $url = route('tour.show', ['id' => $tour->id]);
+                    // Root fix: Use 'tour' parameter name instead of 'id'
+                    $url = route('tour.show', ['tour' => $tour->id]);
                     $parsingURL = parse_url($url);
                     $uri = $parsingURL['path'];
 
@@ -1438,7 +2016,8 @@ $select_office=Offices::where('status',1)->first();
            }else {
                 $status = Status::query()->where('id', $request->fieldValue)->first();
                 $status_name = $status ? $status->name : '';
-                $url = route('tour.show', ['id' => $tour->id]);
+                // Root fix: Use 'tour' parameter name instead of 'id'
+                $url = route('tour.show', ['tour' => $tour->id]);
                 $parsingURL = parse_url($url);
                 $uri = $parsingURL['path'];
 
@@ -1549,7 +2128,8 @@ $select_office=Offices::where('status',1)->first();
         }
 
         if($request->status != $tour_model->status){
-            $url = route('tour.show', ['id' => $tour]);
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            $url = route('tour.show', ['tour' => $tour]);
             $parsingURL = parse_url($url);
             $uri = $parsingURL['path'];
             $status = Status::query()->where('id', $request->status)->first();
@@ -1663,82 +2243,108 @@ $select_office=Offices::where('status',1)->first();
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour_model->name} edited", 'success');
 
         if($request->get('calendar_edit') == 1){
-            $data = ['route' => url('home')];
+            return redirect()->to('home');
         }else if($request->get('tab')){
-            $data = ['route' => url('profile?'.$request->get('tab'))];
+            return redirect()->to('profile?'.$request->get('tab'));
         }else{
-            $data = ['route' => route('tour.show', [ 'id' => $tour ])];
+            // Root fix: Use 'tour' parameter name instead of 'id'
+            return redirect()->route('tour.show', [ 'tour' => $tour ]);
         }
-		
-
-//        return response()->json(json_encode($data));
-		return redirect()->route('tour.show', [ 'id' => $tour ]);
-        return response()->json($data);
 		
     }
 
     /**
-     * Delete confirmation message by Ajaxis.
-     *
-     * @link     https://github.com/amranidev/ajaxis
-     * @param    \Illuminate\Http\Request $request
-     * @return  String
-     */
-    public function DeleteMsg($id, Request $request , $tab = null )
-    {
-        $tab_url = ($tab) ? '/'. $tab : '';
-
-//        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/tour/' . $id . '/delete'. $tab_url);
-        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/tour/' . $id . '/delete'. $tab_url);
-
-        if ($request->ajax()) {
-            return $msg;
-        }
+ * Delete confirmation message - simplified approach
+ *
+ * @param int $id
+ * @param Request $request
+ * @param string|null $tab
+ * @return String
+ */
+public function DeleteMsg($id, Request $request, $tab = null)
+{
+    // Simply redirect to destroy method or return confirmation data
+    if ($request->ajax()) {
+        return response()->json([
+            'message' => trans('main.WouldyouliketoremoveThis') . '?',
+            'delete_url' => $tab ? route('tour_tab.destroy', ['id' => $id, 'tab' => $tab]) : route('tour.destroy', ['id' => $id])
+        ]);
     }
+    
+    // For non-ajax, redirect to confirmation or back
+    return redirect()->back()->with('warning', trans('main.WouldyouliketoremoveThis'));
+}
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param    int $id
-     * @return  \Illuminate\Http\Response
-     */
-    public function destroy($id, $tab = null)
-    {
+/**
+ * Remove the specified resource from storage.
+ *
+ * @param int $id
+ * @param string|null $tab
+ * @return \Illuminate\Http\Response
+ */
+public function destroy($id, $tab = null)
+{
+    try {
         $tour = Tour::findOrfail($id);
 
         if($tour){
             if ($tour->users) {
                 foreach ($tour->users as $user) {
-                    $notification = Notification::query()->create(['content' => "Tour {$tour->name} deleted",
-                        'link' => null]);
+                    $notification = Notification::query()->create([
+                        'content' => "Tour {$tour->name} deleted",
+                        'link' => null
+                    ]);
                     $user->notifications()->attach($notification);
                 }
             }
         }
 
-
         $this->removeFile($tour);
         $tour->delete();
+        
         BusDay::query()->where('tour_id', $id)->delete();
         TransferToDrivers::query()->where('tour_id', $id)->delete();
         TransferToBuses::query()->where('tour_id', $id)->delete();
         Comment::query()->where('reference_type', Comment::$services['tour'])->where('reference_id', $id)->delete();
         Quotation::query()->where('tour_id', $id)->delete();
-		ClientInvoices::query()->where('tour_id', $id)->delete();
-		InvoicesTours::query()->where('invoices_tours_id', $id)->delete();
-		//InvoicesTours::query()->find( $id)->delete();
+        ClientInvoices::query()->where('tour_id', $id)->delete();
+        InvoicesTours::query()->where('invoices_tours_id', $id)->delete();
+        
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} deleted", 'success');
 
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true, 
+                'message' => trans('main.DeletedSuccessfully') ?? 'Deleted successfully'
+            ]);
+        }
+
         if(URL::previous() == route('quotation.index')){
-            return URL::to('quotation');
+            return redirect()->to('quotation');
         }
+        
         if($tab){
-            return URL::to('profile?tab=history-tours-tab');
+            return redirect()->to('profile?tab=history-tours-tab');
         }
 
-        return URL::to('tour');
+        return redirect()->to('tour');
+        
+    } catch (\Exception $e) {
+        \Log::error('Error deleting tour: ' . $e->getMessage());
+        
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error deleting tour'
+            ], 500);
+        }
+        
+        return redirect()->back()->with('error', 'Error deleting tour');
     }
+}
 
+
+       
     /**
      * Remove the specified resource from storage.
      *
@@ -2088,7 +2694,8 @@ $select_office=Offices::where('status',1)->first();
 	        return response()->json(['success' => true, 'message' => 'Tour converted successfully']);
 	    }
 
-	    return redirect(route('tour.show', ['id' => $id]));
+	    // Root fix: Use 'tour' parameter name instead of 'id'
+	    return redirect(route('tour.show', ['tour' => $id]));
     }
 	public function convertToQuotation(Request $request, $id) {
     	$tour = Tour::find($id);
@@ -2105,7 +2712,8 @@ $select_office=Offices::where('status',1)->first();
 	        return response()->json(['success' => true, 'message' => 'Quotation converted successfully']);
 	    }
 
-	    return redirect(route('tour.show', ['id' => $id]));
+	    // Root fix: Use 'tour' parameter name instead of 'id'
+	    return redirect(route('tour.show', ['tour' => $id]));
     }
 	
 	
@@ -2292,3 +2900,4 @@ public function quotation_data(Request $request)
    }
 
 }
+

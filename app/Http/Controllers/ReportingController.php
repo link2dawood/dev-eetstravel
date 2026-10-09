@@ -73,13 +73,11 @@ class ReportingController extends Controller
                 $can = 1;
             }
 
-            $link = route("reporting.{$low}.show", ['id' => $service->id]);
-            $btn = "";
-            if ($can) {
-                $btn .= "<a class='btn btn-primary btn-sm' hidden data-id=$id data-type=$type data-service_name=\"{$service->name}\" id='service-property' href='{$link}' data-link={$link}><i class='fa fa-info-circle'></i></a>";
-            }
-
-            $service->action_buttons = $btn;
+            // Action buttons will be generated in the view using the action_buttons component
+            // Store the service type and link for the view
+            $service->service_type = $low;
+            $service->show_link = route("reporting.{$low}.show", ['id' => $service->id]);
+            $service->can_show = $can;
             return $service;
         });
 

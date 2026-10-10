@@ -253,10 +253,21 @@
         window.location.href = form.action + (query ? '?' + query : '') + (hash || '');
     }
 
+    function resetCloneButton() {
+        const button = document.getElementById('clone_tour_send');
+        if (!button) return;
+        button.dataset.busy = '';
+        button.disabled = false;
+        button.innerHTML = '<i class="ti ti-copy me-1"></i>{{ trans('main.Submit') }}';
+    }
+    // the browser's back button can restore the page with the button still "Copying..."
+    window.addEventListener('pageshow', resetCloneButton);
+
     function openTabFromHash() {
         if (!location.hash) return;
         const link = document.querySelector('.card-header-tabs .nav-link[href="' + location.hash + '"]');
-        if (link && window.bootstrap) bootstrap.Tab.getOrCreateInstance(link).show();
+        // this Bootstrap build has no getOrCreateInstance()
+        if (link && window.bootstrap && bootstrap.Tab) new bootstrap.Tab(link).show();
     }
 
     function exportActiveTable() {
@@ -295,9 +306,11 @@
                 if (form) form.action = '/tour/' + cloneButton.dataset.id + '/clone';
                 const error = document.querySelector('.block-error');
                 if (error) { error.textContent = ''; error.style.display = 'none'; }
+                resetCloneButton();
                 // the button's data-bs-toggle opens the dialog; opening it here too stacked two backdrops
-                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('tour-clone-modal'));
-                if (!cloneButton.hasAttribute('data-bs-toggle')) modal.show();
+                if (!cloneButton.hasAttribute('data-bs-toggle') && window.bootstrap) {
+                    new bootstrap.Modal(document.getElementById('tour-clone-modal')).show();
+                }
             }
         });
 
@@ -323,8 +336,20 @@
             const error = document.querySelector('.block-error');
             if (!input || input.value.trim() !== '') return;
             event.preventDefault();
-            if (error) { error.textContent = 'Enter Date'; error.style.display = 'block'; }
+            if (error) { error.textContent = 'Please choose the departure date for the copy.'; error.style.display = 'block'; }
         });
+
+        // One copy per click: the request takes a few seconds, and repeated clicks created duplicate tours.
+        // helper.js submits this form through jQuery, so listen with jQuery too.
+        if (window.jQuery) {
+            jQuery('#tour-clone-modal-form').on('submit', function(event) {
+                const button = document.getElementById('clone_tour_send');
+                if (button.dataset.busy === '1') { event.preventDefault(); return false; }
+                button.dataset.busy = '1';
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Copying...';
+            });
+        }
     });
 })();
 </script>

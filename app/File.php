@@ -53,7 +53,17 @@ class File extends Model
     /** Public URL of the stored file (uploads live on the "public" disk). */
     public function getUrlAttribute()
     {
-        return $this->attach_file_name ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->attach_file_name) : null;
+        if (!$this->attach_file_name) {
+            return null;
+        }
+        // Older uploads (Stapler) store only the bare file name under public/system/App/File/attaches/000/000/<id>/original/
+        if (strpos($this->attach_file_name, '/') === false) {
+            $legacy = 'system/App/File/attaches/' . implode('/', str_split(str_pad($this->id, 9, '0', STR_PAD_LEFT), 3)) . '/original/' . $this->attach_file_name;
+            if (is_file(public_path($legacy))) {
+                return asset($legacy);
+            }
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->attach_file_name);
     }
 
     public function getDisplayNameAttribute()

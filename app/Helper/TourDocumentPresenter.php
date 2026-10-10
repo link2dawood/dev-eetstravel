@@ -128,6 +128,19 @@ class TourDocumentPresenter
         ];
     }
 
+    /** First photo uploaded for the supplier (hotel, restaurant, ...), or null. */
+    public function serviceImage($package)
+    {
+        $service = $package->service();
+        if (!$service || !method_exists($service, 'files')) {
+            return null;
+        }
+        $file = $service->files()
+            ->whereIn('attach_content_type', ['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+            ->orderBy('id')->first();
+        return $file ? $file->url : null;
+    }
+
     protected function menusText($package)
     {
         return collect($package->menus)
@@ -203,6 +216,7 @@ class TourDocumentPresenter
                     $items[] = [
                         'time' => $this->time($p->time_from),
                         'type' => 'Hotel',
+                        'image' => $this->serviceImage($p),
                         'title' => $p->name,
                         'lines' => array_filter([
                             'Check-in ' . $this->time($p->time_from) . ($checkOut ? ' · check-out ' . $checkOut->format('D j M') : '') . ' · ' . $nights . ' ' . ($nights == 1 ? 'night' : 'nights'),
@@ -222,6 +236,7 @@ class TourDocumentPresenter
                 $items[] = [
                     'time' => $from . ($to && $to !== $from ? '–' . $to : ''),
                     'type' => self::TYPE_LABELS[(int) $p->type] ?? 'Service',
+                    'image' => $this->serviceImage($p),
                     'title' => $p->name,
                     'lines' => array_filter([
                         $contact['address'] ? 'Address: ' . $contact['address'] : '',
@@ -248,6 +263,7 @@ class TourDocumentPresenter
             $result[] = [
                 'number' => $i + 1,
                 'date' => $date->format('l, j F Y'),
+                'iso' => $date->toDateString(),
                 'items' => $items,
                 'notes' => $notes,
                 'overnight' => $overnight,
@@ -276,6 +292,7 @@ class TourDocumentPresenter
                     'nights' => $nights,
                     'address' => $contact['address'],
                     'phone' => $contact['phone'],
+                    'image' => $this->serviceImage($p),
                 ];
             }
         }

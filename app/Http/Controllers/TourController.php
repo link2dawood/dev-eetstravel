@@ -1800,56 +1800,20 @@ public function store(StoreTourRequest $request)
 
     public function landingPage(Request $request, $id)
     {
-		
         $tour = Tour::findOrFail($id);
-		
-        $dayFrom = !empty($tour->departure_date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tour->departure_date)
-            ? Carbon::createFromFormat('Y-m-d', $tour->departure_date)
-            : Carbon::now();
-        $dayTo = !empty($tour->retirement_date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tour->retirement_date)
-            ? Carbon::createFromFormat('Y-m-d', $tour->retirement_date)
-            : Carbon::now();
-        $diff = $dayFrom->diffInDays($dayTo);
-        $tour->tourCode = "$tour->name#$dayFrom->month$dayTo->day-$diff-D";
-//        $data = $this->prepareTourPackages($tour, $request);
-        $attachmenttypes = \App\Attachmenttype::all();
-        
-        $serviceTypes = [
-                     'hotel',
-                     'event',
-                     'guide',
-                     'transfer',
-                     'restaurant',
-                     'tourPackage',
-                     'cruise',
-                     'flight'
-                 ];
-        $tourDays = TourDay::where('tour', $tour->id)->get()->sortBy('date');
-        
-        $tourTransfers = $tour->transfers;
+        $exclude = array_filter((array) $request->input('exclude', []));
 
-        $exclude = [];
-        if(!empty($request->input('exclude'))){
-        if(count($request->input('exclude')) > 0 ) {
-            $exclude = $request->input('exclude');
-        } else  {
-            $exclude = [];
-        }  
-        }
-		
-        $usersResponsible = User::find($tour->responsible);
+        // Same data source as the itinerary exports, so both always agree
+        $presenter = new \App\Helper\TourDocumentPresenter($tour);
+        $landing = $tour->attachments()->first();
 
-        $listRoomsHotel = \App\TourRoomTypeHotel::where('tour_id', $tour->id )->get();        
-        
-        view()->share([ 'tour' => $tour, 
-                         'serviceTypes' => $serviceTypes,
-                         'tourDays' => $tourDays,
-                         'tourTransfers' => $tourTransfers,
-                         'usersResponsible' => $usersResponsible,
-                         'listRoomsHotel' => $listRoomsHotel,
-                         'attachmenttypes' => $attachmenttypes,
-                         'exclude' => $exclude ]);
-        return view('export.landing_page');
+        return view('export.landing', [
+            'summary' => $presenter->summary(),
+            'office' => $presenter->office(),
+            'days' => $presenter->days($exclude),
+            'hotels' => $presenter->hotels($exclude),
+            'heroImage' => $landing && $landing->url ? $landing->url : null,
+        ]);
     }
 
     /**

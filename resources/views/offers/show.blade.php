@@ -53,7 +53,7 @@
                             <td>
                                 <b><i>{!!trans('Tour Name')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$tour->name!!}</td>
+                            <td class="info_td_show">{!!$tour->name ?? ''!!}</td>
                         </tr>
                         <tr>
                             <td>
@@ -90,7 +90,13 @@
                             <td>
                                 <b><i>{!!trans('Offer Date')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$stay_date??""!!}</td>
+                            <td class="info_td_show">{{ $offer->created_at ? \Carbon\Carbon::parse($offer->created_at)->toDateString() : '' }}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b><i>{!!trans('Date of stay')!!} : </i></b>
+                            </td>
+                            <td class="info_td_show">{{ $stay_date ?? '' }}</td>
                         </tr>
                         <tr>
                             <td>
@@ -126,9 +132,9 @@
                         
                         <tr>
                             <td>
-                                <b><i>{!!trans('Portrage pp')!!} : </i></b>
+                                <b><i>{!!trans('Porterage pp')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$stay_date??""!!}</td>
+                            <td class="info_td_show">{{ $offer->portrage_perperson ?? '' }}</td>
                         </tr>
                         <tr>
                             <td>
@@ -147,7 +153,7 @@
                             <td>
                                 <b><i>{!!trans('Hotel Note')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$offer->hotel_file??""!!}</td>
+                            <td class="info_td_show">{{ $offer->hotel_note ?? '' }}</td>
                         </tr>
 						@php
 							$printedRoomNames = [];
@@ -174,34 +180,31 @@
                 </div>
 				<div class="">
 					<h3 class="box-title">Cancellation Policies</h3>
-					<table id="recent-offers-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%; table-layout: fixed'>
+					<table id="recent-offers-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%'>
                     <thead>
-                    <th>ID</th>
-					<th>{!!trans('Policy')!!}</th>
-                    <th>{!!trans('Hotel Name')!!}</th>
-                    <th>{!!trans('City')!!}</th>
-					<th>{!!trans('Status')!!}</th>
-                    <th>{!!trans('Date of stay')!!}</th>
-					<th>{!!trans('Offer Date')!!}</th>
-					<th>{!!trans('Option Date')!!}</th>
-                    <th>{!!trans('Tour Name')!!}</th>
-                    <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                    </thead>
-                    <tfoot>
                     <tr>
-                        <th class="not"></th>
-						<th>{!!trans('Policy')!!}</th>
-                    <th>{!!trans('Hotel Name')!!}</th>
-                    <th>{!!trans('City')!!}</th>
-					<th>{!!trans('Status')!!}</th>
-                    <th>{!!trans('Date of stay')!!}</th>
-					<th>{!!trans('Offer Date')!!}</th>
-					<th>{!!trans('Option Date')!!}</th>
-                    <th>{!!trans('Tour Name')!!}</th>
-                        <th class="not"></th>
+                        <th>ID</th>
+                        <th>{!!trans('Days before arrival')!!}</th>
+                        <th>{!!trans('Free cancellation')!!}</th>
+                        <th>{!!trans('Policy')!!}</th>
                     </tr>
-                    </tfoot>
+                    </thead>
+                    <tbody>
+                    @forelse($policies as $policy)
+                        <tr>
+                            <td>{{ $policy->id }}</td>
+                            <td>{{ $policy->cancellation_days }}</td>
+                            <td>{{ $policy->cancellation_percentage }} {{ $policy->cancellation_type }}</td>
+                            <td>{{ $policy->cancellation_days }} days before arrival: {{ $policy->cancellation_percentage }}{{ $policy->cancellation_type }} can be cancelled free of charge.</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted">No cancellation policies for this offer.</td></tr>
+                    @endforelse
+                    </tbody>
                 </table>
+                @if($offer->cancellationNote)
+                    <p><b>{!!trans('Additional Cancellation Policies')!!}:</b> {{ $offer->cancellationNote }}</p>
+                @endif
 				</div>
            
                 
@@ -215,78 +218,3 @@
     <script src="{{ asset('js/comment.js') }}"></script>
 	
 @endsection
-@push('scripts')
-	<script type="text/javascript" src="{{asset('js/jspdf.min.js')}}"></script>
-	 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
-<script>
-	
-     $(document).ready(function() {
-        let table = $('#recent-offers-table').DataTable({
-            dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [
-                {
-                    extend: 'csv',
-                    title: 'Current Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Current Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Current Offer List',
-					orientation: 'landscape',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                }
-            ],
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('cancellation_policies_data',['offer_id'=> $offer->id])}}",
-            },
-            columns: [
-                {data: 'id', name: 'id'},
-				
-				{data: 'cancel_policy', name: 'cancel_policy'},
-                {data: 'hotel_name', name: 'hotel_name'},
-                {data: 'city', name: 'city'},
-				{data: 'status', name: 'status'},
-                {data: 'stay_date', name: 'stay_date'},
-               {data: 'stay_date', name: 'stay_date'},
-                {data: 'option_date', name: 'option_date'},
-				 {data: 'tour_name', name: 'tour_name'},
-                {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-            ],
-        });
-        $('#recent-offers-table tfoot th').each( function () {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            }
-        });
-        table.columns().every( function () {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if(that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#recent-offers-table tfoot th').appendTo('#recent-offers-table thead');
-    });
-		</script>
-
-@endpush

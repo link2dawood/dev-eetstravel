@@ -225,7 +225,7 @@
 												 <label for="tags-input">Send copy of reply to this email address</label>
 
                                     <input type="text" id="tags-input" name="emails"
-                                        value="{{ $tour_package->service()->work_email }}" style = "width:60rem">
+                                        value="{{ optional($tour_package->service())->work_email }}" style = "width:60rem">
                                             </div>
                                             <div class="input-wrapper col-md-4">
 												 <label for="reference">{!! trans('Ref No:') !!}</label>
@@ -715,7 +715,7 @@
     const tagify = new Tagify(input, {
         duplicates: false, // Prevent duplicate tags
         whitelist: [{
-            value: '{{ $tour_package->service()->work_email }}',
+            value: '{{ optional($tour_package->service())->work_email }}',
             readonly: true
         }],
     });

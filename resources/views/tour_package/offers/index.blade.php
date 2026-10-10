@@ -46,12 +46,12 @@
     </div>
 				</div>	
 			
-			@if($tour_package->service()->service_type == 'Hotel')
+			@if(($tour_package->servicesTypes[$tour_package->type] ?? null) == 'Hotel')
 				<tr>
                 <td>
                     <b><i>{!!trans('Supplier Url')!!}: </i></b>
                 </td>
-				<td><a href ={!!$tour_package->supplier_url."/".$tour_package->id!!} >Go to  Supplier Page</a></td>
+				<td><a href="{{ \App\TourPackage::supplierBookingUrl($tour_package->id) }}">Go to  Supplier Page</a></td>
             	</tr>
 				<div class = "row" style = "margin:10px">
 				<div id="tour_create" class = "col-md-1">

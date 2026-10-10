@@ -905,12 +905,13 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 		return view("tour_package.offers.offer_emails",compact('emails','tms_emails','user','tour_package'));
 	}
 	public function show($id){
-		$offer = HotelOffers::find($id);
+		$offer = HotelOffers::findOrFail($id);
 		$package = TourPackage::find($offer->package_id);
 		$tour = Tour::find($offer->tour_id);
+		$policies = OfferCancellationPolicies::where('offer_id', $offer->id)->get();
 		$user = Auth::user();
 		$room_types = RoomTypes::all();
-		$city_id =  $package->service()->city??"";
+		$city_id =  optional(optional($package)->service())->city ?? "";
 			$city = City::find($city_id);
 		$stay_date = "";
 
@@ -938,7 +939,7 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
                 }
             }
 		}
-		return view("offers.show",compact('offer','room_types','package','tour','city','stay_date','selected_room_types'));
+		return view("offers.show",compact('offer','room_types','package','tour','city','stay_date','selected_room_types','policies'));
 	}
 	public function create($id){
 		

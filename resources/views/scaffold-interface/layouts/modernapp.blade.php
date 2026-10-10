@@ -39,7 +39,7 @@
     <link rel="stylesheet" href="{{asset('assets/css/slick-theme.css')}}">
     <link rel="stylesheet" href="{{asset('assets/fonts/fontawesome-free-5.15.4-web/css/all.css')}}">
     <link rel="stylesheet" href="{{asset('assets/plugin/richtexteditor/rte_theme_default.css')}}">
-    <link rel="stylesheet" href="{{asset('assets/scss/multiselect.css')}}">
+    <link rel="stylesheet" href="{{asset('assets/css/multiselect.css')}}">
     <link rel="stylesheet" href="{{asset('assets/scss/style.css')}}">
 
     {{--<script type="text/javascript" src="{{ asset('js/app.js') }}"></script>--}}

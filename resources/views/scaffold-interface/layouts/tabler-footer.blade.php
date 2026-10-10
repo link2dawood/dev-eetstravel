@@ -16,7 +16,7 @@
                 <ul class="list-inline list-inline-dots mb-0">
                     <li class="list-inline-item">
                         Copyright &copy; {{ date('Y') }}
-                        <a href="." class="link-secondary">TMS - Tour Management System</a>.
+                        <a href="{{ url('/') }}" class="link-secondary">TMS - Tour Management System</a>.
                         All rights reserved.
                     </li>
                 </ul>

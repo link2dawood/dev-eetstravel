@@ -1,6 +1,6 @@
 let tablesFinder = {
     init: () => {
-        if (!$('#settings-table')) return;
+        if (!$('#settings-table').length || !$.fn.DataTable) return;
         tablesFinder.render();
     },
     render: () => {

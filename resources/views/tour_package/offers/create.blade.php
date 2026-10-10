@@ -6,7 +6,7 @@
         'sub_title' => 'Create Offer',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
+            ['title' => 'Offers', 'icon' => 'suitcase', 'route' => route('offers', $tour_package->id)],
             ['title' => 'Create', 'route' => null],
         ],
     ])
@@ -29,7 +29,6 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
                             </div>
                         </div>
                     </div>
@@ -59,99 +58,21 @@
                             </div>
                             <div class="">
 								
-                                @foreach ($selected_room_types as $selected_room_type)
+                                @foreach (collect($selected_room_types)->filter()->unique('id') as $selected_room_type)
                                     <input type="hidden" name ="room_type_id[]" value="{{ $selected_room_type->id }}">
-                                    @if ($selected_room_type->code == 'SIN')
-                                        <div class ="row">
-                                            <label for="singleRate">Single Room Rate</label>
-                                            <div class="input-wrapper" style="width: 113px;">
-                                                <input class="form-control" type="text" id="singleRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style = "margin-left:5rem">
-                                                <label for="singleBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="singleBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
+                                    <div class ="row">
+                                        <label for="rate_{{ $selected_room_type->id }}">{{ $selected_room_type->name }} Room Rate</label>
+                                        <div class="input-wrapper" style="width: 113px;">
+                                            <input class="form-control" type="text" id="rate_{{ $selected_room_type->id }}"
+                                                name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
                                         </div>
-                                    @endif
-                                    @if ($selected_room_type->code == 'TWN')
-                                        <div class ="row">
-                                            <label for="twinRate">Twin Room Rate</label>
-                                            <div class="input-wrapper col-md-2" style="width: 113px;">
-                                                <input class="form-control" type="text" id="twinRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
-                                                <label for="twinBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="twinBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
+                                        <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
+                                            <label for="breakfast_{{ $selected_room_type->id }}">Breakfast
+                                                included</label>
+                                            <input type="checkbox" id="breakfast_{{ $selected_room_type->id }}"
+                                                name="is_breakfast_{{ $selected_room_type->id }}" checked>
                                         </div>
-                                    @endif
-                                    @if ($selected_room_type->code == 'DOU')
-                                        <div class ="row">
-                                            <label for="doubleRate">Double Room Rate</label>
-                                            <div class="input-wrapper" style="width: 113px;">
-                                                <input class="form-control" type="text" id="doubleRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
-                                                <label for="doubleBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="doubleBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
-    
-                                        </div>
-                                    @endif
-                                    @if ($selected_room_type->code == 'TRI')
-                                        <div class ="row">
-                                            <label for="tripleRate">Triple Room Rate</label>
-                                            <div class="input-wrapper" style="width: 113px;">
-                                                <input class="form-control" type="text" id="tripleRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}"placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
-                                                <label for="tripleBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="tripleBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
-                                        </div>
-                                    @endif
-                                    @if ($selected_room_type->code == 'SIE')
-                                        <div class ="row">
-                                            <label for="suiteRate">Suite Room Rate</label>
-                                            <div class="input-wrapper" style="width: 113px;">
-                                                <input class="form-control" type="text" id="suiteRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
-                                                <label for="suiteBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="suiteBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
-                                        </div>
-                                    @endif
-                                    @if ($selected_room_type->code == 'DFS')
-                                        <div class ="row">
-                                            <label for="dfsRate">Double for single Room Rate</label>
-                                            <div class="input-wrapper" style="width: 113px;">
-                                                <input class="form-control" type="text" id="dfsRate"
-                                                    name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
-                                            </div>
-                                            <div class="input-wrapper col-md-5 mt-2" style="margin-left:5rem">
-                                                <label for="dfsBreakfastIncluded">Breakfast
-                                                    included</label>
-                                                <input type="checkbox" id="dfsBreakfastIncluded"
-                                                    name="is_breakfast_{{ $selected_room_type->id }}" checked>
-                                            </div>
-                                        </div>
-                                    @endif
+                                    </div>
                                 @endforeach
                                 <div class="row">
                                     <div class="input-wrapper" style="width: 113px;">
@@ -286,7 +207,7 @@
                         </div>
                     </div>
                     
-                    <button class="btn btn-primary">Submit</button>
+                    <button class="btn btn-success" type="submit">{!! trans('main.Save') !!}</button>
                 </form>
             </div>
         </div>

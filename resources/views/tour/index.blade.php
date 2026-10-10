@@ -159,8 +159,9 @@
                     <div class="tab-pane-title">
                         <h3 class="card-title mb-0">On Going Projects</h3>
                         <div class="d-flex gap-2 flex-wrap">
-                            <select id="year-filter" class="form-select" style="max-width: 160px;"><option value="">All Years</option>@foreach($years as $year)<option value="{{ $year }}">{{ $year }}</option>@endforeach</select>
-                            <select id="month-filter" class="form-select" style="max-width: 160px;"><option value="">All Months</option>@foreach($months as $key => $month)<option value="{{ $key }}">{{ $month }}</option>@endforeach</select>
+                            {{-- filtered server-side (departure year/month); changing a select reloads this tab --}}
+                            <select id="year-filter" class="form-select" style="max-width: 160px;"><option value="">All Years</option>@foreach($years as $year)<option value="{{ $year }}" {{ (string) request('year') === (string) $year ? 'selected' : '' }}>{{ $year }}</option>@endforeach</select>
+                            <select id="month-filter" class="form-select" style="max-width: 160px;"><option value="">All Months</option>@foreach($months as $key => $month)<option value="{{ $key }}" {{ (string) request('month') === (string) $key ? 'selected' : '' }}>{{ $month }}</option>@endforeach</select>
                         </div>
                     </div>
                     <div class="table-responsive mb-4">
@@ -175,6 +176,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($monthlyChartTours->hasPages())<div class="pagination-wrap mb-4"><div class="text-muted">Showing {{ $monthlyChartTours->firstItem() }} to {{ $monthlyChartTours->lastItem() }} of {{ $monthlyChartTours->total() }} entries</div>{{ $monthlyChartTours->links() }}</div>@endif
                     <h3 class="card-title">Cancelled Projects</h3>
                     <div class="table-responsive">
                         <table id="cancelled-chart-table" class="table card-table table-vcenter tour-data-table">
@@ -188,6 +190,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($cancelledChartTours->hasPages())<div class="pagination-wrap"><div class="text-muted">Showing {{ $cancelledChartTours->firstItem() }} to {{ $cancelledChartTours->lastItem() }} of {{ $cancelledChartTours->total() }} entries</div>{{ $cancelledChartTours->links() }}</div>@endif
                 </div>
 
                 <div class="tab-pane fade" id="archived-tours-tab" role="tabpanel">
@@ -329,6 +332,21 @@
             searchTimer = setTimeout(submitFilters, 600);
         });
         document.getElementById('filterDropdown')?.addEventListener('change', submitFilters);
+
+        // Monthly tab year/month: reload with the filter, keep other filters, reopen this tab
+        ['year-filter', 'month-filter'].forEach(function(id) {
+            document.getElementById(id)?.addEventListener('change', function() {
+                const params = new URLSearchParams(location.search);
+                ['year', 'month'].forEach(function(key) {
+                    const value = document.getElementById(key + '-filter').value;
+                    if (value) params.set(key, value); else params.delete(key);
+                });
+                params.delete('monthly_page');
+                params.delete('cancelled_page');
+                const query = params.toString();
+                location.href = location.pathname + (query ? '?' + query : '') + '#monthly-chart-tab';
+            });
+        });
         document.querySelector('.export-csv')?.addEventListener('click', exportActiveTable);
 
         document.getElementById('clone_tour_send')?.addEventListener('click', function(event) {

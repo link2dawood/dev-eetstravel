@@ -623,9 +623,22 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
         ['path' => request()->url(), 'pageName' => 'client_page']
     );
 
+    // Monthly tab: optional year/month filter on the departure date (applies to both of its tables)
+    $chartYear = (int) request()->get('year');
+    $chartMonth = (int) request()->get('month');
+    $inChartPeriod = function ($tour) use ($chartYear, $chartMonth) {
+        if (!$tour->departure_date) {
+            return !$chartYear && !$chartMonth;
+        }
+        $d = Carbon::parse($tour->departure_date);
+        return (!$chartYear || $d->year === $chartYear) && (!$chartMonth || $d->month === $chartMonth);
+    };
+    $monthlyTours = $processedTours->where('status', 4)->filter($inChartPeriod)->values();
+    $cancelledTours = $processedTours->where('status', 6)->filter($inChartPeriod)->values();
+
     $monthlyChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $processedTours->where('status', 4)->forPage($monthlyPage, $perPage),
-        $processedTours->where('status', 4)->count(),
+        $monthlyTours->forPage($monthlyPage, $perPage),
+        $monthlyTours->count(),
         $perPage,
         $monthlyPage,
         ['path' => request()->url(), 'pageName' => 'monthly_page']
@@ -633,8 +646,8 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
 
     $cancelledChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
         // 6 = Cancelled (46 is "Requested")
-        $processedTours->where('status', 6)->forPage($cancelledPage, $perPage),
-        $processedTours->where('status', 6)->count(),
+        $cancelledTours->forPage($cancelledPage, $perPage),
+        $cancelledTours->count(),
         $perPage,
         $cancelledPage,
         ['path' => request()->url(), 'pageName' => 'cancelled_page']

@@ -49,13 +49,8 @@ class BookingRequestController extends Controller
     }
 	public function getShowButton($offer, array $perm,$supplier)
 	{
-		$url = array(
-			'show'       => route('taxes.show', ['id' => $offer->id]),
-			'edit'       => route('taxes.edit', ['id' => $offer->id]),
-			'delete_msg' => "/offer/{$offer->id}/deleteMsg",
-			'id'         => $offer->id
-		);
 					$package = TourPackage::find($offer->package_id);
+		$service = optional(optional($package)->service());
 			$tour_id = "";
 			if(!empty($package)){
 				$tour_id = $package->getTour()->id??"";
@@ -70,7 +65,7 @@ class BookingRequestController extends Controller
 			}
 			else if($supplier == 0){
 				$button = '<button class="delete btn btn-danger btn-sm" style="margin-right: 5px;" data-info="' . htmlspecialchars(json_encode($package ?: ' ')) . '"
-    onclick="loadTemplate(JSON.parse((this.getAttribute(\'data-info\')) ? JSON.parse((this.getAttribute(\'data-info\'))).type : \'\'), \'' . htmlspecialchars($package->service()->work_email) . '\', \'' . htmlspecialchars($package->name) . '\', \'' . htmlspecialchars($package->pax . ' ' . $package->pax_free) . '\', \'\', \'' . htmlspecialchars($package->service()->work_email) . '\', \'' . htmlspecialchars($package->service()->work_phone) . '\', \'' . htmlspecialchars($package->description) . '\', \'' . htmlspecialchars($status_name) . '\', \'' . htmlspecialchars($package->time_from) . '\', \'' . htmlspecialchars($package->time_to) . '\', \'' . htmlspecialchars($package->supplier_url) . '\', \'' . htmlspecialchars($package->total_amount) . '\', \'' . htmlspecialchars($menu) . '\', \'' . htmlspecialchars($tour->id) . '\', \'' . htmlspecialchars($package->reference) . '\', \'' . htmlspecialchars($tour->name) . '\', \'' . htmlspecialchars($package->id) . '\', \'' . htmlspecialchars($offer->id) . '\');"
+    onclick="loadTemplate(JSON.parse((this.getAttribute(\'data-info\')) ? JSON.parse((this.getAttribute(\'data-info\'))).type : \'\'), \'' . htmlspecialchars($service->work_email) . '\', \'' . htmlspecialchars($package->name) . '\', \'' . htmlspecialchars($package->pax . ' ' . $package->pax_free) . '\', \'\', \'' . htmlspecialchars($service->work_email) . '\', \'' . htmlspecialchars($service->work_phone) . '\', \'' . htmlspecialchars($package->description) . '\', \'' . htmlspecialchars($status_name) . '\', \'' . htmlspecialchars($package->time_from) . '\', \'' . htmlspecialchars($package->time_to) . '\', \'' . htmlspecialchars($package->supplier_url) . '\', \'' . htmlspecialchars($package->total_amount) . '\', \'' . htmlspecialchars($menu) . '\', \'' . htmlspecialchars($tour->id) . '\', \'' . htmlspecialchars($package->reference) . '\', \'' . htmlspecialchars($tour->name) . '\', \'' . htmlspecialchars($package->id) . '\', \'' . htmlspecialchars($offer->id) . '\');"
     class="btn btn-success btn-xs"
 ><i class="fa fa-envelope" aria-hidden="true"></i></button>';
 				
@@ -451,6 +446,7 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 		$hotelOffer = HotelOffers::create([
             'package_id' => $id,
 			'tour_id' => $tour->id,
+			'ref' => $request->reference,
             'status' => $request->status,
 			'option_date' => $request->option_with_date,
 			'currency' => $request->currency,

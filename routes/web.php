@@ -261,10 +261,6 @@ Route::group(['middleware' => 'web'], function () {
 		Route::get('/past_offers', 'OfferController@past_offers')->name('past_offers.index');
 		Route::get('/current_bookings', 'OfferController@current_bookings')->name('current_bookings.index');
 		Route::get('/cancellation_policies', 'OfferController@cancellation_policies')->name('cancellation_policies.index');
-		Route::get('/recent_offers_data', 'OfferController@recent_offers_data')->name('recent_offers_data');
-		Route::get('/past_offers_data', 'OfferController@past_offers_data')->name('past_offers_data');
-		Route::get('/current_bookings_data', 'OfferController@current_bookings_data')->name('current_bookings_data');
-		Route::get('/cancellation_policies_data', 'OfferController@cancellation_policies_data')->name('cancellation_policies_data');
 		Route::get('/tour_package/hotel_offers/{id}', 'OfferController@hotel_offers')->name('offers');
 		Route::get('/tour_package/hotel_offers/{id}/create', 'OfferController@create')->name('offers.create')
 			;

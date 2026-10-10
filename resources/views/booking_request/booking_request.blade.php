@@ -465,33 +465,9 @@
 					<th>{!!trans('Hotel Note')!!}</th>
                     <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
                     </thead>
-                    <tfoot>
-                    <tr>
-                        <th class="not"></th>
-                    <th>{!!trans('Status')!!}</th>
-						@php
-											$printedRoomNames = [];
-										@endphp
-
-										@foreach ($selected_room_types as $selected_room_type)
-											@if (!in_array($selected_room_type->name, $printedRoomNames))
-												<th class="rooms-title">{{ $selected_room_type->name }}</th>
-												@php
-													$printedRoomNames[] = $selected_room_type->name;
-												@endphp
-											@endif
-										@endforeach
-                    <th>{!!trans('Currency')!!}</th>
-					<th>{!!trans('City Tax')!!}</th>
-                    <th>{!!trans('Halfboard Supp p.p')!!}</th>
-					<th>{!!trans('foc')!!}</th>
-                    <th>{!!trans('Max per group')!!}</th>
-					<th>{!!trans('Portrage pp')!!}</th>
-					<th>{!!trans('Hotel File')!!}</th>
-					<th>{!!trans('Hotel Note')!!}</th>
-                        <th class="not"></th>
-                    </tr>
-                    </tfoot>
+                    <tbody id="offers-tbody">
+                        <tr><td colspan="99" class="text-center text-muted">Loading offers...</td></tr>
+                    </tbody>
                 </table>
                                 
                             </div>
@@ -842,122 +818,93 @@
         });*/
     });
 	
-	    $(document).ready(function() {
-        let table = $('#offers-table').DataTable({
-            dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [
-                {
-                    extend: 'csv',
-                    title: 'Current Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Offers List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Offer List',
-					orientation: 'landscape',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                }
-            ],
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('offers_data',[$tour_package->id,1])}}",
-            },
-            columns: [
-				{data: 'id', name: 'id'},
-				{data: 'status', name: 'status'},
-				{data: 'supplier_delete', name: 'supplier_delete'},
-				@foreach ($selected_room_types as $selected_room_type)
-                { "data": "{{ $selected_room_type->code }}" },
-            	@endforeach
-                {data: 'currency', name: 'currency'},
-				{data: 'city_tax', name: 'city_tax'},
-				{data: 'halfboard', name: 'halfboard'},
-				{data: 'foc_after_every_pax', name: 'foc_after_every_pax'},
-				{data: 'halfboardMax', name: 'halfboardMax'},
-				{data: 'portrage_perperson', name: 'portrage_perperson'},
-				{data: 'hotel_file', name: 'hotel_file'},
-                {data: 'hotel_note', name: 'hotel_note'},
-               
-                {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-               
-            ],
-			"fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-			console.log(aData);
-			if(aData.supplier_delete == 1){
-			$(nRow).css('background', '#ffbbb2');
-			}
-               
-            }
-		 });
-        $('#offers-table tfoot th').each( function () {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            }
-        });
-        table.columns().every( function () {
-            let that = this;
+    // Offers table: filled from the offers_data JSON (all rows in one response; no DataTables on this page)
+    @php
+        $offerRoomCodes = collect($selected_room_types)->filter()->unique('name')->pluck('code')->values();
+    @endphp
+    var offerRoomCodes = @json($offerRoomCodes);
+    var offerColumns = ['id', 'status', 'supplier_delete'].concat(offerRoomCodes, ['currency', 'city_tax', 'halfboard', 'foc_after_every_pax', 'halfboardMax', 'portrage_perperson', 'hotel_file', 'hotel_note']);
 
-            $('input', this.footer()).on('keyup change', function() {
-                if(that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
+    function offerCell(text) {
+        var td = document.createElement('td');
+        td.textContent = text === null || text === undefined ? '' : text;
+        return td;
+    }
+
+    function loadOffers() {
+        var tbody = document.getElementById('offers-tbody');
+        if (!tbody) return;
+        $.getJSON(@json(route('offers_data', [$tour_package->id, 1]))).done(function (response) {
+            tbody.innerHTML = '';
+            var rows = response.data || [];
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="99" class="text-center text-muted">No offers yet.</td></tr>';
+                return;
+            }
+            rows.forEach(function (row) {
+                var tr = document.createElement('tr');
+                tr.dataset.id = row.id;
+                if (row.supplier_delete == 1) tr.style.background = '#ffbbb2';
+                offerColumns.forEach(function (key) {
+                    tr.appendChild(offerCell(key === 'supplier_delete' ? (row.supplier_delete == 1 ? 'Withdrawn' : '') : row[key]));
+                });
+                var actions = document.createElement('td');
+                actions.innerHTML = row.action || '';   // server-built buttons
+                tr.appendChild(actions);
+                tbody.appendChild(tr);
             });
+        }).fail(function () {
+            tbody.innerHTML = '<tr><td colspan="99" class="text-center text-danger">Offers could not be loaded. Please refresh the page.</td></tr>';
         });
-        $('#offers-table tfoot th').appendTo('#offers-table thead');
-    });
+    }
+
+    $(document).ready(loadOffers);
 </script>
 <script>
   $(document).ready(function () {
-    var recordToDeleteId;
-setTimeout(function () {
-    $('.delete').on('click', function () {
-      recordToDeleteId = $(this).data('link');
+    var recordToDeleteLink;
+
+    function offerNotice(message, type) {
+      var box = document.getElementById('offers-notice');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'offers-notice';
+        var table = document.getElementById('offers-table');
+        if (!table) return;
+        table.closest('.table-responsive').before(box);
+      }
+      box.className = 'alert alert-' + type + ' mt-2';
+      box.textContent = message;
+    }
+
+    // Delegated: the offer rows are added after the page loads
+    $(document).on('click', '#offers-table .delete', function () {
+      recordToDeleteLink = $(this).data('link');
       $('#confirmDeleteModal').modal('show');
     });
 
     $('#confirmDelete').on('click', function () {
-      // Make an AJAX request to delete the record
+      if (!recordToDeleteLink) return;
       $.ajax({
-        url: '' + recordToDeleteId,
+        url: recordToDeleteLink,
         type: 'get',
         success: function (data) {
-          // Assuming the server returns success
           if (data.success) {
-            // Remove the row from the table
-            $('tr[data-id="' + recordToDeleteId + '"]').remove();
+            offerNotice('The offer was withdrawn.', 'success');
+            loadOffers();
           } else {
-            // Handle deletion failure
-            alert('Failed to delete record.');
+            offerNotice('The offer could not be withdrawn.', 'danger');
           }
         },
         error: function () {
-          // Handle AJAX error
-          alert('Error occurred during deletion.');
+          offerNotice('Something went wrong while withdrawing the offer. Please try again.', 'danger');
         },
         complete: function () {
-          // Hide the modal regardless of success or failure
+          recordToDeleteLink = null;
           $('#confirmDeleteModal').modal('hide');
         }
       });
     });
- }, 3000);
   });
 	
 	function myFunction(val,val2){

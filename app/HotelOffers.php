@@ -9,8 +9,8 @@ class HotelOffers extends Model
 {
 	    protected $table = 'hotel_offers';
 protected $fillable = [
-        'package_id','tour_id', 'status', 'option_date' ,
-	'currency','city_tax','halfboard','foc_after_every_pax','halfboardMax','portrage_perperson','other_coditions','hotel_file','hotel_note','cancellationNote'
+        'package_id','tour_id','ref', 'status', 'option_date' ,
+	'currency','city_tax','halfboard','foc_after_every_pax','halfboardMax','children_cost','portrage_perperson','other_coditions','hotel_file','hotel_note','cancellationNote'
     ];
 	
 	public function offer_room_prices()

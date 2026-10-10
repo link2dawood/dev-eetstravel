@@ -118,9 +118,7 @@ class GuideController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Guide $guide->name created", 'success');
 
         $this->addFile($request, $guide);
-        $data = ['route' => route('guide.index')];
-		return redirect()->route('guide.index');
-        return response()->json($data);
+        return redirect()->route('guide.index');
     }
 
     /**
@@ -216,9 +214,7 @@ class GuideController extends Controller
         LaravelFlashSessionHelper::setFlashMessage("Guide $guide->name edited", 'success');
 
         $this->addFile($request, $guide);
-        $data = ['route' => route('guide.index')];
-		return redirect()->route('guide.index');
-        return response()->json($data);
+        return redirect()->route('guide.index');
     }
 
     /**

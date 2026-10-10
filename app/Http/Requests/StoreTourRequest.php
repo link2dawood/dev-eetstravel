@@ -4,9 +4,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Carbon\Carbon;
+use App\Http\Requests\Concerns\ResolvesCityIds;
 
 class StoreTourRequest extends FormRequest
 {
+    use ResolvesCityIds;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -31,6 +34,7 @@ class StoreTourRequest extends FormRequest
             'price_for_one' => $this->price_for_one ?? 0,
             'is_quotation' => $this->boolean('is_quotation'),
         ]);
+        $this->mergeResolvedCityIds();
     }
 
     /**
@@ -153,7 +157,8 @@ class StoreTourRequest extends FormRequest
                 'city_begin' => 'required|integer|exists:cities,id',
                 'country_end' => 'required|string|max:191',
                 'city_end' => 'required|integer|exists:cities,id',
-                'assigned_user' => 'required|integer|exists:users,id',
+                'assigned_user' => 'required',
+                'assigned_user.*' => 'integer|exists:users,id',
                 'transfer_id' => 'nullable|integer|exists:transfers,id'
             ]);
         } else {
@@ -162,7 +167,8 @@ class StoreTourRequest extends FormRequest
                 'city_begin' => 'nullable|integer',
                 'country_end' => 'nullable|string|max:191',
                 'city_end' => 'nullable|integer',
-                'assigned_user' => 'nullable|integer|exists:users,id',
+                'assigned_user' => 'nullable',
+                'assigned_user.*' => 'integer|exists:users,id',
                 'transfer_id' => 'nullable|integer'
             ]);
         }

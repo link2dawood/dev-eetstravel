@@ -7281,6 +7281,14 @@
             border-top:2px solid rgb(102, 103, 103);
             width:20px;
         }
+    
+        /* keep the day table inside the page (row negative margins pushed it off the right edge) */
+        .row { margin-left: 0 !important; margin-right: 0 !important; }
+        table.hei { width: 100% !important; table-layout: fixed; }
+        .container-fluid { margin: 0 !important; padding: 0 30px !important; max-width: none !important; }
+        .container-fluide { margin-right: 30px; }
+        .container-fluide .pull-right { float: none !important; }
+        .container-fluide table { width: 100% !important; }
     </style>
 
 </head>
@@ -7308,6 +7316,11 @@
         <div class="col-sm-6">
 
 
+            @php
+                $peopleCount = 0;
+                $roomsCodes = '';
+                $menus = '';
+            @endphp
             <table  border="0" cellspacing="0" cellpadding="0">
                 <tbody>
                 <tr>
@@ -7335,6 +7348,7 @@
                 </tr>
 					
 					
+                @if($listRoomsHotel->count())
                 <tr>
 
                     <td></td>
@@ -7364,6 +7378,7 @@
                         </div>
                     </td>
                 </tr>
+                @endif
 					
 					<tr>
 
@@ -7393,6 +7408,7 @@
                 </tr>
 
 
+                @if(trim(strip_tags((string) $tour->phone)) !== '')
                 <tr>
                     <td ></td>
                     <td ><h4 class="text_color">{!!trans('main.Mobile')!!}:</h4></td>
@@ -7402,9 +7418,11 @@
                     <td ></td>
                     <td>{!! $tour->phone  !!}</td>
                 </tr>
+                @endif
 
                 @if(count($tourTransfers) > 0)
-                    @foreach ($tourTransfers as $package)
+                    {{-- tour->transfers returns every package; only transfers (type 3) are coaches --}}
+                    @foreach (collect($tourTransfers)->where('type', 3) as $package)
 					<tr>
 
                         <td ></td>
@@ -7446,8 +7464,9 @@
                                 @if($item->id == $package->status ) {{$item->name}} <br>@endif
                             @endforeach --}}
                         <br>
-                            {{ \Carbon\Carbon::parse($package->time_from)->format('m-d-Y')}}<br>
-                            {{ \Carbon\Carbon::parse($package->time_to)->format('m-d-Y')}}
+                            @if($package->time_from)
+                                {{ display_date($package->time_from) }} {{ \Carbon\Carbon::parse($package->time_from)->format('H:i') }}@if($package->time_to) - {{ \Carbon\Carbon::parse($package->time_to)->format('H:i') }}@endif
+                            @endif
                         </td>
                    </tr>
                     @endforeach
@@ -7500,21 +7519,21 @@
 
                         <tr>
                             <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateDep')!!}:</h4></td>
+                            <td width="250"><h4 class="text_color">{!!trans('main.DepDate')!!}:</h4></td>
                         </tr>
                         <tr>
                             <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->departure_date)->format('m-d-Y')}}</td>
+                            <td width="250">{{ \Carbon\Carbon::parse($tour->departure_date)->format('d-m-Y')}}</td>
                         </tr>
 
                         <tr>
                             <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateReturn')!!}:</h4></td>
+                            <td width="250"><h4 class="text_color">{!!trans('main.RetDate')!!}:</h4></td>
                         </tr>
                         <tr>
 
                             <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->retirement_date)->format('m-d-Y')}}</td>
+                            <td width="250">{{ \Carbon\Carbon::parse($tour->retirement_date)->format('d-m-Y')}}</td>
                         </tr>
 
                         <tr>
@@ -7540,6 +7559,7 @@
 					</td>
                         </tr>
 
+                        @if($roomsCodes !== '')
                         <tr>
                             <td width="50"></td>
                             <td width="250"><h4 class="text_color">{!!trans('main.ROOMS')!!}:</h4></td>
@@ -7548,15 +7568,18 @@
                             <td width="50"></td>
                             <td width="250">{{ $roomsCodes }}</td>
                         </tr>
+                        @endif
 
+                        @if(is_object($usersResponsible))
                         <tr>
                             <td width="50"></td>
                             <td width="250"><h4 class="text_color">{!!trans('main.Personincharge')!!}:</h4></td>
                         </tr>
                         <tr>
                             <td width="50"></td>
-                            <td width="250">@if(is_object($usersResponsible)) {{ $usersResponsible->name }} @endif</td>
+                            <td width="250">{{ $usersResponsible->name }}</td>
                         </tr>
+                        @endif
 
                         <tr>
                             <td width="50"></td>
@@ -7615,7 +7638,8 @@
                     <tr>
                         <td class="border_table" align="right" valign="top" class="text_color">
                             
-                            {{ Carbon\Carbon::parse($package->time_from)->format('H:i')}} - {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}	
+                            {{-- check-in only; hotel end time is a 23:59 placeholder --}}
+                            {{ Carbon\Carbon::parse($package->time_from)->format('H:i')}}
 
                                 @if( $package->getStatusName() === 'Requested' || $package->type ==0)
                                     <br>

@@ -108,6 +108,30 @@ class TaskController extends Controller
         ));
     }
 
+    private function normalizeAssignedUsers($assignedUsers): array
+    {
+        if ($assignedUsers === null || $assignedUsers === '' || $assignedUsers === 'null') {
+            return [];
+        }
+
+        if (!is_array($assignedUsers)) {
+            $assignedUsers = explode(',', $assignedUsers);
+        }
+
+        return collect($assignedUsers)
+            ->flatMap(function ($value) {
+                return is_array($value) ? $value : explode(',', (string) $value);
+            })
+            ->map(function ($value) {
+                return (int) trim((string) $value);
+            })
+            ->filter(function ($value) {
+                return $value > 0;
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -127,19 +151,7 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        $assigned_user = [];
-        if (!is_array($request->assigned_user) && $request->assigned_user != null) {
-            $a_users = explode(',', $request->assigned_user);
-            if ($a_users[0] != 'null') {
-                foreach ($a_users as $item) {
-                    $assigned_user[] = (int)$item;
-                }
-            } else {
-                $assigned_user = null;
-            }
-        } else {
-            $assigned_user = $request->get('assigned_user', null);
-        }
+        $assigned_user = $this->normalizeAssignedUsers($request->get('assigned_user'));
 
         $this->validateTask($request);
         $task = new Task();
@@ -253,20 +265,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $assigned_user = [];
-
-        if (!is_array($request->assigned_user) && $request->assigned_user != null) {
-            $a_users = explode(',', $request->assigned_user);
-            if ($a_users[0] != 'null') {
-                foreach ($a_users as $item) {
-                    $assigned_user[] = $item;
-                }
-            } else {
-                $assigned_user = null;
-            }
-        } else {
-            $assigned_user = $request->get('assigned_user', null);
-        }
+        $assigned_user = $this->normalizeAssignedUsers($request->get('assigned_user'));
 
         if ($request->ajax() && $request->newStatus) {
             $task = Task::findOrFail($id);

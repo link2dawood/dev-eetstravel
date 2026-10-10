@@ -57,6 +57,10 @@ trait HelperTrait{
      */
     public function findDateRange(array $data)
     {
+        // new \DateTime(null) means "now", which would silently rebuild the tour around today
+        if (empty($data['departure_date']) || empty($data['retirement_date'])) {
+            return null;
+        }
         $departureDate = new \DateTime($data['departure_date']);
         $retirementDate = new \DateTime($data['retirement_date']);
         $retirementDate = $retirementDate->modify('+1 day');

@@ -65,7 +65,16 @@ function addExportButtons() {
     // Add simple export buttons for tables
     $('.table').each(function() {
         const tableId = $(this).attr('id');
-        if (tableId && !$(this).siblings('.export-buttons').length) {
+        // Skip tables whose card/tab already has its own export control (avoids duplicate buttons)
+        let $scope = $(this).closest('.card');
+        if (!$scope.length) $scope = $(this).closest('.tab-pane');
+        if (!$scope.length) $scope = $(document.body);
+        const hasOwnExport = $scope
+            .find('button, a')
+            .not('.export-buttons *')
+            .filter(function() { return /export|csv|excel/i.test($(this).text() + ' ' + ($(this).attr('onclick') || '') + ' ' + this.className); })
+            .length > 0;
+        if (tableId && !hasOwnExport && !$(this).closest('.table-responsive').prev('.export-buttons').length) {
             const exportButtons = $(`
                 <div class="export-buttons mb-3">
                     <button class="btn btn-sm btn-success" onclick="exportTableToCSV('${tableId}', '${tableId}_export.csv')">

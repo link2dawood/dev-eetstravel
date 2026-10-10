@@ -9,7 +9,7 @@
         <div class="box box-primary">
             <div class="box-body">
                 <h2 class="page-header">
-                    <i class="fa fa-list" aria-hidden="true"></i> Front Sheet [{{$quotation->name}} - {{$tour->name}}]
+                    <i class="fa fa-list" aria-hidden="true"></i> Front Sheet [{{ implode(' - ', array_filter([$quotation->name, $tour->name])) }}]
                 </h2>
                 <span id="help" class="btn btn-box-tool pull-right"><i class="fa fa-question-circle" aria-hidden="true"></i>
                     @include('legend.frontsheet_legend')

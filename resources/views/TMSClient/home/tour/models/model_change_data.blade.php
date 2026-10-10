@@ -3,7 +3,7 @@
     <li class="list-item">
       <div class="d-flex align-items-center justify-content-between">
         <h6 class="fw-semibold">{{$hotel->name}}{{"(hotel)"}}</h6>
-        <button class="btn btn-primary btn-sm add-service-button pre-loader-func" data-link="https://dev.eetstravel.com/tour_package" data-service_type="hotel" data-service_id="{{$hotel->id}}" data-service_name="{{$hotel->name}}" data-tourDayId="{{$tourDayId}}"><i class="fas fa-plus"></i></button>
+        <button class="btn btn-primary btn-sm add-service-button pre-loader-func" data-link="{{ url('tour_package') }}" data-service_type="hotel" data-service_id="{{$hotel->id}}" data-service_name="{{$hotel->name}}" data-tourDayId="{{$tourDayId}}"><i class="fas fa-plus"></i></button>
       </div>
 		   @for($i=1 ; $i <=5 ; $i ++)
 							@if($hotel->rate == 2)

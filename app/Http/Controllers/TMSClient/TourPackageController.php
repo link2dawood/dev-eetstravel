@@ -247,7 +247,7 @@ class TourPackageController extends Controller
         $tourPackage->rate = $request->rate;
         $tourPackage->note = $request->note;
         $tourPackage->description = $request->description;
-		$tourPackage->supplier_url = "https://dev.eetstravel.com/booking/".$latestId;
+		// supplier_url is set from the real id in TourPackage::booted()
 		
         $serviceType = $request->serviceType; // we should to connect with tourday or tour(transfer)
         if (strtolower($serviceType) == 'transfer') {

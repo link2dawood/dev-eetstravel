@@ -74,7 +74,7 @@ class QuotationController extends Controller {
             }
 
             // Add comparison link
-            $comparison_link = route('comparison.show', ['id' => $quotation->id]);
+            $comparison_link = route('comparison.show', ['comparison' => $quotation->id]);
             if (Auth::user()->can('comparison.show')) {
                 $quotation->comparison = "<a href='{$comparison_link}' class='click_event' style='color: blue; text-decoration: underline!important; cursor: pointer'>Front Sheet</a>";
             } else {
@@ -117,7 +117,7 @@ class QuotationController extends Controller {
     public function getButton($id, $quotation)
     {
         $url = [
-            'edit' => route('quotation.edit', ['id' => $id]),
+            'edit' => route('quotation.edit', ['quotation' => $id]),
             'print' => route('quotation.pdf', ['id' => $id])
         ];
 
@@ -228,7 +228,7 @@ class QuotationController extends Controller {
 		LaravelFlashSessionHelper::setFlashMessage("Quotation #$quotation->name edited");
 		$route = route('tour.show', ['tour' => $quotation->tour_id]);
        //return "$route?tab=quotation_tab";
-		return route( 'quotation.edit', [ 'id' => $quotation->id ] );
+		return route('quotation.edit', ['quotation' => $quotation->id]);
 	}
 
 	/**
@@ -265,7 +265,7 @@ class QuotationController extends Controller {
 
         LaravelFlashSessionHelper::setFlashMessage("Quotation #{$quotation->name} created", 'success');
 
-		return route( 'quotation.edit', [ 'id' => $quotation->id ] );
+		return route('quotation.edit', ['quotation' => $quotation->id]);
 	}
 
 	public function pdf( Request $request, $id ) {
@@ -313,9 +313,11 @@ class QuotationController extends Controller {
         if ($export == 'csv') {
 
            // $this->csvExport($tour, $type);
-        } else $this->prepareExport($quotation, $export, $tour, $calculations,$listRoomsHotel);
+            return back();
+        }
 
-        return back();
+        // Return the download; it was previously built, discarded, and the user sent back()
+        return $this->prepareExport($quotation, $export, $tour, $calculations, $listRoomsHotel);
     }
 	public function prepareExport($quotation, string $export, $tour  ,$calculations,$listRoomsHotel,$request = null){
         $this->request =$request;
@@ -329,7 +331,8 @@ class QuotationController extends Controller {
                 $this->listRoomsHotel = $listRoomsHotel;
             }
             public function view(): \Illuminate\Contracts\View\View {
-                return view('quotation.excel', compact('quotation', 'calculations', 'listRoomsHotel'));
+                // properties, not locals: compact() here threw "Undefined variable"
+                return view('quotation.excel', ['quotation' => $this->quotation, 'calculations' => $this->calculations, 'listRoomsHotel' => $this->listRoomsHotel]);
             }
         };
         return Excel::download($exportClass, 'Quotation_'.$excelName.'.'.$exportFormat);

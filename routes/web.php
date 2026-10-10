@@ -257,6 +257,7 @@ Route::group(['middleware' => 'web'], function () {
     });
 	Route::group(['middleware' => 'web'], function () {
 		Route::get('/current_offers', 'OfferController@current_offers')->name('current_offers.index');
+		Route::get('/offers/create', 'OfferController@select_create_package')->name('offers.select_create_package');
 		Route::get('/past_offers', 'OfferController@past_offers')->name('past_offers.index');
 		Route::get('/current_bookings', 'OfferController@current_bookings')->name('current_bookings.index');
 		Route::get('/cancellation_policies', 'OfferController@cancellation_policies')->name('cancellation_policies.index');
@@ -789,6 +790,10 @@ Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landin
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');
 Route::get('tp/getaddEmails', '\App\Http\Controllers\BookingRequestController@getaddEmails')->name('tour_package.getAdditionEmails');
 Route::get('booking/{generatedlink}/{id}', '\App\Http\Controllers\BookingRequestController@generated_link');
+// Offers table on the supplier booking page (DataTables JSON)
+Route::get('booking/offers/{id}/{supplier}', '\App\Http\Controllers\BookingRequestController@offersData')->name('offers_data');
+// Links already sent to suppliers only carry the encrypted package id
+Route::get('booking/{generatedlink}', '\App\Http\Controllers\BookingRequestController@generated_link_encrypted');
 Route::get('offer/{id}/show', 'OfferController@show')->name('show');
 Route::get('offer/{id}/supplier_delete', 'OfferController@supplier_delete')->name('supplier_delete');
 Route::get('/offer/api/status_list', 'OfferController@statusList');
@@ -841,5 +846,6 @@ Route::get('check', function(){
 });
 	
 Auth::routes();
+
 
 

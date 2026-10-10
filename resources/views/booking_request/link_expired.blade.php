@@ -187,7 +187,7 @@ path.smile {
   <div class="message">
     <h1>Oops, this link is expired</h1>
     <p>This URL is not valid anymore.</p>
-    <a href="https://dev.eetstravel.com/" target="_blank">dev.eetstravel.com</a>
+    <a href="{{ url('/') }}" target="_blank">{{ parse_url(url('/'), PHP_URL_HOST) }}</a>
   </div>
   
 <!--   <div class="light">

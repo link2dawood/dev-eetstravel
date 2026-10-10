@@ -757,213 +757,145 @@ header("content-disposition: attachment;filename=". $download_name ."");
             border-top:2px solid rgb(102, 103, 103);
             width:20px;
         }
+
+        /* Itinerary layout: fluid widths only so the page never scrolls sideways */
+        .itinerary-page { max-width: 210mm; margin: 0 auto; padding: 0 15px; overflow-x: hidden; }
+        .itinerary-page .row { margin-left: 0; margin-right: 0; }
+        .itinerary-page table { max-width: 100%; }
+        .itinerary-page img { max-width: 100%; height: auto; }
+        .itinerary-header td { padding-top: 30px; padding-bottom: 15px; }
+        .itinerary-logo { max-height: 70px; }
+        .itinerary-title {
+            display: inline-block;
+            margin: 30px 0 10px;
+            padding-bottom: 4px;
+            font-size: 26px;
+            border-bottom: 2px solid #666767;
+        }
+        .itinerary-summary .summary-col { padding: 0 10px 0 0; }
+        .summary-box { background-color: #f3f3f3; padding: 12px 16px; }
+        .field-label {
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: #666767;
+        }
+        .field-label:first-child { margin-top: 0; }
+        .field-value { font-size: 14px; color: #333; word-wrap: break-word; }
+        .itinerary-page h3.text_color { font-size: 18px; }
+        .itinerary-page h4.text_color { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin: 8px 0 2px; }
     </style>
 
 </head>
 <body>
 
-<div class="container-fluid" >
-    <table class="row" width="100%">
+<div class="container-fluid itinerary-page">
+    @php
+        $peopleCount = 0;
+        $roomsCodes = '';
+        $roomsList = [];
+        foreach ($listRoomsHotel as $item) {
+            if (!$item->room_types) {
+                continue;
+            }
+            $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$item->room_types->code])
+                ? App\TourPackage::$roomsPeopleCount[$item->room_types->code] * $item->count : 0;
+            $roomsCodes .= ($roomsCodes === '' ? '' : '+') . $item->count . $item->room_types->code;
+            $roomsList[] = $item->count . ' ' . $item->room_types->name;
+        }
+        $paxText = trim($tour->pax . ($tour->getRawOriginal('pax_free') ? ' ' . $tour->pax_free : ''));
+        $tourDisplayName = trim($tour->name . ' ' . $tour->external_name);
+    @endphp
+
+    <table class="itinerary-header" width="100%" cellspacing="0" cellpadding="0">
         <tr>
-            <td class="column">
-                <h2 class="float-left text_color" style="text-decoration: underline;margin-top: 50px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!!trans('main.Itinerary')!!}</h2>
+            <td valign="bottom">
+                <h2 class="itinerary-title text_color">{!!trans('main.Itinerary')!!}</h2>
             </td>
-            <td class="column" >
-                <img style="padding-top: 50px;padding-right: 60px;padding-bottom: 20px;" src="{{asset('/img/eets_logo_small.jpg' )}}" />
+            <td align="right" valign="bottom">
+                <img class="itinerary-logo" src="{{asset('/img/eets_logo_small.jpg' )}}" alt="" />
             </td>
         </tr>
     </table>
-    <table>
-        <div class="row" width="100%">
-        <div class="col-sm-6">
-            <table   cellspacing="0" cellpadding="0">
-                <tbody>
-                <tr>
-                    <td width="70"></td>
-                    <td width="500"><h4 class="text_color border_up" >Pax:</h4></td>
-                </tr>
-                <tr>
-                    //<td ></td>
-                    <td >{{$tour->pax}} {{$tour->pax_free}}</td>
-                </tr>
-                <tr>
-                   // <td></td>
-                    <td>
-                        <h4 class="text_color ">{!!trans('main.Room')!!}:</h4>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <div style="width:350px; word-wrap: break-word">
-                        @php
-                            $peopleCount = 0;
-                            $roomsCodes = '';
-                        @endphp
-                        @foreach($listRoomsHotel as $item)
-                            @php
-                                $peopleCount +=
-                                isset( App\TourPackage::$roomsPeopleCount[$item->room_types->code])
-                                 ? App\TourPackage::$roomsPeopleCount[$item->room_types->code] * $item->count : 0;
-                                $roomsCodes=='' ? $roomsCodes = $item->count . $item->room_types->code : $roomsCodes .= '+' . $item->count . $item->room_types->code
-                            @endphp
-                            <span>
-                                {{ $item->count }} {{ $item->room_types->name }},
-                            </span>
-                        @endforeach
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td >
-                        <h4 class="text_color">T/L:</h4>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td >
-                         {{$tour->itinerary_tl}}
-                    </td>
-                </tr>
-                <tr>
-                    <td ></td>
-                    <td ><h4 class="text_color">{!!trans('main.Mobile')!!}:</h4></td>
-                </tr>
-                <tr>
-                    <td ></td>
-                    <td>{!! $tour->phone  !!}</td>
-                </tr>
-                @if(count($tourTransfers) > 0)
-                    @foreach ($tourTransfers as $package)
-					<tr>
-                        <td ></td>
-                        <td >{{--<h4 class="text_color border_up">Driver:</h4>--}}</td>
-                    </tr>
-					<tr>
-                            <td ></td>
-                        <td >{{--$package->name--}}</td>
-                    </tr>
-                    <tr>
-                        <td ></td>
-                        <td >{{--<h4 class="text_color">Mobile:</h4>--}}</td>
-                    </tr>
-					<tr>
-						<td ></td>
-                        <td >
-                            @forelse($package->getTransferDrivers() as $driver)
-                            <h4 class="text_color border_up">{!!trans('main.Driver')!!}:</h4>
-                                {{ $driver->name }}
-                                <h4 class="text_color"><br>{!!trans('main.Mobile')!!}:</h4>
-                                <span style="display: block">{{ $driver->phone }}</span>
-                            @empty
-                            @endforelse
-                        </td>
-                   </tr>
-                    <tr>
-                        <td ></td>
-                        <td ><h4 class="text_color" >Coach Details:</h4></td>
-                    </tr>
-					<tr>
-						<td ></td>
-                        <td >
-                            {{ $package->name }}
-{{--                             @foreach( \App\Status::where('type', 'bus')->get() as $item)
-                                @if($item->id == $package->status ) {{$item->name}} <br>@endif
-                            @endforeach --}}
-                        <br>
-                            {{ \Carbon\Carbon::parse($package->time_from)->format('m-d-Y')}}<br>
-                            {{ \Carbon\Carbon::parse($package->time_to)->format('m-d-Y')}}
-                        </td>
-                   </tr>
-                    @endforeach
+
+    <table class="itinerary-summary" width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="summary-col" valign="top" width="50%">
+                @if($paxText !== '')
+                    <div class="field-label">Pax</div>
+                    <div class="field-value">{{ $paxText }}</div>
                 @endif
-                </tbody>
-            </table>
-        </div>
 
+                @if(count($roomsList))
+                    <div class="field-label">{!!trans('main.Room')!!}</div>
+                    <div class="field-value">{{ implode(', ', $roomsList) }}</div>
+                @endif
 
-        <div class="col-sm-6">
+                @if(trim((string) $tour->itinerary_tl) !== '')
+                    <div class="field-label">T/L</div>
+                    <div class="field-value">{{ $tour->itinerary_tl }}</div>
+                @endif
 
-            <div class="container-fluide">
-                <div class="row pull-right">
+                @if(trim(strip_tags((string) $tour->phone)) !== '')
+                    <div class="field-label">{!!trans('main.Mobile')!!}</div>
+                    <div class="field-value">{!! $tour->phone !!}</div>
+                @endif
 
-                    <table width="300px" border="0" cellspacing="0" cellpadding="0" style="margin-top: -200px;background-color: #f3f3f3">
-                        <tbody>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.Name')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><div style="width:250px; word-wrap: break-word">{{$tour->name}} {{$tour->external_name}}</div></td>
-                        </tr>
+                @foreach (collect($tourTransfers)->where('type', 3) as $package)
+                    @foreach($package->getTransferDrivers() as $driver)
+                        <div class="field-label">{!!trans('main.Driver')!!}</div>
+                        <div class="field-value">{{ $driver->name }}</div>
+                        @if($driver->phone)
+                            <div class="field-label">{!!trans('main.Mobile')!!}</div>
+                            <div class="field-value">{{ $driver->phone }}</div>
+                        @endif
+                    @endforeach
+                    <div class="field-label">Coach Details</div>
+                    <div class="field-value">
+                        {{ $package->name }}
+                        @php
+                            $coachFrom = $package->time_from ? \Carbon\Carbon::parse($package->time_from) : null;
+                            $coachTo = $package->time_to ? \Carbon\Carbon::parse($package->time_to) : null;
+                        @endphp
+                        @if($coachFrom)
+                            <br>{{ display_date($coachFrom) }} {{ $coachFrom->format('H:i') }}
+                            @if($coachTo)
+                                - @if(!$coachTo->isSameDay($coachFrom)){{ display_date($coachTo) }} @endif{{ $coachTo->format('H:i') }}
+                            @endif
+                        @endif
+                    </div>
+                @endforeach
+            </td>
+            <td class="summary-col" valign="top" width="50%">
+                <div class="summary-box">
+                    <div class="field-label">{!!trans('main.Name')!!}</div>
+                    <div class="field-value">{{ $tourDisplayName }}</div>
 
+                    <div class="field-label">{!!trans('main.DepDate')!!}</div>
+                    <div class="field-value">{{ display_date($tour->departure_date) }}</div>
 
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateDep')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->departure_date)->format('m-d-Y')}}</td>
-                        </tr>
+                    <div class="field-label">{!!trans('main.RetDate')!!}</div>
+                    <div class="field-value">{{ display_date($tour->retirement_date) }}</div>
 
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.DateReturn')!!}:</h4></td>
-                        </tr>
-                        <tr>
+                    @if($paxText !== '')
+                        <div class="field-label">Pax</div>
+                        <div class="field-value">{{ $paxText }}</div>
+                    @endif
 
-                            <td width="50"></td>
-                            <td width="250">{{ \Carbon\Carbon::parse($tour->retirement_date)->format('m-d-Y')}}</td>
-                        </tr>
+                    @if($roomsCodes !== '')
+                        <div class="field-label">{!!trans('main.ROOMS')!!}</div>
+                        <div class="field-value">{{ $roomsCodes }}</div>
+                    @endif
 
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">PAX:</h4></td>
-                        </tr>
-                        <tr>
-
-                            <td width="50"></td>
-                            <td width="250">{{$tour->pax}} {{$tour->pax_free}}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.ROOMS')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">{{ $roomsCodes }}</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250"><h4 class="text_color">{!!trans('main.Personincharge')!!}:</h4></td>
-                        </tr>
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">@if(is_object($usersResponsible)) {{ $usersResponsible->name }} @endif</td>
-                        </tr>
-
-                        <tr>
-                            <td width="50"></td>
-                            <td width="250">&nbsp;</td>
-                        </tr>
-
-
-                        </tbody>
-                    </table>
-
+                    @if(is_object($usersResponsible))
+                        <div class="field-label">{!!trans('main.Personincharge')!!}</div>
+                        <div class="field-value">{{ $usersResponsible->name }}</div>
+                    @endif
                 </div>
-
-
-            </div>
-
-
-        </div>
-    </div>
+            </td>
+        </tr>
     </table>
     <?php $countDay = 0; ?>
     @if(isset($isDoc) and $isDoc)
@@ -973,7 +905,7 @@ header("content-disposition: attachment;filename=". $download_name ."");
     @endif
     <div class="row">
         <div class="col-sm-12 nopadding">
-        <h2 class="float-left text_color" style="text-decoration: underline;margin-top: 50px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!!trans('main.Itinerary')!!}</h2>
+            <h2 class="itinerary-title text_color">{!!trans('main.Itinerary')!!}</h2>
         </div>
     </div>
 	<div class="row">
@@ -995,7 +927,8 @@ header("content-disposition: attachment;filename=". $download_name ."");
                             @foreach($tourDay->packages as $package)
                                 @if (!in_array($package->id, $exclude))
                                 <tr>
-                                    <td align="right" valign="top" class="text_color">{{ Carbon\Carbon::parse($package->time_from)->format('H:i')}} @if(!$package->description_package)- {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}
+                                    {{-- Hotels show check-in only; their end time is a 23:59 placeholder --}}
+                                    <td align="right" valign="top" class="text_color">{{ Carbon\Carbon::parse($package->time_from)->format('H:i')}} @if(!$package->description_package)@if((int) $package->type !== 0)- {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}@endif
                                             <br>
                                             @if($package->type !== null)
                                                 {{ ucfirst($serviceTypes[$package->type]) }}
@@ -1098,18 +1031,32 @@ header("content-disposition: attachment;filename=". $download_name ."");
                                 $menus = '';
                                 ?>
                                 @if ($srv)
-                                    @if ($srv->work_phone)
-                                        <span class="text_color"> {!! trans('main.Tel') !!}:
-                                        </span>{{ $srv->work_phone }}
-                                        @endif @if ($srv->work_fax)
-                                            Fax: {{ $srv->work_fax }}
-                                        @endif <br>
-                                        @if ($srv->address_first)
-                                            <span class="text_color"> {!! trans('main.Address') !!}:
-                                            </span>{!! $srv->address_first !!} <br>
-                                        @endif
-                                        <br>
+                                    @php
+                                        // Strip stray leading separators (e.g. "-40998772") from contact numbers
+                                        $srvPhone = ltrim(trim((string) $srv->work_phone), " -/.,");
+                                        $srvFax = ltrim(trim((string) $srv->work_fax), " -/.,");
+                                        // Street is often split across address_first/address_second
+                                        $srvCity = method_exists($srv, 'cityObject') && $srv->cityObject ? $srv->cityObject->name : '';
+                                        $srvAddress = collect([$srv->address_first ?? '', $srv->address_second ?? '', $srvCity])
+                                            ->map(function ($part) { return trim(strip_tags((string) $part), " ,"); })
+                                            ->filter()
+                                            ->implode(', ');
+                                    @endphp
+                                    @if ($srvPhone !== '' || $srvFax !== '')
+                                        <div>
+                                            @if ($srvPhone !== '')
+                                                <span class="text_color">{!! trans('main.Tel') !!}:</span> {{ $srvPhone }}
+                                            @endif
+                                            @if ($srvFax !== '')
+                                                @if ($srvPhone !== '')&nbsp;&nbsp;@endif<span class="text_color">Fax:</span> {{ $srvFax }}
+                                            @endif
+                                        </div>
                                     @endif
+                                    @if ($srvAddress !== '')
+                                        <div><span class="text_color">{!! trans('main.Address') !!}:</span> {{ $srvAddress }}</div>
+                                    @endif
+                                    <br>
+                                @endif
                                     @if ($package->type == 0)
                                         <?php
                                         

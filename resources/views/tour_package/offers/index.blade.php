@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.tabler-app')
+﻿@extends('scaffold-interface.layouts.tabler-app')
 @section('title','Show')
 @section('content')
 <style>
@@ -55,7 +55,7 @@
             	</tr>
 				<div class = "row" style = "margin:10px">
 				<div id="tour_create" class = "col-md-1">
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('offers.create',$tour_package->id), \App\Tour::class) !!}
+                    <a href="{{ route('offers.create', $tour_package->id) }}" class="btn btn-primary create-action-btn"><span class="create-action-icon" aria-hidden="true">+</span> Create Offer</a>
                 </div>
 					<div class = "col-md-1">
 				<a class='btn btn-success' href= "{{route('offers.emails',$tour_package->id)}}" >{!! trans('Offer Emails') !!}</a>
@@ -345,3 +345,4 @@
 	</script>
     <script src="{{ asset('js/comment.js') }}"></script>
 @endsection
+

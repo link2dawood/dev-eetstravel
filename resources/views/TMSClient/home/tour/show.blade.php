@@ -30,7 +30,7 @@
                         </button>
                         
 
-                          <button id="serviceModel" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tourServiceAddModal" data-url="https://dev.eetstravel.com/sevice_modal/show/215 " data-date="2023-06-15" data-tour_id="215" data-departure_date="2023-06-15" data-retirement_date="2023-06-16" data-tourdayid="1860" data-link="https://dev.eetstravel.com/client_tour_package" style="border:none"><i class="fas fa-plus"></i></button>
+                          <button id="serviceModel" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tourServiceAddModal" data-url="{{ url('sevice_modal/show/215') }}" data-date="2023-06-15" data-tour_id="215" data-departure_date="2023-06-15" data-retirement_date="2023-06-16" data-tourdayid="1860" data-link="{{ url('client_tour_package') }}" style="border:none"><i class="fas fa-plus"></i></button>
 
                         
                       </div>
@@ -120,7 +120,7 @@
                           <button id="serviceModel" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                 data-bs-target="#tourServiceAddModal" data-url="{{route('service_modal.show',[$tour->id])}} "   data-date="{!! $tourDate->date !!}" data-tour_id='{{$tour->id}}'
                 data-departure_date='{{$tour->departure_date}}'
-                data-retirement_date="{{$tour->retirement_date}}" data-tourDayId="{{$tourDate->id}}" data-link="https://dev.eetstravel.com/client_tour_package" style = "border:none"><i class="fas fa-plus"></i></button>
+                data-retirement_date="{{$tour->retirement_date}}" data-tourDayId="{{$tourDate->id}}" data-link="{{ url('client_tour_package') }}" style = "border:none"><i class="fas fa-plus"></i></button>
 
                         
                       </div>

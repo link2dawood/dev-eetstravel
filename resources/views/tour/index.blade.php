@@ -75,26 +75,30 @@
         </div>
 
         <div class="card-body">
-            <div class="row mb-3 g-2 align-items-center">
+            {{-- Search/filter are applied server-side so they cover all tours, not just the current page --}}
+            <form method="GET" action="{{ route('tour.index') }}" id="tour-filter-form" class="row mb-3 g-2 align-items-center">
                 <div class="col-md-6 col-lg-5">
                     <div class="input-icon table-search">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="tour-search" class="form-control" placeholder="Search visible table...">
+                        <input type="search" name="search" id="tour-search" class="form-control" placeholder="Search all tours..." value="{{ request('search') }}">
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-7">
                     <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-                        <select id="filterDropdown" class="form-select" style="max-width: 200px;">
+                        <select name="status" id="filterDropdown" class="form-select" style="max-width: 200px;">
                             <option value="">All Statuses</option>
-                            <option value="quotation">Quotations</option>
-                            <option value="go ahead">Go Ahead</option>
+                            <option value="quotation" {{ request('status') === 'quotation' ? 'selected' : '' }}>Quotations</option>
+                            <option value="go ahead" {{ request('status') === 'go ahead' ? 'selected' : '' }}>Go Ahead</option>
                         </select>
+                        @if(request('search') || request('status'))
+                            <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary"><i class="ti ti-x me-1"></i>Clear</a>
+                        @endif
                         <button class="btn btn-secondary export-csv" type="button">
                             <i class="ti ti-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
                         </button>
                     </div>
                 </div>
-            </div>
+            </form>
 
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="tours-tab" role="tabpanel">
@@ -117,11 +121,11 @@
                                 <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}">
                                     <td><span class="text-muted">#{{ $tour->id }}</span></td>
                                     <td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted d-lg-none">{{ $tour->responsible_user_names ?? '' }}</small></td>
-                                    <td><span class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</span></td>
-                                    <td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td>
-                                    <td class="d-none d-xl-table-cell">{{ $tour->assigned_user_names ?? '—' }}</td>
+                                    <td><span class="text-muted"><span class="text-nowrap">{{ display_date($tour->departure_date) }}</span></span></td>
+                                    <td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '-' }}</td>
+                                    <td class="d-none d-xl-table-cell">{{ $tour->assigned_user_names ?? '-' }}</td>
                                     <td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;"><span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>{{ $tour->getStatusName() }}</span></td>
-                                    <td class="d-none d-md-table-cell"><span class="text-muted">{{ $tour->external_name ?? '—' }}</span></td>
+                                    <td class="d-none d-md-table-cell"><span class="text-muted">{{ $tour->external_name ?? '-' }}</span></td>
                                     <td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
                                 </tr>
                             @empty
@@ -140,10 +144,10 @@
                             <tbody>
                             @forelse($clientTours as $tour)
                                 <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}">
-                                    <td><span class="text-muted">#{{ $tour->id }}</span></td><td><div class="fw-bold">{{ $tour->name }}</div></td><td>{{ $tour->client_name ?: '—' }}</td><td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;"><span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
+                                    <td><span class="text-muted">#{{ $tour->id }}</span></td><td><div class="fw-bold">{{ $tour->name }}</div></td><td>{{ $tour->client_name ?: '-' }}</td><td><span class="text-nowrap">{{ display_date($tour->departure_date) }}</span></td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;"><span class="status-dot" style="background-color: {{ $tour->getStatusColor() }};"></span>{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '-' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted py-5">No requested tours found.</td></tr>
+                                <tr><td colspan="7" class="text-center py-5"><div class="empty"><div class="empty-icon"><i class="ti ti-users"></i></div><p class="empty-title">No records found</p><p class="empty-subtitle text-muted">There are no requested tours{{ request('search') || request('status') ? ' matching your filter' : '' }}.</p></div></td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -164,7 +168,7 @@
                             <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
                             <tbody>
                             @forelse($monthlyChartTours as $tour)
-                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted"><span class="text-nowrap">{{ display_date($tour->departure_date, '') }}</span></small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '-' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '-' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
                             @empty
                                 <tr><td colspan="6" class="text-center text-muted py-4">No ongoing projects found.</td></tr>
                             @endforelse
@@ -177,7 +181,7 @@
                             <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
                             <tbody>
                             @forelse($cancelledChartTours as $tour)
-                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted">{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '' }}</small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div><small class="text-muted"><span class="text-nowrap">{{ display_date($tour->departure_date, '') }}</span></small></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '-' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '-' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
                             @empty
                                 <tr><td colspan="6" class="text-center text-muted py-4">No cancelled projects found.</td></tr>
                             @endforelse
@@ -192,9 +196,9 @@
                             <thead><tr><th>ID</th><th>{{ trans('main.Name') }}</th><th class="d-none d-lg-table-cell">{{ trans('Responsible Users') }}</th><th>{{ trans('main.DepDate') }}</th><th>{{ trans('main.Status') }}</th><th class="d-none d-md-table-cell">{{ trans('main.ExternalName') }}</th><th class="text-end">{{ trans('main.Actions') }}</th></tr></thead>
                             <tbody>
                             @forelse($archivedTours as $tour)
-                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '—' }}</td><td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '—' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
+                                <tr class="clickable-row" style="background: {{ $tour->getRowBackgroundColor() }};" data-href="{{ route('tour.show', ['tour' => $tour->id]) }}"><td>#{{ $tour->id }}</td><td><div class="fw-bold">{{ $tour->name }}</div></td><td class="d-none d-lg-table-cell">{{ $tour->responsible_user_names ?? '-' }}</td><td><span class="text-nowrap">{{ display_date($tour->departure_date) }}</span></td><td><span class="badge" style="background-color: {{ $tour->getStatusColor() }}20; color: {{ $tour->getStatusColor() }}; border: 1px solid {{ $tour->getStatusColor() }}40;">{{ $tour->getStatusName() }}</span></td><td class="d-none d-md-table-cell">{{ $tour->external_name ?? '-' }}</td><td class="text-end action-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td></tr>
                             @empty
-                                <tr><td colspan="7" class="text-center text-muted py-5">No archived tours found.</td></tr>
+                                <tr><td colspan="7" class="text-center py-5"><div class="empty"><div class="empty-icon"><i class="ti ti-archive"></i></div><p class="empty-title">No records found</p><p class="empty-subtitle text-muted">There are no archived tours{{ request('search') || request('status') ? ' matching your filter' : '' }}.</p></div></td></tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -230,24 +234,29 @@
 @endsection
 
 @section('post_scripts')
-<script src="{{ asset('js/tour-interactions.js') }}"></script>
 <script>
 (function() {
     function activeTable() {
         return document.querySelector('.tab-pane.active .tour-data-table');
     }
 
-    function filterActiveTable() {
-        const table = activeTable();
-        if (!table) return;
-        const searchValue = (document.getElementById('tour-search')?.value || '').toLowerCase().trim();
-        const statusValue = (document.getElementById('filterDropdown')?.value || '').toLowerCase().trim();
-        table.querySelectorAll('tbody tr').forEach(function(row) {
-            const rowText = row.textContent.toLowerCase();
-            const matchesSearch = !searchValue || rowText.includes(searchValue);
-            const matchesStatus = !statusValue || rowText.includes(statusValue);
-            row.style.display = matchesSearch && matchesStatus ? '' : 'none';
-        });
+    // Search/status are filtered server-side across all tours; submit and keep the open tab
+    let searchTimer = null;
+    function submitFilters() {
+        const form = document.getElementById('tour-filter-form');
+        if (!form) return;
+        const activeLink = document.querySelector('.card-header-tabs .nav-link.active');
+        const hash = activeLink ? activeLink.getAttribute('href') : '';
+        const params = new URLSearchParams(new FormData(form));
+        Array.from(params.keys()).forEach(function(key) { if (!params.get(key)) params.delete(key); });
+        const query = params.toString();
+        window.location.href = form.action + (query ? '?' + query : '') + (hash || '');
+    }
+
+    function openTabFromHash() {
+        if (!location.hash) return;
+        const link = document.querySelector('.card-header-tabs .nav-link[href="' + location.hash + '"]');
+        if (link && window.bootstrap) bootstrap.Tab.getOrCreateInstance(link).show();
     }
 
     function exportActiveTable() {
@@ -286,14 +295,27 @@
                 if (form) form.action = '/tour/' + cloneButton.dataset.id + '/clone';
                 const error = document.querySelector('.block-error');
                 if (error) { error.textContent = ''; error.style.display = 'none'; }
-                const modal = new bootstrap.Modal(document.getElementById('tour-clone-modal'));
-                modal.show();
+                // the button's data-bs-toggle opens the dialog; opening it here too stacked two backdrops
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('tour-clone-modal'));
+                if (!cloneButton.hasAttribute('data-bs-toggle')) modal.show();
             }
         });
 
-        document.getElementById('tour-search')?.addEventListener('input', filterActiveTable);
-        document.getElementById('filterDropdown')?.addEventListener('change', filterActiveTable);
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) { tab.addEventListener('shown.bs.tab', filterActiveTable); });
+        openTabFromHash();
+        const searchInput = document.getElementById('tour-search');
+        if (searchInput && searchInput.value) {
+            searchInput.focus();
+            searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        }
+        document.querySelectorAll('.card-header-tabs [data-bs-toggle="tab"]').forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function() { history.replaceState(null, '', tab.getAttribute('href')); });
+        });
+        document.getElementById('tour-filter-form')?.addEventListener('submit', function(event) { event.preventDefault(); submitFilters(); });
+        document.getElementById('tour-search')?.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(submitFilters, 600);
+        });
+        document.getElementById('filterDropdown')?.addEventListener('change', submitFilters);
         document.querySelector('.export-csv')?.addEventListener('click', exportActiveTable);
 
         document.getElementById('clone_tour_send')?.addEventListener('click', function(event) {

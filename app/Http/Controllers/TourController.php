@@ -574,6 +574,34 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
         return $tour;
     });
 
+    // Search and status filter run over all tours, before pagination
+    $search = trim((string) request()->get('search', ''));
+    $statusFilter = strtolower(trim((string) request()->get('status', '')));
+    if ($search !== '' || $statusFilter !== '') {
+        $searchLower = mb_strtolower($search);
+        $processedTours = $processedTours->filter(function ($tour) use ($searchLower, $statusFilter) {
+            $statusName = strtolower($tour->getRelationValue('status')->name ?? '');
+            if ($statusFilter !== '' && strpos($statusName, $statusFilter) === false) {
+                return false;
+            }
+            if ($searchLower === '') {
+                return true;
+            }
+            $haystack = mb_strtolower(implode(' ', [
+                $tour->id,
+                $tour->name,
+                $tour->external_name,
+                $tour->departure_date,
+                display_date($tour->departure_date, ''),
+                $tour->responsible_user_names,
+                $tour->assigned_user_names,
+                $tour->client_name,
+                $statusName,
+            ]));
+            return strpos($haystack, $searchLower) !== false;
+        })->values();
+    }
+
     // Partition tours efficiently using collections and apply pagination
     $tours = new \Illuminate\Pagination\LengthAwarePaginator(
         $processedTours->whereNotIn('status', [46, 6, 39])->forPage($toursPage, $perPage),
@@ -583,9 +611,13 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
         ['path' => request()->url(), 'pageName' => 'page']
     );
 
+    // Requested = submitted by a client, or in the "Requested" status (46)
+    $requestedTours = $processedTours->filter(function ($tour) {
+        return !empty($tour->client_id) || (int) $tour->status === 46;
+    });
     $clientTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0)->forPage($clientPage, $perPage),
-        $processedTours->where('client_id', '!=', null)->where('client_id', '!=', 0)->count(),
+        $requestedTours->forPage($clientPage, $perPage),
+        $requestedTours->count(),
         $perPage,
         $clientPage,
         ['path' => request()->url(), 'pageName' => 'client_page']
@@ -600,8 +632,9 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
     );
 
     $cancelledChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $processedTours->where('status', 46)->forPage($cancelledPage, $perPage),
-        $processedTours->where('status', 46)->count(),
+        // 6 = Cancelled (46 is "Requested")
+        $processedTours->where('status', 6)->forPage($cancelledPage, $perPage),
+        $processedTours->where('status', 6)->count(),
         $perPage,
         $cancelledPage,
         ['path' => request()->url(), 'pageName' => 'cancelled_page']
@@ -614,6 +647,14 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
         $archivedPage,
         ['path' => request()->url(), 'pageName' => 'archived_page']
     );
+
+    // Keep search/filter/other pages in links and reopen the tab the link belongs to
+    $query = request()->query();
+    $tours->appends($query)->fragment('tours-tab');
+    $clientTours->appends($query)->fragment('client-tours-tab');
+    $monthlyChartTours->appends($query)->fragment('monthly-chart-tab');
+    $cancelledChartTours->appends($query)->fragment('monthly-chart-tab');
+    $archivedTours->appends($query)->fragment('archived-tours-tab');
 
     // Get years efficiently
     $years = Tour::selectRaw('YEAR(departure_date) as year')
@@ -698,32 +739,8 @@ public function create(Request $request)
 /**
  * Handle file upload for tours
  */
-private function addFile($request, $tour)
-{
-    if ($request->hasFile('attach')) {
-        $files = $request->file('attach');
-        
-        if (!is_array($files)) {
-            $files = [$files];
-        }
-
-        foreach ($files as $file) {
-            if ($file->isValid()) {
-                $destinationPath = 'uploads/attachments/';
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->move(public_path($destinationPath), $fileName);
-                
-                $attachment = new Attachment();
-                $attachment->url = url($destinationPath . $fileName);
-                $attachment->path = $destinationPath . $fileName;
-                $attachment->original_name = $file->getClientOriginalName();
-                $attachment->save();
-                
-                $tour->attachments()->save($attachment);
-            }
-        }
-    }
-}
+// Tour documents (attach[]) are stored by FileTrait::addFile in the File table (shown on the
+// tour page). Attachment is reserved for the landing-page image, which used to share it.
 
 /**
  * Handle image upload for landing page
@@ -1421,11 +1438,16 @@ public function store(StoreTourRequest $request)
 
         // 
       $id = $tourId;
-        $data = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
         $tour = Tour::findOrfail($id);
-        $dateRange = $this->findDateRange($data);
-        if (!$dateRange) return null;
-        $this->createUpdateTourDates($id, $dateRange);
+        // Only resync tour days when dates are explicitly passed; a plain page view
+        // must never rewrite them (empty dates resolved to "today" and wiped the other days).
+        if ($request->departureDate && $request->retirementDate) {
+            $data = ['departure_date' => $request->departureDate, 'retirement_date' => $request->retirementDate];
+            $dateRange = $this->findDateRange($data);
+            if ($dateRange) {
+                $this->createUpdateTourDates($id, $dateRange);
+            }
+        }
         $tourDates = TourDay::get(['id', 'date', 'tour'])->where('tour', $id)->sortBy('date');
         $arr = array();
         $i = 0;
@@ -1751,7 +1773,7 @@ public function store(StoreTourRequest $request)
         $tour->tourCode = "$tour->name#$dayFrom->month$dayTo->day-$diff-D";
         $data = $this->prepareTourPackages($tour, $request);
         if ($request->pdf_type  === 'hotels'){
-            return $pdf = exportPdfHotels($tour, $data,$request);
+            return $this->exportPdfHotels($tour, $data, $request);
         }
         if ($request->pdf_type === 'hotel'){
             return $this->exportPdfHotels($tour, $data,$request);
@@ -1845,13 +1867,12 @@ public function store(StoreTourRequest $request)
             $request = request();
         }
 
-        // dd($tour);
+        // Return the download; previously the file was built and discarded, then back() was returned
         if ($export == 'csv') {
+            return $this->csvExport($tour, $type ?? 'tour', $request);
+        }
 
-            $this->csvExport($tour, $type , $request);
-        } else $this->prepareExport($tour, $export ,$request);
-
-        return back();
+        return $this->prepareExport($tour, $export, $request);
     }
 
     /**
@@ -1949,7 +1970,8 @@ public function store(StoreTourRequest $request)
             return response($tour);
         }
         if ($request->ajax() && $request->fieldName){
-            $tour_model = Tour::find($tour);
+            $tour_model = Tour::findOrFail($tour);
+            $data = null;
             if ($request->fieldName == 'departure_date' && $tour_model->retirement_date < $request->fieldValue) return response('wrong date');
             if ($request->fieldName == 'retirement_date' && $tour_model->departure_date > $request->fieldValue) return response('wrong date');
             if ($request->fieldName == 'departure_date'){
@@ -1962,12 +1984,13 @@ public function store(StoreTourRequest $request)
             }
 
 
-            if ($request->fieldName == 'status' &&  $request->fieldValue == 39) { //Tour Confirmed
+            // $tour is the route id (string); work on the loaded model
+            if ($request->fieldName == 'status' && $request->fieldValue == 39) { //Tour Confirmed
 
-                $tourDatesAll = TourDay::where('tour', $tour)->whereNull('deleted_at')->orderBy('date')->get();
+                $tourDatesAll = TourDay::where('tour', $tour_model->id)->whereNull('deleted_at')->orderBy('date')->get();
                 $count_result = 0;
                 $count_transfer_item  = 0;
-                $transfers_tour = TourPackage::query()->where('tour_id', $tour)->get();
+                $transfers_tour = TourPackage::query()->where('tour_id', $tour_model->id)->get();
 
                 //is transfer confirmed
                 foreach ($transfers_tour as $item){
@@ -1985,54 +2008,31 @@ public function store(StoreTourRequest $request)
 
                 }
 
-                if (count($tourDatesAll) == $count_result &&  count($transfers_tour) == $count_transfer_item ) {
-                    $tour->status = 39;
-                    $tour->save();
-					
-                    $status = Status::query()->where('id', $tour->status)->first();
-                    $status_name = $status ? $status->name : '';
-                    // Root fix: Use 'tour' parameter name instead of 'id'
-                    $url = route('tour.show', ['tour' => $tour->id]);
-                    $parsingURL = parse_url($url);
-                    $uri = $parsingURL['path'];
-
-                    if ($tour->users) {
-                        foreach ($tour->users as $user) {
-                            $notification = Notification::query()->create(
-                                ['content' => "Tour {$tour->name} changed status to {$status_name}",
-                                     'link' => $uri]);
-                            $user->notifications()->attach($notification);
-                        }
-                    }
-
-                }else{
-
-                    $data = ['status_error' => 'Not all services are confirmed'];
-
-
-                    return response()->json($data);
+                if (!(count($tourDatesAll) == $count_result && count($transfers_tour) == $count_transfer_item)) {
+                    return response()->json(['status_error' => 'Not all services are confirmed']);
                 }
+            }
 
-           }else {
+            $tour_model[$request->fieldName] = $request->fieldValue;
+            $tour_model->save();
+
+            // Keep tour days in step with inline date edits
+            if (in_array($request->fieldName, ['departure_date', 'retirement_date']) && !empty($data)) {
+                $this->createUpdateTourDates($tour_model->id, $data);
+            }
+
+            // Only status changes notify the assigned users
+            if ($request->fieldName == 'status') {
                 $status = Status::query()->where('id', $request->fieldValue)->first();
                 $status_name = $status ? $status->name : '';
-                // Root fix: Use 'tour' parameter name instead of 'id'
-                $url = route('tour.show', ['tour' => $tour->id]);
-                $parsingURL = parse_url($url);
-                $uri = $parsingURL['path'];
+                $uri = parse_url(route('tour.show', ['tour' => $tour_model->id]), PHP_URL_PATH);
 
-                if ($tour->users) {
-                    foreach ($tour->users as $user) {
-                        $notification = Notification::query()->create(
-                            ['content' => "Tour {$tour->name} changed status to {$status_name}",
-                                 'link' => $uri]);
-                        $user->notifications()->attach($notification);
-                    }
+                foreach ($tour_model->users as $user) {
+                    $notification = Notification::query()->create(
+                        ['content' => "Tour {$tour_model->name} changed status to {$status_name}",
+                             'link' => $uri]);
+                    $user->notifications()->attach($notification);
                 }
-
-                $tour_model[$request->fieldName] = $request->fieldValue;
-                $tour_model->save();
-				
             }
 
             return response($tour);
@@ -2095,7 +2095,8 @@ public function store(StoreTourRequest $request)
             $departure_date = Carbon::now();
         }
 		$formattedDate = $departure_date->format('md');
-		$modifiedString = preg_replace('/#\d+$/', '', $request->name);
+		// Strip the old " #mmdd" suffix including its space; otherwise every save adds another space
+		$modifiedString = trim(preg_replace('/\s*#\d+\s*$/', '', $request->name));
 		$tour_name = $modifiedString." #".$formattedDate;
         $tour_model->name = $tour_name;
         $tour_model->overview = $request->overview;
@@ -2119,8 +2120,13 @@ public function store(StoreTourRequest $request)
         $tour_model->itinerary_tl = $request->itinerary_tl;
 
         if ($request->assigned_user) {
-            $a_users = explode(',', $request->assigned_user);
-			$tour_model->tasks()->each(function ($task) use ($a_users) {
+            $a_users = is_array($request->assigned_user)
+                ? $request->assigned_user
+                : explode(',', $request->assigned_user);
+            $a_users = collect($a_users)->map(function ($value) {
+                return (int) trim((string) $value);
+            })->filter()->unique()->values()->all();
+            $tour_model->tasks()->each(function ($task) use ($a_users) {
 				// Sync only the new assigned users for each task
 				$task->assigned_users()->sync($a_users);
 			});
@@ -2472,48 +2478,57 @@ public function destroy($id, $tab = null)
         $oldDates = TourDay::with('packages')->where('tour', $id)->get();
         $oldTransfer = TourPackage::query()->where('id', $oldTour->transfer_id)->first();
 
-        $tour = Tour::query()->where('id', $id)->first();
-        $start_date = $request->departure_date;
-        $dtFromOld = Carbon::parse($oldTour->departure_date);
-        $dtDiff = $dtFromOld->diffInDays(Carbon::parse($oldTour->retirement_date));
-        $end_date = Carbon::parse($start_date)->addDays($dtDiff);
-
-
-        DB::beginTransaction();
-        $newTour = $oldTour->replicate();
-        $newTour->transfer_id = null;
-        $newTour->departure_date = $request->departure_date;
-        $newTour->invoice = null;
-        $newTour->ga = null;
-        $newTour->status = Status::query()->where('type', 'tour')->where('name', 'Pending')->first()->id;
-        $dtFromOld = Carbon::parse($oldTour->departure_date);
-        $dtDiff = $dtFromOld->diffInDays(Carbon::parse($oldTour->retirement_date));
-        $newTour->retirement_date = Carbon::parse($newTour->departure_date)->addDays($dtDiff);
-        $newTour->name = "$oldTour->name (clone)";
-        // $newTour->assigned_user = $request->user()->id;
-        $newTour->push();
-        $newTour->users()->attach($request->user()->id);
-
-
-        $newTour->external_name = $this->generateExternalName($newTour->getAttributes()['country_begin'], $newTour->id);
-        $newTour->save();
-        DB::commit();
-        $data = ['departure_date' => $newTour->departure_date, 'retirement_date' => $newTour->retirement_date];
-        $dateRange = $this->findDateRange($data);
-        $this->createUpdateTourDates($newTour->id, $dateRange);
-        $this->cloneTourDays($oldDates, $newTour->id);
-
-        if(!empty($oldTransfer)){
-            $newTransfer = $oldTransfer->replicate();
-            $newTransfer->description = null;
-            $newTransfer->paid = 0;
-            $newTransfer->save();
-            $newTour->transfer_id = $newTransfer->id;
-            $newTour->save();
+        if (!$request->departure_date || !strtotime($request->departure_date)) {
+            LaravelFlashSessionHelper::setFlashMessage('Please choose a valid departure date for the copy', 'error');
+            return back();
         }
 
+        $dtFromOld = Carbon::parse($oldTour->departure_date);
+        $dtDiff = $dtFromOld->diffInDays(Carbon::parse($oldTour->retirement_date));
 
-        LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} cloned", 'success');
+        DB::beginTransaction();
+        try {
+            $newTour = $oldTour->replicate();
+            $newTour->transfer_id = null;
+            $newTour->departure_date = Carbon::parse($request->departure_date)->toDateString();
+            $newTour->invoice = null;
+            $newTour->ga = null;
+            // unique per tour: a copied value made the insert fail (e.g. tour 123)
+            if (array_key_exists('share_token', $newTour->getAttributes())) {
+                $newTour->share_token = null;
+            }
+            $newTour->status = Status::query()->where('type', 'tour')->where('name', 'Pending')->first()->id;
+            $newTour->retirement_date = Carbon::parse($newTour->departure_date)->addDays($dtDiff)->toDateString();
+            $newTour->name = "$oldTour->name (clone)";
+            $newTour->push();
+            $newTour->users()->attach($request->user()->id);
+
+            $newTour->external_name = $this->generateExternalName($newTour->getAttributes()['country_begin'], $newTour->id);
+            $newTour->save();
+
+            $data = ['departure_date' => $newTour->departure_date, 'retirement_date' => $newTour->retirement_date];
+            $dateRange = $this->findDateRange($data);
+            $this->createUpdateTourDates($newTour->id, $dateRange);
+            $this->cloneTourDays($oldDates, $newTour->id);
+
+            if(!empty($oldTransfer)){
+                $newTransfer = $oldTransfer->replicate();
+                $newTransfer->description = null;
+                $newTransfer->paid = 0;
+                $newTransfer->save();
+                $newTour->transfer_id = $newTransfer->id;
+                $newTour->save();
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Tour clone failed', ['tour_id' => $id, 'error' => $e->getMessage()]);
+            LaravelFlashSessionHelper::setFlashMessage("Could not copy tour {$oldTour->name}: " . $e->getMessage(), 'error');
+            return back();
+        }
+
+        LaravelFlashSessionHelper::setFlashMessage("Tour {$oldTour->name} copied", 'success');
 
         return redirect(route('tour.edit', ['tour' => $newTour->id]));
     }

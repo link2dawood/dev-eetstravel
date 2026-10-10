@@ -2,6 +2,7 @@
 @section('title', 'Restaurants')
 
 @section('content')
+<style>.sample-row td{background:#f8fafc;color:#475569}.cursor-pointer{cursor:pointer}</style>
 <div class="container-xl">
     <div class="page-header d-print-none">
         <div class="row g-2 align-items-center">
@@ -46,13 +47,13 @@
                 <table id="restaurants-table" class="table card-table table-vcenter table-hover">
                     <thead>
                         <tr>
-                            <th style="width:60px" onclick="sortTable(0, 'restaurants-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(1, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-md-table-cell" onclick="sortTable(2, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-lg-table-cell" onclick="sortTable(3, 'restaurants-table')" class="cursor-pointer">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-lg-table-cell" onclick="sortTable(4, 'restaurants-table')" class="cursor-pointer">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-sm-table-cell" onclick="sortTable(5, 'restaurants-table')" class="cursor-pointer">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-xl-table-cell" onclick="sortTable(6, 'restaurants-table')" class="cursor-pointer">{!!trans('main.ContactEmail')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th style="width:60px" class="cursor-pointer" onclick="sortTable(0, 'restaurants-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th class="cursor-pointer" onclick="sortTable(1, 'restaurants-table')">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell cursor-pointer" onclick="sortTable(2, 'restaurants-table')">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell cursor-pointer" onclick="sortTable(3, 'restaurants-table')">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell cursor-pointer" onclick="sortTable(4, 'restaurants-table')">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell cursor-pointer" onclick="sortTable(5, 'restaurants-table')">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-xl-table-cell cursor-pointer" onclick="sortTable(6, 'restaurants-table')">{!!trans('main.ContactEmail')!!} <i class="ti ti-arrows-sort"></i></th>
                             <th class="text-end">{!!trans('main.Actions')!!}</th>
                         </tr>
                     </thead>
@@ -66,11 +67,11 @@
                                     <small class="text-muted d-lg-none">{{ $restaurant->city_name ?? '' }}</small>
                                 </div>
                             </td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $restaurant->address ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->country_name ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->city_name ?? '—' }}</span></td>
-                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $restaurant->work_phone ?? '—' }}</span></td>
-                            <td class="d-none d-xl-table-cell"><span class="text-muted">{{ $restaurant->contact_email ?? '—' }}</span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $restaurant->address ?? '-' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->country_name ?? '-' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->city_name ?? '-' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $restaurant->work_phone ?? '-' }}</span></td>
+                            <td class="d-none d-xl-table-cell"><span class="text-muted">{{ $restaurant->contact_email ?? '-' }}</span></td>
                             <td class="text-end">
                                 <div class="btn-list justify-content-end">
                                     @include('component.action_buttons', ['item' => $restaurant, 'routePrefix' => 'restaurant'])
@@ -78,17 +79,15 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="empty">
-                                    <div class="empty-icon"><i class="ti ti-tools-kitchen-2 icon" style="font-size: 3rem;"></i></div>
-                                    <p class="empty-title">No restaurants found</p>
-                                    <p class="empty-subtitle text-muted">Get started by adding your first restaurant</p>
-                                    <div class="empty-action">
-                                        {!! \App\Helper\PermissionHelper::getCreateButton(route('restaurant.create'), \App\Restaurant::class, 'btn btn-primary') !!}
-                                    </div>
-                                </div>
-                            </td>
+                        <tr class="sample-row">
+                            <td><span class="badge bg-secondary me-1">Sample</span>#S-101</td>
+                            <td><div class="d-flex flex-column"><span class="fw-bold">Sample Bistro</span><small class="text-muted d-lg-none">Rome</small></div></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">Via Roma 10</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">Italy</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">Rome</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">+39 000 000</span></td>
+                            <td class="d-none d-xl-table-cell"><span class="text-muted">Chef Sample</span></td>
+                            <td class="text-end text-muted">Sample only</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -107,6 +106,50 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>$(document).ready(function() { initializeBootstrapTable('restaurants-table'); });</script>
+<script>
+    function filterTable(tableId, searchValue) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const rows = table.querySelectorAll('tbody tr');
+        const filter = (searchValue || '').toLowerCase();
+        rows.forEach(function(row) {
+            row.style.display = row.textContent.toLowerCase().includes(filter) - '' : 'none';
+        });
+    }
+
+    function sortTable(columnIndex, tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' - 'desc' : 'asc';
+        table.dataset.sortColumn = columnIndex;
+        table.dataset.sortDirection = direction;
+        rows.sort(function(a, b) {
+            const left = (a.children[columnIndex]-.innerText || '').trim().toLowerCase();
+            const right = (b.children[columnIndex]-.innerText || '').trim().toLowerCase();
+            return direction === 'asc' - left.localeCompare(right) : right.localeCompare(left);
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+    }
+
+    function exportTableToCSV(tableId, filename) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const rows = Array.from(table.querySelectorAll('tr')).filter(function(row) { return row.style.display !== 'none'; });
+        const csv = rows.map(function(row) {
+            return Array.from(row.querySelectorAll('th,td')).slice(0, -1).map(function(cell) {
+                return '"' + cell.innerText.replace(/"/g, '""').trim() + '"';
+            }).join(',');
+        }).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
+    }
+</script>
 @endpush

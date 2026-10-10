@@ -130,6 +130,11 @@
                 <input type="hidden" id="tab" name="tab" value="{{ $tab }}" >
                 <input type="hidden" name="reference_id" value="{{ $tour->id }}">
                 <input type="hidden" name="calendar_edit" value="{{ $calendar_edit }}">
+                {{-- raw values: the city_*/country_* accessors return display names, which must not be saved back --}}
+                <input type="hidden" name="country_begin" value="{{ old('country_begin', $tour->getRawOriginal('country_begin')) }}">
+                <input type="hidden" name="city_begin" value="{{ old('city_begin', $tour->getRawOriginal('city_begin')) }}">
+                <input type="hidden" name="country_end" value="{{ old('country_end', $tour->getRawOriginal('country_end')) }}">
+                <input type="hidden" name="city_end" value="{{ old('city_end', $tour->getRawOriginal('city_end')) }}">
 
                 {{-- Action Buttons --}}
                 <div class="row mb-3">

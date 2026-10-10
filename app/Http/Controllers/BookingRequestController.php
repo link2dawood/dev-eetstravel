@@ -74,7 +74,7 @@ class BookingRequestController extends Controller
     class="btn btn-success btn-xs"
 ><i class="fa fa-envelope" aria-hidden="true"></i></button>';
 				
-				$button .= '<a class="btn btn-warning btn-sm show-button" href="https://dev.eetstravel.com/offer/'.$offer->id.'/show" data-link="https://dev.eetstravel.com/tour/5"><i class="fa fa-info-circle"></i></a>';
+				$button .= '<a class="btn btn-warning btn-sm show-button" href="'.url('/').'/offer/'.$offer->id.'/show" data-link="'.url('/').'/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>';
 			}
 			return $button;
 		
@@ -239,6 +239,54 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 			return $e;
 		}
 	}
+	/**
+	 * Offers already given for a package, for the DataTables grid on the supplier
+	 * booking page (route offers_data; its old endpoint had been removed).
+	 */
+	public function offersData(Request $request, $id, $supplier = 1){
+		$roomTypes = RoomTypes::query()->orderBy('sort_order', 'ASC')->get();
+		$rows = HotelOffers::where('package_id', $id)->orderByDesc('id')->get()->map(function ($offer) use ($roomTypes, $supplier) {
+			$row = [
+				'id' => $offer->id,
+				'status' => $offer->status,
+				'supplier_delete' => (int) $offer->supplier_delete,
+				'currency' => optional(Currencies::find($offer->currency))->name ?? $offer->currency,
+				'city_tax' => $offer->city_tax,
+				'halfboard' => $offer->halfboard,
+				'foc_after_every_pax' => $offer->foc_after_every_pax,
+				'halfboardMax' => $offer->halfboardMax,
+				'portrage_perperson' => $offer->portrage_perperson,
+				'hotel_file' => $offer->hotel_file,
+				'hotel_note' => $offer->hotel_note,
+				'action' => $this->getShowButton($offer, [], (int) $supplier),
+			];
+			foreach ($roomTypes as $roomType) {
+				$price = optional($offer->offer_room_prices->firstWhere('room_type_id', $roomType->id))->price;
+				$row[$roomType->code] = $price ?? 'N/A';
+			}
+			return $row;
+		})->values();
+
+		return response()->json([
+			'draw' => (int) $request->get('draw', 0),
+			'recordsTotal' => $rows->count(),
+			'recordsFiltered' => $rows->count(),
+			'data' => $rows,
+		]);
+	}
+
+	/**
+	 * Supplier links stored before the fix are "booking/{encrypted id}" (one segment).
+	 */
+	public function generated_link_encrypted($generatedLink){
+		try {
+			$id = \Illuminate\Support\Facades\Crypt::decryptString($generatedLink);
+		} catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+			abort(404);
+		}
+		return $this->generated_link($generatedLink, $id);
+	}
+
 	public function generated_link($genrated_id,$id){
 		
 
@@ -255,8 +303,11 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 	
 
 
-		$emails = $this->getEmails($id);
-		$tms_emails = $this->tmsEmails($id);
+		// Mailbox history is optional: the page must still open when IMAP is unavailable
+		try { $emails = $this->getEmails($id); } catch (\Throwable $e) { $emails = []; }
+		try { $tms_emails = $this->tmsEmails($id); } catch (\Throwable $e) { $tms_emails = []; }
+		if (!is_array($emails)) $emails = [];
+		if (!is_array($tms_emails)) $tms_emails = [];
 
 		$serviceTypes = $this->serviceTypes;
 

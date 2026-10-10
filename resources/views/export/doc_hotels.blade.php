@@ -7292,8 +7292,8 @@
           <b>  {{ $office->office_name }}</b><br>
             ( Associates ) / Budapest operation office:<br>
             <br>
-            TEL: +{{ $office->tel }} , FAX: +{{ $office->fax }} <br>
-            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }}>External name : {{ $tour->external_name }}
+            TEL: {{ ltrim($office->tel ?? '', ' :') }} , FAX: {{ ltrim($office->fax ?? '', ' :') }} <br>
+            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }} | External name : {{ $tour->external_name }}
 	<div class="row">
 		<div class="col-sm-12">
          <!-- foreach start -->
@@ -7319,7 +7319,7 @@
                     <tr>
                         <td class="" width="5%" valign="top" class="text_color">
                             
-                            {{ Carbon\Carbon::parse($package->time_from)->format('H:i')}} - {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}	
+                            {{ Carbon\Carbon::parse($package->time_from)->format('H:i')}}	
 
                                 @if( $package->getStatusName() === 'Requested' || $package->type ==0)
                                     <br>

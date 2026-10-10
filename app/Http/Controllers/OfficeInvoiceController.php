@@ -117,6 +117,32 @@ public function store(Request $request)
     return redirect()->back()->with('success', 'Office invoices saved successfully.');
 }
 
+	/**
+	 * Office invoice PDF (route office_invoices_pdf_export; the action was missing
+	 * although the detail page links to it and the template already existed).
+	 */
+	public function pdfExport($id, $pdf_type = 'short')
+	{
+		$officeinvoice_dataId = DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->first();
+		abort_if(!$officeinvoice_dataId, 404);
+
+		$from_office = Offices::find($officeinvoice_dataId->from_office) ?? new Offices();
+		$to_office = Offices::find($officeinvoice_dataId->to_office) ?? new Offices();
+		$invoice_items = DB::table('office_invoices')->where('officeinvoice_dataId', $id)->get();
+
+		$pdf = \PDF::loadView('export.office_invoices.officeInvoicesPdf', [
+			'officeinvoice_dataId' => $officeinvoice_dataId,
+			'from_office' => $from_office,
+			'to_office' => $to_office,
+			'invoice_items' => $invoice_items,
+			'service_charge' => 0,
+			'isDoc' => false,
+			'download_name' => '',
+		]);
+
+		return $pdf->download('office_invoice_' . preg_replace('/[^A-Za-z0-9_-]/', '_', $officeinvoice_dataId->invoice_no) . '.pdf');
+	}
+
 	// get invoice data in table SQL Innerjoins ---//
 
 	 public function office_invoice_details(Request $request , $id)

@@ -124,7 +124,7 @@ class ClientInvoiceController extends Controller
     {
         $transactions = ClientInvoices::find($tourId);
         $tour = Tour::find($transactions->tour_id);
-    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
+    $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tourName = $tour->name;
         $clients = Client::all();
         $hotels = Hotel::all();
@@ -141,7 +141,7 @@ class ClientInvoiceController extends Controller
         $tour = Tour::all()->first();
         $quotation = Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first();
 
-    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
+    $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $hotels = Hotel::all();
@@ -167,7 +167,7 @@ class ClientInvoiceController extends Controller
 		//dd($transactions->client);
         $tour = Tour::find($transactions->tour_id);
 
-    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
+    $office = Schema::hasTable((new Offices)->getTable()) ? Offices::find($transactions->office_id) : null;
 
         $transactions_cust = ClientInvoices::where("tour_id", $transactions->tour_id)->get();
         $total_amount = 0;
@@ -284,7 +284,7 @@ class ClientInvoiceController extends Controller
         ];
 
         try {
-            if (Schema::hasTable('offices') && Offices::count() > 0) {
+            if (Schema::hasTable((new Offices)->getTable()) && Offices::count() > 0) {
                 $rules['office_id'] = 'required';
             } else {
                 // No offices available (or table missing) — accept office_id as nullable so form can be submitted.
@@ -301,7 +301,7 @@ class ClientInvoiceController extends Controller
     public function edit($id, Request $request)
     {
         $transactions = ClientInvoices::find($id);
-    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
+    $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $quotation = Quotation::find($transactions->quotation_id);
@@ -516,7 +516,7 @@ class ClientInvoiceController extends Controller
 			$calculations =[];
 		}
         
-    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
+    $office = Schema::hasTable((new Offices)->getTable()) ? Offices::find($transactions->office_id) : null;
         $client = Client::find($transactions->client_id);
         $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
         $tourdays = $tour->tour_days;
@@ -583,18 +583,19 @@ class ClientInvoiceController extends Controller
 			$quotation = [];
 			$calculations =[];
 		}
-    $office = Schema::hasTable('offices') ? Offices::find($transactions->office_id) : null;
+    $office = Schema::hasTable((new Offices)->getTable()) ? Offices::find($transactions->office_id) : null;
         $client = Client::find($transactions->client_id);
         $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
         $tourdays = $tour->tour_days;
         $invoice_items = DB::table('invoice_items')->where("invoice_id", $transactions->id)->get();
 
         if ($export == 'csv') {
-
             // $this->csvExport($tour, $type);
-        } else $this->prepareExport($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items, $export);
+            return back();
+        }
 
-        return back();
+        // Return the download; it was previously built, discarded, and the user sent back()
+        return $this->prepareExport($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items, $export);
     }
     public function prepareExport($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items, $export)
     {
@@ -614,7 +615,8 @@ class ClientInvoiceController extends Controller
                 $this->invoice_items = $invoice_items;
             }
             public function view(): \Illuminate\Contracts\View\View {
-                return view('export.accounting.billingExcel', compact('tour', 'office', 'client', 'transactions', 'tourDates', 'quotation', 'calculations', 'tourdays', 'invoice_items'));
+                // properties, not locals: compact() here threw "Undefined variable"
+                return view('export.accounting.billingExcel', get_object_vars($this));
             }
         };
         return Excel::download($exportClass, 'Invoice' . $excelName . '.' . $export);
@@ -647,7 +649,7 @@ class ClientInvoiceController extends Controller
 	public function add_payment(Request $request,$id)
     {
         $transactions = ClientInvoices::find($id);
-    $offices = Schema::hasTable('offices') ? Offices::all() : collect();
+    $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $quotation = Quotation::find($transactions->quotation_id);

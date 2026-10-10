@@ -5,9 +5,19 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Concerns\ResolvesCityIds;
 
 class UpdateTourRequest extends FormRequest
 {
+    use ResolvesCityIds;
+
+    /** Fields the inline editors (touredit-* cells) may change one at a time */
+    private const INLINE_FIELDS = [
+        'name', 'external_name', 'departure_date', 'retirement_date', 'status',
+        'country_begin', 'city_begin', 'country_end', 'city_end',
+        'pax', 'pax_free', 'phone', 'itinerary_tl',
+    ];
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -32,6 +42,16 @@ class UpdateTourRequest extends FormRequest
             'price_for_one' => $this->price_for_one ?? 0,
             'is_quotation' => $this->boolean('is_quotation'),
         ]);
+        // The edit form posts cities as names; validation expects cities.id
+        $this->mergeResolvedCityIds();
+    }
+
+    /**
+     * Inline edits post a single fieldName/fieldValue pair, not the whole form.
+     */
+    private function isInlineEdit()
+    {
+        return $this->ajax() && $this->filled('fieldName');
     }
 
     /**
@@ -42,6 +62,16 @@ class UpdateTourRequest extends FormRequest
     public function rules()
     {
         $tourId = $this->route('id'); // Get tour ID from route
+
+        if ($this->isInlineEdit()) {
+            // Validate only the edited field; date order/range is checked in TourController@update
+            return [
+                'fieldName' => ['required', Rule::in(self::INLINE_FIELDS)],
+                'fieldValue' => $this->input('fieldName') === 'name'
+                    ? ['required', 'string', 'min:3', 'max:191', 'regex:/^[a-zA-Z0-9\s\-#]+$/']
+                    : ['nullable', 'max:191'],
+            ];
+        }
         $maxDate = Carbon::now()->addYears(2)->format('Y-m-d');
         $minDate = Carbon::now()->subDays(30)->format('Y-m-d'); // Allow 30 days in past for updates
 
@@ -151,11 +181,12 @@ class UpdateTourRequest extends FormRequest
         // Additional validation for non-quotation tours
         if (!$this->boolean('is_quotation')) {
             $rules = array_merge($rules, [
-                'country_begin' => 'required|string|max:191',
-                'city_begin' => 'required|integer|exists:cities,id',
-                'country_end' => 'required|string|max:191',
-                'city_end' => 'required|integer|exists:cities,id',
-                'assigned_user' => 'required|integer|exists:users,id',
+                'country_begin' => 'nullable|string|max:191',
+                'city_begin' => 'nullable|integer|exists:cities,id',
+                'country_end' => 'nullable|string|max:191',
+                'city_end' => 'nullable|integer|exists:cities,id',
+                'assigned_user' => 'required',
+                'assigned_user.*' => 'integer|exists:users,id',
                 'transfer_id' => 'nullable|integer|exists:transfers,id'
             ]);
         } else {
@@ -164,7 +195,8 @@ class UpdateTourRequest extends FormRequest
                 'city_begin' => 'nullable|integer',
                 'country_end' => 'nullable|string|max:191',
                 'city_end' => 'nullable|integer',
-                'assigned_user' => 'nullable|integer|exists:users,id',
+                'assigned_user' => 'nullable',
+                'assigned_user.*' => 'integer|exists:users,id',
                 'transfer_id' => 'nullable|integer'
             ]);
         }

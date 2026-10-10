@@ -96,6 +96,10 @@
     .datepicker.datepicker-dropdown table {
         width: auto !important;
     }
+
+    /* Files: the caption bar already has Remove; drop the stray corner "x" on the preview */
+    .tour-files-row .file-preview > .fileinput-remove,
+    .tour-files-row .file-preview > .close { display: none !important; }
 </style>
 @endsection
 @section('content')
@@ -252,6 +256,54 @@
                                         @endforeach
                                     </select>
                                 </div>
+
+                                {{-- Route: required for tours (validation); cities autocomplete via google_places.js --}}
+                                <div class="row g-2">
+                                    <div class="col-md-6 form-group">
+                                        <label for="country_from">{!! trans('main.CountryFrom') !!} *</label>
+                                        {!! Form::select('country_begin', \App\Helper\Choices::getCountriesArray(), old('country_begin'), ['class' => 'form-control', 'id' => 'country_from', 'required' => true]) !!}
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="city_from">{!! trans('main.Cityfrom') !!} *</label>
+                                        <input id="city_from" name="city_begin" type="text" class="form-control" value="{{ old('city_begin') }}" autocomplete="off" required>
+                                        <input type="hidden" name="city_begin_code" id="city_code_from" value="{{ old('city_begin_code') }}">
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="country_to">{!! trans('main.CountryTo') !!} *</label>
+                                        {!! Form::select('country_end', \App\Helper\Choices::getCountriesArray(), old('country_end'), ['class' => 'form-control', 'id' => 'country_to', 'required' => true]) !!}
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="city_to">{!! trans('main.CityTo') !!} *</label>
+                                        <input id="city_to" name="city_end" type="text" class="form-control" value="{{ old('city_end') }}" autocomplete="off" required>
+                                        <input type="hidden" name="city_end_code" id="city_code_to" value="{{ old('city_end_code') }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{!! trans('main.AssignedUser') !!} *</label>
+                                    <div class="card card-sm">
+                                        <div class="card-body" style="max-height:250px; overflow-y:auto;">
+                                            <div class="row g-2">
+                                                @foreach ($users as $user)
+                                                    <div class="col-md-6 col-lg-4">
+                                                        <label class="form-selectgroup-item flex-fill">
+                                                            <input type="checkbox" name="assigned_user[]" value="{{ $user->id }}"
+                                                                   class="form-selectgroup-input" {{ in_array($user->id, (array) old('assigned_user', [])) ? 'checked' : '' }}>
+                                                            <div class="form-selectgroup-label d-flex align-items-center p-2">
+                                                                <div class="me-2">
+                                                                    <span class="form-selectgroup-check"></span>
+                                                                </div>
+                                                                <div class="form-selectgroup-label-content">
+                                                                    <div class="font-weight-medium">{{ $user->name }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 {{--Status pending--}}
                                 {!! Form::hidden('status', 1) !!}
@@ -271,9 +323,10 @@
 								<!-- Child details will be added dynamically using JavaScript -->
 							</div>
 
-							 <button type="button" onclick="addChildFields()" class="btn btn-primary">Add Child</button>
-      
-       
+							<div class="mb-3">
+								<button type="button" onclick="addChildFields()" class="btn btn-primary"><i class="ti ti-plus me-1"></i>Add Child</button>
+							</div>
+
                             <div class="form-group">
                                 <label for="pax_free">{!!trans('main.PaxFree')!!}</label>
                                 {!! Form::text('pax_free', old('pax_free'), ['class' => 'form-control']) !!}
@@ -307,8 +360,12 @@
 
                             </div>
                             <!-- ////////////////// -->
-                            @if(!$isQuotation)
-                            
+                            {!! Form::hidden('is_quotation', 1) !!}
+                        </div>
+                    </div>
+                    @if(!$isQuotation)
+                    {{-- Files and landing image span both columns so the left column isn't left empty --}}
+                    <div class="row mt-2 tour-files-row">
  {{--                           <div class="form-group">
                                 <label for="retirement_date">{!!trans('main.Invoice')!!}</label>
 
@@ -332,16 +389,16 @@
 
                             </div>--}}
                                
-                                <div class="form-group">
+                                <div class="col-md-6 form-group">
                                     <label>{!!trans('main.Files')!!}</label>
-                                    @component('component.file_upload_field')@endcomponent 
+                                    @component('component.file_upload_field')@endcomponent
                                 </div>
-                                <div class="form-group">
-                                        <label for="attach">{!!trans('main.imageforlanding')!!}</label>
+                                <div class="col-md-6 form-group">
+                                        <label for="imgInp">{!!trans('main.imageforlanding')!!}</label>
                                         <div>
                                             <div class="file-preview thumbnail">
                                                 <div class="file-drop-zone-title" style="padding:15px 10px;"><center>Image for landing page</center>
-                                                    <img id="pic" src="" style="width:100%">
+                                                    <img id="pic" src="" alt="" style="width:100%" hidden>
                                                 </div>                                   
                                             </div>
                                         </div>
@@ -352,17 +409,15 @@
                                             </div>
 
                                                 <div class="input-group-btn">
-                                                    <div tabindex="500" class="btn btn-primary btn-file"><i class="glyphicon glyphicon-folder-open"></i>&nbsp;  <span class="hidden-xs">Browse â€¦</span>
+                                                    <div tabindex="500" class="btn btn-primary btn-file"><i class="ti ti-folder-open me-1"></i><span class="hidden-xs">Browse...</span>
                                                         <input type="file" name="files[]" id="imgInp" class="fileToUpload" multiple>
 
                                                     </div>
                                             </div>
                                          </div>
                                     </div>
-                            @endif
-                            {!! Form::hidden('is_quotation', 1) !!}
-                        </div>
                     </div>
+                    @endif
                     <div class="row mt-3">
                         <div class="col-md-12 text-end">
                             <button class="btn btn-success" type="submit">
@@ -389,7 +444,7 @@
                 var reader = new FileReader();
 
                 reader.onload = function(e) {
-                  $('#pic').attr('src', e.target.result);
+                  $('#pic').attr('src', e.target.result).prop('hidden', false);
                   $('#file-caption-name').html(input.files[0].name); 
                 }
 

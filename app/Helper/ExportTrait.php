@@ -94,6 +94,21 @@ trait ExportTrait{
             return Excel::download($export, 'Services_'.$excelName.'.csv', \Maatwebsite\Excel\Excel::CSV);
         }
     }
+    /**
+     * Display-ready data for the itinerary/voucher templates (export.itinerary, export.voucher).
+     */
+    protected function tourDocumentData($tour, array $exclude = [])
+    {
+        $presenter = new \App\Helper\TourDocumentPresenter($tour);
+        return [
+            'summary' => $presenter->summary(),
+            'office' => $presenter->office(),
+            'days' => $presenter->days($exclude),
+            'hotels' => $presenter->hotels($exclude),
+            'vouchers' => $presenter->vouchers(),
+        ];
+    }
+
     public function exportPdfVoucher($tour, $data, $request)
     {
 		$office=Offices::where('status',1)->first();
@@ -105,7 +120,7 @@ trait ExportTrait{
 
 
             foreach ($tour->transfers as $id => $transfer){
-                if ($package->vch == 0) {
+                if ($transfer->vch == 0) {
                     unset($tour->transfers[$id]);
                 }
             }
@@ -137,7 +152,7 @@ trait ExportTrait{
             'listRoomsHotel' => $listRoomsHotel
         ]);
         PDF::setOptions(['isHtml5ParserEnabled' => true]);
-        $pdf = PDF::loadView('export.pdf_voucher');
+        $pdf = PDF::loadView('export.voucher', $this->tourDocumentData($tour) + ['mode' => 'pdf'])->setPaper('a4');
 //        return $pdf->download('tour_voucher_list.pdf');
 
 
@@ -202,6 +217,55 @@ trait ExportTrait{
             }
         }
 
+        // Headings inside table cells also trigger "Cannot add TextRun in TextRun";
+        // render them as bold text instead.
+        foreach (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as $tag) {
+            $nodes = [];
+            foreach ($dom->getElementsByTagName($tag) as $node) {
+                $nodes[] = $node;
+            }
+
+            foreach ($nodes as $node) {
+                $inCell = false;
+                for ($parent = $node->parentNode; $parent; $parent = $parent->parentNode) {
+                    if (in_array($parent->nodeName, ['td', 'th'], true)) {
+                        $inCell = true;
+                        break;
+                    }
+                }
+                if (!$inCell) {
+                    continue;
+                }
+
+                $bold = $dom->createElement('strong');
+                while ($node->firstChild) {
+                    $bold->appendChild($node->firstChild);
+                }
+                $node->parentNode->replaceChild($bold, $node);
+            }
+        }
+
+        // PhpWord loads images from disk: resolve relative paths against public/,
+        // and drop images it could not load (they would abort the whole export).
+        $images = [];
+        foreach ($dom->getElementsByTagName('img') as $node) {
+            $images[] = $node;
+        }
+        foreach ($images as $node) {
+            $src = $node->getAttribute('src');
+            if (preg_match('#^(https?:)?//#i', $src) || strpos($src, 'data:') === 0) {
+                continue;
+            }
+            $path = public_path(ltrim(parse_url($src, PHP_URL_PATH) ?: '', '/'));
+            if ($src !== '' && is_file($path)) {
+                $node->setAttribute('src', $path);
+            } elseif (is_file($src)) {
+                continue;
+            } else {
+                $node->parentNode->removeChild($node);
+            }
+        }
+
         $root = $dom->getElementById('phpword-root');
         if (!$root) {
             return $html;
@@ -262,12 +326,23 @@ trait ExportTrait{
 
 	     private function addHtmlToPhpWordSection($section, $html)
     {
+        // Remember what is already in the section so a failed addHtml can be rolled back
+        $existingElements = $section->getElements();
+
         try {
             \PhpOffice\PhpWord\Shared\Html::addHtml($section, $html);
             return;
         } catch (\BadMethodCallException $e) {
             if (strpos($e->getMessage(), 'Cannot add TextRun in TextRun') === false) {
                 throw $e;
+            }
+
+            // addHtml fails part-way; drop what it already added so the plain-text
+            // fallback below doesn't duplicate the document content
+            foreach ($section->getElements() as $element) {
+                if (!in_array($element, $existingElements, true)) {
+                    $section->removeElement($element);
+                }
             }
 
             $plainText = trim(html_entity_decode(strip_tags((string) $html), ENT_QUOTES, 'UTF-8'));
@@ -315,17 +390,13 @@ public function exportVoucherdoc($tour, $data, $request)
         $listRoomsHotel = TourRoomTypeHotel::where('tour_id', $tour->id )->get();
 
      
-        $htmlContent =  View::make('export.doc_voucher', [
-			'office'=>$office,
-            'tour' => $tour,
-            'tourDays' => $tourDays,
-            'issued' => $issued_time,
-            'last' => $data['last'],
-            'checkedExcludeVch' => $checkedExcludeVch,
-            'param' => 'someVal',
-            'listRoomsHotel' => $listRoomsHotel,
-			'office' => $office,
-        ])->render();
+        // Word ignores CSS page breaks: render each voucher separately and add a real page break between them
+        $docData = $this->tourDocumentData($tour);
+        $voucherHtmlParts = [];
+        foreach ($docData['vouchers'] ?: [null] as $voucher) {
+            $voucherHtmlParts[] = View::make('export.voucher', ['vouchers' => $voucher ? [$voucher] : []] + $docData + ['mode' => 'doc'])->render();
+        }
+        $htmlContent = implode('', $voucherHtmlParts);
 	
 // Sanitize the HTML content
 $config = HTMLPurifier_Config::createDefault();
@@ -338,7 +409,7 @@ $config->set('Cache.SerializerPath', $cacheDir);
 $purifier = new HTMLPurifier($config);
 
 // Sanitize the HTML content
-$sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent));
+// (each voucher part is sanitized below)
     // Create a new PHPWord object
     $phpWord = new PhpWord();
 
@@ -346,7 +417,12 @@ $sanitizedHtml = $this->normalizeHtmlForPhpWord($purifier->purify($htmlContent))
 $section = $phpWord->addSection();
 	 $section->getStyle()->setMarginLeft(1000);
 
-    $this->addHtmlToPhpWordSection($section, $sanitizedHtml);
+    foreach ($voucherHtmlParts as $partIndex => $part) {
+        if ($partIndex > 0) {
+            $section->addPageBreak();
+        }
+        $this->addHtmlToPhpWordSection($section, $this->normalizeHtmlForPhpWord($purifier->purify($part)));
+    }
 ini_set('upload_max_filesize', '62M');
 ini_set('post_max_size', '62M');
     // Save the document to a temporary file
@@ -592,7 +668,7 @@ ini_set('post_max_size', '62M');
             'exclude' => $exclude ];
 
 
-        return view('export.html', compact('setting'));
+        return view('export.itinerary', $this->tourDocumentData($tour, (array) $exclude) + ['mode' => 'html']);
 
     }
     
@@ -687,10 +763,10 @@ ini_set('post_max_size', '62M');
 
        // return view('export.bootstrap', compact('setting'));
 
-        PDF::setOptions(['isHtml5ParserEnabled' => true,'defaultPaperSize' =>'a3']);
+        PDF::setOptions(['isHtml5ParserEnabled' => true, 'defaultPaperSize' => 'a4']);
        // $pdf = PDF::loadView('export.pdf_simple');
 //return View('export.bootstrap');
-        $pdf = PDF::loadView('export.bootstrap');
+        $pdf = PDF::loadView('export.itinerary', $this->tourDocumentData($tour, (array) $exclude) + ['mode' => 'pdf'])->setPaper('a4');
 
         //return $pdf->download('itinerary_list.pdf');
 
@@ -754,24 +830,7 @@ public function exportDocShort($tour, $data, $request)
 
     // Share the variables with the view
 	$isHtml =true;
-    $htmlContent =  View::make('export.doc', [ 'tour' => $tour,
-                        'serviceTypes' => $serviceTypes,
-											  'office'=>$office,
-                        'tourDays' => $tourDays,
-                        'tourTransfers' => $tourTransfers,
-                        'usersResponsible' => $usersResponsible,
-                        'listRoomsHotel' => $listRoomsHotel,
-                        'statusPackage' => $statusPackages,
-                        'exclude' => $exclude,'isHtml' => false ])->render();
- $htmlContent2 = view('export.doc', [ 'tour' => $tour,
-                        'serviceTypes' => $serviceTypes,
-											  'office'=>$office,
-                        'tourDays' => $tourDays,
-                        'tourTransfers' => $tourTransfers,
-                        'usersResponsible' => $usersResponsible,
-                        'listRoomsHotel' => $listRoomsHotel,
-                        'statusPackage' => $statusPackages,
-                        'exclude' => $exclude,'isHtml' => false ])->render();
+    $htmlContent = View::make('export.itinerary', $this->tourDocumentData($tour, (array) $exclude) + ['mode' => 'doc'])->render();
 	
 // Sanitize the HTML content
 $config = HTMLPurifier_Config::createDefault();

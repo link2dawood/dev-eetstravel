@@ -344,6 +344,7 @@
 
 @push('scripts')
 {{-- DataTables scripts loaded via centralized loader (window.loadDataTables) --}}
+<script type="text/javascript" src="{{asset('js/supplier-search.js')}}"></script>
 
 <script type="text/javascript">
     $(document).ready(function() {
@@ -356,8 +357,7 @@
 <script type="text/javascript">
     // Override DataTables initialization to add responsive features
     (function() {
-        const originalGenerateTable = globalSearch.generateTable;
-        
+        if (typeof globalSearch === 'undefined') return;
         globalSearch.generateTable = function(service_select = null) {
             // Store original service for visibility toggles
             if(this.service == "Hotel"){
@@ -456,21 +456,10 @@
             
             $('#search-table_filter').css('display', 'none');
             
-            // Add custom search fields
-            $('#search-table_filter').after('<label>City:<input type="text" id="city-search" style="margin-right: 10px;"></label>');
-            $('#search-table_filter').before('<label>Name:<input type="text" id="hotel-name-search" style="margin-left: 10px;"></label>');
 
-            $('#city-search').on('keyup', function () {
-                table.column(3).search(this.value).draw();
-            });
-
-            $('#hotel-name-search').on('keyup', function () {
-                table.column(0).search(this.value).draw();
-            });
         };
     })();
 </script>
-<script type="text/javascript" src="{{asset('js/supplier-search.js')}}"></script>
 <script type="text/javascript">
     // Initialize the search app
     globalSearchApp.run();

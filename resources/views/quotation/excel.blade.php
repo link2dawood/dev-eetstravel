@@ -6,7 +6,7 @@
 </style>
 
 <div class = "heading" > 
-<table class="table table-bordered" class = "heading"  >
+<table class="table table-bordered heading">
                                                 <thead  class = "heading" >
                                                 <th>Date</th>
                                                 <th  class = "heading" > City</th>

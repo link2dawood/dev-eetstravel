@@ -20,6 +20,10 @@ class CitiesHelper
     }
 
     public static function changeCityNameToID($cityName){
+        // Already an id (e.g. resolved during validation): keep it instead of searching by name
+        if (is_numeric($cityName) && City::whereKey((int) $cityName)->exists()) {
+            return (int) $cityName;
+        }
         return City::where('name', '=', $cityName)->pluck('id')->first();
     }
 

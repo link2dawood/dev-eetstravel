@@ -983,8 +983,8 @@
           <b>  {{ $office->office_name }}</b><br>
             ( Associates ) / Budapest operation office:<br>
             {{ $office->office_address }} <br>
-            TEL: +{{ $office->tel }} , FAX: +{{ $office->fax }} <br>
-            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }}>External name : {{ $tour->external_name }}
+            TEL: {{ ltrim($office->tel ?? '', ' :') }} , FAX: {{ ltrim($office->fax ?? '', ' :') }} <br>
+            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }} | External name : {{ $tour->external_name }}
         </p><hr>
         <table class="preview-table" style="margin-top: 5px; border-style: groove;">
             <tbody>
@@ -995,20 +995,20 @@
 				<tr>
 					<td><b>{!! trans('main.Rooms') !!}:</b></td><td>@php $peopleCount = 0;$roomsCodes = ''; @endphp @foreach ($listRoomsHotel as $item) @php $peopleCount += isset(App\TourPackage::$roomsPeopleCount[$item->room_types->code]) ? App\TourPackage::$roomsPeopleCount[$item->room_types->code] * $item->count : 0;
                                 $roomsCodes == '' ? ($roomsCodes = $item->count . $item->room_types->code) : ($roomsCodes .= '+' . $item->count . $item->room_types->code);
-                            @endphp<span>{{ $item->count }} {{ $item->room_types->name }},</span>@endforeach</td>
-					<td><b>{!! trans(' T/L ') !!}:</b></td>
-                    <td> {{ $tour->itinerary_tl }}</td>
+                            @endphp<span>{{ $item->count }} {{ $item->room_types->name }},</span>@endforeach @if($listRoomsHotel->isEmpty())-@endif</td>
+					<td><b>T/L:</b></td>
+                    <td>{{ $tour->itinerary_tl ?: '-' }}</td>
                     
                 </tr><tr>
-					<td><b>{!! trans('main.DateReturn') !!}:</b></td>
-                    <td>{{ \Carbon\Carbon::parse($tour->retirement_date)->format('m-d-Y') }}</td>
-                    <td><b>{!! trans('PAX') !!}:</b></td>
+					<td><b>{!! trans('main.RetDate') !!}:</b></td>
+                    <td>{{ \Carbon\Carbon::parse($tour->retirement_date)->format('d-m-Y') }}</td>
+                    <td><b>Pax:</b></td>
                     <td>{{ $tour->pax }} {{ $tour->pax_free }}</td>
                 </tr><tr>
                     <td><b>{!! trans('main.Mobile') !!}:</b></td>
-                    <td>{!! $tour->phone !!}  </td>
-					<td><b>{!! trans('main.DateDep') !!}:</b></td>
-                    <td> {{ \Carbon\Carbon::parse($tour->departure_date)->format('m-d-Y') }}</td>
+                    <td>{!! trim(strip_tags((string) $tour->phone)) !== '' ? $tour->phone : '-' !!}</td>
+					<td><b>{!! trans('main.DepDate') !!}:</b></td>
+                    <td> {{ \Carbon\Carbon::parse($tour->departure_date)->format('d-m-Y') }}</td>
                 </tr>
             </tbody>
         </table>
@@ -1024,7 +1024,7 @@
                 </tr>
                 @foreach ($tourDay->packages as $package)
                     @if ( !$package->description_package)
-                        <tr><td class="" width="1%"  valign="top" class="text_color">{{ Carbon\Carbon::parse($package->time_from)->format('H:i') }} -  {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }} @if ($package->getStatusName() === 'Requested' || $package->type == 0)<br>@if ($package->type !== null) {{ ucfirst($serviceTypes[$package->type]) }} @endif <br>{{ $package->getStatusName() }}@endif</td> <td class="" width="1%" align="center" valign="top">
+                        <tr><td class="" width="1%"  valign="top" class="text_color">{{ Carbon\Carbon::parse($package->time_from)->format('H:i') }}@if ((int) $package->type !== 0) - {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}@endif @if ($package->getStatusName() === 'Requested' || $package->type == 0)<br>@if ($package->type !== null) {{ ucfirst($serviceTypes[$package->type]) }} @endif <br>{{ $package->getStatusName() }}@endif</td> <td class="" width="1%" align="center" valign="top">
                                 <img src="img/clear.png" width="11" height="11" style="padding-top:5px;" />
                             </td>
                             <td class="" align="left" valign="top"><span class="text_color"> @if ($loop->iteration == 1 && $countDay == 1) @if (isset($package->service()->service_type)) {{ $package->service()->service_type }} @endif @endif </span>{{str_replace("&", "and", $package->name)}}<br>@if(@$package->service()->service_type == 'Transfer' || @$package->service()->service_type == 'Guide')

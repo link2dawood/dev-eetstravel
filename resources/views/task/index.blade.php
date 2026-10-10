@@ -397,7 +397,167 @@
         .view-toggle-btn:hover:not(.active) {
             background: #f8f9fa;
         }
-    </style>
+    
+/* Task table spacing and darker action icons */
+.task-table-wrapper {
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow-x: auto;
+}
+
+.task-table {
+    min-width: 980px;
+}
+
+.task-table thead th,
+.task-table tbody td {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+
+.task-table thead th:first-child,
+.task-table tbody td:first-child {
+    padding-left: 20px !important;
+}
+
+.task-table thead th:last-child,
+.task-table tbody td:last-child {
+    padding-right: 22px !important;
+}
+
+.action-buttons {
+    gap: 8px !important;
+}
+
+.action-icon.edit {
+    color: #b45309 !important;
+    stroke: #b45309 !important;
+}
+
+.action-icon.delete {
+    color: #b91c1c !important;
+    stroke: #b91c1c !important;
+}
+
+.action-icon.preview,
+.action-icon.view {
+    color: #0369a1 !important;
+    stroke: #0369a1 !important;
+}
+
+/* Filled classic task action buttons */
+.action-buttons {
+    gap: 8px !important;
+    justify-content: center !important;
+}
+
+.action-buttons a {
+    width: 34px;
+    height: 30px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff !important;
+    text-decoration: none;
+}
+
+.action-buttons a.preview-action {
+    background: #f59f00;
+}
+
+.action-buttons a.edit-action {
+    background: #0b74d1;
+}
+
+.action-buttons a.delete-action {
+    background: #df3438;
+}
+
+.action-buttons a:hover {
+    filter: brightness(.92);
+}
+
+.action-buttons svg,
+.action-buttons svg path,
+.action-buttons svg line,
+.action-buttons svg polyline,
+.action-buttons svg circle {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+.task-table thead th:last-child,
+.task-table tbody td:last-child {
+    min-width: 140px !important;
+    width: 140px !important;
+}
+
+/* Remove inner white box/outline from task action icons */
+.monday-action-btn,
+.monday-action-btn:hover,
+.monday-action-btn:focus,
+.monday-action-btn:active,
+.monday-action-btn:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-clip: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.monday-action-btn svg {
+    display: block !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.monday-action-btn svg *,
+.monday-action-btn svg path,
+.monday-action-btn svg line,
+.monday-action-btn svg polyline,
+.monday-action-btn svg circle,
+.monday-action-btn svg rect {
+    background: transparent !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.action-buttons a,
+.action-buttons a:hover,
+.action-buttons a:focus,
+.action-buttons a:active,
+.action-buttons a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-clip: border-box !important;
+}
+
+.action-buttons svg,
+.action-buttons svg * {
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Clean task action font icons */
+.monday-action-btn i,
+.action-buttons a i {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+</style>
 
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -642,24 +802,13 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
-                                            <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
+                                        <a href="{{ route('task.show', ['id' => $task->id]) }}" class="preview-action" title="Preview">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
                                         </a>
-                                        <a href="#" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete">
-                                            <svg class="action-icon delete" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" class="edit-action" title="Edit">
+                                            <i class="ti ti-pencil" aria-hidden="true"></i>
                                         </a>
+                                        <a href="#" class="delete-action" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></a>
                                     </div>
                                 </td>
                             </tr>
@@ -762,22 +911,14 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
-                                            <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
+                                        <a href="{{ route('task.show', ['id' => $task->id]) }}" class="preview-action" title="Preview">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
                                         </a>
-                                        <a href="#" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete">
-                                            <svg class="action-icon delete" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" class="edit-action" title="Edit">
+                                            <i class="ti ti-pencil" aria-hidden="true"></i>
+
                                         </a>
+                                        <a href="#" class="delete-action" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></a>
                                     </div>
                                 </td>
                             </tr>
@@ -881,22 +1022,14 @@
                                 </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
-                                            <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
+                                        <a href="{{ route('task.show', ['id' => $task->id]) }}" class="preview-action" title="Preview">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
                                         </a>
-                                        <a href="#" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete">
-                                            <svg class="action-icon delete" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" class="edit-action" title="Edit">
+                                            <i class="ti ti-pencil" aria-hidden="true"></i>
+
                                         </a>
+                                        <a href="#" class="delete-action" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></a>
                                     </div>
                                 </td>
                             </tr>
@@ -959,22 +1092,14 @@
                                 <td><span class="text-muted">-</span></td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="action-buttons">
-                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" title="Edit">
-                                            <svg class="action-icon edit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
+                                        <a href="{{ route('task.show', ['id' => $task->id]) }}" class="preview-action" title="Preview">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
                                         </a>
-                                        <a href="#" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete">
-                                            <svg class="action-icon delete" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
+                                        <a href="{{ route('task.edit', ['id' => $task->id]) }}" class="edit-action" title="Edit">
+                                            <i class="ti ti-pencil" aria-hidden="true"></i>
+
                                         </a>
+                                        <a href="#" class="delete-action" onclick="event.preventDefault(); confirmDelete(event, '{{ route('task.destroy', $task->id) }}')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></a>
                                     </div>
                                 </td>
                             </tr>

@@ -100,7 +100,7 @@
                                         <!-- SHOW BUTTON -->
                                         <a v-if="show" 
                                            :href="'/tour/' + tour.id"
-                                           class="btn btn-sm btn-warning" 
+                                           class="btn btn-sm btn-warning dash-act dash-act-view" 
                                            title="View">
                                             <i class="ti ti-eye"></i>
                                         </a>
@@ -108,7 +108,7 @@
                                         <!-- EDIT BUTTON -->
                                         <a v-if="edit" 
                                            :href="'/tour/' + tour.id + '/edit'"
-                                           class="btn btn-sm btn-primary" 
+                                           class="btn btn-sm btn-primary dash-act dash-act-edit" 
                                            title="Edit">
                                             <i class="ti ti-edit"></i>
                                         </a>
@@ -116,7 +116,7 @@
                                         <!-- DELETE BUTTON -->
                                         <button v-if="destroy"
                                                 type="button"
-                                                class="btn btn-sm btn-danger delete-tour-btn"
+                                                class="btn btn-sm btn-danger delete-tour-btn dash-act dash-act-delete"
                                                 :data-tour-id="tour.id"
                                                 :data-tour-name="tour.name"
                                                 title="Delete"

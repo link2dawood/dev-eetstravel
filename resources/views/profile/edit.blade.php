@@ -1,4 +1,4 @@
-@extends('scaffold-interface.layouts.tabler-app')
+﻿@extends('scaffold-interface.layouts.tabler-app')
 @section('title','Edit Profile')
 @section('content')
 	@include('layouts.title',
@@ -25,6 +25,77 @@
 }
 .select2-container--default .select2-search--inline .select2-search__field {
 	position: absolute;
+}
+   
+
+   
+.user-management-table .trash-icon-action,
+.profile-management-table .trash-icon-action {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.user-management-table .trash-icon-action::before,
+.profile-management-table .trash-icon-action::before {
+    content: "";
+    width: 15px;
+    height: 17px;
+    border: 2px solid #d63939;
+    border-top: 0;
+    border-radius: 0 0 3px 3px;
+    box-sizing: border-box;
+}
+
+.user-management-table .trash-icon-action::after,
+.profile-management-table .trash-icon-action::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 8px;
+    width: 18px;
+    height: 2px;
+    background: #d63939;
+    border-radius: 2px;
+    box-shadow: 5px -4px 0 -3px #d63939, 7px -4px 0 -3px #d63939;
+}
+
+.user-management-table .trash-icon-action:hover::before,
+.profile-management-table .trash-icon-action:hover::before {
+    border-color: #b02a2a;
+}
+
+.user-management-table .trash-icon-action:hover::after,
+.profile-management-table .trash-icon-action:hover::after {
+    background: #b02a2a;
+}
+
+.user-management-table .trash-icon-action span,
+.profile-management-table .trash-icon-action span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.user-management-table td:last-child,
+.user-management-table th:last-child,
+.profile-management-table td:last-child,
+.profile-management-table th:last-child {
+    width: 130px;
+    text-align: center;
+    vertical-align: middle;
 }
    </style>
 <section class="content">
@@ -79,7 +150,7 @@
                            value="{{ old('email_login', $user->email_login) }}"
                            class="form-control"
                            placeholder="user@example.com">
-                    <small class="form-text text-muted">This login is used to connect the user’s SnappyMail inbox.</small>
+                    <small class="form-text text-muted">This login is used to connect the user's SnappyMail inbox.</small>
                 </div>
 
                 <div class="form-group">
@@ -150,7 +221,7 @@
 							<button class='btn btn-primary'>{{trans('main.Addrole')}}</button>
 						</div>
 					</form>
-					<table class='table'>
+					<table class='table profile-management-table'>
 						<thead>
 							<th>{{trans('main.Role')}}</th>
 							<th>{{trans('main.Action')}}</th>
@@ -164,9 +235,7 @@
 										{{ csrf_field() }}
 										<input type="text" hidden name="user_id" value="{{$user->id}}">
 										<input type="text" hidden name="role" value="{{$role}}">
-										<button type="submit" class="btn btn-danger btn-sm">
-											<i class="ti ti-trash icon"></i>
-										</button>
+										<button type="submit" class="trash-icon-action" title="Delete role" aria-label="Delete role"><span>Delete</span></button>
 									</form>
 								</td>
 							</tr>
@@ -197,7 +266,7 @@
 							<button class='btn btn-primary'>{{trans('main.Addpermission')}}</button>
 						</div>
 					</form>
-					<table class='table'>
+					<table class='table profile-management-table'>
 						<thead>
 							<th>{{trans('main.Permission')}}</th>
 							<th>{{trans('main.Action')}}</th>
@@ -206,7 +275,7 @@
 							@foreach($userPermissions as $key => $permission)
 							<tr>
 								<td>{{$permission}}</td>
-								<td><a href="{{url('users/removePermission')}}/{{$user->id}}/{{$key}}" class="btn btn-danger btn-sm"><i class="ti ti-trash icon"></i></a></td>
+								<td><a href="{{url('users/removePermission')}}/{{$user->id}}/{{$key}}" class="trash-icon-action" title="Delete permission" aria-label="Delete permission"><span>Delete</span></a></td>
 							</tr>
 							@endforeach
 						</tbody>
@@ -231,3 +300,5 @@
 	});
 </script>
 @endsection
+
+

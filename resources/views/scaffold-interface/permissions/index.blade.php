@@ -40,7 +40,15 @@
                                     <form action="{{ route('permissions.destroy', $permission->id) }}" method="POST" style="display: inline-block;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-icon btn-ghost-danger js-confirm-delete-form" title="Delete" data-confirm-message="Are you sure you want to delete this permission?">
+                                        @php
+                                            $permissionRoles = $permission->roles->pluck('name')->implode(', ');
+                                        @endphp
+                                        {{-- force=1: the user has seen (and confirmed) which roles lose this permission --}}
+                                        <input type="hidden" name="force" value="1">
+                                        <button type="submit" class="btn btn-icon btn-ghost-danger js-confirm-delete-form" title="Delete"
+                                                data-confirm-message="{{ $permissionRoles !== ''
+                                                    ? 'Permission "' . $permission->name . '" is assigned to: ' . $permissionRoles . '. Deleting it will remove this access from those roles. Delete anyway?'
+                                                    : 'Are you sure you want to delete this permission?' }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M4 7l16 0" />

@@ -28,7 +28,7 @@
                             <ul class="del-container">
                                 <li>
                                     <div style="display: inline-block;margin-right: 20px">
-                                        <a href="{{$attach->attach->url()}}" target="_blank"><span class="glyphicon glyphicon-paperclip"></span>{{$attach->attach_file_name}}</a>
+                                        <a href="{{ $attach->url }}" target="_blank"><span class="glyphicon glyphicon-paperclip"></span>{{$attach->attach_file_name}}</a>
                                     </div>
                                 </li>
 
@@ -43,13 +43,13 @@
                     </td>
                     <td>
                         <!-- INFO BUTTON-->
-                        <a href='/comment/{!!$comment->id!!}' class='btn btn-warning btn-sm'><i class="fa fa-info-circle" aria-hidden="true"></i></a>
+                        <a href='/comment/{!!$comment->id!!}' class='btn btn-warning btn-sm dash-act dash-act-view' title='View'><i class="ti ti-eye" aria-hidden="true"></i></a>
                         <!-- EDIT BUTTON-->
-                        <a href='/comment/{!!$comment->id!!}/edit' class='btn btn-primary btn-sm'
-                           data-link='/comment/{!!$comment->id!!}/edit'><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+                        <a href='/comment/{!!$comment->id!!}/edit' class='btn btn-primary btn-sm dash-act dash-act-edit' title='Edit'
+                           data-link='/comment/{!!$comment->id!!}/edit'><i class="ti ti-pencil" aria-hidden="true"></i></a>
                         <!-- DELETE BUTTON-->
-                        <a data-toggle="modal" data-target="#myModal" class='btn btn-danger btn-sm delete'
-                           data-link="/comment/{!!$comment->id!!}/delete_msg"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+                        <a data-toggle="modal" data-target="#myModal" class='btn btn-danger btn-sm delete dash-act dash-act-delete' title='Delete'
+                           data-link="/comment/{!!$comment->id!!}/delete_msg"><i class="ti ti-trash" aria-hidden="true"></i></a>
                     </td>
                 </tr>
             @endforeach

@@ -149,12 +149,12 @@
                                         <div class="col-12">
                                             <div class="form-group">
                                                 <label class="form-label required">{!! trans('main.AssignedUser') !!}</label>
-                                                <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
+                                                <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2 task-assignment-list">
                                                     @foreach ($users as $user)
                                                     <label class="form-selectgroup-item flex-fill">
                                                         <input 
                                                             type="checkbox" 
-                                                            name="assigned_user" 
+                                                            name="assigned_user[]" 
                                                             id="user_{{ $user->id }}" 
                                                             value="{{ $user->id }}"
                                                             class="form-selectgroup-input user_checkboxes"
@@ -305,4 +305,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+@endpush
+@push('styles')
+<style>
+    .task-assignment-list,
+    .task-assignment-list .form-selectgroup-item,
+    .task-assignment-list .form-selectgroup-label {
+        box-sizing: border-box;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .task-assignment-list .form-selectgroup-item {
+        display: block;
+        margin: 0;
+    }
+
+    .task-assignment-list .form-selectgroup-label {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .task-assignment-list .form-selectgroup-label-content {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .task-assignment-list .form-selectgroup-label-content > div:last-child {
+        min-width: 0;
+    }
+
+    .task-assignment-list .form-selectgroup-label-content > div:last-child > div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
 @endpush

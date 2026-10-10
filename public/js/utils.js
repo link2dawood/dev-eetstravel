@@ -152,7 +152,8 @@ $(document).ready(function() {
                     $(this).css({"right": "-100%"});
                 }
 
-                $(this).css({"opacity":0});
+                // hide fully so the off-screen panel doesn't widen the page
+                $(this).css({"opacity":0}).hide();
             });
         }
     );
@@ -189,7 +190,8 @@ $(document).ready(function() {
                     $(this).css({"right": "-100%"});
                 }
 
-                $(this).css({"opacity":0});
+                // hide fully so the off-screen panel doesn't widen the page
+                $(this).css({"opacity":0}).hide();
             });
         }
     );
@@ -205,7 +207,8 @@ $(document).ready(function() {
         }, function() {
             $('#legend_help_quotation').stop().fadeTo( "fast", 0,function() {
                 $(this).css({"left": "-200%"});
-                $(this).css({"opacity":0});
+                // hide fully so the off-screen panel doesn't widen the page
+                $(this).css({"opacity":0}).hide();
             });
         }
     );
@@ -220,7 +223,8 @@ $(document).ready(function() {
         }, function() {
             $('#legend_help_guest_list').stop().fadeTo( "fast", 0,function() {
                 $(this).css({"left": "-200%"});
-                $(this).css({"opacity":0});
+                // hide fully so the off-screen panel doesn't widen the page
+                $(this).css({"opacity":0}).hide();
             });
         }
     );

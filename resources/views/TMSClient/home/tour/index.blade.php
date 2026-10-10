@@ -274,7 +274,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Redirect to a new page
-                        window.location.href = "https://dev.eetstravel.com/TMS-Client/quotation_requests";
+                        window.location.href = "{{ url('TMS-Client/quotation_requests') }}";
                     }
                 });
             },

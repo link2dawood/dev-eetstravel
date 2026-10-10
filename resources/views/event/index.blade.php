@@ -1,7 +1,8 @@
-@extends('scaffold-interface.layouts.tabler-app')
+﻿@extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Events')
 
 @section('content')
+<style>.sample-row td{background:#f8fafc;color:#475569}.cursor-pointer{cursor:pointer}</style>
 <div class="container-xl">
     <div class="page-header d-print-none">
         <div class="row g-2 align-items-center">
@@ -46,13 +47,13 @@
                 <table id="events-table" class="table card-table table-vcenter table-hover">
                     <thead>
                         <tr>
-                            <th style="width:60px" onclick="sortTable(0, 'events-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(1, 'events-table')" class="cursor-pointer">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-md-table-cell" onclick="sortTable(2, 'events-table')" class="cursor-pointer">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-lg-table-cell" onclick="sortTable(3, 'events-table')" class="cursor-pointer">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-lg-table-cell" onclick="sortTable(4, 'events-table')" class="cursor-pointer">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-sm-table-cell" onclick="sortTable(5, 'events-table')" class="cursor-pointer">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-xl-table-cell" onclick="sortTable(6, 'events-table')" class="cursor-pointer">{!!trans('main.ContactEmail')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th style="width:60px" class="cursor-pointer" onclick="sortTable(0, 'events-table')">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th class="cursor-pointer" onclick="sortTable(1, 'events-table')">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell cursor-pointer" onclick="sortTable(2, 'events-table')">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell cursor-pointer" onclick="sortTable(3, 'events-table')">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-lg-table-cell cursor-pointer" onclick="sortTable(4, 'events-table')">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell cursor-pointer" onclick="sortTable(5, 'events-table')">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-xl-table-cell cursor-pointer" onclick="sortTable(6, 'events-table')">{!!trans('main.ContactEmail')!!} <i class="ti ti-arrows-sort"></i></th>
                             <th class="text-end">{!!trans('main.Actions')!!}</th>
                         </tr>
                     </thead>
@@ -66,11 +67,11 @@
                                     <small class="text-muted d-lg-none">{{ $event->city_name ?? '' }}</small>
                                 </div>
                             </td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $event->address ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $event->country_name ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $event->city_name ?? '—' }}</span></td>
-                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $event->work_phone ?? '—' }}</span></td>
-                            <td class="d-none d-xl-table-cell"><span class="text-muted">{{ $event->contact_email ?? '—' }}</span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $event->address ?? '-' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $event->country_name ?? '-' }}</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $event->city_name ?? '-' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $event->work_phone ?? '-' }}</span></td>
+                            <td class="d-none d-xl-table-cell"><span class="text-muted">{{ $event->contact_email ?? '-' }}</span></td>
                             <td class="text-end">
                                 <div class="btn-list justify-content-end">
                                     @include('component.action_buttons', ['item' => $event, 'routePrefix' => 'event'])
@@ -78,17 +79,15 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="empty">
-                                    <div class="empty-icon"><i class="ti ti-calendar-event icon" style="font-size: 3rem;"></i></div>
-                                    <p class="empty-title">No events found</p>
-                                    <p class="empty-subtitle text-muted">Get started by adding your first event</p>
-                                    <div class="empty-action">
-                                        {!! \App\Helper\PermissionHelper::getCreateButton(route('event.create'), \App\Event::class, 'btn btn-primary') !!}
-                                    </div>
-                                </div>
-                            </td>
+                        <tr class="sample-row">
+                            <td><span class="badge bg-secondary me-1">Sample</span>#S-101</td>
+                            <td><div class="d-flex flex-column"><span class="fw-bold">Sample Conference</span><small class="text-muted d-lg-none">Rome</small></div></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">Via Roma 10</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">Italy</span></td>
+                            <td class="d-none d-lg-table-cell"><span class="text-muted">Rome</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">+39 000 000</span></td>
+                            <td class="d-none d-xl-table-cell"><span class="text-muted">events@example.com</span></td>
+                            <td class="text-end text-muted">Sample only</td>
                         </tr>
                         @endforelse
                     </tbody>

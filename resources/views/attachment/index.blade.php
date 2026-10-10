@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Images')
 @section('content')
 @include('layouts.title',
 ['title' => 'Images', 'sub_title' => 'Images List',
@@ -13,9 +13,10 @@
                 @if (Session::has('message'))
                 <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
                 @endif
-                <form action="upload.php" method="post" enctype="multipart/form-data">
+                <form action="{{ route('images.savefile') }}" method="post" enctype="multipart/form-data">
+                    @csrf
                     
-                    @foreach($attachmenttypes as $attachmenttype)
+                    @forelse($attachmenttypes as $attachmenttype)
                     <div class="col-md-3">
                         <div class="thumbnail text-center">
                            
@@ -31,12 +32,16 @@
 --}}                                
                                 <div class="upload-btn-wrapper">
                                     {{--<button class="btn btn-primary">Change</button>--}}
-                                    <input name="fileToUpload[]" data-name="{{ $attachmenttype->model }}" data-id="{{ $attachmenttype->id }}" data-model="Attachmenttype" class="fileToUpload"type="file" name="myfile" />
+                                    <input name="files[]" data-name="{{ $attachmenttype->model }}" data-id="{{ $attachmenttype->id }}" data-model="Attachmenttype" class="fileToUpload" type="file" />
                                 </div>                                
                             </div>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="col-12">
+                        <div class="alert alert-info">No image categories found yet. Sample: Landing Page Image, Announcement Image, Supplier Gallery.</div>
+                    </div>
+                    @endforelse
 
                 </form>
                 <span id="url" hidden data-url="{{ route('images.savefile') }}"></span>

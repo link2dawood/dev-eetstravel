@@ -1,233 +1,58 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Cancellation Policies')
 @section('content')
-    @include('layouts.title',
-           ['title' => 'Cancellation Policies', 'sub_title' => 'Policies List',
-           'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Cancellation Policies', 'icon' => null, 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="cancellation-search" class="form-control" placeholder="Search cancellation policies..." onkeyup="filterTable('cancellation-policies-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('cancellation-policies-table', 'cancellation_policies_export.csv')">
-                                <i class="ti ti-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="cancellation-policies-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%; min-width: 1200px;'>
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0, 'cancellation-policies-table')">ID <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(1, 'cancellation-policies-table')">{!!trans('Policy')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(2, 'cancellation-policies-table')">{!!trans('Hotel Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(3, 'cancellation-policies-table')">{!!trans('City')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(4, 'cancellation-policies-table')">{!!trans('Status')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(5, 'cancellation-policies-table')">{!!trans('Date of stay')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(6, 'cancellation-policies-table')">SIN <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(7, 'cancellation-policies-table')">DOU <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(8, 'cancellation-policies-table')">TRI <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(9, 'cancellation-policies-table')">{!!trans('Offer Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(10, 'cancellation-policies-table')">{!!trans('Option Date')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(11, 'cancellation-policies-table')">{!!trans('Tour Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                                <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($processedOffers as $offer)
-                            <tr>
-                                <td>{{ $offer->id }}</td>
-                                <td data-delete-label>{{ $offer->cancel_policy }}</td>
-                                <td>{{ $offer->hotel_name }}</td>
-                                <td>{{ $offer->city_name }}</td>
-                                <td>{{ $offer->status }}</td>
-                                <td>{{ $offer->stay_date }}</td>
-                                <td>{{ $offer->SIN }}</td>
-                                <td>{{ $offer->DOU }}</td>
-                                <td>{{ $offer->TRI }}</td>
-                                <td>{{ $offer->offer_date ? \Carbon\Carbon::parse($offer->offer_date)->format('Y-m-d') : '' }}</td>
-                                <td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '' }}</td>
-                                <td>{{ $offer->tour_name }}</td>
-                                <td onclick="event.stopPropagation();">
-                                    @if(!empty($offer->tour))
-                                        @include('component.action_buttons', [
-                                            'item' => $offer->tour,
-                                            'routePrefix' => 'tour'
-                                        ])
-                                    @else
-                                        <span class="text-muted small">No tour linked</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="13" class="text-center">No cancellation policies found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Clone Modal -->
-        <div class="modal fade" id="tour-clone-modal" tabindex="-1" role='dialog' aria-labelledby='tour-clone-label'>
-            <div class="modal-dialog" role='document'>
-                <div class="modal-content">
-                    <div class="box box-body" style="border-top: none">
-                        <div class="alert alert-info block-error" style="text-align: center; display: none;"></div>
-                        <form id="tour-clone-modal-form">
-                            <div class="form-group">
-                                <label for="tour_id">{{ trans('main.Tour') }}</label>
-                                <input name="offer_date" id="offer_date" type="hidden" value="">
-                                <input name="option_date" id="option_date" type="hidden" value="">
-                                <select name="tour_id" id="tour_id" class="form-control tour_dropdown" required>
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}">{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group" id="services" style="display:none"></div>
-                            <div class="form-group" id="service_div"></div>
-                            <button type="submit" class="btn btn-success pre-loader-func" id="clone_tour_send">{!!trans('main.Submit')!!}</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Templates Modal -->
-    <div class="modal fade" id="TemplatesModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="padding-left: 17px;padding-right: 17px;">
-        <div class="modal-dialog modal-lg" style="width: 90%;">
-            <form class="modal-content" id="templateSendForm" enctype="multipart/form-data" action="/templates/api/send" method="POST">
-                <input name="_token" type="hidden" value="{{ csrf_token() }}">
-                <input name="id" id="id" type="hidden" value="">
-                <input name="package_id" id="package_id" type="hidden" value="">
-                <input name="tour_id" id="tour_id" type="hidden" value="">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">{!! trans('main.SendTemplate') !!}</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="form-group">
-                            <div class="input-group">
-                                <input name="email" id="email" class="form-control" placeholder="E-mail:" required="" value="">
-                                <span class="input-group-addon"> {!! trans('main.Template') !!}</span>
-                                <span class="input-group-addon" style="width:0px; padding-left:0px; padding-right:0px; border:none;"></span>
-                                <select id="template_selector" name="template_selector" class="form-control"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <input name="subject" id="subject" class="form-control" placeholder="Subject:" value="" style="pointer-events: none;">
-                        </div>
-                        <div class="form-group">
-                            <textarea name="templatesContent" id="templatesContent" placeholder="Non required Field" class="form-control" style="height: 400px; visibility: hidden; display: none;"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <div class="btn btn-default btn-file">
-                                <i class="ti ti-paperclip"></i> {!! trans('main.Attachment') !!}
-                                <input type="file" name="attachment[]" multiple="" name="file" id="file">
-                            </div>
-                            <div id="file_name"></div>
-                            <script>
-                                document.getElementById('file').onchange = function() {
-                                    $('#file_name').html('Selected files: <br/>');
-                                    $.each(this.files, function(i, file) {
-                                        $('#file_name').append(file.name + ' <br/>');
-                                    });
-                                };
-                            </script>
-                            <p class="help-block">Max. 32MB</p>
-                        </div>
-                    </div>
-                    <div class="box-footer">
-                        <div class="pull-right">
-                            <button id="send" onclick="sendTemplate();" class="btn btn-primary"><i class="ti ti-file-code"></i> {!! trans('main.Send') !!}</button>
-                        </div>
-                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="ti ti-x"></i> {!! trans('main.Discard') !!}</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    @include('component.delete_modal_simple')
+@include('layouts.title', ['title' => 'Cancellation Policies', 'sub_title' => 'Policies List', 'breadcrumbs' => [['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')], ['title' => 'Cancellation Policies', 'icon' => null, 'route' => null]]])
+<section class="content offer-page"><div class="box box-primary"><div class="box-body">
+    <div class="row align-items-center mb-3 toolbar-row"><div class="col-md-6"><input type="text" class="form-control" placeholder="Search cancellation policies..." oninput="offerFilterTable('cancellation-policies-table', this.value)"></div><div class="col-md-6 text-md-end"><button type="button" class="btn btn-success btn-sm" onclick="offerExportTable('cancellation-policies-table', 'cancellation_policies_export.csv')"><i class="ti ti-download"></i> Export CSV</button></div></div>
+    @php $hasRows = count($processedOffers) > 0; $rows = $hasRows ? collect($processedOffers) : collect([(object)['id'=>'S-301','cancel_policy'=>'14 days before arrival: 25% can be cancelled free of charge.','hotel_name'=>'Sample Lake Hotel','city_name'=>'Como','status'=>'Offered with Option','stay_date'=>now()->addDays(30)->format('Y-m-d'),'SIN'=>'120','DOU'=>'180','TRI'=>'240','offer_date'=>now(),'option_date'=>now()->addDays(5),'tour_name'=>'Sample Italy Tour','tour'=>null]]); @endphp
+    <div class="table-responsive"><table id="cancellation-policies-table" class="table table-striped table-bordered table-hover"><thead><tr><th onclick="offerSortTable('cancellation-policies-table',0)">ID</th><th>Policy</th><th>Hotel Name</th><th>City</th><th>Status</th><th>Date of stay</th><th>SIN</th><th>DOU</th><th>TRI</th><th>Offer Date</th><th>Option Date</th><th>Tour Name</th><th>Actions</th></tr></thead><tbody>@foreach($rows as $offer)<tr class="{{ $hasRows ? '' : 'sample-row' }}"><td>{{ $offer->id }} @unless($hasRows)<span class="badge bg-secondary sample-badge">Sample</span>@endunless</td><td data-delete-label><div class="policy-text">{{ $offer->cancel_policy }}</div></td><td>{{ $offer->hotel_name }}</td><td>{{ $offer->city_name }}</td><td>{{ $offer->status }}</td><td>{{ $offer->stay_date }}</td><td>{{ $offer->SIN }}</td><td>{{ $offer->DOU }}</td><td>{{ $offer->TRI }}</td><td>{{ $offer->offer_date ? \Carbon\Carbon::parse($offer->offer_date)->format('Y-m-d') : '—' }}</td><td>{{ $offer->option_date ? \Carbon\Carbon::parse($offer->option_date)->format('Y-m-d') : '—' }}</td><td>{{ $offer->tour_name }}</td><td class="actions-cell">@if($hasRows && !empty($offer->tour)) @include('component.action_buttons', ['item' => $offer->tour, 'routePrefix' => 'tour']) @else <span class="text-muted small">{{ $hasRows ? 'No tour linked' : 'Sample only' }}</span> @endif</td></tr>@endforeach</tbody></table></div>
+</div></div></section>
+@include('component.delete_modal_simple')
 @endsection
-
+@push('styles')
+<style>
+    .offer-page .toolbar-row { gap: .75rem; }
+    .offer-page .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .offer-page table { background: #fff; min-width: 980px; }
+    .offer-page th { white-space: nowrap; cursor: pointer; }
+    .offer-page td { vertical-align: middle; }
+    .offer-page .policy-text { max-width: 260px; white-space: normal; line-height: 1.35; }
+    .offer-page .actions-cell .btn-list { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: .35rem; }
+    .offer-page .sample-row { background: #f8fafc; }
+    .offer-page .sample-badge { font-size: .7rem; }
+</style>
+@endpush
 @push('scripts')
-<script src="{{ asset('js/loadtemplate.js') }}"></script>
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-    $(document).ready(function () {
-        // Initialize Bootstrap table
-        initializeBootstrapTable('cancellation-policies-table');
-
-        $('#tour-clone-modal-form').submit(function (e) {
-            var userConfirmed = confirm('Are you sure? Do you really want to submit the form?');
-            if (!userConfirmed) {
-                e.preventDefault();
-                location.reload();
-            }
+(function () {
+    function getCellText(row, index) { const cell = row.children[index]; return cell ? cell.innerText.trim().toLowerCase() : ''; }
+    window.offerFilterTable = function(tableId, value) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const query = (value || '').toLowerCase().trim();
+        table.querySelectorAll('tbody tr').forEach(function(row) { row.style.display = !query || row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+    };
+    window.offerSortTable = function(tableId, columnIndex) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+        table.dataset.sortColumn = columnIndex; table.dataset.sortDirection = direction;
+        rows.sort(function(a, b) {
+            const left = getCellText(a, columnIndex); const right = getCellText(b, columnIndex);
+            const leftNumber = parseFloat(left.replace(/[^0-9.-]/g, '')); const rightNumber = parseFloat(right.replace(/[^0-9.-]/g, ''));
+            if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber)) return direction === 'asc' ? leftNumber - rightNumber : rightNumber - leftNumber;
+            return direction === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
         });
-    });
-
-    function dropdown_ajax(tour_id, offer_date, option_date) {
-        $.ajaxSetup({
-            headers: { 'X-CSRF-TOKEN': $('meta[name=csrf-token]').attr('content') }
-        });
-        $.ajax({
-            type: "POST",
-            url: `/offer/${tour_id}/days_dropdown`,
-            data: {
-                offer_date: offer_date,
-                option_date: option_date,
-            },
-            success: function(result) {
-                if (result[0] === "") {
-                    $("#service_div").show();
-                    $("#services").hide();
-                    $("#service_div").html(`<h3> Please Add Service in the tour </h3>`);
-                } else {
-                    $("#service_div").hide();
-                    $("#services").show();
-                    $("#services").html(result);
-                }
-            },
-            error: function(result) {
-                console.log(result);
-            }
-        });
-    }
-
-    // Attach event handlers directly - no setTimeout delay needed
-    $('.tour_dropdown').on('change', function(){
-        let offer_date = $('#offer_date').val();
-        let option_date = $('#option_date').val();
-        dropdown_ajax($(this).val(), offer_date, option_date);
-    });
-
-    $('.change-tour-button').show();
-    $('.change-tour-button').on('click', function(){
-        let id = $(this).data('id');
-        let tour_id = $(this).data('tour');
-        let offer_date = $(this).data('offer_date');
-        let option_date = $(this).data('option_date');
-
-        $('#offer_date').val(offer_date);
-        $('#option_date').val(option_date);
-
-        dropdown_ajax(tour_id, offer_date, option_date);
-        $('#tour_id').val(tour_id).trigger('change');
-
-        $('#tour-clone-modal-form').attr('action', '/offer/' + id + '/assign_to_tour');
-    });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+    };
+    window.offerExportTable = function(tableId, filename) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const rows = Array.from(table.querySelectorAll('tr')).filter(function(row) { return row.style.display !== 'none'; });
+        const csv = rows.map(function(row) { return Array.from(row.querySelectorAll('th,td')).map(function(cell) { return '"' + cell.innerText.replace(/"/g, '""').trim() + '"'; }).join(','); }).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename || 'offers_export.csv';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
+    };
+})();
 </script>
 @endpush

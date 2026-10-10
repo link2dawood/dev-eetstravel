@@ -17,7 +17,7 @@
     <div class="box box-primary">
 		<a class="btn btn-default"
                                                
-                                               href="{{route('office_invoices_pdf_export', ['id' =>$officeinvoice_dataId, 'type' => 'short'])}}" style = "float:right;">Invoice PDF</a>
+                                               href="{{route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'pdf_type' => 'short'])}}" style = "float:right;">Invoice PDF</a>
         <div class="box-body">
             <div>
              

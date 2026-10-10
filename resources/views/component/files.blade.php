@@ -15,7 +15,7 @@
                             {{-- </form> --}}
                     </div>
                     <div class="panel-body">
-                        <a href="{{'/public'.$image->attach->url()}}"><img src="{{'/public'.$image->attach->url()}}" style="height: 250px; max-width: 325px"></a>
+                        <a href="{{ $image->url }}"><img src="{{ $image->url }}" style="height: 250px; max-width: 325px"></a>
                     </div>
                 </div>
                 @endforeach
@@ -65,9 +65,9 @@
                         <tr class='del-container'>
                             <td>
                                 <div class="link_attach_file">
-                                    <a href="{{url('public/'.$attach->attach->url())}}" target="_blank" class="link_file">
+                                    <a href="{{ $attach->url }}" target="_blank" class="link_file">
                                         <span class="glyphicon glyphicon-paperclip"></span>
-                                        <span class="name_link_file">{{$attach->attach_file_name}}</span>
+                                        <span class="name_link_file">{{ $attach->display_name }}</span>
                                     </a>
                                 </div>
                                 <div style="display: inline-block" class="pull-right">

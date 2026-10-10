@@ -722,7 +722,253 @@
         .dashboard-task-list .monday-action-btn.delete:focus {
             background: #b02a2a !important;
         }
-    </style>
+    
+/* Task table spacing and action color refinements */
+.monday-group-content {
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.monday-table {
+    min-width: 1000px;
+}
+
+.monday-table-header th {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+
+.monday-table-cell,
+.monday-table-cell-task {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+
+.monday-table-header th:first-child,
+.monday-table-row td:first-child {
+    padding-left: 20px !important;
+}
+
+.monday-table-header th:last-child,
+.monday-table-row td:last-child {
+    padding-right: 22px !important;
+}
+
+.monday-actions {
+    gap: 8px !important;
+}
+
+.monday-action-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+}
+
+.monday-action-btn svg {
+    color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+.monday-action-btn.view,
+.monday-action-btn.preview {
+    color: #0369a1 !important;
+    border: 1px solid #38bdf8 !important;
+    background: #e0f2fe !important;
+}
+
+.monday-action-btn.view:hover,
+.monday-action-btn.preview:hover {
+    color: #075985 !important;
+    border-color: #0284c7 !important;
+    background: #bae6fd !important;
+}
+
+.monday-action-btn.edit {
+    color: #b45309 !important;
+    border: 1px solid #fb923c !important;
+    background: #ffedd5 !important;
+}
+
+.monday-action-btn.edit:hover {
+    color: #92400e !important;
+    border-color: #ea580c !important;
+    background: #fed7aa !important;
+}
+
+.monday-action-btn.delete {
+    color: #b91c1c !important;
+    border: 1px solid #f87171 !important;
+    background: #fee2e2 !important;
+}
+
+.monday-action-btn.delete:hover {
+    color: #991b1b !important;
+    border-color: #dc2626 !important;
+    background: #fecaca !important;
+}
+
+/* Filled task action buttons */
+.monday-actions {
+    gap: 8px !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+}
+
+.monday-action-btn {
+    width: 34px !important;
+    height: 30px !important;
+    min-width: 34px !important;
+    border-radius: 7px !important;
+    border: 0 !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.monday-action-btn svg,
+.monday-action-btn svg path,
+.monday-action-btn svg line,
+.monday-action-btn svg polyline,
+.monday-action-btn svg circle {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+.monday-action-btn.view,
+.monday-action-btn.preview {
+    background: #f59f00 !important;
+}
+
+.monday-action-btn.view:hover,
+.monday-action-btn.preview:hover {
+    background: #e67700 !important;
+}
+
+.monday-action-btn.edit {
+    background: #0b74d1 !important;
+}
+
+.monday-action-btn.edit:hover {
+    background: #075ca8 !important;
+}
+
+.monday-action-btn.delete {
+    background: #df3438 !important;
+}
+
+.monday-action-btn.delete:hover {
+    background: #be262a !important;
+}
+
+.monday-table-header th:last-child,
+.monday-table-row td:last-child {
+    min-width: 140px !important;
+    width: 140px !important;
+}
+
+/* Keep SP inline editor readable while typing */
+.monday-sp.monday-editable:focus-within {
+    padding: 0 !important;
+    min-width: 56px !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    overflow: visible !important;
+}
+
+.monday-sp .monday-editable-input {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 32px !important;
+    padding: 4px 8px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    text-align: center !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    border: 2px solid var(--monday-primary) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 0 0 3px rgba(6, 111, 209, 0.14) !important;
+    opacity: 1 !important;
+    caret-color: #111827 !important;
+}
+
+.monday-sp .monday-editable-input:focus {
+    outline: none !important;
+}
+
+/* Remove inner white box/outline from task action icons */
+.monday-action-btn,
+.monday-action-btn:hover,
+.monday-action-btn:focus,
+.monday-action-btn:active,
+.monday-action-btn:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-clip: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.monday-action-btn svg {
+    display: block !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.monday-action-btn svg *,
+.monday-action-btn svg path,
+.monday-action-btn svg line,
+.monday-action-btn svg polyline,
+.monday-action-btn svg circle,
+.monday-action-btn svg rect {
+    background: transparent !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.action-buttons a,
+.action-buttons a:hover,
+.action-buttons a:focus,
+.action-buttons a:active,
+.action-buttons a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-clip: border-box !important;
+}
+
+.action-buttons svg,
+.action-buttons svg * {
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Clean task action font icons */
+.monday-action-btn i,
+.action-buttons a i {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+</style>
 <div class="dashboard-task-list">
     <div class="wrapper">
         <div class="header">
@@ -818,22 +1064,9 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -886,22 +1119,9 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask(1)" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask(1)" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask(1)" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask(1)" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask(1)" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -948,22 +1168,9 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask(2)" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask(2)" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask(2)" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask(2)" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask(2)" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1037,22 +1244,9 @@
                                 <td class="monday-table-cell text-center">{{ $task->story_points ?? '—' }}</td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1090,13 +1284,8 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask(100)" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask(100)" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask(100)" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1164,22 +1353,9 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                                <path d="M16 5l3 3" />
-                                            </svg>
-                                        </button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn view dash-act dash-act-view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn edit dash-act dash-act-edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1209,15 +1385,7 @@
                                 </td>
                                 <td class="monday-table-cell">
                                     <div class="monday-actions" style="display: flex !important; opacity: 1;">
-                                        <button class="monday-action-btn delete" onclick="deleteTask(200)" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-                                                <path d="M4 7l16 0" />
-                                                <path d="M10 11l0 6" />
-                                                <path d="M14 11l0 6" />
-                                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                <path d="M9 7v-1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1" />
-                                            </svg>
-                                        </button>
+                                        <button class="monday-action-btn delete dash-act dash-act-delete" onclick="deleteTask(200)" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1411,6 +1579,10 @@
                     }
                 });
             }, 10);
+        }
+
+        function viewTask(taskId) {
+            window.location.href = '/task/' + taskId;
         }
 
         function editTask(taskId) {

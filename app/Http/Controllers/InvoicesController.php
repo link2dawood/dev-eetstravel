@@ -276,7 +276,7 @@ class  InvoicesController extends Controller
     }
     public function edit($id, Request $request)
     {
-        $invoices = InvoicesTours::find($id);
+        $invoices = InvoicesTours::findOrFail($id);
 		//$invoices = Invoices::find($id);
 		
         $offices = Offices::all();
@@ -340,7 +340,8 @@ class  InvoicesController extends Controller
             return URL::to('$invoices/' . $id);
         }
 
-        $invoice_tour= InvoicesTours::find($id);
+        // {id} is the invoice-tour link id (InvoicesTours), as used by the list buttons
+        $invoice_tour= InvoicesTours::findOrFail($id);
 		 $invoices = Invoices::find($invoice_tour->invoices_id);
         $office = Offices::find($invoices->office_id);
 

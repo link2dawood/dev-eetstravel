@@ -825,7 +825,7 @@ header("content-disposition: attachment;filename=". $download_name .".doc");
         <table class="row" width="100%">
             <tr>
                 <td class="column" >
-                    <h4 class="text_color  float-left" style="margin-top: 0px;  margin-left:50px;">{{$client->name}}<br>{{$client->address}}<br>
+                    <h4 class="text_color  float-left" style="margin-top: 0px;  margin-left:50px;">{{ $client->name ?? '' }}<br>{{ $client->address ?? '' }}<br>
                         </h4>
                 </td>
                 <td class="column">
@@ -1029,7 +1029,7 @@ header("content-disposition: attachment;filename=". $download_name .".doc");
              <footer style="margin-left:80px; margin-top:30px">
                 <h4 class="footer_headings">Beneficiary Name : EUROPE EXPRESS TRAVEL SERVICE INT'L CO., LTD.</h4>
                 <h4 class="footer_headings">Bank Name :{{$office->bank_name}}.</h4>
-                <h4 class="footer_headings">Bank Address : {{$client->address}}, </h4>
+                <h4 class="footer_headings">Bank Address : {{ $client->address ?? '' }}, </h4>
                 <h4 class="footer_headings">SWIFT CODE : {{$office->swift_code}}</h4>
                 <h4 class="footer_headings">Account : {{$office->account_no}}</h4>
             </footer>

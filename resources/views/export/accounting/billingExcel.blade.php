@@ -65,7 +65,7 @@
           <td>
           </td>
           <td>
-              <h4 class="text_color  float-left" style="  margin-left:50px; width=:100%">{{ $client->name }}
+              <h4 class="text_color  float-left" style="  margin-left:50px; width=:100%">{{ $client->name ?? '' }}
               </h4>
           </td>
 
@@ -75,7 +75,7 @@
           <td>
           </td>
           <td>
-              <h4 class="text_color  float-left" style="  margin-left:50px;">{{ $client->address }}
+              <h4 class="text_color  float-left" style="  margin-left:50px;">{{ $client->address ?? '' }}
               </h4>
           </td>
       </tr>
@@ -262,7 +262,7 @@
           <tr>
               <td>
               </td>
-              @php$tdNumber = 0;
+              @php $tdNumber = 0;
               @endphp
               @foreach ($calculations as $calc)
                   @if (isset($calc['activity']) && $calc['activity'])
@@ -281,7 +281,7 @@
           <tr>
               <td>
               </td>
-              @php$tdNumber = 0;
+              @php $tdNumber = 0;
               @endphp
               @foreach ($calculations as $calc)
                   @if (isset($calc['activity']) && $calc['activity'])
@@ -309,7 +309,7 @@
 
           @if (!empty($quotation->additional_persons))
               <tr>
-                  @php$tdNumber = 0;
+                  @php $tdNumber = 0;
                   @endphp
                   @foreach ($quotation->additional_persons as $person)
                       @if ($person->active)
@@ -330,7 +330,7 @@
           @endif
           @if (!empty($quotation->additional_persons))
               <tr>
-                  @php$tdNumber = 0;
+                  @php $tdNumber = 0;
                   @endphp
                   @foreach ($quotation->additional_persons as $person)
                       @if ($person->active)
@@ -355,7 +355,7 @@
 
 
   <table>
-      <footer style="margin-left:80px; margin-top:30px">
+      <div class="footer" style="margin-left:80px; margin-top:30px">{{-- div, not <footer>: the Excel HTML reader (libxml) rejects HTML5 tags --}}
           <tr>
               <td>
               </td>
@@ -383,7 +383,7 @@
               </td>
 
               <td>
-                  <h4 class="footer_headings">Bank Address : {{ $client->address }}, </h4>
+                  <h4 class="footer_headings">Bank Address : {{ $client->address ?? '' }}, </h4>
               </td>
           </tr>
           <tr></tr>
@@ -406,5 +406,5 @@
 
               </td>
           </tr>
-      </footer>
+      </div>
   </table>

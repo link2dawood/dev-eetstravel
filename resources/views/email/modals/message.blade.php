@@ -26,7 +26,7 @@
 
                 <div v-for="(file, index) in newEmail.files" style="margin: 5px">
                     <span>@{{ file.name }}</span>
-                    <button class="btn btn-sm btn-danger" @click="removeFile(index)"><i class="fa fa-trash-o"></i></button>
+                    <button type="button" class="btn btn-sm btn-danger dash-act dash-act-delete" @click="removeFile(index)" title="Remove"><i class="ti ti-trash"></i></button>
 
                 </div>
                 <p class="help-block">Max. 32MB</p>
@@ -192,7 +192,7 @@
             $('.progress').hide();
             $('#msg').html(data);
             $('form').submit();
-            window.location.href="https://dev.eetstravel.com/email-composer";        
+            window.location.href="{{ url('email-composer') }}";        
             }
         });
     })

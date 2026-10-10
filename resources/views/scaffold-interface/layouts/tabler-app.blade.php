@@ -11,9 +11,14 @@
 
     <title>@yield('title', 'TMS - Tour Management System')</title>
 
+    <!-- Preload icon fonts so icons don't render as empty boxes first -->
+    <link rel="preload" href="{{ asset('tabler/css/fonts/tabler-icons.woff2') }}?v2.47.0" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('css/font-awesome-4.7.0/fonts/fontawesome-webfont.woff2') }}?v=4.7.0" as="font" type="font/woff2" crossorigin>
+
     <!-- CSS files -->
     <link href="{{ asset('tabler/css/tabler.min.css') }}" rel="stylesheet"/>
     <link href="{{ asset('tabler/css/tabler-icons.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ asset('css/font-awesome-4.7.0/css/font-awesome.min.css') }}">
     <link rel="stylesheet" href="{{asset('css/jquery.toast.css')}}">
     <link rel="stylesheet" href="{{asset('css/fileinput.min.css')}}">
     <link rel="stylesheet" href="{{asset('css/magnific.css')}}">
@@ -175,6 +180,69 @@
             content: "/";
             margin: 0 0.5rem;
             color: var(--tblr-secondary-color, #6b7280);
+        }
+
+        /* Separator comes from ::after above; drop Tabler's ::before so it isn't doubled */
+        .breadcrumb .breadcrumb-item + .breadcrumb-item::before,
+        .content-header > .breadcrumb > li + li::before {
+            content: none !important;
+            display: none !important;
+        }
+        .breadcrumb .breadcrumb-item + .breadcrumb-item {
+            padding-left: 0;
+        }
+
+        /* Standard action buttons: filled colour, white icon, same size everywhere.
+           view = orange, edit = blue, delete = red, copy = green.
+           !important + the repeated class beat older per-section styles (e.g. tinted .monday-action-btn). */
+        body .dash-act.dash-act.dash-act {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 40px !important;
+            height: 30px !important;
+            min-width: 40px;
+            padding: 0 !important;
+            margin: 0;
+            border: 0 !important;
+            border-radius: 7px !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            line-height: 1 !important;
+            cursor: pointer;
+            transition: filter .15s ease, box-shadow .15s ease;
+        }
+        body .dash-act.dash-act.dash-act i,
+        body .dash-act.dash-act.dash-act .ti,
+        body .dash-act.dash-act.dash-act .fa { font-size: 17px !important; color: #ffffff !important; line-height: 1; margin: 0 !important; }
+        body .dash-act.dash-act.dash-act svg { width: 17px !important; height: 17px !important; color: #ffffff !important; stroke: #ffffff !important; margin: 0 !important; }
+        body .dash-act.dash-act.dash-act.dash-act-view   { background-color: #f59f00 !important; }
+        body .dash-act.dash-act.dash-act.dash-act-edit   { background-color: #0b6bcb !important; }
+        body .dash-act.dash-act.dash-act.dash-act-delete { background-color: #d63939 !important; }
+        body .dash-act.dash-act.dash-act.dash-act-copy   { background-color: #2fb344 !important; }
+        body .dash-act.dash-act.dash-act:hover,
+        body .dash-act.dash-act.dash-act:focus,
+        body .dash-act.dash-act.dash-act:active {
+            color: #ffffff !important;
+            filter: brightness(.92);
+            outline: none;
+        }
+        body .dash-act.dash-act.dash-act:focus-visible { box-shadow: 0 0 0 3px rgba(11, 107, 203, .25) !important; }
+        body .dash-act.dash-act.dash-act:hover i, body .dash-act.dash-act.dash-act:focus i, body .dash-act.dash-act.dash-act:active i,
+        body .dash-act.dash-act.dash-act:hover svg, body .dash-act.dash-act.dash-act:focus svg, body .dash-act.dash-act.dash-act:active svg { color: #ffffff !important; stroke: #ffffff !important; }
+        body .dash-act.dash-act.dash-act.dash-act-view:hover, body .dash-act.dash-act.dash-act.dash-act-view:focus, body .dash-act.dash-act.dash-act.dash-act-view:active       { background-color: #f59f00 !important; }
+        body .dash-act.dash-act.dash-act.dash-act-edit:hover, body .dash-act.dash-act.dash-act.dash-act-edit:focus, body .dash-act.dash-act.dash-act.dash-act-edit:active       { background-color: #0b6bcb !important; }
+        body .dash-act.dash-act.dash-act.dash-act-delete:hover, body .dash-act.dash-act.dash-act.dash-act-delete:focus, body .dash-act.dash-act.dash-act.dash-act-delete:active { background-color: #d63939 !important; }
+        body .dash-act.dash-act.dash-act.dash-act-copy:hover, body .dash-act.dash-act.dash-act.dash-act-copy:focus, body .dash-act.dash-act.dash-act.dash-act-copy:active       { background-color: #2fb344 !important; }
+
+        /* Open dropdown toggles keep dark, readable text */
+        .btn-secondary.show,
+        .btn-secondary:active,
+        .btn-secondary.dropdown-toggle.show,
+        .btn-secondary.dropdown-toggle:focus {
+            color: #1f2937 !important;
+            background-color: #cbd5e1 !important;
+            border-color: #94a3b8 !important;
         }
 
         .breadcrumb li a {
@@ -525,6 +593,7 @@
         /* Badge Styles */
         .badge.bg-red {
             background-color: var(--tblr-danger, #d63939) !important;
+            color: #ffffff !important;
         }
 
         /* Dropdown Menu Improvements */
@@ -545,8 +614,11 @@
 
         /* FontAwesome Fallback Support */
         .fa, .fas, .far, .fal, .fab {
-            font-family: 'Font Awesome 5 Free', 'Font Awesome 5 Brands', 'tabler-icons' !important;
+            font-family: 'FontAwesome', 'Font Awesome 5 Free', 'Font Awesome 5 Brands', 'tabler-icons' !important;
         }
+
+        /* Hover legends start hidden; utils.js fades them in, so they never widen the page */
+        #legend_help, #legend_help_quotation, #legend_help_guest_list { display: none; }
 
         /* Ensure Tabler Icons Load */
         @font-face {
@@ -560,28 +632,7 @@
             font-style: normal;
         }
 
-        /* FontAwesome to Tabler Icon Mapping */
-        .fa-dashboard::before { content: "\ea47"; font-family: 'tabler-icons'; } /* ti-home */
-        .fa-home::before { content: "\ea47"; font-family: 'tabler-icons'; } /* ti-home */
-        .fa-users::before { content: "\f508"; font-family: 'tabler-icons'; } /* ti-users */
-        .fa-user::before { content: "\ebc9"; font-family: 'tabler-icons'; } /* ti-user */
-        .fa-cog::before { content: "\ebd5"; font-family: 'tabler-icons'; } /* ti-settings */
-        .fa-bell::before { content: "\ea35"; font-family: 'tabler-icons'; } /* ti-bell */
-        .fa-envelope::before { content: "\eb03"; font-family: 'tabler-icons'; } /* ti-mail */
-        .fa-tasks::before { content: "\ec1c"; font-family: 'tabler-icons'; } /* ti-checkbox */
-        .fa-calendar::before { content: "\ea53"; font-family: 'tabler-icons'; } /* ti-calendar */
-        .fa-briefcase::before { content: "\ea46"; font-family: 'tabler-icons'; } /* ti-briefcase */
-        .fa-map-pin::before { content: "\ebe9"; font-family: 'tabler-icons'; } /* ti-map-pin */
-        .fa-building::before { content: "\ea4c"; font-family: 'tabler-icons'; } /* ti-building */
-        .fa-key::before { content: "\eaf4"; font-family: 'tabler-icons'; } /* ti-key */
-        .fa-search::before { content: "\eb1c"; font-family: 'tabler-icons'; } /* ti-search */
-        .fa-plus::before { content: "\eb0b"; font-family: 'tabler-icons'; } /* ti-plus */
-        .fa-minus::before { content: "\eaf2"; font-family: 'tabler-icons'; } /* ti-minus */
-        .fa-edit::before { content: "\eaea"; font-family: 'tabler-icons'; } /* ti-edit */
-        .fa-trash::before { content: "\eb41"; font-family: 'tabler-icons'; } /* ti-trash */
-        .fa-check::before { content: "\ea5e"; font-family: 'tabler-icons'; } /* ti-check */
-        .fa-times::before,
-        .fa-close::before { content: "\eb55"; font-family: 'tabler-icons'; } /* ti-x */
+        /* fa-* icons render from Font Awesome 4.7 (loaded in <head>); no tabler remapping needed */
 
         /* Global readable form fields */
         input.form-control,
@@ -992,21 +1043,22 @@
             color: currentColor;
         }
 
-        .glyphicon-folder-open::before { content: "\ea70"; }
-        .glyphicon-trash::before { content: "\eb41"; }
-        .glyphicon-ban-circle::before { content: "\ec36"; }
-        .glyphicon-upload::before { content: "\ec8f"; }
-        .glyphicon-file::before { content: "\ea7c"; }
-        .glyphicon-remove::before { content: "\eb55"; }
-        .glyphicon-zoom-in::before,
-        .glyphicon-eye-open::before { content: "\ea9a"; }
+        /* Codepoints match tabler-icons v2.47 (public/tabler/css/tabler-icons.min.css) */
+        .glyphicon-folder-open::before { content: "\faf7"; } /* ti-folder-open */
+        .glyphicon-trash::before { content: "\eb41"; }       /* ti-trash */
+        .glyphicon-ban-circle::before { content: "\eb55"; }  /* ti-x (Cancel/Remove) */
+        .glyphicon-upload::before { content: "\eb47"; }      /* ti-upload */
+        .glyphicon-file::before { content: "\eaa4"; }        /* ti-file */
+        .glyphicon-remove::before { content: "\eb55"; }      /* ti-x */
+        .glyphicon-zoom-in::before { content: "\eb56"; }     /* ti-zoom-in */
+        .glyphicon-eye-open::before { content: "\ea9a"; }    /* ti-eye */
         .glyphicon-resize-full::before,
         .glyphicon-fullscreen::before { content: "\ea28"; }
         .glyphicon-resize-small::before,
         .glyphicon-resize-vertical::before { content: "\ea29"; }
-        .glyphicon-triangle-left::before { content: "\ea19"; }
-        .glyphicon-triangle-right::before { content: "\ea1f"; }
-        .glyphicon-exclamation-sign::before { content: "\ea06"; }
+        .glyphicon-triangle-left::before { content: "\ea60"; }   /* ti-chevron-left */
+        .glyphicon-triangle-right::before { content: "\ea61"; }  /* ti-chevron-right */
+        .glyphicon-exclamation-sign::before { content: "\ea05"; } /* ti-alert-circle */
 
         .file-input .btn .glyphicon,
         .file-input .btn i,

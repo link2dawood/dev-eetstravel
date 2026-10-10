@@ -1,191 +1,58 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title','Current Bookings')
 @section('content')
-    @include('layouts.title',
-        ['title' => 'Current Bookings', 'sub_title' => 'Booking List',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Current Bookings', 'icon' => null, 'route' => null]
-        ]])
-    <section class="content">
-        <div class="box box-primary">
-            <div class="box-body">
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="current-bookings-search" class="form-control" placeholder="Search current bookings..." onkeyup="filterTable('current-bookings-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('current-bookings-table', 'current_bookings_export.csv')">
-                                <i class="ti ti-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="current-bookings-table" class="table table-striped table-bordered table-hover bootstrap-table" style="background:#fff; width: 100%; min-width: 1000px;">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0, 'current-bookings-table')" style="width: 60px;">ID <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(1, 'current-bookings-table')">{!! trans('Tour') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(2, 'current-bookings-table')">{!! trans('Hotel Name') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(3, 'current-bookings-table')">{!! trans('City') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(4, 'current-bookings-table')">{!! trans('Status') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(5, 'current-bookings-table')">{!! trans('Date of Stay') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(6, 'current-bookings-table')" style="width: 60px;">SIN <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(7, 'current-bookings-table')" style="width: 60px;">DOU <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(8, 'current-bookings-table')" style="width: 60px;">TRI <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(9, 'current-bookings-table')" style="width: 150px;">{!! trans('Cancellation Policy') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th onclick="sortTable(10, 'current-bookings-table')" style="width: 200px;">{!! trans('Payments Made') !!} <i class="ti ti-arrows-sort"></i></th>
-                                <th class="actions-button" style="width: 140px!important">{!! trans('main.Actions') !!}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($processedBookings as $booking)
-                            <tr>
-                                <td>{{ $booking->id }}</td>
-                                <td data-delete-label>{{ $booking->tour_name }}</td>
-                                <td>{{ $booking->hotel_name }}</td>
-                                <td>{{ $booking->city_name }}</td>
-                                <td>{{ $booking->status_name }}</td>
-                                <td>{{ $booking->stay_date }}</td>
-                                <td class="text-center">-</td>
-                                <td class="text-center">-</td>
-                                <td class="text-center">-</td>
-                                <td>
-                                    <div style="max-width: 150px; white-space: normal; word-wrap: break-word;">
-                                        {{ $booking->cancel_policy }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="max-width: 200px; white-space: normal; word-wrap: break-word;">
-                                        {{ $booking->payment_policy }}
-                                    </div>
-                                </td>
-                                <td onclick="event.stopPropagation();">
-                                    @if(!empty($booking->model))
-                                        @include('component.action_buttons', [
-                                            'item' => $booking->model,
-                                            'routePrefix' => 'tour_package'
-                                        ])
-                                    @else
-                                        <span class="text-muted small">No booking record linked</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="12" class="text-center">No current bookings found</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </section>
-    @include('component.delete_modal_simple')
+@include('layouts.title', ['title' => 'Current Bookings', 'sub_title' => 'Booking List', 'breadcrumbs' => [['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')], ['title' => 'Current Bookings', 'icon' => null, 'route' => null]]])
+<section class="content offer-page"><div class="box box-primary"><div class="box-body">
+    <div class="row align-items-center mb-3 toolbar-row"><div class="col-md-6"><input type="text" class="form-control" placeholder="Search current bookings..." oninput="offerFilterTable('current-bookings-table', this.value)"></div><div class="col-md-6 text-md-end"><button type="button" class="btn btn-success btn-sm" onclick="offerExportTable('current-bookings-table', 'current_bookings_export.csv')"><i class="ti ti-download"></i> Export CSV</button></div></div>
+    @php $hasRows = count($processedBookings) > 0; $rows = $hasRows ? collect($processedBookings) : collect([(object)['id'=>'S-201','tour_name'=>'Sample Alps Group','hotel_name'=>'Sample Grand Hotel','city_name'=>'Zurich','status_name'=>'Confirmed','stay_date'=>now()->addDays(21)->format('Y-m-d'),'cancel_policy'=>'7 days before arrival: 50% can be cancelled free of charge.','payment_policy'=>'30% deposit before arrival.','model'=>null]]); @endphp
+    <div class="table-responsive"><table id="current-bookings-table" class="table table-striped table-bordered table-hover"><thead><tr><th onclick="offerSortTable('current-bookings-table',0)">ID</th><th>Tour</th><th>Hotel Name</th><th>City</th><th>Status</th><th>Date of Stay</th><th>Cancellation Policy</th><th>Payments Made</th><th>Actions</th></tr></thead><tbody>@foreach($rows as $booking)<tr class="{{ $hasRows ? '' : 'sample-row' }}"><td>{{ $booking->id }} @unless($hasRows)<span class="badge bg-secondary sample-badge">Sample</span>@endunless</td><td data-delete-label>{{ $booking->tour_name }}</td><td>{{ $booking->hotel_name }}</td><td>{{ $booking->city_name }}</td><td>{{ $booking->status_name }}</td><td>{{ $booking->stay_date }}</td><td><div class="policy-text">{{ $booking->cancel_policy }}</div></td><td><div class="policy-text">{{ $booking->payment_policy }}</div></td><td class="actions-cell">@if($hasRows && !empty($booking->model)) @include('component.action_buttons', ['item' => $booking->model, 'routePrefix' => 'tour_package']) @else <span class="text-muted small">{{ $hasRows ? 'No booking record linked' : 'Sample only' }}</span> @endif</td></tr>@endforeach</tbody></table></div>
+</div></div></section>
+@include('component.delete_modal_simple')
 @endsection
-
 @push('styles')
 <style>
-/* Action Buttons Container */
-.action-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-/* Individual Action Button */
-.btn-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border: 2px solid;
-    border-radius: 8px;
-    background-color: transparent;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0;
-    text-decoration: none;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-}
-
-.btn-action svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* Edit Button */
-.edit-action {
-    color: #f9a825;
-    border-color: #f9a825;
-}
-
-.edit-action:hover {
-    background-color: #f9a825;
-    color: white;
-}
-
-/* Delete Button */
-.delete-action {
-    color: #ef5350;
-    border-color: #ef5350;
-}
-
-.delete-action:hover {
-    background-color: #ef5350;
-    color: white;
-}
-
-/* Table Cell Text Wrapping */
-.table td {
-    vertical-align: middle;
-}
-
-/* Improved column width control */
-#current-bookings-table th:nth-child(11),
-#current-bookings-table td:nth-child(11) {
-    min-width: 200px;
-    max-width: 250px;
-}
-
-#current-bookings-table th:nth-child(10),
-#current-bookings-table td:nth-child(10) {
-    min-width: 150px;
-    max-width: 180px;
-}
-
-/* Better text display in long columns */
-.table td > div {
-    line-height: 1.4;
-}
-
-/* Actions column */
-#current-bookings-table th:nth-child(12),
-#current-bookings-table td:nth-child(12) {
-    text-align: center;
-}
-
-.actions-cell {
-    padding: 12px 8px !important;
-}
+    .offer-page .toolbar-row { gap: .75rem; }
+    .offer-page .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .offer-page table { background: #fff; min-width: 980px; }
+    .offer-page th { white-space: nowrap; cursor: pointer; }
+    .offer-page td { vertical-align: middle; }
+    .offer-page .policy-text { max-width: 260px; white-space: normal; line-height: 1.35; }
+    .offer-page .actions-cell .btn-list { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: .35rem; }
+    .offer-page .sample-row { background: #f8fafc; }
+    .offer-page .sample-badge { font-size: .7rem; }
 </style>
 @endpush
-
 @push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
-$(document).ready(function() {
-    initializeBootstrapTable('current-bookings-table');
-});
+(function () {
+    function getCellText(row, index) { const cell = row.children[index]; return cell ? cell.innerText.trim().toLowerCase() : ''; }
+    window.offerFilterTable = function(tableId, value) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const query = (value || '').toLowerCase().trim();
+        table.querySelectorAll('tbody tr').forEach(function(row) { row.style.display = !query || row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+    };
+    window.offerSortTable = function(tableId, columnIndex) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+        table.dataset.sortColumn = columnIndex; table.dataset.sortDirection = direction;
+        rows.sort(function(a, b) {
+            const left = getCellText(a, columnIndex); const right = getCellText(b, columnIndex);
+            const leftNumber = parseFloat(left.replace(/[^0-9.-]/g, '')); const rightNumber = parseFloat(right.replace(/[^0-9.-]/g, ''));
+            if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber)) return direction === 'asc' ? leftNumber - rightNumber : rightNumber - leftNumber;
+            return direction === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+    };
+    window.offerExportTable = function(tableId, filename) {
+        const table = document.getElementById(tableId); if (!table) return;
+        const rows = Array.from(table.querySelectorAll('tr')).filter(function(row) { return row.style.display !== 'none'; });
+        const csv = rows.map(function(row) { return Array.from(row.querySelectorAll('th,td')).map(function(cell) { return '"' + cell.innerText.replace(/"/g, '""').trim() + '"'; }).join(','); }).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename || 'offers_export.csv';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
+    };
+})();
 </script>
 @endpush

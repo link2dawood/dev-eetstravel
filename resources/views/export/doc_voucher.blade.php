@@ -79,8 +79,8 @@ $hotels = [];
           <b>  {{ $office->office_name }}</b><br>
             ( Associates ) / Budapest operation office:<br>
             {{ $office->office_address }} <br>
-            TEL: +{{ $office->tel }} , FAX: +{{ $office->fax }} <br>
-            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }}>External name : {{ $tour->external_name }}
+            TEL: {{ ltrim($office->tel ?? '', ' :') }} , FAX: {{ ltrim($office->fax ?? '', ' :') }} <br>
+            Office Email : eets@eets.hu<br><br>			    Name : {{ $tour->name }} | External name : {{ $tour->external_name }}
         </p>
         <?php
         $index++;
@@ -94,7 +94,7 @@ $hotels = [];
                 <td><b>{!!trans('main.To')!!}:</b></td>
                 <td>{{str_replace("&", "and", $package->name)}}</td>
                 <td  style="margin-top: 0px;"><b>{!!trans('main.IssuedDate')!!}</b></td>
-                <td>{{$issued}}</td>
+                <td>{{ display_date($issued) }}</td>
             </tr>
             <tr>
                 <td><b>{!!trans('main.Address')!!}:</b></td>
@@ -129,8 +129,8 @@ $hotels = [];
                 <td><b>{!!trans('main.ServiceType')!!}</b></td>
                 <td>@if(isset($package->service()->service_type)){{$package->service()->service_type}}@endif</td>
                 <td><b>{!!trans('main.ServiceDate')!!}</b></td>
-                <td>{!!trans('main.From')!!}: {{$package->time_from}}<br>
-                    {!!trans('main.To')!!}: {{$package->time_to}}
+                <td>{!!trans('main.From')!!}: {{ display_date($package->time_from, '') }} {{ $package->time_from ? \Carbon\Carbon::parse($package->time_from)->format('H:i') : '' }}<br>
+                    {!!trans('main.To')!!}: {{ display_date($package->time_to, '') }} {{ $package->time_to ? \Carbon\Carbon::parse($package->time_to)->format('H:i') : '' }}
                 </td>
             </tr>
              <tr>

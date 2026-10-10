@@ -89,6 +89,23 @@ class TourPackage extends Model
 
     protected $guarded = [];
 
+    protected static function booted()
+    {
+        // The supplier booking link needs the real id, which only exists after insert.
+        // Callers used to guess "latest id + 1" and hard-code the dev domain.
+        static::created(function (TourPackage $package) {
+            $package->forceFill(['supplier_url' => static::supplierBookingUrl($package->id)])->saveQuietly();
+        });
+    }
+
+    /**
+     * Public link a supplier opens to answer a booking request (route: booking/{generatedlink}/{id}).
+     */
+    public static function supplierBookingUrl($id)
+    {
+        return url('booking/' . \Illuminate\Support\Facades\Crypt::encryptString($id) . '/' . $id);
+    }
+
     /**
     * tour day.
     *
@@ -365,11 +382,10 @@ class TourPackage extends Model
     }
 
     public function getTransferDrivers(){
-        $transfer_id = $this->service()->id;
+        // Drivers are stored per transfer package; matching on the package id alone also works
+        // when the transfer company record (service()) is missing, which used to hide all drivers.
         $transfer_drivers = TransferToDrivers::query()
-            ->where('transfer_id', $transfer_id)
             ->where('tour_package_id', $this->id)
-            ->where('tour_id', $this->getTour()->id)
             ->get();
 
         $transfer_drivers_id = collect();

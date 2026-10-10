@@ -122,10 +122,8 @@ class EventController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Event $event->name created", 'success');
 
-        $this->addFile($request, $event);    
-        $data = ['route' => route('event.index')];
-		return redirect()->route('event.index');
-        return response()->json($data);
+        $this->addFile($request, $event);
+        return redirect()->route('event.index');
     }
 
     /**

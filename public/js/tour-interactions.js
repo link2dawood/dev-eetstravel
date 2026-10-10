@@ -225,6 +225,8 @@
             const exportButtons = document.querySelectorAll('.export-csv');
 
             exportButtons.forEach(button => {
+                // Buttons without data-table are handled by the page's own script
+                if (!button.hasAttribute('data-table')) return;
                 button.addEventListener('click', function() {
                     const tableId = this.getAttribute('data-table');
                     const filename = this.getAttribute('data-filename') || 'export.csv';

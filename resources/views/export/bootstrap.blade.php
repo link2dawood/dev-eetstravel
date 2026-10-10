@@ -1000,7 +1000,7 @@
             <b>{{ $office->office_name ??"" }}</b><br>
             ( Associates ) / Budapest operation office:<br>
             {{ $office->office_address??"" }} <br>
-            TEL: +{{ $office->tel??"" }} , FAX: +{{ $office->fax??"" }} <br>
+            TEL: {{ ltrim($office->tel ?? '', ' :') }} , FAX: {{ ltrim($office->fax ?? '', ' :') }} <br>
             Office Email : eets@eets.hu<br><br>
             <span>Name : {{ $tour->name }}</span> <span>External name : {{ $tour->external_name }}</span>
         </p>
@@ -1014,7 +1014,7 @@
                     <td><b>{!! trans('main.Name') !!}:</b></td>
                     <td>{{ $tour->name }}
                         {{ $tour->external_name }}</td>
-                    <td><b>{!! trans('main.Room') !!}</b></td>
+                    <td><b>{!! trans('main.Rooms') !!}:</b></td>
                     <td>@php
                         $peopleCount = 0;
                         $roomsCodes = '';
@@ -1028,16 +1028,17 @@
                                 {{ $item->count }} {{ $item->room_types->name }},
                             </span>
                         @endforeach
+                        @if($listRoomsHotel->isEmpty()) - @endif
                     </td>
                 </tr>
                 <tr>
-                    <td><b>{!! trans(' T/L: ') !!}:</b></td>
-                    <td> {{ $tour->itinerary_tl }}</td>
-                    <td><b>{!! trans('main.DateDep') !!}</b></td>
-                    <td> {{ \Carbon\Carbon::parse($tour->departure_date)->format('m-d-Y') }}</td>
+                    <td><b>T/L:</b></td>
+                    <td>{{ $tour->itinerary_tl ?: '-' }}</td>
+                    <td><b>{!! trans('main.DepDate') !!}:</b></td>
+                    <td>{{ display_date($tour->departure_date) }}</td>
                 </tr>
                 <tr>
-                    <td><b>{!! trans('PAX') !!}:</b></td>
+                    <td><b>Pax:</b></td>
                     <td>
 						{{ $tour->pax }} 
 						@if(!empty($tour->childrens) )
@@ -1054,20 +1055,18 @@
 							 {{ $tour->pax_free }} free
 						@endif
 					</td>
-                    <td><b>{!! trans('Personincharge') !!}</b></td>
+                    <td><b>{!! trans('main.Personincharge') !!}:</b></td>
                     <td>
-                        @if (is_object($usersResponsible))
-                            {{ $usersResponsible->name }}
-                        @endif
+                        {{ is_object($usersResponsible) ? $usersResponsible->name : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <b>{!! trans('main.Mobile') !!}</b>
+                        <b>{!! trans('main.Mobile') !!}:</b>
                     </td>
-                    <td>{!! $tour->phone !!}</td>
-                    <td><b>{!! trans('main.DateReturn') !!}</b></td>
-                    <td>{{ \Carbon\Carbon::parse($tour->retirement_date)->format('m-d-Y') }}</td>
+                    <td>{!! trim(strip_tags((string) $tour->phone)) !== '' ? $tour->phone : '-' !!}</td>
+                    <td><b>{!! trans('main.RetDate') !!}:</b></td>
+                    <td>{{ display_date($tour->retirement_date) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -1086,8 +1085,8 @@
         <div class="row">
             <div class="col-sm-12 nopadding">
                 <!-- foreach start -->
-                <table class='hei ' width="100rem" style="margin:20px" cellspacing="0" cellpadding="0"
-                    style="margin-top: 50px">
+                {{-- Fluid width: the old 100rem width pushed the table off the page --}}
+                <table class='hei ' width="100%" style="width:100%; margin:20px 0 0;" cellspacing="0" cellpadding="0">
                     <tbody>
                         @foreach ($tourDays as $tourDay)
                             <?php $countDay++; ?>
@@ -1106,7 +1105,8 @@
                                         <td align="center" valign="" class="text_color border_table" width="100px"
                                             style="margin-left: 50px">
                                             {{ Carbon\Carbon::parse($package->time_from)->format('H:i') }} @if (!$package->description_package)
-                                                - {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}
+                                                {{-- hotels: check-in only, end time is a 23:59 placeholder --}}
+                                                @if ((int) $package->type !== 0)- {{ Carbon\Carbon::parse($package->time_to)->format('H:i') }}@endif
                                                 <br>
                                                 @if ($package->type !== null)
                                                     {{ ucfirst($serviceTypes[$package->type]) }}

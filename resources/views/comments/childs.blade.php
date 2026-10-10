@@ -31,7 +31,7 @@
                         <tr class="del-container">
                             <td class="td_link_attach">
                                 <div class="td_link_attach__name">
-                                    <a class="name_attach" href="{{'public/'.$attach->attach->url()}}" target="_blank">
+                                    <a class="name_attach" href="{{ $attach->url }}" target="_blank">
                                         <span class="glyphicon glyphicon-paperclip"></span>
                                         {{$attach->attach_file_name}}
                                     </a>

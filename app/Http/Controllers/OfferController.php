@@ -58,6 +58,20 @@ class OfferController extends Controller
         $this->middleware('preventBackHistory');
         $this->middleware('auth');
     }
+		private function offerableHotelPackages()
+	{
+		return TourPackage::with(['tour', 'status'])
+			->where('type', 0)
+			->orderBy('id', 'desc')
+			->limit(100)
+			->get();
+	}
+
+	public function select_create_package()
+	{
+		$packages = $this->offerableHotelPackages();
+		return view('offers.select_create_package', compact('packages'));
+	}
 	public function cancellation_policies(){
 		$room_types = RoomTypes::all();
 		$currentDate = Carbon::now(); // Get the current date and time
@@ -148,6 +162,19 @@ class OfferController extends Controller
 				$stay_date = Carbon::parse($package->time_from)->toDateString();
 			}
 
+			$latestOffer = $package->latestHotelOffer;
+			$cancelPolicy = 'N/A';
+			$paymentPolicy = 'N/A';
+
+			if ($latestOffer && $latestOffer->cancellation_policiy) {
+				$policy = $latestOffer->cancellation_policiy;
+				$cancelPolicy = trim(($policy->cancellation_days ?? '0') . ' days before arrival: ' . ($policy->cancellation_percentage ?? '0') . ($policy->cancellation_type ?? '') . ' can be cancelled free of charge.');
+			}
+
+			if ($latestOffer && $latestOffer->payment_policiy) {
+				$policy = $latestOffer->payment_policiy;
+				$paymentPolicy = trim(($policy->deposit_percentage ?? '0') . ($policy->deposit_type ?? '') . ' deposit due ' . ($policy->deposit_days ?? '0') . ' days before arrival.');
+			}
             $processedBookings[] = (object)[
 				'id' => $package->id,
 				'hotel_name' => $package->name ?? '',
@@ -155,8 +182,8 @@ class OfferController extends Controller
 				'stay_date' => $stay_date,
 				'tour_name' => $package->getTour()->name ?? '',
 				'status_name' => $package->getStatusName() ?? '',
-				'cancel_policy' => $package->latestHotelOffer->cancellation_policiy ?? 'N/A',
-				'payment_policy' => $package->latestHotelOffer->payment_policiy ?? 'N/A',
+				'cancel_policy' => $cancelPolicy,
+				'payment_policy' => $paymentPolicy,
                 'model' => $package,
 			];
 		}
@@ -188,7 +215,7 @@ class OfferController extends Controller
 		
 		$btn = "<button class='btn btn-success btn-sm change-tour-button' data-toggle='modal' data-id='{$url['id']}' data-tour='{$tour_id}' data-target='#tour-clone-modal' ><i class='fa fa-plus'></i></button>";
 		
-		return  '<div style="width:150px; text-align: center;"><a class="delete btn btn-danger btn-sm" style="margin-right: 5px" data-toggle="modal" data-target="#myModal" data-link="' . $url["delete_msg"] . '"><i class="fa fa-trash-o"></i></a><a class="btn btn-warning btn-sm show-button" href="https://dev.eetstravel.com/offer/'.$offer->id.'/show" data-link="https://dev.eetstravel.com/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>'.$btn.'</div>';
+		return  '<div style="width:150px; text-align: center;"><a class="delete btn btn-danger btn-sm" style="margin-right: 5px" data-toggle="modal" data-target="#myModal" data-link="' . $url["delete_msg"] . '"><i class="fa fa-trash-o"></i></a><a class="btn btn-warning btn-sm show-button" href="'.url('/').'/offer/'.$offer->id.'/show" data-link="'.url('/').'/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>'.$btn.'</div>';
 		//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
 	}
 	public function getShowButton($offer,array $perm)
@@ -216,7 +243,7 @@ class OfferController extends Controller
 		
 		$btn = "";
 		
-		return  '<div style="width:150px; text-align: center;"><a class="delete btn btn-danger btn-sm" style="margin-right: 5px" data-toggle="modal" data-target="#myModal" data-link="' . $url["delete_msg"] . '"><i class="fa fa-trash-o"></i></a><a class="btn btn-warning btn-sm show-button" href="https://dev.eetstravel.com/offer/'.$offer->id.'/show" data-link="https://dev.eetstravel.com/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>'.$btn.'</div>';
+		return  '<div style="width:150px; text-align: center;"><a class="delete btn btn-danger btn-sm" style="margin-right: 5px" data-toggle="modal" data-target="#myModal" data-link="' . $url["delete_msg"] . '"><i class="fa fa-trash-o"></i></a><a class="btn btn-warning btn-sm show-button" href="'.url('/').'/offer/'.$offer->id.'/show" data-link="'.url('/').'/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>'.$btn.'</div>';
 		//        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
 	}
 	
@@ -748,7 +775,7 @@ public function cancellation_policies_data(Request $request)
                     class="btn btn-success btn-xs"
                 ><i class="fa fa-envelope" aria-hidden="true"></i></button>';
 
-                $button .= '<a class="btn btn-warning btn-sm show-button" href="https://dev.eetstravel.com/offer/'.$offer->id.'/show" data-link="https://dev.eetstravel.com/tour/5"><i class="fa fa-info-circle"></i></a>';
+                $button .= '<a class="btn btn-warning btn-sm show-button" href="'.url('/').'/offer/'.$offer->id.'/show" data-link="'.url('/').'/offer/'.$offer->id.'/show"><i class="fa fa-info-circle"></i></a>';
             }
             $offer->action_buttons = $button;
 
@@ -868,8 +895,11 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 	public function offer_emails($id){
 		$tour_package = TourPackage::find($id);
 
-		$emails = $this->getEmails($id);
-		$tms_emails = $this->tmsEmails($id);
+		// Mailbox history is optional: the page must still open when IMAP is unavailable
+		try { $emails = $this->getEmails($id); } catch (\Throwable $e) { $emails = []; }
+		try { $tms_emails = $this->tmsEmails($id); } catch (\Throwable $e) { $tms_emails = []; }
+		if (!is_array($emails)) $emails = [];
+		if (!is_array($tms_emails)) $tms_emails = [];
 		
 		$user = Auth::user();
 		return view("tour_package.offers.offer_emails",compact('emails','tms_emails','user','tour_package'));
@@ -978,29 +1008,26 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 		if(!empty($request->tourDayId)){
 		$offer = HotelOffers::find($id);
 		$originalTp  = TourPackage::find($offer->package_id);
+
+		// Save the copy first and use its real id (it used to guess "latest id + 1")
 		$clonedTp = $originalTp->replicate();
-		$latestId = TourPackage::withTrashed()->latest()->pluck('id')->first();
-		$latestId = $latestId +1;
-		
-		$offer->tour_id =  $request->tour_id;
-		$offer->package_id =  $latestId;
-		$offer->save();
 		$clonedTp->save();
-		$latestId = Crypt::encryptString($latestId );
 		$tourDay = TourDay::query()->get()->where('id', $request->tourDayId)->first();
 		$clonedTp->assignTourDay($tourDay);
-		
-		$clonedTp->supplier_url = "https://dev.eetstravel.com/booking/".$latestId; 
-		$clonedTp->save();
-		
+
+		$offer->tour_id =  $request->tour_id;
+		$offer->package_id =  $clonedTp->id;
+		$offer->save();
+
 		$tour = Tour::find($request->tour_id);
-		
-        LaravelFlashSessionHelper::setFlashMessage("Offee {$offer->id} assign to tour {$tour->name}", 'success');
+
+        LaravelFlashSessionHelper::setFlashMessage("Offer {$offer->id} assigned to tour {$tour->name}", 'success');
 		}
 		else{
-			LaravelFlashSessionHelper::setFlashMessage("Offee cannot assign", 'error');
+			LaravelFlashSessionHelper::setFlashMessage("Offer cannot be assigned: choose a tour day", 'error');
 		}
-        return redirect(route('offer.index'));
+        // offer.index does not exist; the offers overview is current_offers.index
+        return redirect(route('current_offers.index'));
 	}
 	
 
@@ -1124,3 +1151,7 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
         return response()->json(Status::select('name', 'id')->orderBy('sort_order', 'asc')->where('type', 'offer')->get()->toJson());
     }
 }
+
+
+
+

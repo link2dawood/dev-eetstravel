@@ -81,6 +81,15 @@
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
     }
 
+    /* Back on the left, actions grouped on the right; buttons never split their label */
+    .tour-header-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+    .tour-header-actions .btn { white-space: nowrap; }
+
     @media (max-width: 576px) {
         .conversion-alert {
             align-items: stretch;
@@ -120,8 +129,8 @@
             </div>
             {{-- Page title actions --}}
             <div class="col-12 d-print-none mb-3">
-                <div class="btn-list" style="justify-content: space-between;">
-                    <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary">
+                <div class="tour-header-actions">
+                    <a href="{{ route('tour.index') }}" class="btn btn-ghost-secondary me-auto">
                         <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
                     </a>
                     @if (Auth::user()->can('tour.edit'))
@@ -149,7 +158,7 @@
                                 <i class="ti ti-file-spreadsheet me-2"></i>CSV - Service
                             </a>
                             <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_export', ['id' => $tour->id, 'export' => 'xlsx']) }}"); return false;'>
-                                <i class="ti ti-file-excel me-2"></i>Excel
+                                <i class="ti ti-file-spreadsheet me-2"></i>Excel
                             </a>
                         </div>
                     </div>
@@ -334,7 +343,7 @@
             {{-- Front Sheet Tab --}}
             <div role="tabpanel" class="tab-pane active show" id="frontsheet-tab">
                 <h3 class="mb-4">
-                    <i class="ti ti-file-text me-2"></i>Front Sheet [- {{ $tour->external_name ?? $tour->name }} #{{ $tour->id }}]
+                    <i class="ti ti-file-text me-2"></i>Front Sheet <span class="text-muted">- {{ $tour->external_name ?: $tour->name }} #{{ $tour->id }}</span>
                 </h3>
                 
                 @if(!empty($quotation) && isset($quotation->id))
@@ -357,7 +366,8 @@
                         </div>
                         <div class="col-md-6">
                             <h5>
-                                <strong>Pax:</strong> {{ $tour->pax }} +{{ $tour->pax_free }}
+                                {{-- pax_free accessor already returns "+N" (or 0) --}}
+                                <strong>Pax:</strong> {{ $tour->pax }}@if($tour->getRawOriginal('pax_free')) {{ $tour->pax_free }}@endif
                             </h5>
                         </div>
                     </div>
@@ -1171,15 +1181,16 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
                             <tbody>
                                 <tr>
                                     <td><strong>{!! trans('main.DepDate') !!}</strong></td>
-                                    <td>{{ $tour->departure_date ?? '—' }}</td>
+                                    <td>{{ display_date($tour->departure_date, '—') }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>{!! trans('main.RetDate') !!}</strong></td>
-                                    <td>{{ $tour->retirement_date ?? '—' }}</td>
+                                    <td>{{ display_date($tour->retirement_date, '—') }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>{!! trans('main.Status') !!}</strong></td>
-                                    <td>{{ $status->name ?? '—' }}</td>
+                                    {{-- $status is reused as a loop flag in the services table above, so read it from the tour --}}
+                                    <td>{{ $tour->status ? $tour->getStatusName() : '—' }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>{!! trans('main.Phone') !!}</strong></td>
@@ -1189,6 +1200,59 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
                         </table>
                     </div>
                 </div>
+                {{-- Files uploaded on Create/Edit Tour (File table) --}}
+                @php $tourFiles = collect($files['image'] ?? [])->merge($files['attach'] ?? []); @endphp
+                <h4 class="mt-4 mb-2"><i class="ti ti-paperclip me-2"></i>{!! trans('main.Files') !!}</h4>
+                @if($tourFiles->isEmpty())
+                    <p class="text-muted mb-0">No files uploaded yet. Add files from Edit Tour.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr><th>{!! trans('main.Name') !!}</th><th>Type</th><th>Size</th><th>Uploaded</th><th class="text-end">{!! trans('main.Actions') !!}</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($tourFiles as $tourFile)
+                                    <tr>
+                                        <td><a href="{{ $tourFile->url }}" target="_blank" rel="noopener"><i class="ti ti-{{ $tourFile->isImage() ? 'photo' : 'file' }} me-1"></i>{{ $tourFile->display_name }}</a></td>
+                                        <td class="text-muted">{{ $tourFile->attach_content_type ?? '-' }}</td>
+                                        <td class="text-muted text-nowrap">{{ $tourFile->attach_file_size ? number_format($tourFile->attach_file_size / 1024, 1) . ' KB' : '-' }}</td>
+                                        <td class="text-muted text-nowrap">{{ display_date($tourFile->created_at) }}</td>
+                                        <td class="text-end text-nowrap">
+                                            <a href="{{ $tourFile->url }}" target="_blank" rel="noopener" class="btn dash-act dash-act-view" title="Open"><i class="ti ti-eye"></i></a>
+                                            @if(Auth::user()->can('tour.edit'))
+                                                <button type="button" class="btn dash-act dash-act-delete js-delete-tour-file" data-url="{{ route('file_delete', ['id' => $tourFile->id]) }}" data-name="{{ $tourFile->display_name }}" title="Delete"><i class="ti ti-trash"></i></button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <script>
+                    document.addEventListener('click', function (event) {
+                        var button = event.target.closest('.js-delete-tour-file');
+                        if (!button) return;
+                        var ask = typeof window.appConfirm === 'function'
+                            ? window.appConfirm('Delete file "' + button.dataset.name + '"?', { title: 'Confirm delete', confirmText: 'Delete', cancelText: 'Cancel' })
+                            : Promise.resolve(true);
+                        ask.then(function (confirmed) {
+                            if (!confirmed) return;
+                            fetch(button.dataset.url, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'X-Requested-With': 'XMLHttpRequest' },
+                                credentials: 'same-origin'
+                            }).then(function (response) {
+                                if (!response.ok) throw new Error('HTTP ' + response.status);
+                                button.closest('tr').remove();
+                                if (window.appToast) window.appToast('File deleted', 'success');
+                            }).catch(function () {
+                                if (window.appToast) window.appToast('Could not delete the file', 'error');
+                            });
+                        });
+                    });
+                    </script>
+                @endif
             </div>
 
             {{-- Quotations Tab --}}
@@ -1237,8 +1301,8 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-success">
-                                        <i class="ti ti-file-excel"></i>
+                                    <a href="{{ route('quotation.excel', ['id' => $quotation->id]) }}" target="_blank" class="btn btn-sm btn-success" title="Export to Excel">
+                                        <i class="ti ti-file-spreadsheet me-1"></i>Excel
                                     </a>
                                 </td>
                                 <td>{{ Carbon\Carbon::parse($quotation->created_at)->format('d-m-Y') }}</td>
@@ -1403,7 +1467,7 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
                         @forelse($billingData as $billing)
                             <tr>
                                 <td>{{ $billing['id'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($billing['date'] ?? now())->format('Y-m-d') }}</td>
+                                <td>{{ display_date($billing['date'] ?? null) }}</td>
                                 <td>{{ $billing['office_name'] }}</td>
                                 <td>{{ $billing['total_amount'] }}</td>
                                 <td>

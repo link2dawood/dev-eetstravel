@@ -49,4 +49,20 @@ use Illuminate\Database\Eloquent\Model;
 class File extends Model
 {
     protected $guarded = [];
+
+    /** Public URL of the stored file (uploads live on the "public" disk). */
+    public function getUrlAttribute()
+    {
+        return $this->attach_file_name ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->attach_file_name) : null;
+    }
+
+    public function getDisplayNameAttribute()
+    {
+        return basename((string) $this->attach_file_name);
+    }
+
+    public function isImage()
+    {
+        return in_array($this->attach_content_type, ['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+    }
 }

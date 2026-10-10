@@ -81,7 +81,7 @@
                                                 <label for="rate_{{ $selected_room_type->id }}" class="mb-0">{{ $selected_room_type->name }}</label>
                                             </td>
                                             <td>
-                                                <input class="form-control" type="number" step="1" min="0" id="rate_{{ $selected_room_type->id }}"
+                                                <input class="form-control" type="number" step="0.01" min="0" id="rate_{{ $selected_room_type->id }}"
                                                     name="room_rate_{{ $selected_room_type->id }}" placeholder="Rate">
                                             </td>
                                             <td>
@@ -105,19 +105,19 @@
                         <div class="row g-3">
                             <div class="col-6 col-md-4">
                                 <label class="form-label" for="city_tax">City tax</label>
-                                <input class="form-control" type="number" step="1" min="0" id="city_tax" name="city_tax">
+                                <input class="form-control" type="number" step="0.01" min="0" id="city_tax" name="city_tax">
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label" for="portrage_perperson">Porterage p.p.</label>
-                                <input class="form-control" type="number" step="1" min="0" id="portrage_perperson" name="portrage_perperson">
+                                <input class="form-control" type="number" step="0.01" min="0" id="portrage_perperson" name="portrage_perperson">
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label" for="halfboard">Halfboard supp. p.p.</label>
-                                <input class="form-control" type="number" step="1" min="0" max="999999" id="halfboard" name="halfboard">
+                                <input class="form-control" type="number" step="0.01" min="0" max="999999" id="halfboard" name="halfboard">
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label" for="children_cost">Children cost</label>
-                                <input class="form-control" type="number" step="1" min="0" id="children_cost" name="children_cost">
+                                <input class="form-control" type="number" step="0.01" min="0" id="children_cost" name="children_cost">
                             </div>
                             <div class="col-6 col-md-4">
                                 <label class="form-label" for="foc_after_every_pax">F.O.C.</label>
@@ -168,7 +168,7 @@
                             </div>
                             <div class="col-6 col-sm-3">
                                 <label class="form-label" for="cancellationPercentage">Free to cancel</label>
-                                <input type="number" step="1" class="form-control" id="cancellationPercentage" min="0">
+                                <input type="number" step="0.01" class="form-control" id="cancellationPercentage" min="0">
                             </div>
                             <div class="col-8 col-sm-4">
                                 <label class="form-label" for="cancellationType">Type</label>

@@ -91,9 +91,7 @@ public function currentBookings()
         $service = $package ? $package->service() : null;
         
         // Get cancellation policy
-        $cancellationPolicies = DB::table('offer_cancellation_policies')
-            ->where('offer_id', $offer->id)
-            ->get();
+        $cancellationPolicies = \App\OfferCancellationPolicies::where('offer_id', $offer->id)->get();
         
         $cancelPolicy = '';
         foreach ($cancellationPolicies as $policy) {

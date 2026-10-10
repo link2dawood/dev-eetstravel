@@ -1,11 +1,34 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AddPerformanceIndexesToTables extends Migration
 {
+    /**
+     * index name => [table, columns]
+     *
+     * Each index is added only when its table and columns exist and the index is not
+     * there yet: tour_packages has no tour_day_id/hotel/transfer columns, which made
+     * this migration fail halfway and then fail again on the indexes it had created.
+     */
+    private $indexes = [
+        'idx_tours_status_departure' => ['tours', ['status', 'departure_date']],
+        'idx_tours_client' => ['tours', ['client_id']],
+        'idx_tours_responsible' => ['tours', ['responsible']],
+        'idx_tours_created' => ['tours', ['created_at']],
+        'idx_tasks_status_deadline' => ['tasks', ['status', 'dead_line']],
+        'idx_tasks_tour' => ['tasks', ['tour']],
+        'idx_tasks_assign' => ['tasks', ['assign']],
+        'idx_tasks_created' => ['tasks', ['created_at']],
+        'idx_tour_packages_day' => ['tour_packages', ['tour_day_id']],
+        'idx_tour_packages_hotel' => ['tour_packages', ['hotel']],
+        'idx_tour_packages_transfer' => ['tour_packages', ['transfer']],
+        'idx_users_email' => ['users', ['email']],
+        'idx_notifications_created' => ['notifications', ['created_at']],
+    ];
+
     /**
      * Run the migrations.
      *
@@ -13,38 +36,12 @@ class AddPerformanceIndexesToTables extends Migration
      */
     public function up()
     {
-        // Add indexes to tours table for better performance
-        Schema::table('tours', function (Blueprint $table) {
-            $table->index(['status', 'departure_date'], 'idx_tours_status_departure');
-            $table->index('client_id', 'idx_tours_client');
-            $table->index('responsible', 'idx_tours_responsible');
-            $table->index('created_at', 'idx_tours_created');
-        });
-
-        // Add indexes to tasks table for better performance
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->index(['status', 'dead_line'], 'idx_tasks_status_deadline');
-            $table->index('tour', 'idx_tasks_tour');
-            $table->index('assign', 'idx_tasks_assign');
-            $table->index('created_at', 'idx_tasks_created');
-        });
-
-        // Add indexes to tour_packages table
-        Schema::table('tour_packages', function (Blueprint $table) {
-            $table->index('tour_day_id', 'idx_tour_packages_day');
-            $table->index('hotel', 'idx_tour_packages_hotel');
-            $table->index('transfer', 'idx_tour_packages_transfer');
-        });
-
-        // Add indexes to users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->index('email', 'idx_users_email');
-        });
-
-        // Add indexes to notifications table if it exists
-        if (Schema::hasTable('notifications')) {
-            Schema::table('notifications', function (Blueprint $table) {
-                $table->index('created_at', 'idx_notifications_created');
+        foreach ($this->indexes as $name => [$table, $columns]) {
+            if (!Schema::hasTable($table) || !Schema::hasColumns($table, $columns) || $this->indexExists($table, $name)) {
+                continue;
+            }
+            Schema::table($table, function ($blueprint) use ($columns, $name) {
+                $blueprint->index($columns, $name);
             });
         }
     }
@@ -56,39 +53,17 @@ class AddPerformanceIndexesToTables extends Migration
      */
     public function down()
     {
-        // Remove indexes from tours table
-        Schema::table('tours', function (Blueprint $table) {
-            $table->dropIndex('idx_tours_status_departure');
-            $table->dropIndex('idx_tours_client');
-            $table->dropIndex('idx_tours_responsible');
-            $table->dropIndex('idx_tours_created');
-        });
-
-        // Remove indexes from tasks table
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->dropIndex('idx_tasks_status_deadline');
-            $table->dropIndex('idx_tasks_tour');
-            $table->dropIndex('idx_tasks_assign');
-            $table->dropIndex('idx_tasks_created');
-        });
-
-        // Remove indexes from tour_packages table
-        Schema::table('tour_packages', function (Blueprint $table) {
-            $table->dropIndex('idx_tour_packages_day');
-            $table->dropIndex('idx_tour_packages_hotel');
-            $table->dropIndex('idx_tour_packages_transfer');
-        });
-
-        // Remove indexes from users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('idx_users_email');
-        });
-
-        // Remove indexes from notifications table if it exists
-        if (Schema::hasTable('notifications')) {
-            Schema::table('notifications', function (Blueprint $table) {
-                $table->dropIndex('idx_notifications_created');
-            });
+        foreach ($this->indexes as $name => [$table]) {
+            if (Schema::hasTable($table) && $this->indexExists($table, $name)) {
+                Schema::table($table, function ($blueprint) use ($name) {
+                    $blueprint->dropIndex($name);
+                });
+            }
         }
+    }
+
+    private function indexExists($table, $name)
+    {
+        return !empty(DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$name]));
     }
 }

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class HotelOffers extends Model
 {
+	use \App\Helper\FormatsDecimalAmounts;
+
 	    protected $table = 'hotel_offers';
 protected $fillable = [
         'package_id','tour_id','ref', 'status', 'option_date' ,
@@ -48,9 +50,14 @@ protected $fillable = [
 			
 		}
 		
-			return $price; 
+			return $this->formatAmount($price);
 		}
 	
+	public function getCityTaxAttribute($value) { return $this->formatAmount($value); }
+	public function getHalfboardAttribute($value) { return $this->formatAmount($value); }
+	public function getPortragePerpersonAttribute($value) { return $this->formatAmount($value); }
+	public function getChildrenCostAttribute($value) { return $this->formatAmount($value); }
+
 	 public function getStatusName($id)
     {
         return Status::find($id)->name;

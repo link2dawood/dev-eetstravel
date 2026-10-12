@@ -2,14 +2,12 @@
 <div class="col-md-12">
     <div class="box box-primary">
         <div class="box-header">
-            <div class="box-tools pull-right">
+            <div class="box-tools d-flex justify-content-end">
 
                 <div class="form-inline">
-                    <div class="form-group">
-                        <span id="filter" class="btn btn-box-tool"><i class="fa fa-car" aria-hidden="true"></i></span>
-                        <span id="help" class="btn btn-box-tool"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
-                        <span class="btn btn-box-tool"></span>
-                        <span class="btn btn-box-tool"></span>
+                    <div class="form-group d-flex gap-1">
+                        <span id="filter" class="btn btn-box-tool" title="Filter buses"><i class="fa fa-car" aria-hidden="true"></i></span>
+                        <span id="help" class="btn btn-box-tool" title="Legend"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
                    <!-- <button type="button" class="btn btn-box-tool" {{--data-widget="collapse"--}}>
                    <i class="fa fa-minus"></i></button>
                         <button type="button" class="btn btn-box-tool" {{--data-widget="remove"--}}>

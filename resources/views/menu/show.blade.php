@@ -1,11 +1,11 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title','Menu')
 @section('content')
     @include('layouts.title',
-    ['title' => 'Menu', 'sub_title' => 'Create Menu',
+    ['title' => 'Menu', 'sub_title' => 'Menu Details',
     'breadcrumbs' => [
     ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-    ['title' => 'Create', 'route' => null]]])
+    ['title' => 'Details', 'route' => null]]])
     <section class="content">
         <div class="box box-primary">
                 <div class="box-body">
@@ -41,7 +41,7 @@
                                     <td>
                                         <b><i>{{trans('main.Description')}}: </i></b>
                                     </td>
-                                    <td class="info_td_show">{!!$menu->description!!}</td>
+                                    <td class="info_td_show">{!! $menu->safeDescription() !!}</td>
                                 </tr>
                                 </tbody>
                             </table>

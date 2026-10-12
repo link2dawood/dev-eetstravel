@@ -354,8 +354,9 @@ class AgreementsController extends Controller
     {
         $n = strtok($name, '(');
         if ($n) {
+            // Packages of other services (or unlinked hotels) have no matching hotel
             $hotel = Hotel::where('name', $n)->first();
-            return $hotel['city'];
+            return $hotel ? $hotel->city : null;
         }
         return null;
     }

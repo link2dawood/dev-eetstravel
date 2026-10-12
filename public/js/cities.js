@@ -1,59 +1,33 @@
-
+// When a country select changes, reload the matching city select with that country's cities.
+// Pairs by id: country -> city, country_from -> city_from, country_begin -> city_begin, etc.
+// City text inputs (e.g. Supplier Search) are left alone.
 $(document).ready(function() {
-    $('#country_begin').on('change', function() {
-        var countryId = $(this).val();
+    $(document).on('change', 'select[id^="country"]', function() {
+        var citySelect = $('#' + this.id.replace(/^country/, 'city'));
+        if (!citySelect.length || !citySelect.is('select')) return;
 
-        // Make AJAX request to fetch cities
+        var countryCode = $(this).val();
+        if (!countryCode) {
+            citySelect.html('<option value="">Select a country first</option>').trigger('change');
+            return;
+        }
+
+        citySelect.prop('disabled', true);
         $.ajax({
-            url: '/city_list/' + countryId, // Replace with your route URL
+            url: '/city_list/' + encodeURIComponent(countryCode),
             method: 'get',
-            data: {
-                country_id: countryId
+            dataType: 'html',
+            success: function(options) {
+                citySelect.html(options).val('').trigger('change');
             },
-            success: function(response) {
-                $("#city_begin").html(response);
+            error: function() {
+                if (typeof window.appToast === 'function') {
+                    window.appToast('The city list could not be loaded. Please try again.', 'error');
+                }
             },
-            error: function(xhr, status, error) {
-                console.log(error);
-            }
-        });
-    });
-
-    $('#country_end').on('change', function() {
-        var countryId = $(this).val();
-
-        // Make AJAX request to fetch cities
-        $.ajax({
-            url: '/city_list/' + countryId, // Replace with your route URL
-            method: 'get',
-            data: {
-                country_id: countryId
-            },
-            success: function(response) {
-                $("#city_end").html(response);
-            },
-            error: function(xhr, status, error) {
-                console.log(error);
+            complete: function() {
+                citySelect.prop('disabled', false);
             }
         });
     });
 });
-
-$('#country').on('change', function() {
-        var countryId = $(this).val();
-
-        // Make AJAX request to fetch cities
-        $.ajax({
-            url: '/city_list/' + countryId, // Replace with your route URL
-            method: 'get',
-            data: {
-                country_id: countryId
-            },
-            success: function(response) {
-                $("#city").html(response);
-            },
-            error: function(xhr, status, error) {
-                console.log(error);
-            }
-        });
-    });

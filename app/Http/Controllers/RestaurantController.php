@@ -160,7 +160,7 @@ class RestaurantController extends Controller
         $menus = $restaurant->menus ?? collect([]);
         
         // Get invoices for this restaurant
-        $invoices = $restaurant->invoices ?? collect([]);
+        $invoices = \App\Helper\SupplierInvoices::forService(4, $id);
         
         // Get comments
         $comments = Comment::where('reference_type', Comment::$services['restaurant'])

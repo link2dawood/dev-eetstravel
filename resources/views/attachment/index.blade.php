@@ -13,16 +13,27 @@
                 @if (Session::has('message'))
                 <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
                 @endif
-                <form action="{{ route('images.savefile') }}" method="post" enctype="multipart/form-data">
+                {{-- The form is the grid row, so each category card sits in a column --}}
+                <form action="{{ route('images.savefile') }}" method="post" enctype="multipart/form-data" class="row g-3 m-0 w-100">
                     @csrf
-                    
+
                     @forelse($attachmenttypes as $attachmenttype)
-                    <div class="col-md-3">
-                        <div class="thumbnail text-center">
-                           
-                            <h3>{{ $attachmenttype->name }} </h3>
-                            
-                            <img class="pic" src="@if($attachmenttype->attachments()->first() != null) {{ $attachmenttype->attachments()->first()->url }} @endif" alt="{{ $attachmenttype->name }}" style="width:100%">
+                    <div class="col-sm-6 col-lg-4 col-xl-3">
+                        <div class="card h-100">
+                          <div class="card-body text-center">
+                            <h3 class="card-title mb-2">{{ $attachmenttype->name }}</h3>
+
+                            @php $attachmentImage = $attachmenttype->attachments()->first(); @endphp
+                            <div class="ratio ratio-4x3 bg-light rounded mb-2 position-relative overflow-hidden">
+                                <div class="d-flex flex-column align-items-center justify-content-center text-muted image-placeholder"{!! $attachmentImage ? ' style="display:none !important"' : '' !!}>
+                                    <i class="ti ti-photo-off" style="font-size: 2rem;"></i>
+                                    <small>{{ $attachmentImage ? 'Image not available on this server' : 'No image yet' }}</small>
+                                </div>
+                                @if($attachmentImage)
+                                    <img class="pic" src="{{ $attachmentImage->url }}" alt="{{ $attachmenttype->name }}" style="width:100%; height:100%; object-fit:cover;"
+                                         onerror="this.style.display='none'; this.parentNode.querySelector('.image-placeholder').style.removeProperty('display');">
+                                @endif
+                            </div>
                             <div class="caption">
 {{--                                
                                 <div class="imginput">
@@ -31,10 +42,11 @@
                                 </div>
 --}}                                
                                 <div class="upload-btn-wrapper">
-                                    {{--<button class="btn btn-primary">Change</button>--}}
-                                    <input name="files[]" data-name="{{ $attachmenttype->model }}" data-id="{{ $attachmenttype->id }}" data-model="Attachmenttype" class="fileToUpload" type="file" />
-                                </div>                                
+                                    <label class="form-label small text-muted mb-1">Replace image</label>
+                                    <input name="files[]" data-name="{{ $attachmenttype->model }}" data-id="{{ $attachmenttype->id }}" data-model="Attachmenttype" class="fileToUpload form-control form-control-sm" type="file" accept="image/*" />
+                                </div>
                             </div>
+                          </div>
                         </div>
                     </div>
                     @empty

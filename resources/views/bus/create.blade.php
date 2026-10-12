@@ -27,7 +27,6 @@
                                     <a href="javascript:history.back()">
                                         <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                     </a>
-                                    <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                                 </div>
                             </div>
                         </div>

@@ -102,11 +102,20 @@ var google_map = {
     },
     generateMap() {
 
-        if(google_map.config.place_object === '' || google_map.config.place_object === null){
+        // No saved place (new or unlocated supplier): nothing to draw
+        if (!google_map.config.place_object || google_map.config.place_object === 'undefined') {
             return;
         }
 
-        const object_place = JSON.parse(google_map.config.place_object);
+        let object_place;
+        try {
+            object_place = JSON.parse(google_map.config.place_object);
+        } catch (e) {
+            return;
+        }
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            return;
+        }
 
         google_map.map = new google.maps.Map(document.getElementById('map'), {
             gestureHandling: 'cooperative'

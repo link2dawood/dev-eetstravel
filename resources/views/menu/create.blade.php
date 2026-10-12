@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title','Create Menu')
 @section('content')
     @include('layouts.title',
     ['title' => 'Menu', 'sub_title' => 'Create Menu',
@@ -17,7 +17,6 @@
                                 <button type="button" class='btn btn-primary back_btn'>{{trans('main.Back')}}</button>
                             </a>
 
-                            <button class="btn btn-success pre-loader-func" type="submit">{{trans('main.Save')}}</button>
                         </div>
                     </div>
                 </div>

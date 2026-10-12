@@ -214,7 +214,8 @@ class HotelController extends Controller
         $files = $this->parseAttach($hotel);
 
         return view('hotel.show', ['title' => $title, 'hotel' => $hotel, 'files' => $files,
-            'criterias' => $criterias, 'contacts' => $contacts]);
+            'criterias' => $criterias, 'contacts' => $contacts,
+            'invoices' => \App\Helper\SupplierInvoices::forService(0, $id)]);
     }
 
     /**
@@ -306,7 +307,10 @@ class HotelController extends Controller
             $data = ['hotelContacts' => true, 'fullNameErrorValidate' => trans('main.ContactsshouldnothaveanemptyFullName')];
             foreach ($contacts as $itemContact){
                 if(!$itemContact['contact_full_name']){
-                    return response()->json($data);
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json($data);
+                    }
+                    return redirect()->back()->withInput()->withErrors(['contacts' => $data['fullNameErrorValidate']]);
                 }
             }
         }
@@ -403,8 +407,12 @@ class HotelController extends Controller
 		$hotel->password  = $request->password ;
         $hotel->status = $status;
         $hotel->save();
-       
-        return response()->json($data);
+
+        // The edit form posts normally; AJAX callers still get the JSON route
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($data);
+        }
+        return redirect($data['route']);
     }
 
     /**

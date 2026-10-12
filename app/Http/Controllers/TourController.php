@@ -2777,13 +2777,14 @@ public function quotation_data(Request $request)
     }
 	
 	public function get_cities($country_code){
-        $options = City::where("country",$country_code)->get();
-        $data = "";
-        foreach ($options as $option) {
-            $data .= '<option>'.$option->name.'</option>';
+        // Option values are city ids: names repeat across countries, so a name cannot identify the city
+        $data = '<option value="">Select city</option>';
+        foreach (\App\Helper\Choices::getCitiesForCountry($country_code) as $id => $name) {
+            if ($id === '') continue;
+            $data .= '<option value="' . e($id) . '">' . e($name) . '</option>';
         }
-        
-        return response()->json([$data]);
+
+        return response($data)->header('Content-Type', 'text/html; charset=UTF-8');
     }
 	
 	 public function docExport(Request $request, $id)

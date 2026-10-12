@@ -16,6 +16,32 @@ class ValidationService
     /**
      * Common validation rules for names and titles
      */
+    /**
+     * City from the country/city picker: a city id (component.city_form submits ids,
+     * because city names repeat across countries) or, for older forms, a city name.
+     */
+    public static function cityRules($required = true)
+    {
+        return [
+            $required ? 'required' : 'nullable',
+            'max:191',
+            function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                if (is_numeric($value)) {
+                    if (!\App\City::whereKey((int) $value)->exists()) {
+                        $fail('Please choose a city from the list.');
+                    }
+                    return;
+                }
+                if (!preg_match("/^[\pL\s\.\-']{2,}$/u", (string) $value)) {
+                    $fail('City name can only contain letters, spaces, hyphens, and dots.');
+                }
+            },
+        ];
+    }
+
     public static function nameRules($required = true, $maxLength = 191, $minLength = 2)
     {
         $rules = [
@@ -320,7 +346,7 @@ class ValidationService
             'work_email' => self::emailRules(true, $emailUnique),
             'work_phone' => self::phoneRules(true),
             'address_first' => self::addressRules(true, 500, 5),
-            'city' => self::nameRules(true, 191, 2),
+            'city' => self::cityRules(true),
             'country' => self::nameRules(true, 191, 2)
         ];
     }

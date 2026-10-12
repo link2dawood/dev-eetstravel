@@ -127,7 +127,7 @@ class TransferController extends Controller
 
         $this->addFile($request, $transfer);
         $data = ['route' => route('transfer.index')];
-		return redirect()->back();
+		return redirect()->route('transfer.index');
         return response()->json($data);
     }
 
@@ -169,7 +169,7 @@ class TransferController extends Controller
         return view(
             'transfer.show',
             ['comments' => $comments, 'title' => $title, 'transfer' => $transfer, 'files' => $files,
-                'criterias' => $criterias]);
+                'criterias' => $criterias, 'invoices' => \App\Helper\SupplierInvoices::forService(3, $id)]);
     }
 
     /**
@@ -228,9 +228,13 @@ class TransferController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Bus Company $transfer->name edited", 'success');
 
-        $this->addFile($request, $transfer);    
+        $this->addFile($request, $transfer);
         $data = ['route' => route('transfer.index')];
-        return response()->json($data);
+        // The edit form posts normally; AJAX callers still get the JSON route
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($data);
+        }
+        return redirect($data['route']);
     }
 
     /**

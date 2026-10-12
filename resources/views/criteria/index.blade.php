@@ -57,37 +57,25 @@
     </section>
 @endsection
 
+@section('post_styles')
+    {{-- DataTables is loaded on demand by window.loadDataTables --}}
+    @include('component.datatables_cdn')
+@endsection
+
 @push('scripts')
 
 <script>
     $(document).ready(function() {
+        (window.loadDataTables ? window.loadDataTables() : Promise.resolve()).then(initCriteriaTable).catch(function () {
+            // Without DataTables the server-rendered table still works, just without search/paging
+        });
+    });
+
+    function initCriteriaTable() {
         let table = $('#criteria-table').DataTable({
-            dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
+            dom: 	"<'row'<'col-sm-6'l><'col-sm-6'f>>" +
             "<'row'<'col-sm-12'tr>>" +
             "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [
-                {
-                    extend: 'csv',
-                    title: 'Criteria List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Criteria List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Criteria List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                }
-            ],
             pageLength: 50,
             columnDefs: [
                 { targets: [5], orderable: false } // Actions column not sortable
@@ -113,6 +101,6 @@
         });
 
         $('#criteria-table tfoot th').appendTo('#criteria-table thead');
-    })
+    }
 </script>
 @endpush

@@ -159,7 +159,7 @@ class GuideController extends Controller
 
         $files = $this->parseAttach($guide);
         return view('guide.show', ['title' => $title, 'guide' => $guide, 'files' => $files,
-            'criterias' => $criterias]);
+            'criterias' => $criterias, 'invoices' => \App\Helper\SupplierInvoices::forService(2, $id)]);
     }
 
     /**

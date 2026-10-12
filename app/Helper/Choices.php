@@ -23,6 +23,19 @@ class Choices
         return $countries;
     }
 
+    /**
+     * Cities of one country for a select: [id => name]. City names repeat across
+     * countries (e.g. Paris FR / Paris US), so forms submit the id, not the name.
+     */
+    public static function getCitiesForCountry($countryAlias)
+    {
+        $cities = ['' => 'Select city'];
+        if (!$countryAlias) {
+            return ['' => 'Select a country first'];
+        }
+        return $cities + City::where('country', $countryAlias)->orderBy('name')->pluck('name', 'id')->toArray();
+    }
+
     public static function getCitiesArray()
     {
         $cities = ['' => 'Select cities'];

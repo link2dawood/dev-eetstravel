@@ -131,7 +131,7 @@
         const rows = table.querySelectorAll('tbody tr');
         const filter = (searchValue || '').toLowerCase();
         rows.forEach(function(row) {
-            row.style.display = row.textContent.toLowerCase().includes(filter) - '' : 'none';
+            row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
         });
     }
 
@@ -140,13 +140,13 @@
         if (!table) return;
         const tbody = table.querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
-        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' - 'desc' : 'asc';
+        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
         table.dataset.sortColumn = columnIndex;
         table.dataset.sortDirection = direction;
         rows.sort(function(a, b) {
-            const left = (a.children[columnIndex]-.innerText || '').trim().toLowerCase();
-            const right = (b.children[columnIndex]-.innerText || '').trim().toLowerCase();
-            return direction === 'asc' - left.localeCompare(right) : right.localeCompare(left);
+            const left = (a.children[columnIndex]?.innerText || '').trim().toLowerCase();
+            const right = (b.children[columnIndex]?.innerText || '').trim().toLowerCase();
+            return direction === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
         });
         rows.forEach(function(row) { tbody.appendChild(row); });
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Services\ValidationService;
 
 class StoreClientRequest extends FormRequest
 {
@@ -60,13 +61,7 @@ class StoreClientRequest extends FormRequest
                 'min:2',
                 'regex:/^[a-zA-Z\s\-]+$/' // Allow letters, spaces, hyphens
             ],
-            'city' => [
-                'required',
-                'string',
-                'max:191',
-                'min:2',
-                'regex:/^[a-zA-Z\s\-\.]+$/' // Allow letters, spaces, hyphens, dots
-            ],
+            'city' => ValidationService::cityRules(true),
             'address' => [
                 'required',
                 'string',

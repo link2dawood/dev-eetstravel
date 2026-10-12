@@ -691,10 +691,11 @@ class BusController extends Controller
                             $tour = Tour::query()->where('id', $item->tour_id)->first();
 
                             if($tour) {
+                                // Filter in SQL: the old code loaded every tour day of every tour, per bus day
                                 $tourDates = TourDay::query()
-                                    ->get(['id', 'date', 'tour'])
-                                    ->where('tour',$item->tour_id)
-                                    ->sortBy('date');
+                                    ->where('tour', $item->tour_id)
+                                    ->orderBy('date')
+                                    ->get(['id', 'date', 'tour']);
 
                                 $date_city = 0;
 
@@ -716,8 +717,9 @@ class BusController extends Controller
                                                     ->where('hotels.id', $hotel['id'])
                                                     ->first();
 
-                                                if($city['name']) {
-                                                    $cities[$date_city] = $city['name'];
+                                                // The hotel's city id may not match any city
+                                                if ($city && $city->name) {
+                                                    $cities[$date_city] = $city->name;
                                                 }
                                             }
 
@@ -864,10 +866,11 @@ class BusController extends Controller
                             $tour = Tour::query()->where('id', $item->tour_id)->first();
 
                             if($tour) {
+                                // Filter in SQL: the old code loaded every tour day of every tour, per bus day
                                 $tourDates = TourDay::query()
-                                    ->get(['id', 'date', 'tour'])
-                                    ->where('tour',$item->tour_id)
-                                    ->sortBy('date');
+                                    ->where('tour', $item->tour_id)
+                                    ->orderBy('date')
+                                    ->get(['id', 'date', 'tour']);
 
                                 $date_city = 0;
 
@@ -889,8 +892,9 @@ class BusController extends Controller
                                                     ->where('hotels.id', $hotel['id'])
                                                     ->first();
 
-                                                if($city['name']) {
-                                                    $cities[$date_city] = $city['name'];
+                                                // The hotel's city id may not match any city
+                                                if ($city && $city->name) {
+                                                    $cities[$date_city] = $city->name;
                                                 }
                                             }
 

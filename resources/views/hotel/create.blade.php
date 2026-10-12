@@ -257,7 +257,7 @@
                                     <div class="col-12">
                                 <div class="form-group">
                                             <label class="form-label">{!!trans('main.Files')!!}</label>
-                                    @component('component.file_upload_field')@endcomponent
+                                    @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
                                 </div>
                         </div>
                                 </x-form-section>

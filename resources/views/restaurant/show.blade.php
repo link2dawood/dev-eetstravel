@@ -24,14 +24,14 @@
                     </div>
                 </div>
                 <ul class="nav nav-tabs" role='tablist'>
-                    <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>{{trans('main.Info')}}</a></li>
-                    <li role='presentation'><a href="#history-tab" aria-controls='history-tab' role='tab' data-toggle='tab'>{{trans('main.History')}}</a></li>
-                    <li role='presentation'><a href="#menu-tab" aria-controls='menu-tab' role='tab' data-toggle='tab'>{{trans('main.Menu')}}</a></li>
-					<li role='presentation' class="tab" data-tab="invoices-tab"><a href="#invoices-tab" aria-controls='invoices-tab' role='tab'
-                                data-toggle='tab' id="invoices_tab" >{!! trans('Invoices') !!}</a></li>
+                    <li class="nav-item" role='presentation'><a class="nav-link active" href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{{trans('main.Info')}}</a></li>
+                    <li class="nav-item" role='presentation'><a class="nav-link" href="#history-tab" aria-controls='history-tab' role='tab' data-bs-toggle='tab'>{{trans('main.History')}}</a></li>
+                    <li class="nav-item" role='presentation'><a class="nav-link" href="#menu-tab" aria-controls='menu-tab' role='tab' data-bs-toggle='tab'>{{trans('main.Menu')}}</a></li>
+                    <li class="nav-item tab" role='presentation' data-tab="invoices-tab"><a class="nav-link" href="#invoices-tab" aria-controls='invoices-tab' role='tab'
+                                data-bs-toggle='tab' id="invoices_tab" >{!! trans('Invoices') !!}</a></li>
                 </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade in active" role='tabpanel' id='info-tab'>
+                <div class="tab-content pt-3">
+                    <div class="tab-pane fade show active" role='tabpanel' id='info-tab'>
                         <table class = 'table_show col-lg-6 table table-bordered'>
                             <tbody>
                             <tr>
@@ -235,13 +235,13 @@
                                 <tr>
                                     <td><a href="{{route('menu.show', ['menu' => $menu->id])}}">{{$menu->name}}</a></td>
                                     <td>{{$menu->price}}</td>
-                                    <td>{!! $menu->description !!}</td>
+                                    <td>{!! $menu->safeDescription() !!}</td>
                                     <td style="width: 100px;">
                                         @if(Auth::user()->can('menu.edit'))
                                             <a href="{{route('menu.edit', ['menu' => $menu->id])}}" class="btn btn-primary btn-sm edit-button" data-link="{{route('menu.edit', ['menu' => $menu->id])}}"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
                                         @endif
                                         @if(Auth::user()->can('menu.destroy_menu'))
-                                            <a  data-toggle="modal" data-target="#myModal" class="btn btn-danger btn-sm delete" data-link="{{route('menu.delete', ['menu' => $menu->id], false)}}"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+                                            <a  data-toggle="modal" data-target="#myModal" data-bs-toggle="modal" data-bs-target="#myModal" class="btn btn-danger btn-sm delete" data-link="{{route('menu.delete', ['id' => $menu->id], false)}}"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
                                         @endif
                                     </td>
                                 </tr>
@@ -249,7 +249,7 @@
                             </tbody>
                         </table>
                     </div>
-					<div role="tabpanel" class="tab-pane fade in" id="invoices-tab">
+					<div role="tabpanel" class="tab-pane fade" id="invoices-tab">
 					<div id="tour_create" style="margin-bottom : 20px;">
                     {!! \App\Helper\PermissionHelper::getCreateButton(route('invoices.create'), \App\Invoices::class) !!}
                 </div>

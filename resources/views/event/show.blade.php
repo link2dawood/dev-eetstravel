@@ -90,7 +90,9 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="history-tab"><div id="history-container"></div></div>
-                <div class="tab-pane fade" id="invoices-tab"><div id="invoices-container"></div></div>
+                <div class="tab-pane fade" id="invoices-tab">
+                    @include('component.supplier_invoices', ['invoices' => $invoices ?? collect(), 'tableId' => 'event-invoices-table'])
+                </div>
             </div>
         </div>
     </div>

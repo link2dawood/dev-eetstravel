@@ -164,7 +164,7 @@ class EventController extends Controller
         $files = $this->parseAttach($event);
 
         return view('event.show', ['event' => $event, 'title' => $title, 'files' => $files,
-            'criterias' => $criterias]);
+            'criterias' => $criterias, 'invoices' => \App\Helper\SupplierInvoices::forService(1, $id)]);
     }
 
     /**

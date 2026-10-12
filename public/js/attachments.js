@@ -1,4 +1,11 @@
 $(document).ready(function () {
+    function notify(message, type) {
+        var toast = window.appToast || window.showToast;
+        if (typeof toast === 'function') {
+            toast(message, type);
+        }
+    }
+
     $('.fileToUpload').on('change', function(){
         var self = $(this);
         var that = this;
@@ -30,19 +37,21 @@ $(document).ready(function () {
                 self.closest('.file-caption-main').find('.file-caption-name').html(that.files[0].name);
                 $('.pic').attr('src', uploadedFile.url);
             } else{
-                self.closest('.thumbnail').find('img.pic').attr('src', uploadedFile.url);
+                // Images page: show the new picture in this category's card (create the <img> if it had none)
+                var card = self.closest('.card, .thumbnail');
+                var img = card.find('img.pic');
+                if (!img.length) {
+                    var frame = card.find('.ratio').first();
+                    img = $('<img class="pic" alt="" style="width:100%; height:100%; object-fit:cover;">').appendTo(frame.length ? frame : card);
+                }
+                img.show().attr('src', uploadedFile.url);
+                card.find('.image-placeholder').attr('style', 'display:none !important');
             }
 
-            if (window.showToast) {
-                window.showToast('Image uploaded successfully', 'success');
-            }
+            notify('Image uploaded successfully', 'success');
         }).fail(function(xhr) {
             var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Image upload failed';
-            if (window.showToast) {
-                window.showToast(message, 'error');
-            } else {
-                alert(message);
-            }
+            notify(message, 'error');
         });
     });
 });

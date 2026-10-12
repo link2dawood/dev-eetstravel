@@ -1546,6 +1546,21 @@
                 }
             });
         @endif
+        @if(isset($errors) && $errors->any())
+            @php
+                $validationMessages = $errors->all();
+                $validationToast = implode(' ', array_slice($validationMessages, 0, 3));
+                if (count($validationMessages) > 3) {
+                    $validationToast .= ' (+' . (count($validationMessages) - 3) . ' more)';
+                }
+            @endphp
+            // Validation errors from a redirect-back: many forms have no inline error block
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof window.appToast === 'function') {
+                    window.appToast({!! json_encode($validationToast) !!}, 'error', 'Please check the form');
+                }
+            });
+        @endif
         window.appConfirm = function(message, options) {
             options = options || {};
 

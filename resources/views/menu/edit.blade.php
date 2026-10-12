@@ -1,11 +1,11 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Edit')
+@section('title','Edit Menu')
 @section('content')
     @include('layouts.title',
-    ['title' => 'Menu', 'sub_title' => 'Create Menu',
+    ['title' => 'Menu', 'sub_title' => 'Edit Menu',
     'breadcrumbs' => [
     ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-    ['title' => 'Create', 'route' => null]]])
+    ['title' => 'Edit', 'route' => null]]])
     <section class="content">
         <div class="box box-primary">
             <form method='POST' action='{{route('menu.update', ['menu' => $menu->id])}}'>
@@ -17,7 +17,6 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success pre-loader-func' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>

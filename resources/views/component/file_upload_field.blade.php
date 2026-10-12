@@ -203,16 +203,28 @@
 		// Handle error response
 		function handleErrorResponse(xhr) {
 			let err = xhr.responseJSON;
-			if (err && typeof err === 'object') {
-				for(let key in err){
-					let errorMsg = Array.isArray(err[key]) ? err[key][0] : err[key];
-					let targetInput = $("[name='" + key + "']");
-					let par = $(targetInput).closest('.form-group');
-					$(par).append("<p class='alert alert-danger validation-error'>" + errorMsg + "</p>");
-					$(par).addClass('has-error');
+			// Laravel validation replies { message, errors: { field: [..] } }
+			let fieldErrors = err && typeof err === 'object' ? (err.errors || err) : null;
+			$('.validation-error').remove();
+			$('.has-error').removeClass('has-error');
+			let shown = 0;
+			if (fieldErrors && typeof fieldErrors === 'object') {
+				for (let key in fieldErrors) {
+					if (key === 'message' || key === 'success' || key === 'status_code' || key === 'debug') continue;
+					let errorMsg = Array.isArray(fieldErrors[key]) ? fieldErrors[key][0] : fieldErrors[key];
+					let targetInput = $("[name='" + key + "'], [name='" + key + "[]']").first();
+					let par = targetInput.closest('.form-group, .mb-3, [class*="col-"]');
+					if (!par.length) continue;
+					$('<p class="alert alert-danger validation-error mt-1 mb-0"></p>').text(errorMsg).appendTo(par);
+					par.addClass('has-error');
+					shown++;
 				}
+			}
+			let message = shown ? 'Please correct the highlighted fields.' : ((err && err.message) || 'An error occurred. Please check your input and try again.');
+			if (typeof window.appToast === 'function') {
+				window.appToast(message, 'error');
 			} else {
-				$('#err-container').html('<div class="alert alert-danger">An error occurred. Please check your input and try again.</div>');
+				$('#err-container').html($('<div class="alert alert-danger"></div>').text(message));
 			}
 		}
 		

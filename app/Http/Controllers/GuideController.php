@@ -52,26 +52,32 @@ class GuideController extends Controller
      *
      * @return  \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - guide';
 
-        $cacheKey = 'guides_index_data_' . md5(request()->getQueryString());
-        $guides = \Cache::remember($cacheKey, 300, function () {
-            return Guide::leftJoin('countries', 'countries.alias', '=', 'guides.country')
-                ->leftJoin('cities', 'cities.id', '=', 'guides.city')
-                ->select([
-                    'guides.id',
-                    'guides.name',
-                    'guides.address',
-                    'guides.work_phone',
-                    'guides.work_contact',
-                    'cities.name as city_name',
-                    'countries.name as country_name'
-                ])
-                ->orderBy('guides.name', 'asc')
-                ->paginate(15);
-        });
+        $search = trim((string) $request->input('search'));
+        $guides = Guide::leftJoin('countries', 'countries.alias', '=', 'guides.country')
+            ->leftJoin('cities', 'cities.id', '=', 'guides.city')
+            ->select([
+                'guides.id',
+                'guides.name',
+                'guides.address_first as address',
+                'guides.work_phone',
+                'guides.work_contact',
+                'cities.name as city_name',
+                'countries.name as country_name'
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('guides.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('guides.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('guide.index', compact('guides', 'title'));
     }

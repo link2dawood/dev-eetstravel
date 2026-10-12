@@ -34,7 +34,7 @@
                 <div class="col-md-6 mb-2 mb-md-0">
                     <div class="input-icon">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="restaurants-search" class="form-control" placeholder="Search restaurants..." onkeyup="filterTable('restaurants-table', this.value)">
+                        <input type="text" id="restaurants-search" class="form-control" placeholder="Search restaurants..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -67,7 +67,7 @@
                                     <small class="text-muted d-lg-none">{{ $restaurant->city_name ?? '' }}</small>
                                 </div>
                             </td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $restaurant->address ?? '-' }}</span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $restaurant->address_first ?? '-' }}</span></td>
                             <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->country_name ?? '-' }}</span></td>
                             <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $restaurant->city_name ?? '-' }}</span></td>
                             <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $restaurant->work_phone ?? '-' }}</span></td>
@@ -106,6 +106,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script>
     function filterTable(tableId, searchValue) {
         const table = document.getElementById(tableId);

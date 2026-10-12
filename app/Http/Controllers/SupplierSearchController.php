@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\TourPackage;
 use App\User;
 use Illuminate\Http\Request;
-use Yajra\Datatables\Datatables;
 use App\Helper\HelperTrait;
 use App\Criteria;
 use App\CriteriaType;
@@ -48,7 +47,7 @@ class SupplierSearchController extends Controller
         $criterias      = $request->criterias;
         $rates          = $request->rates;
 
-        if($request->search['value']) $searchName = $request->search['value'];
+        if ($request->input('search.value')) $searchName = $request->input('search.value');
 
         if ($request->service === 'Service' || $request->service === 'All') {
             // Root fix: Use only valid services (existing model classes)
@@ -90,7 +89,7 @@ class SupplierSearchController extends Controller
                                       ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
                                       ->get() :
                                 $model = $query_builder->select( "{$table_name}.*",
-    DB::raw("IFNULL(cities.name, {$table_name}.city) as city"),
+    "cities.name as city",
     'countries.name as country')
                                       ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
                                       ->get();
@@ -127,28 +126,65 @@ class SupplierSearchController extends Controller
         } elseif (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
             $services = [$namespace];
         } else {
-            $namespace = collect($namespace);
-            $services = $namespace->unique()->all();
+            // Dedupe by type + id (unique() without a key compares every pair of models)
+            $services = collect($namespace)->unique(function ($model) {
+                return get_class($model) . ':' . $model->id;
+            })->all();
         }
         
         // Ensure we have a valid array for DataTables
         if (!is_array($services)) {
             $services = [];
         }
-        
-        $data = Datatables::of($services);
-        $can = 0;
-        if (\Auth::user()->can('tour_package.create')){
-            $can = 1;
+
+        // City typed as text (no autocomplete code): match the city name or the address,
+        // since many suppliers' city ids do not point at their real city
+        $cityName = trim((string) $request->input('city_name'));
+        if ($cityName !== '' && !$cityCode) {
+            $services = array_values(array_filter($services, function ($model) use ($cityName) {
+                return stripos((string) $model->city, $cityName) !== false
+                    || stripos((string) $model->address_first, $cityName) !== false;
+            }));
         }
-        if ($request->actionColumn === 'add-service-column') {
-            $this->serviceColumn($data, $can);
+
+        $can = \Auth::user()->can('tour_package.create') ? 1 : 0;
+        $actionColumn = $request->actionColumn === 'add-service-column' ? 'add-service-column' : 'action';
+
+        return $this->dataTableResponse($request, $services, function ($model) use ($actionColumn, $can) {
+            return [$actionColumn => $actionColumn === 'action' ? $this->dataId($model, $can) : $this->serviceButton($model)];
+        });
+    }
+
+    /**
+     * DataTables server-side JSON (draw / recordsTotal / recordsFiltered / data) for an
+     * in-memory list of models, with paging and single-column sorting.
+     */
+    private function dataTableResponse(Request $request, $items, callable $extraColumns)
+    {
+        $models = collect($items)->values();
+
+        $order = $request->input('order.0');
+        $columnKey = $order ? $request->input('columns.' . (int) $order['column'] . '.data') : null;
+        if ($columnKey && is_string($columnKey) && !in_array($columnKey, ['action', 'add-service-column', 'action-change-service'], true)) {
+            $models = $models->sortBy(function ($model) use ($columnKey) {
+                return mb_strtolower((string) $model->getAttribute($columnKey));
+            }, SORT_NATURAL, ($order['dir'] ?? 'asc') === 'desc')->values();
         }
-        else {
-            $this->actionColumn($data, $can);
-        }      
-        
-        return $data->make(true);
+
+        $total = $models->count();
+        $start = max(0, (int) $request->input('start', 0));
+        $length = (int) $request->input('length', -1);
+        // Only the visible page is serialized
+        $page = ($length > 0 ? $models->slice($start, $length) : $models)->map(function ($model) use ($extraColumns) {
+            return array_merge($model->toArray(), $extraColumns($model));
+        })->values();
+
+        return response()->json([
+            'draw' => (int) $request->input('draw', 0),
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+            'data' => $page,
+        ]);
     }
 
     public function generateTableServiceList(Request $request){
@@ -175,22 +211,14 @@ class SupplierSearchController extends Controller
             ->get();
 
 
-        $servicesDvo = collect($model);
-        $services = $servicesDvo->unique()->all();
-        $data = Datatables::of($services);
-        $this->generateActionServiceItem($data);
+        $services = collect($model)->unique('id')->all();
 
-        return $data->make(true);
-    }
-
-    public function generateActionServiceItem($data){
-        return $data->addColumn('action-change-service', function($model){
+        return $this->dataTableResponse($request, $services, function ($model) {
             $type = strtolower(class_basename(get_class($model)));
-            $id = $model->id;
-            $name = $model->name;
+            $name = e($model->name);
             $pre_loader = $type == 'transfer' ? '' : 'pre-loader-func';
-            return "<button class='btn btn-success change-service-button $pre_loader' data-service_type='{$type}' data-service_id='{$id}' data-service_name=\"{$name}\">Change</button>";
-        })->rawColumns(['action-change-service']);
+            return ['action-change-service' => "<button class='btn btn-success change-service-button $pre_loader' data-service_type='{$type}' data-service_id='{$model->id}' data-service_name=\"{$name}\">Change</button>"];
+        });
     }
 
     /**
@@ -407,22 +435,12 @@ class SupplierSearchController extends Controller
         return is_array($collection) ? $collection : [];
     }
 
-    public function actionColumn($data, $can)
+    public function serviceButton($model)
     {
-        $data->addColumn('action', function($model) use ($can){
-            return $this->dataId($model, $can);
-        })->rawColumns(['action']);
-    }
-
-    public function serviceColumn($data)
-    {
-        return $data->addColumn('add-service-column', function($model){
-            $type = strtolower(class_basename(get_class($model)));
-            $id = $model->id;
-            $name = $model->name;
-            $pre_loader = $type == 'hotel' || $type == 'transfer' ? '' : 'pre-loader-func';
-            return "<button class='btn btn-success add-service-button $pre_loader' data-link=".route('tour_package.store')." data-service_type='{$type}' data-service_id='{$id}' data-service_name=\"{$name}\">Add</button>";
-        })->rawColumns(['add-service-column']);
+        $type = strtolower(class_basename(get_class($model)));
+        $name = e($model->name);
+        $pre_loader = $type == 'hotel' || $type == 'transfer' ? '' : 'pre-loader-func';
+        return "<button class='btn btn-success add-service-button $pre_loader' data-link=".route('tour_package.store')." data-service_type='{$type}' data-service_id='{$model->id}' data-service_name=\"{$name}\">Add</button>";
     }
 
     public function dataId($model, $can)
@@ -431,11 +449,12 @@ class SupplierSearchController extends Controller
         $id = $model->id;
         $low = strtolower($type);
         if (strtolower($type) == 'flight') $low .= 's';
-        $link = route("{$low}.show", ['id' => $model->id]);
-        $btn = "";
+        $link = route("{$low}.show", $model->id);
+        $name = e($model->name);
+        // The row opens the supplier; the eye button is a visible, keyboard-reachable way to do the same
+        $btn = "<a class='btn btn-warning btn-sm btn-icon show-button' href='{$link}' data-link='{$link}' title='View'><i class='ti ti-eye'></i></a>";
         if ($can){
-            $btn .= "<button class='btn btn-success tourAdd' hidden data-id=$id data-type=$type data-service_name=\"{$model->name}\" id='service-property'>Tour</button>" .
-            "<a class='show-button' data-link={$link}></a>";
+            $btn = "<button class='btn btn-success tourAdd' hidden data-id=$id data-type=$type data-service_name=\"{$name}\">Tour</button>" . $btn;
         }
 
         return $btn;

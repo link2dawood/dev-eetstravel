@@ -18,48 +18,61 @@ let globalSearch = {
         globalSearch.countryAlias = '';
         globalSearch.searchName = $('#searchTextField').val();
 	},
-	bindEvents: () => {
-		$('.option-radio').on('click', function(){
-            $(this).attr('disabled', true);
-            var service_select = $(this);
-            var tmp = this.value;
-            if(tmp === 'Bus Company') { tmp = 'Transfer';}
-			globalSearch.service = tmp;
-			globalSearch.rate = '';
-			globalSearch.criterias = [];
-            globalSearch.countryAlias = $('#country').val();
-            globalSearch.searchName = $('#searchTextField').val();
-            globalSearch.city_code = $('#city_code').val();
-			$('#search-table').DataTable().destroy();
-            globalSearch.generateTable(service_select);
-            $('.filters').html('');
-            if(globalSearch.service !== 'Service'){
-                globalSearch.getCriterias();
-            }          
+	// Reads every filter from the form and redraws the results table
+	search: () => {
+		var service = ($('#service-select').val() || 'All').trim();
+		globalSearch.service = service === 'Bus Company' ? 'Transfer' : service;
+		globalSearch.countryAlias = $('#country').val() || '';
+		globalSearch.searchName = $('#searchTextField').val() || '';
+		globalSearch.city_code = $('#city_code').val() || '';
+		globalSearch.city_name = $('#city').val() || '';
+		// DataTables is loaded on demand (component.datatables_cdn)
+		var ready = window.loadDataTables ? window.loadDataTables() : Promise.resolve();
+		ready.then(function () {
+			if ($.fn.DataTable.isDataTable('#search-table')) {
+				$('#search-table').DataTable().destroy();
+			}
+			globalSearch.generateTable();
+		}).catch(function () {
+			if (typeof window.appToast === 'function') {
+				window.appToast('The results table could not be loaded. Check the internet connection and reload the page.', 'error');
+			}
 		});
-        
-        $('#country').on('change', function(){
-			globalSearch.countryAlias = this.value;
+	},
+	bindEvents: () => {
+		// Service type changes the criteria that can be filtered on
+		$('#service-select').on('change', function(){
 			globalSearch.rate = '';
 			globalSearch.criterias = [];
-            globalSearch.searchName = $('#searchTextField').val();
-            globalSearch.city_code = $('#city_code').val();
-			$('#search-table').DataTable().destroy();
-            globalSearch.generateTable();            
-            
-            $('.filters').html('');
-            if(globalSearch.service !== 'Service'){
-                globalSearch.getCriterias();
-            }          
-		});        
-        
-        $('#supplierSearchButton').on('click', function(){
-            $('#search-table').DataTable().destroy();
-            globalSearch.city_code = $('#city_code').val();
+			$('.filters').html('');
+			globalSearch.search();
+			if (globalSearch.service !== 'All') {
+				globalSearch.getCriterias();
+			}
+		});
 
-            globalSearch.searchName = $('#searchTextField').val();
-            globalSearch.generateTable();
-        });
+		$('#country').on('change', function(){
+			globalSearch.search();
+		});
+
+		$('#city').on('input', function(){
+			$('#city_code').val('');   // typed text replaces an autocomplete pick
+		});
+
+		$('#supplierSearchButton').on('click', function(){
+			globalSearch.search();
+		});
+
+		$('#supplierClearButton').on('click', function(){
+			$('#searchTextField, #city, #city_code').val('');
+			$('#service-select').val($('#service-select option:first').val()).trigger('change.select2');
+			$('#country').val('').trigger('change.select2');
+			globalSearch.rate = '';
+			globalSearch.criterias = [];
+			$('.filters').html('');
+			globalSearch.search();
+			$('#searchTextField').focus();
+		});
 	},
 	getCriterias: () => {
 		$.ajax({
@@ -70,7 +83,8 @@ let globalSearch = {
 			}
 		}).done((res) => {
 			$('.filters').html(res);
-			$(':checkbox').change(function(){
+			// Only the filter checkboxes/radios that were just loaded
+			$('.filters :checkbox').on('change', function(){
 				let index = globalSearch.criterias.indexOf(this.name);
 				if (index < 0){
 					globalSearch.criterias.push(this.name);
@@ -78,28 +92,18 @@ let globalSearch = {
 				else {
                     globalSearch.criterias.splice(index, 1);
                 }
-
-				$('#search-table').DataTable().destroy();
-				globalSearch.generateTable();
+				globalSearch.search();
 			});
-			$(':radio').click(function(){
-				if ($(this).hasClass('option-radio')) {
-                    // This is a radio button with the 'option-radio' class,
-                    // so we don't want to execute the existing functionality.
-                    return;
-                }
+			$('.filters :radio').on('click', function(){
 				globalSearch.rate = this.value;
-				$('#search-table').DataTable().destroy();
-				globalSearch.generateTable();
+				globalSearch.search();
 			});
-			$('#clear-filter').click(function(e){
+			$('#clear-filter').on('click', function(e){
 				e.preventDefault();
 				globalSearch.criterias = [];
 				globalSearch.rate = '';
-				$(':checkbox').attr('checked', false);
-				$(':radio').attr('checked', false);
-				$('#search-table').DataTable().destroy();
-				globalSearch.generateTable();
+				$('.filters :checkbox, .filters :radio').prop('checked', false);
+				globalSearch.search();
 			})
 		})
 	},
@@ -526,28 +530,15 @@ let globalSearchApp = {
 	}
 };
 
+// Search while typing (after a short pause) and on Enter, in the name and city boxes only
 var xtime;
-    $('#searchTextField').keyup(function(e){
+$('#searchTextField, #city').on('input', function(){
+    clearTimeout(xtime);
+    xtime = setTimeout(globalSearch.search, 600);
+}).on('keydown', function(e){
+    if (e.key === 'Enter') {
         e.preventDefault();
-        var keycode = (e.keyCode ? e.keyCode : e.which);
         clearTimeout(xtime);
-        if (keycode != '13') {
-            var inp = $(this).val();
-            if(inp == '' || keycode == '8'){
-                $('#supplierSearchButton').click();
-            }
-           xtime = setTimeout(function(){
-               if (inp == $('#searchTextField').val() ){
-                    $('#supplierSearchButton').click();
-               }
-           }, 2000);
-        }
-    });
-                
-    $(document).keypress(function(e) {
-        var keycode = (e.keyCode ? e.keyCode : e.which);
-        if (keycode == '13') {
-            e.preventDefault();
-            $('#supplierSearchButton').click();
-        }
-    });
+        globalSearch.search();
+    }
+});

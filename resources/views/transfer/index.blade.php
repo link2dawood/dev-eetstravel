@@ -68,7 +68,7 @@
                                id="transfer-search" 
                                class="form-control" 
                                placeholder="Search transfers by name, city, country..."
-                               onkeyup="filterTable('transfer-table', this.value)">
+                               name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -181,6 +181,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
 $(document).ready(function() {

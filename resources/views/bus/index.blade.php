@@ -28,7 +28,7 @@
                 <div class="col-md-6 mb-2 mb-md-0">
                     <div class="input-icon">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="bus-search" class="form-control" placeholder="Search buses..." onkeyup="filterTable('bus-table', this.value)">
+                        <input type="text" id="bus-search" class="form-control" placeholder="Search buses..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -42,10 +42,9 @@
                     <thead>
                         <tr>
                             <th style="width:60px" onclick="sortTable(0, 'bus-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(1, 'bus-table')" class="cursor-pointer">License Plate <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-md-table-cell" onclick="sortTable(2, 'bus-table')" class="cursor-pointer">Bus Company <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-lg-table-cell" onclick="sortTable(3, 'bus-table')" class="cursor-pointer">Seats <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-sm-table-cell" onclick="sortTable(4, 'bus-table')" class="cursor-pointer">Type <i class="ti ti-arrows-sort"></i></th>
+                            <th onclick="sortTable(1, 'bus-table')" class="cursor-pointer">Name <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell cursor-pointer" onclick="sortTable(2, 'bus-table')">Bus Number <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell cursor-pointer" onclick="sortTable(3, 'bus-table')">Bus Company <i class="ti ti-arrows-sort"></i></th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -53,10 +52,9 @@
                         @forelse($buses as $bus)
                         <tr>
                             <td><span class="text-muted">#{{ $bus->id }}</span></td>
-                            <td data-delete-label><span class="fw-bold">{{ $bus->license_plate ?? '—' }}</span></td>
+                            <td data-delete-label><span class="fw-bold">{{ $bus->name ?: '—' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $bus->bus_number ?: '—' }}</span></td>
                             <td class="d-none d-md-table-cell"><span class="text-muted">{{ $bus->transfer_name ?? '—' }}</span></td>
-                            <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $bus->seats ?? '—' }}</span></td>
-                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $bus->type ?? '—' }}</span></td>
                             <td class="text-end">
                                 <div class="btn-list justify-content-end">
                                     @include('component.action_buttons', ['item' => $bus, 'routePrefix' => 'bus'])
@@ -65,7 +63,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="5" class="text-center py-5">
                                 <div class="empty">
                                     <div class="empty-icon"><i class="ti ti-bus icon" style="font-size: 3rem;"></i></div>
                                     <p class="empty-title">No buses found</p>
@@ -92,6 +90,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>
 $(document).ready(function() {

@@ -77,16 +77,26 @@ class BusController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Buses';
+        $search = trim((string) $request->input('search'));
         $buses = Bus::query()
             ->leftJoin('transfers', 'transfers.id', '=', 'buses.transfer_id')
             ->select([
                 'buses.*',
                 'transfers.name as transfer_name'
             ])
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('buses.name', 'like', "%{$search}%")
+                        ->orWhere('buses.bus_number', 'like', "%{$search}%")
+                        ->orWhere('transfers.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('buses.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('bus.index', compact('buses', 'title'));
     }
 

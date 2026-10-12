@@ -1,24 +1,28 @@
 <div class="col-md-12">
-	<div class="select_filter">
-		<label style="display: block">{!!trans('main.SelectCriteriatoFilter')!!}: </label>
-		@foreach($criterias as $criteria)
-			<div class="checkbox checkbox-inline select_filters">
-				<input type="checkbox" name="{{$criteria->id}}">{{$criteria->name}}
-			</div>
-		@endforeach
+	<div class="select_filter mb-2">
+		<label class="form-label">{!!trans('main.SelectCriteriatoFilter')!!}:</label>
+		@forelse($criterias as $criteria)
+			<label class="form-check form-check-inline select_filters">
+				<input class="form-check-input" type="checkbox" name="{{$criteria->id}}">
+				<span class="form-check-label">{{$criteria->name}}</span>
+			</label>
+		@empty
+			<span class="text-muted">No criteria for this service type.</span>
+		@endforelse
 	</div>
 
 @if($rates)
 	<div class="select_rate">
-		<label style="display: block">{!!trans('main.CategoryorInterrateFilter')!!}: </label>
+		<label class="form-label">{!!trans('main.CategoryorInterrateFilter')!!}:</label>
 		@foreach($rates as $rate)
-		<div class="checkbox checkbox-inline select_categories_rate">
-			<input type="radio" name="rates" value="{{$rate->id}}">{{$rate->name}}
-		</div>
+		<label class="form-check form-check-inline select_categories_rate">
+			<input class="form-check-input" type="radio" name="rates" value="{{$rate->id}}">
+			<span class="form-check-label">{{$rate->name}}</span>
+		</label>
 		@endforeach
-		<div class="clear_btn_selects_filters">
-			<button class="btn btn-warning btn-sm pull-right" id='clear-filter'>{!!trans('main.ClearFilter')!!}</button>
-		</div>
 	</div>
 @endif
+	<div class="mt-2">
+		<button type="button" class="btn btn-outline-secondary btn-sm" id="clear-filter">{!!trans('main.ClearFilter')!!}</button>
+	</div>
 </div>

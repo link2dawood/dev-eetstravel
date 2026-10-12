@@ -6,6 +6,12 @@
 {{-- Centralized DataTables CDN --}}
 @include('component.datatables_cdn')
 <style>
+    /* The layout turns selects into Select2; make them fill the column and match the inputs */
+    .card .select2-container { width: 100% !important; }
+    .card .select2-container--default .select2-selection--single { min-height: 44px; display: flex; align-items: center; }
+    .card .select2-container--default .select2-selection--single .select2-selection__arrow { height: 100%; }
+    .filters .form-check-inline { margin-right: 1.25rem; }
+
     /* DataTables responsive styling for Tabler */
     .table-responsive {
         overflow-x: auto;
@@ -103,13 +109,15 @@
                                 class="btn btn-primary">
                             <i class="ti ti-search me-1"></i>Search Suppliers
                         </button>
-                        <button type="button" 
-                                class="btn btn-ghost-secondary" 
-                                onclick="document.querySelector('form').reset(); $('#searchTextField').focus();">
+                        <button type="button"
+                                id="supplierClearButton"
+                                class="btn btn-ghost-secondary">
                             <i class="ti ti-x me-1"></i>Clear
                         </button>
                     </div>
                 </div>
+                {{-- Criteria / category filters for the chosen service type (loaded by supplier-search.js) --}}
+                <div class="filters row mt-3"></div>
             </form>
         </div>
     </div>
@@ -414,6 +422,7 @@
                         criterias: this.criterias,
                         rates: this.rate,
                         city_code: this.city_code,
+                        city_name: this.city_name,
                         countryalias: this.countryAlias,
                         searchname: this.searchName
                     }
@@ -461,7 +470,8 @@
     })();
 </script>
 <script type="text/javascript">
-    // Initialize the search app
+    // Initialize the search app and show results straight away
     globalSearchApp.run();
+    globalSearch.search();
 </script>
 @endpush

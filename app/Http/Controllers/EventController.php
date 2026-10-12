@@ -53,26 +53,32 @@ class EventController extends Controller
      *
      * @return  \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - event';
 
-        $cacheKey = 'events_index_data_' . md5(request()->getQueryString());
-        $events = \Cache::remember($cacheKey, 300, function () {
-            return Event::leftJoin('countries', 'countries.alias', '=', 'events.country')
-                ->leftJoin('cities', 'cities.id', '=', 'events.city')
-                ->select([
-                    'events.id',
-                    'events.name',
-                    'events.address',
-                    'events.work_phone',
-                    'events.contact_email',
-                    'cities.name as city_name',
-                    'countries.name as country_name'
-                ])
-                ->orderBy('events.name', 'asc')
-                ->paginate(15);
-        });
+        $search = trim((string) $request->input('search'));
+        $events = Event::leftJoin('countries', 'countries.alias', '=', 'events.country')
+            ->leftJoin('cities', 'cities.id', '=', 'events.city')
+            ->select([
+                'events.id',
+                'events.name',
+                'events.address_first as address',
+                'events.work_phone',
+                'events.contact_email',
+                'cities.name as city_name',
+                'countries.name as country_name'
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('events.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('events.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('event.index', compact('events', 'title'));
     }

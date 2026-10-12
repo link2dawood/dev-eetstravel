@@ -60,22 +60,28 @@ class HotelController extends Controller
     {
         $title = 'Index - Hotel';
 
-        $cacheKey = 'hotels_index_data_' . md5(request()->getQueryString());
-        $hotels = \Cache::remember($cacheKey, 300, function () {
-            return Hotel::leftJoin('countries', 'countries.alias', '=', 'hotels.country')
-                ->leftJoin('cities', 'cities.id', '=', 'hotels.city')
-                ->select([
-                    'hotels.id',
-                    'hotels.name',
-                    'hotels.address',
-                    'hotels.work_phone',
-                    'hotels.contact_email',
-                    'cities.name as city_name',
-                    'countries.name as country_name'
-                ])
-                ->orderBy('hotels.name', 'asc')
-                ->paginate(15);
-        });
+        $search = trim((string) $request->input('search'));
+        $hotels = Hotel::leftJoin('countries', 'countries.alias', '=', 'hotels.country')
+            ->leftJoin('cities', 'cities.id', '=', 'hotels.city')
+            ->select([
+                'hotels.id',
+                'hotels.name',
+                'hotels.address_first as address',
+                'hotels.work_phone',
+                'hotels.contact_email',
+                'cities.name as city_name',
+                'countries.name as country_name'
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('hotels.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('hotels.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('hotel.index', compact('hotels', 'title'));
     }

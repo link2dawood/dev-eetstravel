@@ -48,6 +48,7 @@ class RestaurantController extends Controller
     public function index()
     {
         $title = 'Index - restaurant';
+        $search = trim((string) request()->input('search'));
         $restaurants = Restaurant::leftJoin('countries', 'countries.alias', '=', 'restaurants.country')
             ->leftJoin('cities', 'cities.id', '=', 'restaurants.city')
             ->select(
@@ -55,7 +56,16 @@ class RestaurantController extends Controller
                 'cities.name as city_name',
                 'countries.name as country_name'
             )
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('restaurants.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('restaurants.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('restaurant.index', compact('restaurants', 'title'));
     }
 

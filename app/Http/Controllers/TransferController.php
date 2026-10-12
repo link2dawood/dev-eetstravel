@@ -55,9 +55,10 @@ class TransferController extends Controller
         return DatatablesHelperController::getActionButton($url, false, $transfer);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - transfer';
+        $search = trim((string) $request->input('search'));
         $transfers = Transfer::leftJoin('countries', 'countries.alias', '=', 'transfers.country')
             ->leftJoin('cities', 'cities.id', '=', 'transfers.city')
             ->select([
@@ -69,7 +70,16 @@ class TransferController extends Controller
                 'transfers.work_phone',
                 'transfers.contact_name'
             ])
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('transfers.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('transfers.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('transfer.index', compact('transfers', 'title'));
     }
 

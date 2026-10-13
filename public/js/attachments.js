@@ -11,7 +11,8 @@ $(document).ready(function () {
         var that = this;
         var url = $('#url').data('url');
 
-        if (!this.files || !this.files[0]) {
+        // Inputs without a model (tour create/edit) are saved with their form instead
+        if (!this.files || !this.files[0] || !self.data('model') || !self.data('id')) {
             return;
         }
 
@@ -50,7 +51,9 @@ $(document).ready(function () {
 
             notify('Image uploaded successfully', 'success');
         }).fail(function(xhr) {
-            var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Image upload failed';
+            var json = xhr.responseJSON || {};
+            var fieldErrors = json.errors ? Object.values(json.errors)[0] : null;
+            var message = (fieldErrors && fieldErrors[0]) || json.error || json.message || 'Image upload failed';
             notify(message, 'error');
         });
     });

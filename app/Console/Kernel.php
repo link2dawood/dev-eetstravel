@@ -29,6 +29,7 @@ class Kernel extends ConsoleKernel
         '\App\Console\Commands\TaskDeadlineNotification',
 		'\App\Console\Commands\RunImport',
         '\App\Console\Commands\RepairTourDays',
+        '\App\Console\Commands\RepairServiceCities',
     ];
 
     /**

@@ -24,12 +24,16 @@ class AttachmentController extends Controller {
     
 public function saveFile(Request $request)
 {
-    // Validate the request
+    // Validate the request (images only: the files are served from the public folder)
     $request->validate([
         'files' => 'required',
-        'files.*' => 'file|max:10240', // Max 10MB per file
+        'files.*' => 'image|mimes:jpg,jpeg,png,gif,webp|max:10240', // Max 10MB per file
         'id' => 'required|integer',
-        'model' => 'required|string',
+        'model' => 'required|string|in:Attachmenttype,Tour',
+    ], [
+        'files.*.image' => 'Please choose an image file (JPG, PNG, GIF or WEBP).',
+        'files.*.mimes' => 'Please choose an image file (JPG, PNG, GIF or WEBP).',
+        'files.*.max' => 'The image must be 10 MB or smaller.',
     ]);
 
     try {
@@ -61,23 +65,31 @@ public function saveFile(Request $request)
 
             // Generate unique filename
             $originalName = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
+            $extension = $file->guessExtension() ?: 'jpg'; // from the content, never the client's name
             $uniqueName = time() . '_' . uniqid() . '.' . $extension;
 
-            // Store file using Laravel's default storage
-            $storedPath = $file->storeAs('uploads', $uniqueName, 'public');
+            // Store in public/uploads/attachments (served directly, like uploads/avatars;
+            // the public/storage link is not always present)
+            $mimeType = $file->getMimeType();
+            $size = $file->getSize();
+            $storedPath = 'uploads/attachments/' . $uniqueName;
+            $file->move(public_path('uploads/attachments'), $uniqueName);
 
-            if (!$storedPath) {
-                continue;
+            // "Replace image": the pages show the first attachment, so remove the old ones
+            foreach ($model->attachments()->get() as $old) {
+                if (strpos((string) $old->path, 'uploads/attachments/') === 0 && is_file(public_path($old->path))) {
+                    @unlink(public_path($old->path));
+                }
+                $old->delete();
             }
 
             // Create attachment record
             $attachment = new \App\Attachment();
-            $attachment->url = asset('storage/' . $storedPath);
+            $attachment->url = asset($storedPath);
             $attachment->path = $storedPath;
             $attachment->original_name = $originalName;
-            $attachment->mime_type = $file->getMimeType();
-            $attachment->size = $file->getSize();
+            $attachment->mime_type = $mimeType;
+            $attachment->size = $size;
             $attachment->save();
 
             // Associate with model

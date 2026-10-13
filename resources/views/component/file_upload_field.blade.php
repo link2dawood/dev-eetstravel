@@ -1,6 +1,16 @@
 @php
     $enableAjaxUploads = $enableAjaxUploads ?? true;
 @endphp
+<style>
+    .file-input .file-caption-main { flex-wrap: wrap; }
+    .file-input .file-caption-main .file-caption { flex: 1 1 160px; }
+    .file-input .file-caption-main .input-group-btn {
+        flex: 1 1 auto;
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+    .file-input .file-caption-main .btn { min-width: 0; }
+</style>
 <input id="attach" type="file" name="attach[]" multiple data-enable-ajax="{{ $enableAjaxUploads ? '1' : '0' }}">
 <div id="err-container"></div>
 <script type="text/javascript">
@@ -80,22 +90,7 @@
 				zoomClass: 'btn btn-sm btn-primary',
 			}
 		}).on('filebatchuploaderror', function(event, data, msg){
-			console.error('Upload error:', data);
-			let err = data.jqXHR.responseJSON;
-			
-			$('.validation-error').remove();
-			$('.has-error').removeClass('has-error');
-			
-			if (err && typeof err === 'object') {
-				for(let key in err){
-					let targetInput = $("[name='" + key + "']");
-					let par = $(targetInput).closest('.form-group');
-					$(par).append("<p class='alert alert-danger validation-error'>" + err[key] + "</p>");
-					$(par).addClass('has-error');
-				}
-			} else {
-				$('#err-container').html('<div class="alert alert-danger">Upload failed. Please try again.</div>');
-			}
+			handleErrorResponse(data.jqXHR);
 		}).on('filebatchuploadcomplete', function(event, files, extra) {
 			console.log('Upload complete');
 		}).on('fileclear', function(event) {
@@ -105,10 +100,20 @@
 		if (!enableAjaxUploads) {
 			return;
 		}
+
+		// One save at a time: a second click on Save used to create the record twice
+		function setSaving(on) {
+			targetForm.data('saving', on);
+			targetForm.find('button[type=submit], input[type=submit]').prop('disabled', on);
+		}
 		
 		// Handle form submission
 		$(targetForm).on('submit', function(event){ 
 			event.preventDefault();
+			if (targetForm.data('saving')) {
+				return;
+			}
+			setSaving(true);
 			
 			// Clear previous errors
 			$('.validation-error').remove();
@@ -159,6 +164,11 @@
 		
 		// Handle success response
 		function handleSuccessResponse(res) {
+			let leavesPage = !res.comments && !res.announcement && !res.range_data && !res.transfer_fail
+				&& !res.hotelContacts && res.error_buses !== true && (res.route || res.success);
+			if (!leavesPage) {
+				setSaving(false);
+			}
 			if(res.comments){
 				$(document).find('#show_comments').html(res.content);
 				$(document).find('#form_comment #content').val('');
@@ -202,6 +212,7 @@
 		
 		// Handle error response
 		function handleErrorResponse(xhr) {
+			setSaving(false);
 			let err = xhr.responseJSON;
 			// Laravel validation replies { message, errors: { field: [..] } }
 			let fieldErrors = err && typeof err === 'object' ? (err.errors || err) : null;

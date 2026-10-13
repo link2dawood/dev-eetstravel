@@ -40,16 +40,27 @@ class DriverController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Drivers';
+        $search = trim((string) $request->input('search'));
         $drivers = Driver::query()
             ->leftJoin('transfers', 'transfers.id', '=', 'drivers.transfer_id')
             ->select([
                 'drivers.*',
                 'transfers.name as transfer_name'
             ])
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('drivers.name', 'like', "%{$search}%")
+                        ->orWhere('drivers.phone', 'like', "%{$search}%")
+                        ->orWhere('drivers.email', 'like', "%{$search}%")
+                        ->orWhere('transfers.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('drivers.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('driver.index', compact('drivers', 'title'));
     }
 
@@ -81,12 +92,11 @@ class DriverController extends Controller
             'email' => 'nullable|email'
         ]);
 
-        DB::beginTransaction();
-        $driver = $this->driverRepository->create($request->except('attach'));
-
-        $this->addFile($request, $driver);
-
-        DB::commit();
+        $driver = DB::transaction(function () use ($request) {
+            $driver = $this->driverRepository->create($this->driverData($request));
+            $this->addFile($request, $driver);
+            return $driver;
+        });
 
         $data = ['route' => route('driver.index')];
         LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name created", 'success');
@@ -144,6 +154,19 @@ class DriverController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    /**
+     * Phone and email are optional in the form but NOT NULL in the table:
+     * an empty field (converted to null) used to fail with a server error.
+     */
+    private function driverData(Request $request)
+    {
+        $data = $request->only('name', 'phone', 'email', 'transfer_id');
+        $data['phone'] = $data['phone'] ?? '';
+        $data['email'] = $data['email'] ?? '';
+
+        return $data;
+    }
+
     public function update(Request $request, $id)
     {
         $this->validate($request, [
@@ -152,12 +175,12 @@ class DriverController extends Controller
             'email' => 'nullable|email'
         ]);
 
-        DB::beginTransaction();
-        $this->driverRepository->updateById($id, $request->except('attach'));
-        $driver = $this->driverRepository->byId($id);
-        $this->addFile($request, $driver);
-
-        DB::commit();
+        $driver = DB::transaction(function () use ($request, $id) {
+            $this->driverRepository->updateById($id, $this->driverData($request));
+            $driver = $this->driverRepository->byId($id);
+            $this->addFile($request, $driver);
+            return $driver;
+        });
 
         LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name edited", 'success');
         $data = ['route' => route('driver.index')];

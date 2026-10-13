@@ -43,9 +43,8 @@ class DatatablesHelperController extends Controller
             $btnCnt++;
         }
         
-        // Calculate width based on button count
-        $width = $btnCnt > 1 ? '150px' : '50px';
-        $action = "<div style='width:{$width}; text-align: center;'>" . $action . "</div>";
+        // Buttons in a row with a small gap (they used to touch)
+        $action = "<div class='d-inline-flex flex-nowrap gap-1'>" . $action . "</div>";
         
         return $action;
     }
@@ -80,9 +79,8 @@ class DatatablesHelperController extends Controller
             $btnCnt++;
         }
         
-        // Calculate width based on button count
-        $width = $btnCnt > 1 ? '150px' : '50px';
-        $action = "<div style='width:{$width}; text-align: center;'>" . $action . "</div>";
+        // Buttons in a row with a small gap (they used to touch)
+        $action = "<div class='d-inline-flex flex-nowrap gap-1'>" . $action . "</div>";
         
         return $action;
     }

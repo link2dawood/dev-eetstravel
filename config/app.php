@@ -186,6 +186,8 @@ return [
         App\Providers\DeleteModelValidateServiceProvider::class,
 //        Laravel\Dusk\DuskServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
+        // Registers the "Ajaxis::" views used by every list's delete confirmation (deleteMsg)
+        Amranidev\Ajaxis\AjaxisServiceProvider::class,
 
 //        Webklex\IMAP\Providers\LaravelServiceProvider::class,
 	],

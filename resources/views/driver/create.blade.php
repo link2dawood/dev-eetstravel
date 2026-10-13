@@ -27,15 +27,14 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-lg-6 mt-3">
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="name">{!!trans('main.Name')!!}</label>
                                 <input type="text" name="name" value="{{ old('name') }}" class="form-control">
                                 @if($errors->has('name'))
@@ -43,23 +42,23 @@
                                 @endif
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="phone">{!!trans('main.Phone')!!}</label>
                                 <input type="text" name="phone" value="{{ old('phone') }}" class="form-control">
                                 @if($errors->has('phone'))
                                     <strong>{{$errors->first('phone')}}</strong>
                                 @endif
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label>{!!trans('main.Email')!!}</label>
                                 <input type="text" name="email" value="{{ old('email') }}" class="form-control">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="transfer">{!!trans('main.BusCompany')!!}</label>
                                 {!! Form::select('transfer_id', $transfers, 0,['class' => 'form-control']) !!}
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label>{!!trans('main.Files')!!}</label>
                                 @component('component.file_upload_field')@endcomponent
                             </div>

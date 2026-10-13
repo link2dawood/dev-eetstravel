@@ -75,8 +75,8 @@ function sortTableByColumn(table, columnIndex, header) {
         const cellB = $(b).find('td').eq(columnIndex).text().trim();
 
         // Try to parse as numbers
-        const numA = parseFloat(cellA.replace(/[^0-9.-]/g, ''));
-        const numB = parseFloat(cellB.replace(/[^0-9.-]/g, ''));
+        const numA = /^#?-?\d+(?:\.\d+)?$/.test(cellA) ? Number(cellA.replace('#', '')) : NaN;
+        const numB = /^#?-?\d+(?:\.\d+)?$/.test(cellB) ? Number(cellB.replace('#', '')) : NaN;
 
         let comparison;
         if (!isNaN(numA) && !isNaN(numB)) {
@@ -243,7 +243,7 @@ function exportTableToCSV(tableId, filename) {
         const cols = rows[i].querySelectorAll('td, th');
 
         for (let j = 0; j < cols.length - 1; j++) { // Exclude actions column
-            let data = cols[j].innerText.replace(/"/g, '""');
+            let data = cols[j].textContent.trim().replace(/"/g, '""');
             row.push('"' + data + '"');
         }
 

@@ -27,31 +27,30 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-lg-6 mt-3">
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
                             <input type='hidden' name='modal_create' value="0">
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Name')!!}</label>
                                 <input type="text" name="name" value="{{ old('name') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Code')!!}</label>
                                 <input type="text" name="code" value="{{ old('code') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Symbol')!!}</label>
                                 <input type="text" name="symbol" value="{{ old('symbol') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Cent')!!}</label>
                                 <input type="text" name="cent" value="{{ old('cent') }}" class="form-control">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.SymbolCent')!!}</label>
                                 <input type="text" name="symbol_cent" value="{{ old('symbol_cent') }}" class="form-control">
                             </div>

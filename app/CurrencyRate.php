@@ -24,4 +24,10 @@ use Illuminate\Database\Eloquent\Model;
 class CurrencyRate extends Model
 {
     protected $table = 'currency_rates';
+
+    /** decimal(18,6) without the trailing zeros: 25.530000 -> 25.53 */
+    public function getRateAttribute($value)
+    {
+        return $value === null ? null : rtrim(rtrim(number_format((float) $value, 6, '.', ''), '0'), '.');
+    }
 }

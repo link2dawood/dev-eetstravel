@@ -38,10 +38,21 @@ class CurrencyRateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Currency Rate';
-        $currency_rates = CurrencyRate::paginate(10);
+        $search = trim((string) $request->input('search'));
+        // newest rates first; searchable by currency code or date
+        $currency_rates = CurrencyRate::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('currency', 'like', "%{$search}%")->orWhere('date', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('currency', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('currency_rate.index', compact('currency_rates', 'title'));
     }
 
@@ -164,7 +175,7 @@ class CurrencyRateController extends Controller
         Comment::query()->where('reference_type', Comment::$services['currency_rate'])->where('reference_id', $id)->delete();
 
         LaravelFlashSessionHelper::setFlashMessage("Currency rate $currency_rate->currency deleted", 'success');
-        return URL::to('currency_rate');
+        return request()->ajax() ? URL::to('currency_rate') : redirect('currency_rate');
     }
 
     public function validateCurrencyRate($request){

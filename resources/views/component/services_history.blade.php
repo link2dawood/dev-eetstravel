@@ -23,7 +23,7 @@
 					<a href="{{route('tour.show', ['tour' => $package->tour->id])}}">
 					{{$package->tour->name}} </a>
 					@else
-						{{ $package->tour['name']  }} (deleted)
+						{{ optional($package->tour)->name ?: 'Tour' }} (deleted)
 					@endif
 --}}
                     @if($package->tour && !$package->tour->deleted)
@@ -34,7 +34,7 @@
                             {{$package->tour->name}} 
                         @endif
 					@else
-						{{ $package->tour['name']  }} (deleted)
+						{{ optional($package->tour)->name ?: 'Tour' }} (deleted)
 					@endif
 				</td>
 				<td>{{$package->name}}</td>

@@ -11,6 +11,7 @@ use App\Status;
 use App\StatusType;
 use App\TourPackage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use URL;
 use View;
 
@@ -47,13 +48,21 @@ class StatusController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - task';
+        $search = trim((string) $request->input('search'));
         $status = Status::leftJoin('status_types', 'status_types.type', '=', 'status.type')
             ->select('status.id', 'status.name', 'status.color', 'status.sort_order', 'status_types.name as status_type')
-            ->orderBy('sort_order', 'asc')
-            ->paginate(15);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('status.name', 'like', "%{$search}%")->orWhere('status_types.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('status_types.name', 'asc')
+            ->orderBy('status.sort_order', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('status.index', compact('status', 'title'));
     }
 
@@ -176,46 +185,40 @@ class StatusController extends Controller
      */
     public function destroy($id)
     {
-        $status = Status::find($id);
-        $status_type = $status->type;
+        $status = Status::findOrFail($id);
 
+        // where each status type is stored (bus statuses live on bus days, offer statuses on hotel offers)
+        $usage = [
+            'tour' => [['tours', 'status']],
+            'task' => [['tasks', 'status']],
+            'hotel' => [['tour_packages', 'status']],
+            'service_in_tour' => [['tour_packages', 'status']],
+            'bus' => [['bus_days', 'status_id'], ['tour_packages', 'status']],
+            'offer' => [['hotel_offers', 'tms_status']],
+        ];
 
-
-        if($status_type){
-            $namespace = $this->relation_statuses[$status_type];
-            $elements = [];
-
-            if($namespace == 'TourPackage'){
-                $elements = TourPackage::query()
-                    ->where('status', $id)
-                    ->get();
-            }else{
-                $namespace = 'App\\' . $namespace;
-
-                $elements = $namespace::where('status', $id)->get();
+        $used = false;
+        foreach ($usage[$status->type] ?? [] as [$table, $column]) {
+            if (DB::table($table)->where($column, $id)->exists()) {
+                $used = true;
+                break;
             }
-
-            if($elements->isNotEmpty()){
-
-                LaravelFlashSessionHelper::setFlashMessage("Status $status->name is used", 'warning');
-//                $data = [
-//                    'message' => 'This status is used by the system!',
-//                    'error' => true
-//                ];
-//                return response($data);
-                return URL::to('status');
-            }else{
-                LaravelFlashSessionHelper::setFlashMessage("Status $status->name deleted", 'success');
-                $status->delete();
-                Comment::query()->where('reference_type', Comment::$services['status'])->where('reference_id', $id)->delete();
-                return URL::to('status');
-            }
-        }else{
-            LaravelFlashSessionHelper::setFlashMessage("Status $status->name deleted", 'success');
-            $status->delete();
-            Comment::query()->where('reference_type', Comment::$services['status'])->where('reference_id', $id)->delete();
-            return URL::to('status');
         }
+
+        if ($used) {
+            $message = "Status {$status->name} is in use and cannot be deleted";
+            if (request()->ajax()) {
+                return response()->json(['error' => true, 'message' => $message]);
+            }
+            LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+            return redirect('status');
+        }
+
+        LaravelFlashSessionHelper::setFlashMessage("Status $status->name deleted", 'success');
+        $status->delete();
+        Comment::query()->where('reference_type', Comment::$services['status'])->where('reference_id', $id)->delete();
+
+        return request()->ajax() ? URL::to('status') : redirect('status');
     }
 
     public function validateStatus($request){

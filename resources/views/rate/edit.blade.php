@@ -27,31 +27,30 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{{trans('main.Back')}}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{{trans('main.Save')}}</button>
                             </div>
                         </div>
                     </div>
                     <input type='hidden' name='_token' value='{{Session::token()}}'>
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
+                            <div class="col-lg-6 mt-3">
+                                <div class="form-group mb-3">
                                     <label >{{trans('main.Name')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->name}}{{ old('name') }}" name="name" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{{trans('main.Mark')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->mark}}{{ old('mark') }}" name="mark" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="rate_type">{{trans('main.Ratetype')}}</label>
                                     <select name="rate_type" id="rate_type" class="form-control">
                                         @foreach($rate_types as $rate_type)
-                                            <option value="{{ $rate_type->id }}" {{ $errors != null && count($errors) > 0 ? old('rate_type') == $rate_type->id ? 'selected' : '' : $rate->rate_type == $rate_type->id ? 'selected' : '' }}>{{ $rate_type->name }}</option>
+                                            <option value="{{ $rate_type->id }}" {{ old('rate_type', $rate->rate_type) == $rate_type->id ? 'selected' : '' }}>{{ $rate_type->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label>{{trans('main.Sortorder')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->sort_order}}{{ old('sort_order') }}" name="sort_order" class="form-control">
                                 </div>

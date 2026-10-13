@@ -15,8 +15,8 @@
     <script type="text/javascript" src="{{asset('js/lib/themes/black.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/lib/themes/patterns.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/lib/plugins/dataloader/dataloader.min.js')}}"></script>
-    <script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
-    <script type="text/javascript" src="{{asset('js/lib/chart_bus.js')}}"></script>
+    <script src="{{ asset('js/lib/plugins/export/export.min.js') }}"></script>
+    <script type="text/javascript" src="{{asset('js/lib/chart_bus.js')}}?v={{ filemtime(public_path('js/lib/chart_bus.js')) }}"></script>
 
     <section class="content">
             <div class="box-body">

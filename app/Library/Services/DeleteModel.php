@@ -109,9 +109,9 @@ class DeleteModel
                 $bd = \App\BusDay::where('bus_id', $model->id)->get();
                 $count = $bd->count();
                 if ($count > 0){
-                    $ret = "Delete User ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = "Bus ". $model->name . " cannot be deleted because it is used in " .$count. " bus days.";
                 }
-                break;
+                return $ret;
 
             default:
                 return NULL;

@@ -9,19 +9,16 @@
     <section class="content">
         <div class="box box-primary">
             <div class="box-body">
-                <div>
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('currency_rate.create'), \App\CurrencyRate::class) !!}
-                </div>
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="currency-search" class="form-control" placeholder="Search currency rates..." onkeyup="filterTable('currency-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('currency-table', 'currency_rates_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
-                            </button>
-                        </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <div class="input-icon flex-grow-1" style="max-width: 420px;">
+                        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                        <input type="text" id="currency-search" class="form-control" placeholder="Search currency rates..." name="search" value="{{ request('search') }}" data-list-search>
+                    </div>
+                    <div class="ms-auto d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-success" onclick="exportTableToCSV('currency-table', 'currency_rates_export.csv')">
+                            <i class="ti ti-download me-1"></i> Export CSV
+                        </button>
+                        {!! \App\Helper\PermissionHelper::getCreateButton(route('currency_rate.create'), \App\CurrencyRate::class) !!}
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -71,6 +68,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script>
 $(document).ready(function() {
     initializeBootstrapTable('currency-table');

@@ -38,10 +38,19 @@ class CurrenciesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Currencies';
-        $currencies = Currencies::paginate(10);
+        $search = trim((string) $request->input('search'));
+        $currencies = Currencies::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
         return view('currencies.index', compact('currencies', 'title'));
     }
 
@@ -168,7 +177,7 @@ class CurrenciesController extends Controller
         Comment::query()->where('reference_type', Comment::$services['currencies'])->where('reference_id', $id)->delete();
         LaravelFlashSessionHelper::setFlashMessage("Currency $currencies->name deleted", 'success');
 
-        return URL::to('currencies');
+        return request()->ajax() ? URL::to('currencies') : redirect('currencies');
     }
 
     public function validateCurrencies($request){

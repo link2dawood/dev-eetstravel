@@ -28,32 +28,31 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">Back</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>Save</button>
                             </div>
                         </div>
                     </div>
                     <input type='hidden' name='_token' value='{{Session::token()}}'>
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
+                            <div class="col-lg-6 mt-3">
+                                <div class="form-group mb-3">
                                     <label for="name">Name</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->name}}" name="name" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="phone">Phone</label>
                                     <input type="text" name="phone" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->phone}}" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="email">Email</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->email}}" name="email" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="rate_type">Bus Company</label>
                                     {!! Form::select('transfer_id', $transfers, $errors != null && count($errors) > 0 ? '' : $driver->transfer_id, ['class' => 'form-control']) !!}
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="attach">Files</label>
                                     @component('component.file_upload_field')@endcomponent
                                 </div>

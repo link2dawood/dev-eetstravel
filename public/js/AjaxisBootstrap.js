@@ -95,10 +95,16 @@ $(document).on("click", ".delete", function() {
         url: baseURL + $(this).data("link"),
         success: function(a) {
             if (a.error) {
+                // the record is still in use: say why (most pages have no #errors_message box)
                 var t = $("#errors_message");
-                t.css({
-                    display: "block"
-                }), t.html(a.message), $("#myModal").modal("hide")
+                if (t.length) {
+                    t.css({
+                        display: "block"
+                    }), t.html(a.message)
+                } else if (typeof window.appToast === "function") {
+                    window.appToast($("<div>").html(a.message).text(), "error")
+                }
+                $("#myModal").modal("hide")
             } else if (a.email_search) {
                 var e = $("#search_form");
                 $(e).submit()

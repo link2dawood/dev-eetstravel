@@ -201,7 +201,12 @@ let chatnotifi  = {
     setBells: (res) => {
         var userId = $('meta[name="user-id"]').attr('content');
         let chats = $('.custom-chat-users-list li');
-        let json = JSON.parse(res);
+        // jQuery may already have parsed it; an expired session answers with the HTML login page
+        let json = res;
+        if (typeof res === 'string') {
+            try { json = JSON.parse(res); } catch (e) { return; }
+        }
+        if (!json || typeof json !== 'object') return;
         let ids = json.direct_chats, ids_main = json.main_chat;
 
             for (let key in ids) {
@@ -235,8 +240,12 @@ $(document).ready(chatnotifi.init());
 
 var notificationEmail = {
      init : function () {
-         var pusher = new Pusher('dec55d4997ee67fe0e91', {
-             cluster: 'eu',
+         var config = window.appPusherConfig;
+         if (!config || !config.enabled || !config.key || typeof Pusher !== 'function' || notificationEmail.pusher) {
+             return;
+         }
+         var pusher = notificationEmail.pusher = new Pusher(config.key, {
+             cluster: config.cluster,
              encrypted: true
          });
          var channel = pusher.subscribe('notification');
@@ -245,7 +254,7 @@ var notificationEmail = {
      },
      newNotification : function (data) {
          // console.log(data['user'] ,user_email, data['server'] , window.location.hostname)
-         if((data['user'] === user_email) && data['server'] == window.location.hostname) {
+         if((data['user'] === user_email) && (data['server'] === window.location.hostname || data['server'] === window.location.host)) {
              var userId = $('meta[name="user-id"]').attr('content');
              $.ajax({
                  type: "POST",

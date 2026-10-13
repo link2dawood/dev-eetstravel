@@ -27,27 +27,26 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-lg-6 mt-3">
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
                             <input type='hidden' name='modal_create' value="0">
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Name')!!}</label>
                                 <input type="text" name="name" value="{{ old('name') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.ShortName')!!}</label>
                                 <input type="text" name="short_name" value="{{ old('short_name') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Icon')!!}</label>
                                 <input type="text" name="icon" value="{{ old('icon') }}" class="form-control">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="criteria_type">{!!trans('main.Type')!!}</label>
                                 <select name="criteria_type" id="criteria_type" class="form-control">
                                     @foreach($criteria_types as $criteria_type)

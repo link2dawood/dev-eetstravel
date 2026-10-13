@@ -24,7 +24,7 @@ class UpdateBusRequest extends FormRequest
      */
     public function rules()
     {
-        $busId = $this->route('bus') ?? $this->route('id');
+        $busId = $this->route('bus') ?? $this->route('bu') ?? $this->route('id');
 
         return [
             'name' => ValidationService::businessNameRules(true, 191, 2),

@@ -27,7 +27,6 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
@@ -35,13 +34,13 @@
                     @method('PUT')
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
+                            <div class="col-lg-6 mt-3">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Name')!!}</label>
                                     <input type="text" value="{{ old('name', $status->name) }}" name="name" class="form-control">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="type">{!!trans('main.Ratetype')!!}</label>
                                     <select name="type" id="type_status" class="form-control" onchange="colorView($(this))">
                                         @foreach($status_types as $status_type)
@@ -50,12 +49,12 @@
                                     </select>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label>{!!trans('main.Sortorder')!!}</label>
                                     <input type="text" value="{{ old('sort_order', $status->sort_order) }}" name="sort_order" class="form-control">
                                 </div>
 
-                                <div class="form-group color_view" style="display: none">
+                                <div class="form-group mb-3 color_view" style="display: none">
                                     <label>{!!trans('main.Color')!!}</label>
                                     <div id="cp2" class="input-group colorpicker-component">
                                         <input type="text" id="color_field" name="color" class="form-control" value="{{ old('color', $status->color) }}">

@@ -10,6 +10,8 @@ use App\Helper\PermissionHelper;
 use App\HotelRoomTypes;
 use App\RoomTypes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use URL;
 
 class RoomTypesController extends Controller
@@ -38,12 +40,19 @@ class RoomTypesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Room Types';
+        $search = trim((string) $request->input('search'));
         $room_types = RoomTypes::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('sort_order', 'asc')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
         return view('room_types.index', compact('room_types', 'title'));
     }
 
@@ -69,13 +78,7 @@ class RoomTypesController extends Controller
     {
 
         $this->validateRoomTypes($request);
-		$fileName = "";
-		if ($request->hasFile('image')) {
-			$file = $request->file('image');
-			$fileName = time() . '.' . $request->image->extension();
-			
-			$url = $request->image->move('assets/img/svg/', $fileName);
-		}
+		$fileName = $request->hasFile('image') ? $this->storeImage($request->file('image')) : "";
 
 		
         $status = new RoomTypes();
@@ -141,24 +144,18 @@ class RoomTypesController extends Controller
 
         $room_types = RoomTypes::findOrfail($id);
 		
-		$fileName = "";
+		// keep the current image unless a new one is uploaded (it used to be wiped on every save)
 		if ($request->hasFile('image')) {
-			$file = $request->file('image');
-			$fileName = time() . '.' . $request->image->extension();
-			
-			 if ($room_types->img) {
-            $oldImagePath = public_path('ssets/img/svg/' . $room_types->img);
-				if (file_exists($oldImagePath)) {
-					unlink($oldImagePath);
-				}
-        	}
-			$url = $request->image->move('assets/img/svg/', $fileName);
+			$oldImagePath = $room_types->img ? public_path('assets/img/svg/' . basename($room_types->img)) : null;
+			$room_types->img = $this->storeImage($request->file('image'));
+			if ($oldImagePath && is_file($oldImagePath)) {
+				@unlink($oldImagePath);
+			}
 		}
 
         $room_types->name = $request->get('name');
         $room_types->code = $request->get('code');
         $room_types->sort_order = $request->get('sort_order');
-		$room_types->img = $fileName;
         $room_types->save();
 
         LaravelFlashSessionHelper::setFlashMessage("Room Type $room_types->name edited", 'success');
@@ -185,14 +182,32 @@ class RoomTypesController extends Controller
      */
     public function destroy($id)
     {
-        $status = RoomTypes::findOrfail($id);
-        HotelRoomTypes::query()->where('room_type_id', $id)->delete();
-        $status->delete();
+        $roomType = RoomTypes::findOrfail($id);
+
+        // Deleting used to remove the room type from every booked hotel room as well;
+        // refuse while hotels, agreements, seasons, offers or tours still use it.
+        $references = ['hotel_room_types', 'hotel_agreements_room_type_hotels', 'seasons_prices_room_type_hotels',
+            'prices_room_type_hotels', 'tour_room_type_hotels', 'offer_room_prices'];
+        foreach ($references as $table) {
+            if (Schema::hasTable($table) && DB::table($table)->where('room_type_id', $id)->exists()) {
+                $message = "Room Type {$roomType->name} is used by hotels, seasons, offers or tours and cannot be deleted";
+                if (request()->ajax()) {
+                    return response()->json(['error' => true, 'message' => $message]);
+                }
+                LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+                return redirect('room_types');
+            }
+        }
+
+        $roomType->delete();
         Comment::query()->where('reference_type', Comment::$services['room_types'])->where('reference_id', $id)->delete();
+        if ($roomType->img && is_file(public_path('assets/img/svg/' . basename($roomType->img)))) {
+            @unlink(public_path('assets/img/svg/' . basename($roomType->img)));
+        }
 
-        LaravelFlashSessionHelper::setFlashMessage("Room Type $status->name deleted", 'success');
+        LaravelFlashSessionHelper::setFlashMessage("Room Type $roomType->name deleted", 'success');
 
-        return URL::to('room_types');
+        return request()->ajax() ? URL::to('room_types') : redirect('room_types');
     }
 
     public function validateRoomTypes($request){
@@ -200,7 +215,19 @@ class RoomTypesController extends Controller
         $this->validate($request, [
             'name'    => 'required',
             'code' => 'required',
-            'sort_order'  => 'required|numeric'
+            'sort_order'  => 'required|numeric',
+            // stored in the public assets folder, so images only
+            'image' => 'nullable|file|mimes:svg,png,jpg,jpeg,gif,webp|max:2048',
         ]);
+    }
+
+    /** Saves an uploaded room type icon; the extension comes from the content, not the client's name. */
+    private function storeImage($file)
+    {
+        $extension = $file->guessExtension() === 'svg' || $file->getMimeType() === 'image/svg+xml' ? 'svg' : ($file->guessExtension() ?: 'png');
+        $fileName = time() . '_' . uniqid() . '.' . $extension;
+        $file->move(public_path('assets/img/svg'), $fileName);
+
+        return $fileName;
     }
 }

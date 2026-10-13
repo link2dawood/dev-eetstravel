@@ -43,13 +43,20 @@ class RateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - Rate';
+        $search = trim((string) $request->input('search'));
         $rates = Rate::leftJoin('rate_types', 'rate_types.id', '=', 'rates.rate_type')
             ->select('rates.id', 'rates.name', 'rates.mark', 'rates.sort_order', 'rate_types.name as rate_type')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('rates.name', 'like', "%{$search}%")->orWhere('rate_types.name', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('rates.sort_order', 'asc')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
         return view('rate.index', compact('rates', 'title'));
     }
 
@@ -182,7 +189,7 @@ class RateController extends Controller
         }
 
 
-        return URL::to('rate');
+        return request()->ajax() ? URL::to('rate') : redirect('rate');
     }
 
     public function validateRate($request){

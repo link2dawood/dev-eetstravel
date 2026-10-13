@@ -27,31 +27,36 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{{trans('main.Back')}}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{{trans('main.Save')}}</button>
                             </div>
                         </div>
                     </div>
                     <input type='hidden' name='_token' value='{{Session::token()}}'>
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
+                            <div class="col-lg-6 mt-3">
+                                <div class="form-group mb-3">
                                     <label >{{trans('main.Name')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->name}}{{ old('name') }}" name="name" class="form-control">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label>{{trans('main.Code')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->code}}{{ old('code') }}" name="code" class="form-control">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label>{{trans('main.Sortorder')}}</label>
                                     <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->sort_order}}{{ old('sort_order') }}" name="sort_order" class="form-control">
                                 </div>
-								<div class="form-group">
+								<div class="form-group mb-3">
                                 <label >{{trans('Image')}}</label>
-                                <input type="file" name="image" value="{{ old('name') }}" class="form-control" required>
+                                @if($room_types->img)
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <img src="{{ asset('assets/img/svg/' . $room_types->img) }}" alt="" style="width: 32px; height: 32px; object-fit: contain;" onerror="this.style.display='none'">
+                                    <span class="text-muted small">Current image. Choose a file only to replace it.</span>
+                                </div>
+                                @endif
+                                <input type="file" name="image" class="form-control" accept=".svg,.png,.jpg,.jpeg,.gif,.webp">
                             </div>
                             </div>
                             <div class="col-md-8">

@@ -41,10 +41,10 @@
                 <table id="bus-table" class="table card-table table-vcenter table-hover">
                     <thead>
                         <tr>
-                            <th style="width:60px" onclick="sortTable(0, 'bus-table')" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
-                            <th onclick="sortTable(1, 'bus-table')" class="cursor-pointer">Name <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-sm-table-cell cursor-pointer" onclick="sortTable(2, 'bus-table')">Bus Number <i class="ti ti-arrows-sort"></i></th>
-                            <th class="d-none d-md-table-cell cursor-pointer" onclick="sortTable(3, 'bus-table')">Bus Company <i class="ti ti-arrows-sort"></i></th>
+                            <th style="width:60px" class="cursor-pointer">ID <i class="ti ti-arrows-sort"></i></th>
+                            <th class="cursor-pointer">Name <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-sm-table-cell cursor-pointer">Bus Number <i class="ti ti-arrows-sort"></i></th>
+                            <th class="d-none d-md-table-cell cursor-pointer">Bus Company <i class="ti ti-arrows-sort"></i></th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -66,10 +66,14 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="empty">
                                     <div class="empty-icon"><i class="ti ti-bus icon" style="font-size: 3rem;"></i></div>
-                                    <p class="empty-title">No buses found</p>
-                                    <p class="empty-subtitle text-muted">Get started by adding your first bus</p>
+                                    <p class="empty-title">{{ request('search') ? 'No buses match your search' : 'No buses found' }}</p>
+                                    <p class="empty-subtitle text-muted">{{ request('search') ? 'Try another name, bus number, or company.' : 'Get started by adding your first bus' }}</p>
                                     <div class="empty-action">
+                                        @if(request('search'))
+                                        <a href="{{ route('bus.index') }}" class="btn btn-primary">Clear search</a>
+                                        @else
                                         {!! \App\Helper\PermissionHelper::getCreateButton(route('bus.create'), \App\Bus::class, 'btn btn-primary') !!}
+                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -91,12 +95,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/list-search.js') }}"></script>
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-$(document).ready(function() {
-    initializeBootstrapTable('bus-table');
-});
-</script>
+
 @endpush
 
 @include('component.delete_modal_simple')

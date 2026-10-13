@@ -16,8 +16,8 @@ var config = {
 var d = new Date();
 var monthd =(d.getMonth() + 1);
 var yeard = d.getFullYear();
-var mind = new Date(yeard + "-" + monthd + "-" +'01');
-var lastd = new Date(yeard + "-" + monthd + "-" +'31');
+var mind = new Date(yeard, d.getMonth(), 1);
+var lastd = new Date(yeard, d.getMonth() + 1, 0);
 var datem = new Date(yeard,monthd,1);
 datem.setMonth(datem.getMonth() + 6);
 var maxd = datem;
@@ -41,6 +41,8 @@ var commentbus = {
     },
 
     bindEvents: function () {
+        if (commentbus.bound) return;
+        commentbus.bound = true;
         $(document).on("click", ".reply_comment", function () {
             commentbus.reply($(this));
             return false;
@@ -119,7 +121,7 @@ var commentbus = {
         const id_comment = link.attr('data-comment-id');
         const parent_name = link.attr('data-parent-name');
 
-        $(modal_id).find('#author_name').css({'display': 'table-cell'});
+        $(modal_id).find('#author_name').css({'display': 'flex'});
         $(modal_id).find('#name').append('@'+parent_name);
         $(modal_id).find('#parent_comment').attr('value', id_comment);
         $(modal_id).find('#content').focus();
@@ -173,6 +175,7 @@ function createGraph() {
         "type": "gantt",
         "theme": "light",
         "marginRight": 70,
+        "marginTop": 30,
         "startDuration" : 1,
         "period": "DD",
         "dataDateFormat": "YYYY-MM-DD",
@@ -181,6 +184,7 @@ function createGraph() {
         "columnWidth": 0.5,
         "valueAxis": {
             "type": "date",
+            "position": "top",
             "dateFormats" : ['DD'],
             "labelFunction": formatLabel,
 
@@ -236,9 +240,13 @@ function createGraph() {
         "endDateField": "end",
         "dataProvider": [],
         "dataLoader": {
-            "url": "../api/bus_days"
+            "url": "/api/bus_days",
+            "load": function(loader, chart) { renderBusFilters(chart.dataProvider); }
         },
         "valueScrollbar": {
+            // overview of the whole period, below the chart; the day axis stays on top
+            "oppositeAxis": false,
+            "offset": 30,
 
             "color": '#000000',
 
@@ -322,10 +330,14 @@ function createGraph() {
         },
         "categoryAxis": {
             "parseDates": false,
+            "labelFunction": function (value) {
+                value = String(value);
+                return value.length > 28 ? value.slice(0, 27) + '\u2026' : value;
+            },
        //     "gridPosition": "start",
         //    "gridAlpha": 0,
             "ignoreAxisWidth": true,
-            "autoWrap": true,
+            "autoWrap": false,
           //  "equalSpacing": true,
           //  "gridPosition": "end",
 //            "dashLength": 1,
@@ -336,7 +348,7 @@ function createGraph() {
             // "ignoreAxisWidth": true,
             //  "autoWrap": true
         },
-        "marginLeft": 150,
+        "marginLeft": 200,
 
         "chartCursor": {
       //      "cursorPosition": "mouse",
@@ -367,47 +379,27 @@ function createGraph() {
             }
         },
         {
+            "event": "rendered",
+            "method": function(event) {
+                event.chart.chartCursor.addListener('moved', function (e) {
+                    var axis = event.chart.valueAxis;
+                    var value = axis && axis.coordinateToValue ? axis.coordinateToValue(e.x) : null;
+                    chart2.cursorDate = value ? new Date(value) : null;
+                });
+            }
+        },
+        {
                 "event": "rendered",
                 "method": function(event) {
 
-                    $('#help').hover(
-                        function() {
-                            $('#leggend').css({"left":"80%"});
-                                $('#leggend').fadeTo( "fast", 1 ,function() {
-                            });
-                            $('#filter_block').fadeTo( "fast", 0,function() {
-                                $('#filter_block').css({"left":"-80%"});
-                            });
-                        }, function() {
-                            $('#leggend').fadeTo( "fast", 0,function() {
-                                $('#leggend').css({"left":"-80%"});
-                            });
-                        });
-
-                    $('#filter').hover(
-                        function() {
-                            $('#filter_block').css({"left":"85%"});
-                            $('#filter_block').fadeTo( "fast", 1 ,function() {
-                            });
-                            $('#leggend').fadeTo( "fast", 0,function() {
-                                $('#leggend').css({"left":"-85%"});
-                            });
-                        }, function() {
-                            //$('#filter_block').fadeTo( "fast", 0,function() {
-                              //  $('#filter_block').css({"left":"-80%"});
-                            //});
-                        });
-
-                    $('#filter_block').hover(
-                        function() {
-                            $(this).css({"left":"85%"});
-                            $(this).fadeTo( "fast", 1 ,function() {
-                            });
-                        }, function() {
-                            $(this).fadeTo( "fast", 0,function() {
-                                $(this).css({"left":"-85%"});
-                            });
-                        });
+                    $('#help').off('.busCalendar').on('click.busCalendar', function() {
+                        $('#filter_block').hide();
+                        $('#leggend').css({left: 'auto', right: '0', opacity: 1}).toggle();
+                    });
+                    $('#filter').off('.busCalendar').on('click.busCalendar', function() {
+                        $('#leggend').hide();
+                        $('#filter_block').css({left: 'auto', right: '0', opacity: 1}).toggle();
+                    });
 
                     event.chart.valueAxis.zoomToValues(new Date(mind), new Date(lastd));
 
@@ -442,26 +434,17 @@ function createGraph() {
 }
 
 function clearFields() {
-
-
-    $('#drivers_tour').select2("val", " ");
-    $('#drivers_trip').select2("val", " ");
-    $('#buses_tour').select2("val", " ");
+    $('#drivers_tour, #drivers_trip').val(null).trigger('change');
+    $('#buses_tour').val(null).trigger('change');
 }
 
 function resetForm() {
     $('#modalCreateBusAdd').find('#start_date').datepicker('update', '');
     $('#modalCreateBusAdd').find('#end_date').datepicker('update', '');
-    $('#modalCreateBusAdd').find('#name').val('');
+    $('#modalCreateBusAdd').find('#name_trip').val('');
+    $('#modalCreateBusAdd').find('.block-error-driver, .error_date').hide().text('');
 
-    $('#leggend').fadeTo( "fast", 0,function() {
-        $('#leggend').css({"left":"-80%"});
-    });
-
-
-    $('#filter_block').fadeTo( "fast", 0,function() {
-        $('#filter_block').css({"left":"-80%"});
-    });
+    $('#leggend, #filter_block').hide();
 }
 
 function isArray(array) {
@@ -473,6 +456,8 @@ function isArray(array) {
 
 function handleClick_bus(event) {
     let trip_edit_permission = $('#trip_edit_permission').attr('data-info');
+    $('#modalUpdateTrip .trip_update').empty();
+    $('#update_btn_table_bus').prop('disabled', true);
     $('.block-error-driver').text('');
     $('.block-error-driver').css({'display': 'none'});
     console.log(event.graph.customData);
@@ -494,6 +479,7 @@ function handleClick_bus(event) {
                 }
             }).done((res) => {
                 $('.trip_update').html(res);
+                $('#update_btn_table_bus').prop('disabled', false);
             });
         }
 
@@ -508,6 +494,7 @@ function handleClick_bus(event) {
                 }
             }).done((res) => {
                 $('.trip_update').html(res);
+                $('#update_btn_table_bus').prop('disabled', false);
             });
         }
     }, 300);
@@ -517,9 +504,9 @@ function handleClick_bus(event) {
 
     setTimeout(function (e) {
         if(!trip_edit_permission){
-            $('#modalNoPermission').modal();
+            $('#modalNoPermission').modal('show');
         }else{
-            $('#modalUpdateTrip').modal();
+            $('#modalUpdateTrip').modal('show');
         }
     }, 200);
 
@@ -532,33 +519,24 @@ function handleClick_bus(event) {
 
 function myFF(event) {
     let create_permission_trip = $('#trip_create_permission').attr('data-info');
-    if(!chart2.flag && chart2.cursorDataContext && event.toElement.nodeName === 'path') {
-
-        resetForm();
-
-        var momentString = moment(chart2.val,"MMM DD").format("MM-DD");
-        var year =(new Date()).getFullYear();
-        var full_date = year + "-" + momentString;
-
-        $('#modalCreateBusAdd').find('#start_date').datepicker('update', full_date);
-
-        if( mode !== 1 ) {
-            $("input[type='radio'].minimal").iCheck('uncheck'); //To uncheck the radio button
-            $("input[type='radio'].minimal").filter('[value="1"]').iCheck('uncheck');
-            $("input[type='radio'].minimal").filter('[value="0"]').iCheck('check');
-            $("input[type='radio'].minimal").iCheck('update');
-        }
-
-        tour_reset();
-
-        $(document).find('.tours_bus').addClass('hidden');
-        $(document).find('.name_bus').removeClass('hidden');
+    var target = event.target || event.toElement;
+    if(!chart2.flag && chart2.cursorDataContext && target && target.nodeName === 'path') {
 
         if(!create_permission_trip){
-            $('#modalNoPermission').modal();
-        }else{
-            $('#modalCreateBusAdd').modal();
+            $('#modalNoPermission').modal('show');
+            return;
         }
+
+        openBusTripForm();
+
+        // pre-fill the clicked day and bus
+        if (chart2.cursorDate) {
+            var clicked = moment(chart2.cursorDate).format('YYYY-MM-DD');
+            $('#modalCreateBusAdd').find('#start_date').datepicker('update', clicked);
+            $('#modalCreateBusAdd').find('#end_date').datepicker('update', clicked);
+        }
+        var busId = chart2.cursorDataContext.bus_id;
+        if (busId && $('#bus_trip option[value="' + busId + '"]').length) $('#bus_trip').val(String(busId)).trigger('change');
 
         //value Y
         // console.log(chart.cursorDataContext.category);
@@ -611,10 +589,9 @@ function tour_reset() {
 }
 
 function tour_check() {
-    var departure_date =  $("#tour").select2('data')[0].element.dataset.dep;
-    var retirement_date =  $("#tour").select2('data')[0].element.dataset.ret;
-    console.log(departure_date);
-    console.log(retirement_date);
+    var tourOption = $('#tour option:selected');
+    var departure_date = tourOption.data('dep') || null;
+    var retirement_date = tourOption.data('ret') || null;
     $('#modalCreateBusAdd').find('#start_date').val('').datepicker("remove");
     $('#modalCreateBusAdd').find('#start_date').datepicker({
         format: 'yyyy-mm-dd',
@@ -659,7 +636,7 @@ function createTransferInTour() {
 
     if($('.datepicker_bus_day_dep').val() > $('.datepicker_bus_day_ret').val()){
         $('#modalCreateBusAdd').find('.error_date').css({'display':'block'});
-        $('#modalCreateBusAdd').find('.error_date').append('Date from can not be less than the date to');
+        $('#modalCreateBusAdd').find('.error_date').append('Start date must be on or before end date.');
         return false;
     }
 
@@ -673,7 +650,7 @@ function createTransferInTour() {
     let tour_id = form.get('tour');
     let service_id = form.get('transfer_tour');
     let service_type = 'transfer';
-    let service_name = $("#transfer_tour").select2('data')[0].element.dataset.service_name;
+    let service_name = $('#transfer_tour option:selected').data('service_name');
     let dep_date = form.get('start_date');
     let ret_date = form.get('end_date');
 
@@ -691,6 +668,11 @@ function createTransferInTour() {
             dep_date_transfer: dep_date,
             ret_date_transfer: ret_date
         }
+    }).fail((xhr) => {
+        $('#modalCreateBusAdd .overlay').hide();
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        var message = errors ? Object.values(errors).flat().join(' ') : (xhr.responseJSON && xhr.responseJSON.message) || 'Unable to add the transfer. Please try again.';
+        $('#modalCreateBusAdd .block-error-driver').text(message).show();
     }).done((res) => {
         $(document).find('#modalCreateBusAdd').find('.overlay').css({'display' : 'none'});
 
@@ -709,12 +691,27 @@ function createTransferInTour() {
             $('.block-error-driver').text('');
             $('.block-error-driver').css({'display': 'none'});
             $('.clear_input').val('');
-            chart2.clear();
-            chart2 = null;
-
-            createGraph();
+            notifyBus('Transfer added to the tour', 'success');
+            reloadBusChart();
         }
     })
+}
+
+function notifyBus(message, type) {
+    var toast = window.appToast || window.showToast;
+    if (typeof toast === 'function') toast(message, type);
+}
+
+// Rebuild the chart and keep the period the user was looking at
+function reloadBusChart() {
+    var axis = chart2 && chart2.valueAxis;
+    if (axis && axis.minZoom && axis.maxZoom) {
+        mind = new Date(axis.minZoom);
+        lastd = new Date(axis.maxZoom);
+    }
+    chart2.clear();
+    chart2 = null;
+    createGraph();
 }
 
 function initDateModal() {
@@ -733,7 +730,7 @@ function initDateModal() {
 
         if($('.datepicker_bus_day_dep').val() > $('.datepicker_bus_day_ret').val()){
             $('#modalCreateBusAdd').find('.error_date').css({'display':'block'});
-            $('#modalCreateBusAdd').find('.error_date').append('Date from can not be less than the date to');
+            $('#modalCreateBusAdd').find('.error_date').append('Start date must be on or before end date.');
             return false;
         }
 
@@ -775,18 +772,19 @@ function initDateModal() {
 
                     $('#modalCreateBusAdd').modal('hide');
 
-                    chart2.clear();
-                    chart2 = null;
-
-                    createGraph();
+                    notifyBus('Trip added', 'success');
+                    reloadBusChart();
 
                     $('.block-error-driver').text('');
                     $('.block-error-driver').css({'display': 'none'});
                 }
 
             },
-            error: function(data){
-
+            error: function(xhr){
+                $('#modalCreateBusAdd .overlay').hide();
+                var errors = xhr.responseJSON && xhr.responseJSON.errors;
+                var message = errors ? Object.values(errors).flat().join(' ') : 'Unable to save the trip. Please try again.';
+                $('#modalCreateBusAdd .block-error-driver').text(message).show();
             }
         })
 
@@ -798,6 +796,10 @@ function initDateModal() {
         $('.block-error-driver').css({'display': 'none'});
         $(document).find('#modalUpdateTrip').find('.overlay').css({'display' : 'block'});
 
+        if (!document.forms.form_update_bus_table_trip && !document.forms.form_update_bus_table_tour) {
+            $(document).find('#modalUpdateTrip').find('.overlay').css({'display' : 'none'});
+            return;
+        }
         let check = typeof document.forms.form_update_bus_table_trip === 'undefined' ? 'TOUR' : 'TRIP';
 
         // update Trip
@@ -830,10 +832,11 @@ function deleteTrip() {
             trip_id: trip_id
         }
     }).done((res) => {
-        chart2.clear();
-        chart2 = null;
-        createGraph();
+        notifyBus('Trip deleted', 'success');
+        reloadBusChart();
         $('#modalUpdateTrip').modal('hide');
+    }).fail(() => {
+        notifyBus('Unable to delete the trip', 'error');
     });
 }
 
@@ -883,13 +886,17 @@ function updateTrip(oldForm) {
             $('.block-error-driver').css({'display': 'block'});
         }
         else{
-            chart2.clear();
-            chart2 = null;
-            createGraph();
+            notifyBus('Changes saved', 'success');
+            reloadBusChart();
             $('#modalUpdateTrip').modal('hide');
             $('.block-error-driver').text('');
             $('.block-error-driver').css({'display': 'none'});
         }
+    }).fail((xhr) => {
+        $('#modalUpdateTrip .overlay').hide();
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        var message = errors ? Object.values(errors).flat().join(' ') : 'Unable to save the changes. Please try again.';
+        $('#modalUpdateTrip .block-error-driver').text(message).show();
     });
 }
 
@@ -921,13 +928,17 @@ function updateTour(oldForm) {
             $('.block-error-driver').css({'display': 'block'});
         }
         else{
-            chart2.clear();
-            chart2 = null;
-            createGraph();
+            notifyBus('Changes saved', 'success');
+            reloadBusChart();
             $('#modalUpdateTrip').modal('hide');
             $('.block-error-driver').text('');
             $('.block-error-driver').css({'display': 'none'});
         }
+    }).fail((xhr) => {
+        $('#modalUpdateTrip .overlay').hide();
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        var message = errors ? Object.values(errors).flat().join(' ') : 'Unable to save the changes. Please try again.';
+        $('#modalUpdateTrip .block-error-driver').text(message).show();
     });
 }
 
@@ -950,111 +961,41 @@ function generateObject(){
     chart2.validateData();
 }
 
+function renderBusFilters(data) {
+    loaded_data = JSON.stringify(data);
+    obj = data;
+    spliced = [];
+    var panel = $('#filter_block').empty();
+    var all = $('<input type="checkbox" class="bus_filter_all" checked>').attr('aria-label', 'All buses');
+    $('<label class="d-flex gap-2 align-items-center mb-2"></label>').append(all, document.createTextNode('All buses')).appendTo(panel);
+    data.forEach(function(bus, index) {
+        var input = $('<input type="checkbox" class="bus_filter" checked>').val(index);
+        $('<label class="d-flex gap-2 align-items-center mb-2"></label>').append(input, document.createTextNode(String(bus.category))).appendTo(panel);
+    });
+    panel.find('input').on('change', function() {
+        if ($(this).hasClass('bus_filter_all')) panel.find('.bus_filter').prop('checked', this.checked);
+        var selected = panel.find('.bus_filter:checked').map(function() { return Number(this.value); }).get();
+        all.prop('checked', selected.length === data.length);
+        chart2.dataProvider = data.filter(function(bus, index) { return selected.includes(index); });
+        chart2.validateData();
+    });
+}
+
+function openBusTripForm() {
+    resetForm();
+    tour_reset();
+    clearFields();
+    $('#modalCreateBusAdd .trip_select input').prop('checked', true);
+    if (typeof showBusMode === 'function') {
+        showBusMode(false);
+    } else {
+        $('#modalCreateBusAdd .trip_field, #modalCreateBusAdd .trip_btn').show();
+        $('#modalCreateBusAdd .tour_field, #modalCreateBusAdd .tour_btn').hide();
+    }
+    $('#modalCreateBusAdd').modal('show');
+}
+
 $(function () {
     createGraph();
     initDateModal();
-
-    if(!loaded_data) {
-
-        AmCharts.loadFile('../api/bus_days', {}, function (data) {
-            loaded_data = data;
-            obj = $.parseJSON(data);
-            var html ="<div class='container-fluid' style='margin: 10px;'>";
-
-
-            html += "<div class='row' style='margin-bottom: 2px;'><div class='col-sm-1'><input type='checkbox' class='bus_filter_all' value='set_all'></div><div class='col-sm-9'>All</div></div>";
-
-            for(var i = 0; i<obj.length; i++){
-                html += "<div class='row' style='margin-bottom: 2px;'><div class='col-sm-1'><input type='checkbox' class='bus_filter' value='"+i+"' checked></div><div class='col-sm-9'>"+obj[i].category+"</div></div>";
-            }
-
-            html += "</div>";
-
-            $(document).find('#filter_block').html(html);
-
-
-            $('.bus_filter_all').iCheck({
-                checkboxClass: 'icheckbox_minimal-blue',
-                radioClass   : 'iradio_minimal-blue'
-            }).on('ifClicked', function(e) {
-
-                filter_all = true ;
-
-                $(this).on('ifUnchecked', function(event) {
-
-                    if (!filter_all)  return;
-
-                        spliced = [];
-                        obj = $.parseJSON(loaded_data);
-
-                        $('.bus_filter').each(function (index, element) {
-                            $(element).iCheck('uncheck');
-                            spliced[$(element).val()] = $(element).val();
-                        });
-
-                        generateObject();
-
-
-
-                });
-
-                $(this).on('ifChecked', function(event){
-
-                    if(!filter_all) return;
-
-                        spliced = [];
-                        obj = $.parseJSON(loaded_data);
-
-                        $('.bus_filter').each(function (index, element) {
-                            $(element).iCheck('check');
-                        });
-
-                        generateObject();
-
-
-                });
-
-            });
-
-
-            $('.bus_filter').iCheck({
-                checkboxClass: 'icheckbox_minimal-blue',
-                radioClass   : 'iradio_minimal-blue'
-            }).on('ifClicked', function(e) {
-
-                filter_all = false;
-
-                $('.bus_filter_all').iCheck('uncheck');
-
-                obj = $.parseJSON(loaded_data);
-
-
-                $(this).on('ifUnchecked', function(event){
-
-                    if(!spliced[event.target.value]) {
-                        spliced[event.target.value] = event.target.value;
-                    }
-
-                    generateObject();
-
-                });
-
-                $(this).on('ifChecked', function(event){
-
-                    if(spliced[event.target.value]) {
-                        delete spliced[event.target.value];
-                    }
-
-                    generateObject();
-
-                });
-
-            });
-
-
-        });
-
-
-
-    }
 });

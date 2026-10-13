@@ -113,9 +113,6 @@
 
             @push('scripts')
             <script>
-                $('.link_file').click(function (e) {
-                    window.open($(this).attr('href'));
-                });
                 $('.image').magnificPopup({
                     delegate: 'a',
                     type: 'image',
@@ -123,7 +120,7 @@
                 });
                $('.del-attach').on('click', function (e) {
 					e.preventDefault();
-					let elem = $(this).context;
+                    let elem = this;
 					let deleteUrl = $(elem).attr('data-attach-url');
 
 					// Ask for confirmation before proceeding

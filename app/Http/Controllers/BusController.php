@@ -56,8 +56,8 @@ class BusController extends Controller
 
     public function getButton($id, $bus)
     {
-        $url = array('show'       => route('bus.show', ['id' => $id]),
-            'edit'       => route('bus.edit', ['id' => $id]),
+        $url = array('show'       => route('bus.show', $id),
+            'edit'       => route('bus.edit', $id),
             'delete_msg' => "/bus/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $bus);
@@ -123,12 +123,11 @@ class BusController extends Controller
     public function store(StoreBusRequest $request)
     {
 
-        DB::beginTransaction();
-        $bus = $this->busRepository->create($request->except('attach'));
-
-        $this->addFile($request, $bus);
-
-        DB::commit();
+        $bus = DB::transaction(function () use ($request) {
+            $bus = $this->busRepository->create($request->only('name', 'bus_number', 'transfer_id'));
+            $this->addFile($request, $bus);
+            return $bus;
+        });
 
         $data = ['route' => route('bus.index')];
         LaravelFlashSessionHelper::setFlashMessage("Bus $bus->name created", 'success');
@@ -167,7 +166,7 @@ class BusController extends Controller
     {
         $title = 'Edit - Bus';
 
-        $bus = Bus::query()->where('id', $id)->first();
+        $bus = Bus::query()->findOrFail($id);
 
         $transfers = Transfer::all()->pluck('name', 'id')->toArray();
 
@@ -186,12 +185,12 @@ class BusController extends Controller
     public function update(UpdateBusRequest $request, $id)
     {
 
-        DB::beginTransaction();
-        $this->busRepository->updateById($id, $request->except('attach'));
-        $bus = $this->busRepository->byId($id);
-        $this->addFile($request, $bus);
-
-        DB::commit();
+        $bus = DB::transaction(function () use ($request, $id) {
+            $this->busRepository->updateById($id, $request->only('name', 'bus_number', 'transfer_id'));
+            $bus = $this->busRepository->byId($id);
+            $this->addFile($request, $bus);
+            return $bus;
+        });
 
         LaravelFlashSessionHelper::setFlashMessage("Bus $bus->name edited", 'success');
         $data = ['route' => route('bus.index')];
@@ -215,9 +214,9 @@ class BusController extends Controller
         $bus_statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'bus')->get();
         $buses = Bus::query()->orderBy('name', 'asc')->get();
         $drivers = Driver::query()->orderBy('name', 'asc')->get();
-        $selected_drivers = TripToDrivers::query()->where('bus_day_id', $busDay->id)->get();
 
         if($busDay){
+            $selected_drivers = TripToDrivers::query()->where('bus_day_id', $busDay->id)->get();
             $view = View::make('component.generateFormTrip',
                 compact('busDay', 'bus_statuses', 'buses', 'drivers', 'selected_drivers')
             );
@@ -238,7 +237,7 @@ class BusController extends Controller
         $busDay = BusDay::query()->where('tour_package_id', $tour_package_id)->where('id', $bus_day_id)->first();
         $buses = Bus::query()->where('transfer_id', $transfer_id)->orderBy('name', 'asc')->get();
         $drivers = Driver::query()->where('transfer_id', $transfer_id)->orderBy('name', 'asc')->get();
-        $selected_drivers = TransferToDrivers::query()->where('tour_package_id', $tour_package_id)->get();
+        $selected_drivers = TransferToDrivers::query()->where('tour_package_id', $tour_package_id)->where('bus_day_id', $bus_day_id)->get();
 
         if($busDay){
             $view = View::make('component.generateFormTour',
@@ -336,11 +335,20 @@ class BusController extends Controller
         $trip_id = $request->get('trip_id', 0);
 
         $bus_day = $this->busDayHelper->getBusDayId($bus_day_id);
+        abort_unless($bus_day && $bus_day->tour_package_id === null && (int) $bus_day->trip_id === (int) $trip_id, 404);
         $start_date = $bus_day->date;
+        $end_date = $start_date;
+        $excluded_trip_id = null;
+        if ($trip_mode == 0) {
+            $trip_days = BusDay::query()->where('trip_id', $trip_id)->orderBy('date')->get();
+            $start_date = $trip_days->first()->date;
+            $end_date = $trip_days->last()->date;
+            $excluded_trip_id = $trip_id;
+        }
 
         // validate buses and drivers
         $res_bus_validate = $this->busDayHelper
-            ->validateBuses($bus_id_trip, $start_date, $start_date, null, $bus_day->id);
+            ->validateBuses($bus_id_trip, $start_date, $end_date, null, $bus_day->id, $excluded_trip_id);
 
 
         if(!$res_bus_validate['check']){
@@ -354,7 +362,7 @@ class BusController extends Controller
 
         //validate drivers
         $res_driver_validate = $this->busDayHelper
-            ->validateDrivers($drivers_id_trip, $start_date, $start_date, null, $bus_day->id);
+            ->validateDrivers($drivers_id_trip, $start_date, $end_date, null, $bus_day->id, $excluded_trip_id);
 
         if(!$res_driver_validate){
             $data = [
@@ -449,12 +457,15 @@ class BusController extends Controller
             ->where('tour_package_id', $tour_package_id)
             ->orderBy('date', 'asc')->get();
 
-        $start_date = $bus_days->first()->date;
-        $end_date = $bus_days->last()->date;
+        $bus_day = $bus_days->firstWhere('id', $bus_day_id);
+        abort_unless($bus_day && $tour_package_id, 404);
+        $start_date = $tour_mode == 0 ? $bus_days->first()->date : $bus_day->date;
+        $end_date = $tour_mode == 0 ? $bus_days->last()->date : $bus_day->date;
+        $excluded_package_id = $tour_mode == 0 ? $tour_package_id : null;
 
 
         // validate buses
-        $res_bus_validate = $this->busDayHelper->validateBuses($bus_id, $start_date, $end_date, $tour_package_id);
+        $res_bus_validate = $this->busDayHelper->validateBuses($bus_id, $start_date, $end_date, $excluded_package_id, $bus_day->id);
         if(!$res_bus_validate['check']){
             $data = [
                 'bus_busy' => true,
@@ -465,7 +476,7 @@ class BusController extends Controller
         }
 
 //        validate drivers
-        $res_driver_validate = $this->busDayHelper->validateDrivers($drivers_id, $start_date, $end_date, $tour_package_id);
+        $res_driver_validate = $this->busDayHelper->validateDrivers($drivers_id, $start_date, $end_date, $excluded_package_id, $bus_day->id);
         if(!$res_driver_validate){
             $data = [
                 'bus_busy' => true,
@@ -499,25 +510,19 @@ class BusController extends Controller
             $this->busDayHelper->addDriversToTransfer($drivers_id, $bus_day->tour_id, $bus_day->transfer_id, $tour_package_id, $bus_day->id);
 
             $bus_day->status_id = $status;
+            $bus_day->bus_id = $bus_id;
             $bus_day->save();
 
             // change transfer status
             $check_status_transfer = true;
             foreach ($bus_days as $bus_day_item){
-                if($bus_day_item->status != $status){
+                if($bus_day_item->status_id != $status){
                     $check_status_transfer = false;
                 }
             }
 
             if($check_status_transfer){
                 $this->busDayHelper->changeStatusTransferPackage($bus_day->tour_package_id, $status);
-            }
-
-            if ($bus_id != $bus_day->bus_id){
-                foreach ($bus_days as $bus_day_item){
-                    $bus_day_item->bus_id = $bus_id;
-                    $bus_day_item->save();
-                }
             }
 
         }
@@ -532,7 +537,7 @@ class BusController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id, DeleteModel $deleteModel)
+    public function destroy($id, DeleteModel $deleteModel, Request $request)
     {
         $bus = $this->busRepository->byId($id);
         $message = $deleteModel->check($bus, 'Bus');
@@ -546,7 +551,15 @@ class BusController extends Controller
         }
 
 
-        return URL::to('bus');
+        if ($request->expectsJson()) {
+            return response()->json(['success' => !$message, 'message' => $message]);
+        }
+
+        if ($request->ajax()) {
+            return URL::to('bus');
+        }
+
+        return redirect()->route('bus.index');
     }
 
     public function validateBus($request){
@@ -568,13 +581,9 @@ class BusController extends Controller
         $from = $year."-". $month."-01";
         $end = $year."-". $month."-31";
 
-        $allBuses = [];
        // $to = $year."-". $month_end."-". $day;
         $to = date('Y-m-d', strtotime("+6 months", strtotime($end)));
 
-        foreach(Bus::all() as $bus_){
-            $allBuses[] = [$bus_->name."(".$bus_->bus_number.")"] ;
-        }
         $bus_days = BusDay::query()
             ->groupBy('tour_package_id')
             ->groupBy('bus_id')
@@ -595,11 +604,6 @@ class BusController extends Controller
         		continue;
 	        }
             $bus = Bus::query()->where('id', $bus_day->bus_id)->first();
-
-            $category = [];
-            if($bus){
-                $category[] = $bus->name."(".$bus->bus_number.")" ;
-            }
 
             $segments = [];
             $city_count = 0;
@@ -948,50 +952,47 @@ class BusController extends Controller
                 }
             }
 
-            $dto[] = [
-                'category' => $category,
-                'segments' => $segments
+            if ($bus) {
+                $dto[] = [
+                    'bus_id' => $bus->id,
+                    'segments' => $segments
+                ];
+            }
+        }
+
+        // One row per bus (rows used to be merged by name, so buses sharing a name
+        // shared a row, and a failed array_search dropped the first empty bus).
+        $buses = Bus::query()->orderBy('name')->get(['id', 'name', 'bus_number']);
+        $labelCounts = $buses->countBy(function ($bus) {
+            return $bus->name . '(' . $bus->bus_number . ')';
+        });
+
+        $segmentsByBus = [];
+        foreach ($dto as $item) {
+            $segmentsByBus[$item['bus_id']] = array_merge($segmentsByBus[$item['bus_id']] ?? [], $item['segments']);
+        }
+
+        $finishResult = [];
+        foreach ($buses as $bus) {
+            $label = $bus->name . '(' . $bus->bus_number . ')';
+            if ($labelCounts[$label] > 1) {
+                $label .= ' #' . $bus->id; // same name and number as another bus
+            }
+            $segments = $segmentsByBus[$bus->id] ?? [];
+            usort($segments, function ($a, $b) {
+                return strcmp($a['start'], $b['start']);
+            });
+            $finishResult[] = [
+                'category' => $label,
+                'bus_id' => $bus->id,
+                'segments' => $segments,
             ];
         }
 
-        $result = array();
-        foreach ($dto as $item){
-            $key = '';
-            asort($item['category']);
-            foreach ($item['category'] as $category){
-                $key .= $category;
-            }
-
-            $segments = array();
-            $segments['segments'] = collect();
-            if (isset($result[$key])){
-                $segments = $result[$key];
-            }
-            $segments['segments'] = $segments['segments']->concat($item['segments']);
-            $result[$key] = $segments;
-            $result[$key]['category'] = $item['category'];
-        }
-
-        $finishResult = array();
-        foreach ($result as $key => $segments) {
-            if (count($segments['category']) > 0){
-                $finishResult[] = [
-                    'category' => array_values($segments['category']),
-                    'segments' => $segments['segments']->all(),
-                ];
-                $pos = array_search(array_values($segments['category']), $allBuses);
-                if ($pos !== null){
-                    unset($allBuses[$pos]);
-                }
-            }
-        }
-
-        foreach($allBuses as $allB){
-            $finishResult[] = [
-                    'category' => $allB,
-                    'segments' => [],
-                ];
-        }
+        // Buses with trips first, then the rest by name
+        usort($finishResult, function ($a, $b) {
+            return (empty($a['segments']) <=> empty($b['segments'])) ?: strcasecmp($a['category'], $b['category']);
+        });
 
         return response()->json($finishResult);
     }
@@ -1012,11 +1013,9 @@ class BusController extends Controller
         $bus_trip = $request->get('bus_trip', null);
         $drivers_trip = $request->get('drivers_trip', null);
 
-        $dates_interval = $this->busDayHelper->getDatesInterval($start_date, $end_date);
-
-
         if($type_add == 'TRIP'){
             $this->validateDayTrip($request);
+            $dates_interval = $this->busDayHelper->getDatesInterval($start_date, $end_date);
 
             // validate buses
             $res_bus_validate = $this->busDayHelper->validateBuses($bus_trip, $start_date, $end_date);
@@ -1047,26 +1046,28 @@ class BusController extends Controller
             $city = $request->get('city_begin', null);
 
 
-            // created trip
-            $trip = new Trip();
-            $trip->name = $name_trip;
-            $trip->save();
+            // created trip (all days or none: a failure used to leave a one-day trip behind)
+            DB::transaction(function () use ($name_trip, $dates_interval, $tour_id, $transfer_id, $status, $bus_trip, $city, $country, $drivers_trip) {
+                $trip = new Trip();
+                $trip->name = $name_trip;
+                $trip->save();
 
-            foreach ($dates_interval as $item){
-                $this->busDayHelper->createBusDayTrip(
-                    $tour_id,
-                    $transfer_id,
-                    null,
-                    $item['date'],
-                    $status,
-                    $bus_trip,
-                    $name_trip,
-                    $city,
-                    $country,
-                    $drivers_trip,
-                    $trip->id
-                );
-            }
+                foreach ($dates_interval as $item){
+                    $this->busDayHelper->createBusDayTrip(
+                        $tour_id,
+                        $transfer_id,
+                        null,
+                        $item['date'],
+                        $status,
+                        $bus_trip,
+                        $name_trip,
+                        $city,
+                        $country,
+                        $drivers_trip,
+                        $trip->id
+                    );
+                }
+            });
         }
 
         return response()->json($request);
@@ -1079,8 +1080,8 @@ class BusController extends Controller
             'name_trip'    => 'required',
             'country_begin' => 'required',
             'city_begin' => 'required',
-            'start_date' => 'required',
-            'end_date' => 'required'
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date'
         ]);
     }
 
@@ -1089,8 +1090,8 @@ class BusController extends Controller
         $this->validate($request, [
             'tour'    => 'required',
             'transfer_tour'    => 'required',
-            'start_date' => 'required',
-            'end_date' => 'required'
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date'
         ]);
     }
 
@@ -1162,9 +1163,11 @@ class BusController extends Controller
     }
 
     public function deleteBusDay(Request $request){
+        $request->validate(['trip_mode' => 'required|in:0,1']);
         $bus_day_id = $request->get('bus_day_id');
         $trip_mode = $request->get('trip_mode');
         $trip_id = $request->get('trip_id');
+        BusDay::query()->where('id', $bus_day_id)->where('trip_id', $trip_id)->whereNull('tour_package_id')->firstOrFail();
 
         // delete for full trip
         if($trip_mode == 0){

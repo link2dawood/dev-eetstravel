@@ -30,6 +30,9 @@ class Kernel extends ConsoleKernel
 		'\App\Console\Commands\RunImport',
         '\App\Console\Commands\RepairTourDays',
         '\App\Console\Commands\RepairServiceCities',
+        '\App\Console\Commands\RepairTextEncoding',
+        '\App\Console\Commands\BusSampleData',
+        '\App\Console\Commands\BaseInputSampleData',
     ];
 
     /**

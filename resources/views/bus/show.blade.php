@@ -14,7 +14,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="margin_button">
-                            <a href="javascript:history.back()">
+                            <a href="{{ route('bus.index') }}">
                                 <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
                             </a>
                             <a href="{!! route('bus.edit', $bus->id) !!}">
@@ -29,19 +29,19 @@
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Name')!!} : </i></b>
                         </td>
-                        <td>{!!$bus->name!!}</td>
+                        <td>{{ $bus->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Busnumber')!!} : </i></b>
                         </td>
-                        <td>{!!$bus->bus_number!!}</td>
+                        <td>{{ $bus->bus_number }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.BusCompany')!!} : </i></b>
                         </td>
-                        <td>{!! $bus->transfer ? $bus->transfer->name : ''!!}</td>
+                        <td>{{ $bus->transfer ? $bus->transfer->name : '—' }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -67,6 +67,7 @@
             <!-- /.chat -->
             <div class="box-footer">
                 <form method='POST' action='{{route('comment.store')}}' enctype="multipart/form-data" id="form_comment">
+                    @csrf
                     <div class="input-group" style="width: 100%">
                                         <span id="author_name" class="input-group-addon">
                                             <span id="name"></span>

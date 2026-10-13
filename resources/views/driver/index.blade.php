@@ -28,7 +28,7 @@
                 <div class="col-md-6 mb-2 mb-md-0">
                     <div class="input-icon">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="driver-search" class="form-control" placeholder="Search drivers..." onkeyup="filterTable('driver-table', this.value)">
+                        <input type="text" id="driver-search" class="form-control" placeholder="Search drivers..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -54,8 +54,8 @@
                         <tr>
                             <td><span class="text-muted">#{{ $driver->id }}</span></td>
                             <td data-delete-label><span class="fw-bold">{{ $driver->name ?? '—' }}</span></td>
-                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $driver->phone ?? '—' }}</span></td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $driver->email ?? '—' }}</span></td>
+                            <td class="d-none d-sm-table-cell"><span class="text-muted">{{ $driver->phone ?: '—' }}</span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted">{{ $driver->email ?: '—' }}</span></td>
                             <td class="d-none d-lg-table-cell"><span class="text-muted">{{ $driver->transfer_name ?? '—' }}</span></td>
                             <td class="text-end">
                                 <div class="btn-list justify-content-end">
@@ -68,10 +68,14 @@
                             <td colspan="6" class="text-center py-5">
                                 <div class="empty">
                                     <div class="empty-icon"><i class="ti ti-steering-wheel icon" style="font-size: 3rem;"></i></div>
-                                    <p class="empty-title">No drivers found</p>
-                                    <p class="empty-subtitle text-muted">Get started by adding your first driver</p>
+                                    <p class="empty-title">{{ request('search') ? 'No drivers match your search' : 'No drivers found' }}</p>
+                                    <p class="empty-subtitle text-muted">{{ request('search') ? 'Try another name, phone, email, or company.' : 'Get started by adding your first driver' }}</p>
                                     <div class="empty-action">
+                                        @if(request('search'))
+                                        <a href="{{ route('driver.index') }}" class="btn btn-primary">Clear search</a>
+                                        @else
                                         {!! \App\Helper\PermissionHelper::getCreateButton(route('driver.create'), \App\Driver::class, 'btn btn-primary') !!}
+                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -94,6 +98,7 @@
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
 <script>$(document).ready(function() { initializeBootstrapTable('driver-table'); });</script>
+<script src="{{ asset('js/list-search.js') }}"></script>
 @endpush
 
 @include('component.delete_modal_simple')

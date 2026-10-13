@@ -27,30 +27,36 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-lg-6 mt-3">
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
                             <input type='hidden' name='modal_create' value="0">
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Currency')!!}</label>
-                                <input type="text" name="currency" value="{{ old('currency') }}" class="form-control" required>
+                                @php $currencyCodes = \App\Currencies::query()->orderBy('code')->get(['code', 'name']); $currentCode = (string) old('currency'); @endphp
+                                <select name="currency" class="form-select" required>
+                                    <option value="">Select currency</option>
+                                    @foreach($currencyCodes as $currencyOption)
+                                        <option value="{{ $currencyOption->code }}" {{ strtoupper($currentCode) === strtoupper($currencyOption->code) ? 'selected' : '' }}>{{ $currencyOption->code }} - {{ $currencyOption->name }}</option>
+                                    @endforeach
+                                    @if($currentCode !== '' && !$currencyCodes->contains(function ($x) use ($currentCode) { return strtoupper($x->code) === strtoupper($currentCode); }))
+                                        <option value="{{ $currentCode }}" selected>{{ $currentCode }}</option>
+                                    @endif
+                                </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Rate')!!}</label>
-                                <input type="text" name="rate" value="{{ old('rate') }}" class="form-control" required>
+                                <input type="number" step="0.000001" min="0" name="rate" value="{{ old('rate') }}" class="form-control" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="date">{!!trans('main.Date')!!}</label>
 
-                                <div class="input-group date">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-calendar"></i>
-                                    </div>
-                                    {!! Form::text('date', '', ['class' => 'form-control pull-right datepicker', 'id' => 'date']) !!}
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                                    {!! Form::text('date', old('date', date('Y-m-d')), ['class' => 'form-control datepicker', 'id' => 'date', 'autocomplete' => 'off', 'placeholder' => 'YYYY-MM-DD', 'required']) !!}
                                 </div>
 
                             </div>

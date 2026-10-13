@@ -12,11 +12,9 @@
                 @if (Session::has('message'))
                     <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
                 @endif
-                    <div>
-                        {!! \App\Helper\PermissionHelper::getCreateButton(route('criteria.create'), \App\Criteria::class) !!}
-                    </div>
-                <br>
-                <br>
+                    <div class="d-flex justify-content-end mb-3">
+                    {!! \App\Helper\PermissionHelper::getCreateButton(route('criteria.create'), \App\Criteria::class) !!}
+                </div>
                 <table id="criteria-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 98%; table-layout: fixed'>
                     <thead>
                     <tr>

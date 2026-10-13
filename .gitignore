@@ -54,3 +54,5 @@ auth.json
 /storage/framework/views/*
 .env
 storage/app/city-repair/
+storage/app/encoding-repair/
+storage/app/sample-data/

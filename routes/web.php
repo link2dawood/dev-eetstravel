@@ -553,6 +553,7 @@ Route::group(['middleware' => ['web', 'auth']], function () {
     Route::group(['middleware' => 'web', 'prefix' => 'activities'], function(){
         Route::get('/', 'ActivitiesController@index')->name('activities_index');
     });
+    Route::get('/file/{id}/download', 'FileController@download')->name('file.download');
     Route::post('/file/{id}/delete', 'FileController@delete')->name('file_delete');
     Route::post('/import', 'ImportController@getFile')->name('file_import');
     Route::post('/import_seasons', 'ImportController@getFileSeasons')->name('file_import_seasons');

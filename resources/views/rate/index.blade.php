@@ -12,19 +12,16 @@
                 @if (Session::has('message'))
                     <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
                 @endif
-                    <div>
-                        {!! \App\Helper\PermissionHelper::getCreateButton(route('rate.create'), \App\Rate::class) !!}
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <div class="input-icon flex-grow-1" style="max-width: 420px;">
+                        <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                        <input type="text" id="rate-search" class="form-control" placeholder="Search rates..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
-                <div class="mb-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" id="rate-search" class="form-control" placeholder="Search rates..." onkeyup="filterTable('rate-table', this.value)">
-                        </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm" onclick="exportTableToCSV('rate-table', 'rates_export.csv')">
-                                <i class="fa fa-download"></i> Export CSV
-                            </button>
-                        </div>
+                    <div class="ms-auto d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-success" onclick="exportTableToCSV('rate-table', 'rates_export.csv')">
+                            <i class="ti ti-download me-1"></i> Export CSV
+                        </button>
+                        {!! \App\Helper\PermissionHelper::getCreateButton(route('rate.create'), \App\Rate::class) !!}
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -63,6 +60,12 @@
                         </tbody>
                     </table>
                 </div>
+                @if($rates->hasPages())
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">Showing {{ $rates->firstItem() }} to {{ $rates->lastItem() }} of {{ $rates->total() }} entries</div>
+                    <div>{{ $rates->links() }}</div>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -71,6 +74,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script>
 $(document).ready(function() {
     initializeBootstrapTable('rate-table');

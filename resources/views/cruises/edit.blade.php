@@ -146,7 +146,7 @@
 								<label for="rate">{!!trans('main.Rate')!!}</label>
 								<select name="rate" id="rate" class="form-control">
 									@foreach($rates as $rate)
-										<option value="{{ $rate->id }}" {{ $errors != null && count($errors) > 0 ? old('rate') == $rate->id ? 'selected' : '' : $cruise->rate == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
+										<option value="{{ $rate->id }}" {{ old('rate', $cruise->rate) == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
 									@endforeach
 								</select>
 							</div>

@@ -20,13 +20,11 @@
                         </ul>
                     </div>
                 @endif
-                    <form method='POST' action='{!!url("bus")!!}'>
+                    <form enctype="multipart/form-data" method='POST' action='{!!url("bus")!!}'>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="margin_button">
-                                    <a href="javascript:history.back()">
-                                        <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
-                                    </a>
+                                    <a href="{{ route('bus.index') }}" class="btn btn-primary back_btn">{{ trans('main.Back') }}</a>
                                 </div>
                             </div>
                         </div>
@@ -35,18 +33,18 @@
                             <div class="col-md-4">
                                 <input type='hidden' name='_token' value='{{Session::token()}}'>
                                 <div class="form-group">
-                                    <label>{!!trans('main.Name')!!}</label>
-                                    <input type="text" name="name" value="{{ old('name') }}" class="form-control">
+                                    <label for="bus-name">{!!trans('main.Name')!!}</label>
+                                    <input type="text" name="name" id="bus-name" required minlength="2" maxlength="191" value="{{ old('name') }}" class="form-control">
                                 </div>
 
                                 <div class="form-group">
-                                    <label>{!!trans('main.Busnumber')!!}</label>
-                                    <input type="text" value="{{ old('bus_number') }}" name="bus_number" class="form-control">
+                                    <label for="bus-number">{!!trans('main.Busnumber')!!}</label>
+                                    <input type="text" value="{{ old('bus_number') }}" name="bus_number" id="bus-number" required maxlength="50" class="form-control">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="transfer">{!!trans('main.BusCompany')!!}</label>
-                                    {!! Form::select('transfer_id', $transfers, 0,['class' => 'form-control']) !!}
+                                    {!! Form::select('transfer_id', $transfers, old('transfer_id'), ['class' => 'form-control', 'id' => 'transfer', 'placeholder' => 'Select bus company (optional)']) !!}
                                 </div>
 
                                 <div class="form-group">

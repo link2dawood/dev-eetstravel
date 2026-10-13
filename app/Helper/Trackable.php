@@ -5,7 +5,6 @@ use App\Bus;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\TourPackageController;
 use Dompdf\Exception;
-use Illuminate\Support\Facades\Input;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use App\Country;
@@ -260,13 +259,13 @@ trait Trackable{
         if($className =='TripToDrivers' && $action == 'created') {
             $driver = Driver::where('id', $model['driver_id'])->first();
             $driverDay = BusDay::where('id', $model['bus_day_id'])->first();
-            $current_drivers = Input::get('drivers_id_trip');
-            $allrivers = Input::get('alldrv');
+            $current_drivers = request()->input('drivers_id_trip');
+            $allrivers = request()->input('alldrv');
             
             if($allrivers && $current_drivers){
                 $old_name = 'removed';
                 ($driverDay->name_trip) ? $tripName = $driverDay->name_trip : $tripName = $driverDay->tour_id;
-                (Input::get('trip_mode') == 1) ? $datelog = "on ". Input::get('date') : $datelog ='';
+                (request()->input('trip_mode') == 1) ? $datelog = "on ". request()->input('date') : $datelog ='';
                 foreach ($allrivers as $item){
                     foreach ($current_drivers as $current){
                         if($current != $item) { $old_name = 'added';}

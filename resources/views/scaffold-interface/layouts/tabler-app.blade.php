@@ -1431,25 +1431,33 @@
     <script type="text/javascript" src="{{asset('js/lib/moment-with-locales.js')}}"></script>
     <script type="text/javascript" src="{{URL::asset('js/select2.min.js') }}"></script>
     <script> var baseURL = "{{ URL::to('/') }}"</script>
-    <script type="text/javascript" src="{{URL::asset('js/AjaxisBootstrap.js') }}"></script>
+    <script type="text/javascript" src="{{URL::asset('js/AjaxisBootstrap.js') }}?v={{ filemtime(public_path('js/AjaxisBootstrap.js')) }}"></script>
     <script type="text/javascript" src="{{URL::asset('js/scaffold-interface-js/customA.js') }}"></script>
     <script type="text/javascript" src="{{asset('js/bootstrap-datetimepicker.min.js')}}"></script>
     <script src="{{asset('js/bootstrap-datepicker.min.js')}}"></script>
     <script src="{{asset('js/script.js')}}"></script>
     <script src="{{asset('js/magnific.js')}}"></script>
     
-    <!-- Google Maps API (load before google_places.js) -->
-    @if(config('google.places.key'))
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('google.places.key') }}&libraries=places"></script>
-    @endif
-    
     <script src="{{URL::asset('js/google_places.js')}}"></script>
+    @if(config('google.places.key'))
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('google.places.key') }}&libraries=places&callback=initField"></script>
+    @endif
     <script src="{{URL::asset('js/jquery.scrollTo.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/pusher.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/jquery.repeater.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/bootstrap-tables.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/helper.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/onclick-events.js')}}"></script>
+    @php
+        $pusherClientConfig = [
+            'enabled' => (bool) (config('broadcasting.connections.pusher.key') && config('broadcasting.connections.pusher.secret') && config('broadcasting.connections.pusher.app_id')),
+            'key' => config('broadcasting.connections.pusher.key'),
+            'cluster' => config('broadcasting.connections.pusher.options.cluster', 'mt1'),
+        ];
+    @endphp
+    <script>
+        window.appPusherConfig = @json($pusherClientConfig);
+    </script>
     <script type="text/javascript" src="{{asset('js/notifications.js')}}?v={{ filemtime(public_path('js/notifications.js')) }}"></script>
     <script type="text/javascript" src="{{asset('js/ckeditor/ckeditor.js')}}"></script>
     <script src="{{asset('js/ckeditor.js')}}"></script>

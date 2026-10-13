@@ -27,31 +27,30 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-lg-6 mt-3">
                                 <input type='hidden' name='_token' value='{{Session::token()}}'>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Name')!!}</label>
                                     <input type="text" name="name" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->name}}{{ old('name') }}" class="form-control" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.ShortName')!!}</label>
                                     <input type="text" name="short_name" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->short_name}}{{ old('short_name') }}" class="form-control" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Icon')!!}</label>
                                     <input type="text" name="icon" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->icon}}{{ old('icon') }}" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label for="criteria_type">{!!trans('main.Criteriatype')!!}</label>
                                     <select name="criteria_type" id="criteria_type" class="form-control">
                                         @foreach($criteria_types as $criteria_type)
-                                            <option value="{{ $criteria_type->id }}" {{ $errors != null && count($errors) > 0 ? old('criteria_type') == $criteria_type->id ? 'selected' : '' : $criteria->criteria_type == $criteria_type->id ? 'selected' : '' }}>{{ $criteria_type->name }}</option>
+                                            <option value="{{ $criteria_type->id }}" {{ old('criteria_type', $criteria->criteria_type) == $criteria_type->id ? 'selected' : '' }}>{{ $criteria_type->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>

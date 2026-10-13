@@ -191,13 +191,17 @@ class BusDayHelper
             ->delete();
     }
 
-    public function validateDrivers($drivers_id, $dep_date_transfer, $ret_date_transfer, $tour_package_id = null, $bus_day_id = null){
+    public function validateDrivers($drivers_id, $dep_date_transfer, $ret_date_transfer, $tour_package_id = null, $bus_day_id = null, $trip_id = null){
         $bus_days =
             $tour_package_id == null ?
                     $bus_day_id == null ?
                         BusDay::query()->get() :
                         BusDay::query()->get()->where('id', '!=', $bus_day_id) :
                 BusDay::query()->get()->where('tour_package_id', '!=', $tour_package_id);
+
+        if ($trip_id !== null) {
+            $bus_days = $bus_days->where('trip_id', '!=', $trip_id);
+        }
 
         $dates_interval = $this->getDatesInterval($dep_date_transfer, $ret_date_transfer);
 
@@ -248,7 +252,7 @@ class BusDayHelper
         return true;
     }
 
-    public function validateBuses($bus_id, $dep_date, $ret_date, $tour_package_id = null, $bus_day_id = null){
+    public function validateBuses($bus_id, $dep_date, $ret_date, $tour_package_id = null, $bus_day_id = null, $trip_id = null){
 
         $bus_days =
             $tour_package_id == null ?
@@ -256,6 +260,10 @@ class BusDayHelper
                 BusDay::query()
                     ->get()
                     ->where('tour_package_id', '!=', $tour_package_id);
+
+        if ($trip_id !== null) {
+            $bus_days = $bus_days->where('trip_id', '!=', $trip_id);
+        }
 
         $dates_interval = $this->getDatesInterval($dep_date, $ret_date);
 
@@ -266,7 +274,8 @@ class BusDayHelper
                     $buses_id_bus_day[] = [
                         'bus_id' => $bus_day->bus_id,
                         'trip_id' => $bus_day->trip_id,
-                        'tour_package_id' => $bus_day->tour_package_id
+                        'tour_package_id' => $bus_day->tour_package_id,
+                        'date' => $bus_day->date
                     ];
                 }
             }
@@ -289,8 +298,8 @@ class BusDayHelper
                         ->get();
                 }
 
-                $start_busy = (new Carbon($bus_days_busy->first()->date))->format('Y-m-d');
-                $end_busy = (new Carbon($bus_days_busy->last()->date))->format('Y-m-d');
+                $start_busy = (new Carbon($bus_days_busy ? $bus_days_busy->first()->date : $bus_id_bus_day['date']))->format('Y-m-d');
+                $end_busy = (new Carbon($bus_days_busy ? $bus_days_busy->last()->date : $bus_id_bus_day['date']))->format('Y-m-d');
 
                 return [
                     'check' => false,

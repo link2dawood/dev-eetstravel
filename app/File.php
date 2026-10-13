@@ -63,6 +63,10 @@ class File extends Model
                 return asset($legacy);
             }
         }
+        if (config('filesystems.disks.public.driver') === 'local') {
+            return route('file.download', ['id' => $this->id]);
+        }
+
         return \Illuminate\Support\Facades\Storage::disk('public')->url($this->attach_file_name);
     }
 

@@ -193,7 +193,7 @@ class CriteriaController extends Controller
             Comment::query()->where('reference_type', Comment::$services['criteria'])->where('reference_id', $criterion)->delete();
         }
 
-        return URL::to('criteria');
+        return request()->ajax() ? URL::to('criteria') : redirect('criteria');
     }
 
     public function validateCriteria($request){

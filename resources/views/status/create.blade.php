@@ -28,21 +28,20 @@
                                 <a href="javascript:history.back()">
                                     <button type="button" class='btn btn-primary back_btn'>{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-lg-6 mt-3">
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
                             <input type='hidden' name='modal_create' value="0">
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label >{!!trans('main.Name')!!}</label>
                                 <input type="text" value="{{ old('name') }}" name="name" class="form-control" required  oninvalid="this.setCustomValidity('Field required for filling')" onchange="this.setCustomValidity('')"  >
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label for="type_status">{!!trans('main.Type')!!}</label>
                                 <select name="type" id="type_status" class="form-control" onchange="colorView($(this));">
                                     @foreach($status_types as $status_type)
@@ -52,12 +51,12 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 <label>{!!trans('main.Sortorder')!!}</label>
                                 <input type="text" value="{{ old('sort_order') }}" name="sort_order" class="form-control" required oninvalid="this.setCustomValidity('Field required for filling')" onchange="this.setCustomValidity('')">
                             </div>
 
-                            <div class="form-group color_view" style="display: none">
+                            <div class="form-group mb-3 color_view" style="display: none">
                                 <label>{!!trans('main.Color')!!}</label>
                                 <div id="cp2" class="input-group colorpicker-component">
                                     <input type="text" value="{{ old('color') }}" name="color" class="form-control">

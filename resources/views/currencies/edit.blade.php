@@ -27,31 +27,30 @@
                                 <a href="javascript:history.back()">
                                     <button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
                                 </a>
-                                <button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
                             </div>
                         </div>
                     </div>
                     <input type='hidden' name='_token' value='{{Session::token()}}'>
                     <div class="tab-content">
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
+                            <div class="col-lg-6 mt-3">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Name')!!}</label>
                                     <input type="text" name="name" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->name}}{{ old('name') }}" class="form-control" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Code')!!}</label>
                                     <input type="text" name="code" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->code}}{{ old('code') }}" class="form-control" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Symbol')!!}</label>
                                     <input type="text" name="symbol" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->symbol}}{{ old('symbol') }}" class="form-control" required>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.Cent')!!}</label>
                                     <input type="text" name="cent" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->cent}}{{ old('cent') }}" class="form-control">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group mb-3">
                                     <label >{!!trans('main.SymbolCent')!!}</label>
                                     <input type="text" name="symbol_cent" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->symbol_cent}}{{ old('symbol_cent') }}" class="form-control">
                                 </div>

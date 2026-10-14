@@ -20,7 +20,7 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{{route('tour_expenses.update', ['tour_expense' => $office_tours->id])}}' enctype="multipart/form-data">
+                <form method='POST' action='{{route('tour_expenses.update', $office_tours->id)}}' enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">

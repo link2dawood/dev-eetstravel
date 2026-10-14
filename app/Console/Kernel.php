@@ -33,6 +33,8 @@ class Kernel extends ConsoleKernel
         '\App\Console\Commands\RepairTextEncoding',
         '\App\Console\Commands\BusSampleData',
         '\App\Console\Commands\BaseInputSampleData',
+        '\App\Console\Commands\CommunicationSampleData',
+        '\App\Console\Commands\ClientSampleData',
     ];
 
     /**

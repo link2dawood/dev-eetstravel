@@ -28,7 +28,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
-                                <a href="javascript:history.back()">
+                                <a href="{{ route('transaction.index') }}">
                                     <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
                                 </a>
                                 <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
@@ -41,8 +41,8 @@
                             <div class="alert alert-danger" style="display:none;" id="error_block">
                             </div>
                             <div class="form-group">
-                                <label for="name">{!! trans(' Date') !!} *</label>
-                                {!! Form::text('date', '', ['class' => 'form-control pull-right datepicker', 'id' => 'date']) !!}
+                                <label for="date">{!! trans(' Date') !!} *</label>
+                                <input type="date" name="date" id="date" class="form-control" value="{{ old('date') }}" required>
                             </div>
 
                             <div class="form-group">
@@ -74,8 +74,8 @@
                             
 
                             <div class="form-group">
-                                <label for="name">{!! trans('Paid') !!} *</label>
-                                {!! Form::number('amount', '', ['class' => 'form-control', 'id' => 'amount']) !!}
+                                <label for="amount">{!! trans('Paid') !!} *</label>
+                                {!! Form::number('amount', '', ['class' => 'form-control', 'id' => 'amount', 'min' => 0.01, 'step' => 0.01, 'required' => true]) !!}
                             </div>
 
 

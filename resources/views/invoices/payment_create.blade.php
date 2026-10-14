@@ -149,8 +149,8 @@
                             }
                         });
 			}
-		var selectedValue = $(tour_id).val();
-		package_dropdown_ajax(selectedValue);
+		var selectedValue = $('#tour_id').val();
+        if (selectedValue) package_dropdown_ajax(selectedValue);
 
         $(document).ready(function() {
 			

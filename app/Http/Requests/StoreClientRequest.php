@@ -24,7 +24,7 @@ class StoreClientRequest extends FormRequest
     {
         // Clean and format input data
         $this->merge([
-            'first_name' => trim($this->first_name ?? ''),
+            'name' => trim($this->name ?? ''),
             'country' => trim($this->country ?? ''),
             'city' => trim($this->city ?? ''),
             'address' => trim($this->address ?? ''),
@@ -45,12 +45,12 @@ class StoreClientRequest extends FormRequest
     {
         return [
             // Basic Information
-            'first_name' => [
+            'name' => [
                 'required',
                 'string',
                 'max:191',
                 'min:2',
-                'regex:/^[a-zA-Z\s\-\.\']+$/' // Allow letters, spaces, hyphens, dots, apostrophes
+                'regex:/^[\pL\pN\s\-\.\'&,()\/]+$/u' // company names: letters, digits, & , . ' - ( ) /
             ],
 
             // Location Information
@@ -119,9 +119,9 @@ class StoreClientRequest extends FormRequest
     public function messages()
     {
         return [
-            'first_name.required' => 'Client name is required.',
-            'first_name.regex' => 'Client name can only contain letters, spaces, hyphens, dots, and apostrophes.',
-            'first_name.min' => 'Client name must be at least 2 characters.',
+            'name.required' => 'Client name is required.',
+            'name.regex' => 'Client name can only contain letters, digits, spaces and & , . \' - ( ) /.',
+            'name.min' => 'Client name must be at least 2 characters.',
             'country.required' => 'Country is required.',
             'country.regex' => 'Country name can only contain letters, spaces, and hyphens.',
             'city.required' => 'City is required.',
@@ -150,7 +150,7 @@ class StoreClientRequest extends FormRequest
     public function attributes()
     {
         return [
-            'first_name' => 'client name',
+            'name' => 'client name',
             'work_phone' => 'work phone',
             'contact_phone' => 'contact phone',
             'work_email' => 'work email',

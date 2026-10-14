@@ -44,16 +44,16 @@
         <!-- /.box-body -->
     </div>
 </div>
-<script src="{{asset('assets/js/jquery-3.6.0.min.js')}}"></script>
-  
+{{-- The layout already loads jQuery: a second copy here replaced it and dropped its plugins (select2, datepicker...) --}}
     <script src="{{asset('assets/plugin/richtexteditor/rte.js')}}"></script>
     <script src="{{asset('assets/plugin/richtexteditor/plugins/all_plugins.js')}}"></script>
-    
 
     <script>
-        var editor1 = new RichTextEditor("#div_editor1");
-        var editor1 = new RichTextEditor("#div_editor2");
-        var editor1 = new RichTextEditor("#div_editor3");
+        ['#div_editor1', '#div_editor2', '#div_editor3'].forEach(function (selector) {
+            if (document.querySelector(selector)) {
+                new RichTextEditor(selector);
+            }
+        });
     </script>
 <script>
     $(function () {

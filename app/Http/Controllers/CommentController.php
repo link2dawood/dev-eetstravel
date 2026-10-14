@@ -25,14 +25,22 @@ class CommentController extends Controller
     {
         $title = 'Index - Comments';
 
-        // Get all comments data (same as the AJAX data method)
-        $commentsData = Comment::distinct()
+        // Top-level comments, newest first; searchable by text or sender
+        $search = trim((string) $request->input('search'));
+        $commentsData = Comment::query()
             ->leftJoin('users', 'users.id', '=', 'comments.author_id')
             ->select('comments.id', 'comments.content', 'comments.created_at',
                 'users.name as sender'
             )
-            ->where('parent', null)
-            ->get();
+            ->whereNull('parent')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('comments.content', 'like', "%{$search}%")->orWhere('users.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderByDesc('comments.id')
+            ->paginate(20)
+            ->withQueryString();
 
         // Action buttons will be generated in the view using the action_buttons component
 
@@ -74,7 +82,7 @@ class CommentController extends Controller
 
 //        \DB::commit();
 
-        return URL::to('comment');
+        return request()->ajax() ? URL::to('comment') : redirect('comment');
     }
 
     public function deleteComments($comments){
@@ -189,8 +197,8 @@ class CommentController extends Controller
         $comment->update($request->except('attach','attach_bus'));
         $this->addFile($request, $comment);
 
-        LaravelFlashSessionHelper::setFlashMessage("Comment $comment->content edited", 'success');
+        LaravelFlashSessionHelper::setFlashMessage('Comment "' . \Illuminate\Support\Str::limit(trim(strip_tags((string) $comment->content)), 60) . '" edited', 'success');
         // return redirect(route('announcements.show', ['id' => $id]));
-        return response()->json($data = ['route' => route('comment.show', ['id' => $id])]);
+        return response()->json($data = ['route' => route('comment.show', $id)]);
     }
 }

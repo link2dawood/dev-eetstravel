@@ -167,7 +167,8 @@
                 } catch (Exception $e) {
                     $edit_route = "/comment/{$entity->id}/edit";
                 }
-                $delete_route = "/comment/{$entity->id}/delete_msg";
+                // delete_msg only answers the AJAX dialog; the button navigates, so use the delete route
+                $delete_route = "/comment/{$entity->id}/delete";
             } elseif ($prefix === 'clients') {
                 try {
                     $show_route = route('clients.show', ['client' => $entity->id]);

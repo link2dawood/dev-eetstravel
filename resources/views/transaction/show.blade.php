@@ -27,12 +27,12 @@
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
                 <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
-                    <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>{!!trans('main.Info')!!}</a></li>
+                    <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{!!trans('main.Info')!!}</a></li>
                  
                    
             </div>
             <div class="tab-content">
-                <div class="tab-pane fade in active" role='tabpanel' id='info-tab'>
+                <div class="tab-pane fade show active" role='tabpanel' id='info-tab'>
 					<input id="invoiceId" type="hidden" name="invoiceId" value ="{{$transaction->id}}">
                     <table class = 'table_show table table-bordered col-lg-6'>
                         <tbody>
@@ -47,7 +47,7 @@
                             <td>
                                 <b><i>{!!trans('Description')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$transaction->date}}</td>
+                            <td class="info_td_show">{{$transaction->payment_method}}</td>
                         </tr>
                         <tr>
                             <td>
@@ -71,13 +71,13 @@
                             <td>
                                 <b><i>{!!trans('Transaction No  ')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$transaction->date}}</td>
+                            <td class="info_td_show">{{$transaction->trans_no}}</td>
                         </tr>
                         <tr>
                             <td>
                                 <b><i>{!!trans('Reference No')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$transaction->date}}</td>
+                            <td class="info_td_show">{{$transaction->invoice_no}}</td>
                         </tr>
 						 
 						 <tr>

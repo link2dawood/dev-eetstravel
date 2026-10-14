@@ -66,8 +66,9 @@ class UtilityExpenseController extends Controller {
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
-    public function create(Request $request , $id)
+    public function create(Request $request, $id = null)
     {
+        if (!$id) return redirect()->route('office.index')->with('info', 'Choose an office before adding financial records.');
     	
         $tours = Tour::all();
         $clients = Client::all();
@@ -78,25 +79,26 @@ class UtilityExpenseController extends Controller {
 
         $options = array("Event","Restaurant");
 		
-		$office = Offices::find($id);
+		$office = Offices::findOrFail($id);
 		
         return view('office.utility_expenses.create', compact('tours','clients','hotels','options','events','buses','restaurants','office'));
     }
     public function store(Request $request){
-		$this->validateData($request);
-        Office_Utility_Expenses::create($request->except(["attach"]));
-        return view('office.create');
+		$validated = $this->validateData($request);
+        Office_Utility_Expenses::create($validated);
+        return redirect()->route('office.show', $request->office_id);
     }
 	public function validateData(Request $request){
 	
-		$this->validate($request, [
-            'subject_of_expense'  => 'required',
-            'month'     => 'required',
-            'monthly_expense'     => 'required',
+		return $this->validate($request, [
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'subject_of_expense'  => 'required|string|max:200',
+            'month'     => 'required|date',
+            'monthly_expense'     => 'required|numeric|min:0|max:999999999.99',
         ]);
 	}
     public function edit($id, Request $request){
-		$utility_expenses = Office_Utility_Expenses::find($id);
+		$utility_expenses = Office_Utility_Expenses::findOrFail($id);
 		$tours = Tour::all();
         $clients = Client::all();
         $hotels = Hotel::all();
@@ -108,27 +110,15 @@ class UtilityExpenseController extends Controller {
 		return view('office.utility_expenses.edit', compact('tours','clients','hotels','options','events','buses','restaurants','utility_expenses'));
 	}
 	public function update($id,Request $request){
-        $utility_expenses = Office_Utility_Expenses::find($id);
-        $utility_expenses->update($request->except(["attach"]));
-		return redirect()->back();
+        $validated = $this->validateData($request);
+        $utility_expenses = Office_Utility_Expenses::findOrFail($id);
+        $utility_expenses->update($validated);
+		return redirect()->route('office.show', $request->office_id);
 	}
     public function show($id, Request $request)
     {
-  
-        $title = 'Show - Payments';
-
-        if ($request->ajax()) {
-            return URL::to('office/' . $id);
-        }
-
-        $office_Utility_Expenses =Office_Utility_Expenses::find($id);
-
-        if($office_Utility_Expenses == null){
-            return abort(404);
-        }
-
-      
-        return view('office.show', compact('office_Utility_Expenses','title'));
+        $record = Office_Utility_Expenses::findOrFail($id);
+        return redirect()->route('office.show', $record->office_id);
     }
      
            
@@ -143,10 +133,10 @@ class UtilityExpenseController extends Controller {
 	public function destroy($id)
     {
 
-        $utility_expenses = Office_Utility_Expenses::find($id);
+        $utility_expenses = Office_Utility_Expenses::findOrFail($id);
         $utility_expenses->find($id)->delete();
       LaravelFlashSessionHelper::setFlashMessage("Utility Expense $utility_expenses->subject_of_expense	 deleted", 'success');
 
-        return URL::to('office');
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
 }

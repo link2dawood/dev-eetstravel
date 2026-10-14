@@ -35,8 +35,15 @@ class SnappyMailController extends Controller
         }
 
         try {
-            // Generate SSO hash for SnappyMail
-            $ssoHash = $this->generateSSOHash($user);
+            // SnappyMail's own single sign-on: the credentials are stored in SnappyMail's
+            // cache and only a one-time hash goes in the URL. (The old code put the
+            // mailbox password, base64-encoded, in the URL in a format SnappyMail does not read.)
+            $_ENV['SNAPPYMAIL_INCLUDE_AS_API'] = true;
+            require_once public_path('snappymail/index.php');
+            $ssoHash = \RainLoop\Api::CreateUserSsoHash((string) $user->email_login, (string) $this->getEmailPassword($user));
+            if (!$ssoHash) {
+                throw new \Exception('SnappyMail could not create a sign-in token');
+            }
 
             // Log SSO attempt
             Log::info('SnappyMail SSO attempt', [
@@ -44,9 +51,9 @@ class SnappyMailController extends Controller
                 'email' => $user->email_login
             ]);
 
-            // Redirect to SnappyMail with SSO token
-            $snappymailUrl = config('snappymail.url', '/mail');
-            return redirect($snappymailUrl . '/?sso&hash=' . $ssoHash);
+            // away(): keep the trailing slash, SnappyMail's relative redirects need it
+            $base = $this->webmailUrl();
+            return redirect()->away((strpos($base, 'http') === 0 ? $base : url($base)) . '/?Sso&hash=' . $ssoHash);
 
         } catch (\Exception $e) {
             Log::error('SnappyMail SSO error', [
@@ -64,6 +71,17 @@ class SnappyMailController extends Controller
      * @param User $user
      * @return string
      */
+    /** SnappyMail's address: SNAPPYMAIL_URL, or /snappymail when that path does not exist here. */
+    private function webmailUrl()
+    {
+        $url = rtrim((string) config('snappymail.url', '/snappymail'), '/');
+        if (strpos($url, 'http') !== 0 && !is_dir(public_path(ltrim($url, '/'))) && is_dir(public_path('snappymail'))) {
+            $url = '/snappymail';
+        }
+
+        return $url;
+    }
+
     private function generateSSOHash(User $user)
     {
         $ssoKey = config('snappymail.sso_key');

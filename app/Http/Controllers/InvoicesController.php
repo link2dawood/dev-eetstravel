@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\Request;
 use Image;
+use App\Services\InvoicePayments;
 use DB;
 use App\Attachment;
 use App\User;
@@ -168,6 +169,8 @@ class  InvoicesController extends Controller
     {
         $this->validateInvoice($request);
 
+        $rows = InvoicePayments::rows($request);
+        InvoicePayments::ensureWithinBalance($rows, $request->total_amount);
         $currentDate = Carbon::now();
 
         // Validate payment amounts
@@ -188,6 +191,7 @@ class  InvoicesController extends Controller
         }
 
         try {
+            DB::beginTransaction();
             // Create Invoice
             $invoice = new Invoices();
             $invoice->office_id = $request->office_id;
@@ -221,6 +225,7 @@ class  InvoicesController extends Controller
                         InvoicesTours::create([
                             "invoices_id" => $invoice->id,
                             "invoices_tours_id" => $tour_id,
+                            "package_id" => 0,
                         ]);
                     }
 
@@ -248,6 +253,7 @@ class  InvoicesController extends Controller
                 }
             }
 
+            DB::commit();
             // Success response - redirect to the related tour view if available, otherwise to invoices index
             LaravelFlashSessionHelper::setFlashMessage("Invoice $invoice->invoice_no created successfully", 'success');
 
@@ -258,26 +264,30 @@ class  InvoicesController extends Controller
             return redirect()->route('invoices.index');
 
         } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
             // Error handling
-            LaravelFlashSessionHelper::setFlashMessage("Error creating invoice: " . $e->getMessage(), 'error');
+            LaravelFlashSessionHelper::setFlashMessage("The invoice could not be saved. Please check the values and retry.", 'error');
             return redirect()->back()->withInput();
         }
     }
     public function validateInvoice(Request $request)
     {
         $this->validate($request, [
-            'office_id'     => 'required',
+            'office_id' => 'required|integer|exists:office_fees,id',
             'tour_id'     => 'required|array|min:1',
             'tour_id.*'   => 'required|exists:tours,id',
-            'invoice_no'    =>  'required',
-            'total_amount'    => 'required|numeric|min:0',
+            'invoice_no' => 'required|string|max:191',
+            'total_amount' => 'required|numeric|min:0|max:999999999.99',
+            'extra_amount' => 'nullable|numeric|min:0',
+            'note' => 'nullable|string|max:400',
 
         ]);
     }
     public function edit($id, Request $request)
     {
         $invoices = InvoicesTours::findOrFail($id);
-		//$invoices = Invoices::find($id);
+		//$invoices = Invoices::findOrFail($id);
 		
         $offices = Offices::all();
         $tours = Tour::all();
@@ -288,48 +298,25 @@ class  InvoicesController extends Controller
     }
     public function update($id, Request $request)
     {
-		
-		$invoices_tours = InvoicesTours::find($id);
-		$invoices_tours->update([
-		"invoices_tours_id"    => $request->tours,
-        "package_id"   => $request->package_id,
-		]);
-		$invoice = Invoices::find($invoices_tours->invoices_id);
-        $invoice->update([
-		"office_id"    => $request->office_id,
-        "invoice_no"   => $request->invoice_no,
-        "total_amount"   =>$request->total_amount,
-		]);
-		Transaction::where('invoice_id', $invoices_tours->invoices_id)->where("pay_to", "Supplier")->delete();
-		
-		$payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-		
-		        $i = 0;
-        if(!empty($payment_methods)){
-        foreach ($payment_methods as $payment_method) {
-            // dd($payment_method == "null");
-            if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
-            } else {
-             
-                $transaction = Transaction::create([
-                    "date" =>  $payment_date[$i],
-                    "trans_no" => 'TXN-' . uniqid(),
-                    "amount" => $paid_amount[$i],
-                    "pay_to" => "Supplier",
-                    "invoice_id" => $invoice->id,
-                    "payment_method" => $payment_method,
-                ]);
-				
-            }
-            $i += 1;
-        }
-        }
-
-        
-        return view('invoices.index');
+        $request->validate([
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'tours' => 'required|integer|exists:tours,id',
+            'invoice_no' => 'required|string|max:191',
+            'total_amount' => 'required|numeric|min:0|max:999999999.99',
+        ]);
+        $rows = InvoicePayments::rows($request);
+        DB::transaction(function () use ($id, $request, $rows) {
+            $link = InvoicesTours::findOrFail($id);
+            $invoice = Invoices::whereKey($link->invoices_id)->lockForUpdate()->firstOrFail();
+            $replace = $request->boolean('payments_loaded');
+            $paid = $replace ? 0 : Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->sum('amount');
+            InvoicePayments::ensureWithinBalance($rows, $request->total_amount, $paid);
+            $link->update(['invoices_tours_id' => $request->tours]);
+            $invoice->update($request->only(['office_id', 'invoice_no', 'total_amount']));
+            if ($replace) Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->delete();
+            InvoicePayments::save($rows, $invoice->id, 'Supplier');
+        });
+        return redirect()->route('invoices.show', $id);
     }
     public function show($id, Request $request)
     {
@@ -337,7 +324,7 @@ class  InvoicesController extends Controller
         $title = 'Show - Payments';
 
         if ($request->ajax()) {
-            return URL::to('$invoices/' . $id);
+            return URL::to('invoices/' . $id);
         }
 
         // {id} is the invoice-tour link id (InvoicesTours), as used by the list buttons
@@ -368,14 +355,14 @@ class  InvoicesController extends Controller
     }
     public function destroy($id)
     {
-        $invoices_tours = InvoicesTours::find($id)->delete();
-
-        //$invoice_tours->find($id)->delete();
-        // $invoices = Invoices::find($invoices_tours->invoices_id)->delete();
-        //$invoices->delete();
-        //LaravelFlashSessionHelper::setFlashMessage("Invoice  deleted", 'success');
-        //return redirect()->back();
-        return URL::to('invoices');
+        DB::transaction(function () use ($id) {
+            $link = InvoicesTours::findOrFail($id);
+            $invoice = Invoices::whereKey($link->invoices_id)->lockForUpdate()->firstOrFail();
+            if (Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['invoice' => 'An invoice with payments cannot be deleted.']);
+            $link->delete();
+            if (!InvoicesTours::where('invoices_id', $invoice->id)->exists()) $invoice->delete();
+        });
+        return request()->ajax() ? URL::to('invoices') : redirect()->route('invoices.index');
     }
 	
 	public function supplierdropdown($id, Request $request)
@@ -450,7 +437,7 @@ class  InvoicesController extends Controller
 	public function add_payment(Request $request,$id)
     {
         //$invoices = InvoicesTours::find($id);
-		$invoices = Invoices::find($id);
+		$invoices = Invoices::findOrFail($id);
 		
         $offices = Offices::all();
         $tours = Tour::all();
@@ -459,38 +446,16 @@ class  InvoicesController extends Controller
 
         return view('invoices.payment_create', compact('offices','tours', 'clients', 'invoices'));
     }
-	public function payment_store($id,Request $request)
+    public function payment_store($id, Request $request)
     {
-		
-        $payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-		
-		        $i = 0;
-        if(!empty($payment_methods)){
-        foreach ($payment_methods as $payment_method) {
-            // dd($payment_method == "null");
-            if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
-            } else {
-            
-                $transaction = Transaction::create([
-                    "date" =>  $payment_date[$i],
-                    "trans_no" => 'TXN-' . uniqid(),
-                    "amount" => $paid_amount[$i],
-                    "pay_to" => "Supplier",
-                    "invoice_id" => $id,
-                    "payment_method" => $payment_method,
-                ]);
-				
-            }
-            $i += 1;
-        }
-        }
-		
-		 $invoice_tour= Invoices::find($id);
-		$invoice = $invoice_tour->tours()->first();
-		LaravelFlashSessionHelper::setFlashMessage("payment $transaction->trans_no created", 'success');
-        return redirect()->route('invoices.show', $invoice->id);
+        $rows = InvoicePayments::rows($request, true);
+        DB::transaction(function () use ($id, $rows) {
+            $invoice = Invoices::whereKey($id)->lockForUpdate()->firstOrFail();
+            $paid = Transaction::where('invoice_id', $id)->where('pay_to', 'Supplier')->sum('amount');
+            InvoicePayments::ensureWithinBalance($rows, $invoice->total_amount, $paid);
+            InvoicePayments::save($rows, $id, 'Supplier');
+        });
+        $link = InvoicesTours::where('invoices_id', $id)->first();
+        return $link ? redirect()->route('invoices.show', $link->id) : redirect()->route('invoices.index');
     }
 }

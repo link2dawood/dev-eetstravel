@@ -38,25 +38,27 @@
 @endsection
 
 @push('scripts')
-
+{{-- DataTables is loaded on demand by window.loadDataTables --}}
+@include('component.datatables_cdn')
 <script>
-
-
     $(document).ready(function() {
-        $('#templates').DataTable( {
-            columnDefs: [
-                { targets: [1], orderable: false } // Actions column not sortable
-            ]
-        } );
-
         $('#templates').find("tfoot").remove();
 
+        // the whole row opens the service's templates
         $('#templates tbody').on( 'click', 'tr', function () {
             let url = $(this).find("a").attr('href');
-            window.location.href = url;
+            if (url) window.location.href = url;
         } );
 
+        (window.loadDataTables ? window.loadDataTables() : Promise.resolve()).then(function () {
+            if ($.fn.DataTable) {
+                $('#templates').DataTable({
+                    columnDefs: [
+                        { targets: [1], orderable: false } // Actions column not sortable
+                    ]
+                });
+            }
+        }).catch(function () {});
     })
-
 </script>
 @endpush

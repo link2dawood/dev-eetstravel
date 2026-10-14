@@ -297,9 +297,8 @@ class OfferController extends Controller
 	
   try{     
 		  
-		   $results = $this ->server->getMessagesByCriteria('test',$perPage,$page, 'DESC');
-		 
-$results = $this ->server->getMessages($perPage,$page, 'DESC');
+		   // (a leftover search for the invalid IMAP criterion "test" was removed here)
+$results = $this->server->getMessagesByCriteria('SUBJECT "Request #' . (int) $package_id . '"', 0, 0, 'DESC'); // the mail server searches; only matching emails are downloaded
 		  
 		
 		 $emails = [];
@@ -346,7 +345,7 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 
 		try {
 
-			$results = $this->server->getMessages($perPage, $page, 'DESC');
+			$results = $this->server->getMessagesByCriteria('SUBJECT "Request #' . (int) $package_id . '"', 0, 0, 'DESC'); // the mail server searches; only matching emails are downloaded
 
 			$emails = [];
 			foreach ($results as $result) {

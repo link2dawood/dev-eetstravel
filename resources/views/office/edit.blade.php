@@ -6,7 +6,7 @@
         'sub_title' => 'Edit Office',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
+            ['title' => 'Offices', 'icon' => 'suitcase', 'route' => route('office.index')],
             ['title' => 'Create', 'route' => null],
         ],
     ])
@@ -23,7 +23,7 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST'  action="{{route('office.update', ['office' => $offices->id])}}"enctype="multipart/form-data">
+                <form method='POST'  action="{{route('office.update', $offices->id)}}"enctype="multipart/form-data">
                     {{ csrf_field() }}
                     @if (count($errors) > 0)
                         <br>
@@ -35,10 +35,10 @@
                             </ul>
                         </div>
                     @endif
-                    `<div class="row">
+                    <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
-                                <a href="javascript:history.back()">
+                                <a href="{{ route('office.index') }}">
                                     <button type="button" class='btn btn-primary back_btn'>{!! trans('main.Back') !!}</button>
                                 </a>
                                 <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
@@ -49,32 +49,32 @@
                         <div class="col-md-4">
                             <input type='hidden' name='_token' value='{{ Session::token() }}'>
                             <div class="form-group">
-                                <label for="name">{!! trans('Office Name') !!} *</label>
-                                {!! Form::text('office_name', $offices->office_name, ['class' => 'form-control']) !!}
+                                <label for="office_name">{!! trans('Office Name') !!} *</label>
+                                {!! Form::text('office_name', $offices->office_name, ['class' => 'form-control', 'id' => 'office_name']) !!}
                             </div>
                             <div class="form-group">
-                                <label for="name">{!! trans('Office Address') !!} *</label>
-                                {!! Form::text('office_address', $offices->office_address, ['class' => 'form-control']) !!}
+                                <label for="office_address">{!! trans('Office Address') !!} *</label>
+                                {!! Form::text('office_address', $offices->office_address, ['class' => 'form-control', 'id' => 'office_address']) !!}
                             </div>
 							<div class="form-group">
-                                <label for="name">{!! trans('Bank Name') !!} *</label>
-                                {!! Form::text('bank_name', $offices->bank_name, ['class' => 'form-control']) !!}
+                                <label for="bank_name">{!! trans('Bank Name') !!}</label>
+                                {!! Form::text('bank_name', $offices->bank_name, ['class' => 'form-control', 'id' => 'bank_name']) !!}
                             </div>
 							<div class="form-group">
-                                <label for="name">{!! trans('Account No') !!} *</label>
-                                {!! Form::text('account_no', $offices->account_no, ['class' => 'form-control']) !!}
+                                <label for="account_no">{!! trans('Account No') !!}</label>
+                                {!! Form::text('account_no', $offices->account_no, ['class' => 'form-control', 'id' => 'account_no']) !!}
                             </div>
 							<div class="form-group">
-                                <label for="name">{!! trans('Swift Code') !!} *</label>
-                                {!! Form::text('swift_code', $offices->swift_code, ['class' => 'form-control']) !!}
+                                <label for="swift_code">{!! trans('Swift Code') !!}</label>
+                                {!! Form::text('swift_code', $offices->swift_code, ['class' => 'form-control', 'id' => 'swift_code']) !!}
                             </div>
                             <div class="form-group">
-                                <label for="name">{!! trans('Tel') !!} *</label>
-                                {!! Form::text('tel', $offices->tel, ['class' => 'form-control']) !!}
+                                <label for="tel">{!! trans('Tel') !!}</label>
+                                {!! Form::text('tel', $offices->tel, ['class' => 'form-control', 'id' => 'tel']) !!}
                             </div>
 							<div class="form-group">
-                                <label for="name">{!! trans('Fax') !!} *</label>
-                                {!! Form::text('fax', $offices->fax, ['class' => 'form-control']) !!}
+                                <label for="fax">{!! trans('Fax') !!}</label>
+                                {!! Form::text('fax', $offices->fax, ['class' => 'form-control', 'id' => 'fax']) !!}
                             </div>
 							
 

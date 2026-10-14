@@ -1,0 +1,307 @@
+{
+  "unitTests": 30,
+  "unitAssertions": 55,
+  "browserChecks": 67,
+  "audit": [
+    {
+      "path": "/accounting",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/accounting/create",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/accounting/57",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/accounting/57/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/addInvoicePayment/57",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/invoices",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/invoices/create",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/invoices/151",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/invoices/151/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/add_payment/91",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office/create",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office/13/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/taxes",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/taxes/create",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/taxes/10",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/taxes/10/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/transaction",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/transaction/create",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/transaction/90",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/officeInvoices/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/reporting",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/tour_expenses/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/tour_expenses/11/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/utility_expenses/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/utility_expenses/5/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/employes-salary/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/employes-salary/5/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office_earning/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office_earning/6/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office_balance/create/13",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/office_balance/5/edit",
+      "status": 200,
+      "errors": []
+    },
+    {
+      "scenario": "UI VAT invoice and fractional payment",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Negative client payment rejected",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Supplier overpayment rejected",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Negative tax rejected",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Mobile /accounting/create",
+      "overflow": false,
+      "status": "Pass"
+    },
+    {
+      "scenario": "Mobile /office/13",
+      "overflow": false,
+      "status": "Pass"
+    },
+    {
+      "scenario": "Mobile /taxes",
+      "overflow": false,
+      "status": "Pass"
+    },
+    {
+      "scenario": "Mobile /invoices/151",
+      "overflow": false,
+      "status": "Pass"
+    }
+  ],
+  "workflows": [
+    {
+      "scenario": "Invoice search, clear, sorting, pagination and no-match state",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Client invoice edit recalculates VAT and fractional extra cost; restores sample total",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Supplier edit preserves existing payments and rejects total below paid amount",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Ledger payment editing preserves reference and validates balance",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Ledger payment create/delete",
+      "status": "Pass"
+    },
+    {
+      "scenario": "tour_expenses saves fractional amount and rejects negative update",
+      "status": "Pass"
+    },
+    {
+      "scenario": "utility_expenses saves fractional amount and rejects negative update",
+      "status": "Pass"
+    },
+    {
+      "scenario": "employes-salary saves fractional amount and rejects negative update",
+      "status": "Pass"
+    },
+    {
+      "scenario": "office_earning saves fractional amount and rejects negative update",
+      "status": "Pass"
+    },
+    {
+      "scenario": "office_balance saves fractional amount and rejects negative update",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Reversed tour expense dates rejected",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Office create/edit/delete with optional bank fields",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Tax create/edit including zero VAT/delete",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Interoffice invoice create/edit/PDF/delete",
+      "status": "Pass"
+    },
+    {
+      "scenario": "/accounting/57/export/short valid download",
+      "status": "Pass"
+    },
+    {
+      "scenario": "/accounting/57/excel valid download",
+      "status": "Pass"
+    },
+    {
+      "scenario": "hotel report/filter",
+      "status": "Pass"
+    },
+    {
+      "scenario": "event report/filter",
+      "status": "Pass"
+    },
+    {
+      "scenario": "guide report/filter",
+      "status": "Pass"
+    },
+    {
+      "scenario": "restaurant report/filter",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Report no-match filter",
+      "status": "Pass"
+    },
+    {
+      "scenario": "Guest access rejected",
+      "status": "Pass"
+    }
+  ],
+  "focusedUI": {
+    "checks": [
+      "Tax UI accepts fractional and zero percentages",
+      "Ledger create UI accepts dates and fractional amounts",
+      "Ledger edit mobile layout",
+      "Report filter submission and mobile no-match layout"
+    ],
+    "errors": []
+  }
+}

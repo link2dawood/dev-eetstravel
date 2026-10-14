@@ -114,8 +114,8 @@ class EmailController extends Controller {
             
 
 			$this->client = $server->authenticate(
-				"booking-test@eetstravel.com",
-				"Ffans82guQ9h"
+				config('imap.accounts.default.username'),
+				config('imap.accounts.default.password')
 			);
 		} catch (AuthenticationFailedException $e) {
 			return false;
@@ -173,22 +173,8 @@ class EmailController extends Controller {
 	}
 
 	public function folder( $name, $page = 1 ) {
-		$mails = \DB::table( 'emails' )->where( 'folder', '=', $name )
-		            ->orderBy( 'message_id', 'DESC' )
-		            ->where( 'user_login', Auth::user()->email_login )
-					->where( 'email_server', Auth::user()->email_server )
-		            ->paginate( self::PER_PAGE_MAILS_COUNT );
-
-		return view( 'email.index', [
-			'folders'       => $this->folders,
-			'mails'         => $mails,
-			'page'          => $page,
-			'per_page'      => self::PER_PAGE_MAILS_COUNT,
-			'mailsCount'    => count( $mails ),
-			'folderName'    => $this->folders,
-			'currentFolder' => $name,
-			'imapConnected' => $this->imapConnected
-		] );
+		// The old server-rendered inbox; search and folders now live in the inbox page itself
+		return redirect()->route( 'email.index' );
 	}
 
 	public function mail(Request $request, $id, $currentFolder = self::INBOX_FOLDER ) {
@@ -525,34 +511,8 @@ class EmailController extends Controller {
 	}
 
 	public function emailSearch( Request $request ) {
-		( $request->input( 'search' ) ) ? $search_value = $request->input( 'search' ) : $search_value = $request->input( 'searched' );
-		( $request->input( 'page' ) ) ? $page = $request->input( 'page' ) : $page = 1;
-
-		$mails = \DB::table( 'emails' )
-		            ->where( 'user_login', Auth::user()->email_login )
-					->where( 'email_server', Auth::user()->email_server )
-		            ->where( function ( $query ) use ( $search_value ) {
-			            $query->where( 'subject', 'like', "%$search_value%" )
-			                  ->orWhere( 'body_text', 'like', "%$search_value%" )
-			                  ->orWhere( 'to', 'like', "%$search_value%" )
-			                  ->orWhere( 'from', 'like', "%$search_value%" );
-		            } )
-		            ->orderBy( 'date', 'DESC' )
-		            ->paginate( self::PER_PAGE_MAILS_COUNT );
-
-		return view( 'email.index', [
-			'folderName'    => 'INBOX',
-			'folders'       => $this->folders,
-			'mails'         => $mails,
-			'page'          => $page,
-			'search'        => $search_value,
-			'per_page'      => self::PER_PAGE_MAILS_COUNT,
-			'mailsCount'    => count( $mails ),
-			'currentFolder' => 'INBOX',
-			'imapConnected' => $this->imapConnected
-
-		] );
-
+		// The old server-rendered inbox; search and folders now live in the inbox page itself
+		return redirect()->route( 'email.index' );
 	}
 
 	public function attachmentList( Request $request, $folderName, $id ) {

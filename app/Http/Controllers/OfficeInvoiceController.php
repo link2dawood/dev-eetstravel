@@ -53,9 +53,9 @@ class OfficeInvoiceController extends Controller {
  
     public function getButton($id, $isQuotation = false, $tour, array $perm)
     {
-        $url = array('show'       => route('office_invoices_detail.show', ['officeinvoice_dataId' => $id]),
-                     'edit'       => route('office_earning.edit', ['officeinvoice_dataId' => $id]),
-                     'delete_msg' => "/office_earning/{$id}/deleteMsg",
+        $url = array('show'       => route('office_invoices_detail.show', $id),
+                     'edit'       => route('officeInvoices.edit', $id),
+                     'delete_msg' => "/officeInvoices/{$id}/deleteMsg",
                      'id'         => $id);
 
         return DatatablesHelperController::getActionButtonTours($url, $isQuotation, $perm);
@@ -64,18 +64,19 @@ class OfficeInvoiceController extends Controller {
     
  	public function getShowButton($id, $isQuotation = false, $tour, array $perm)
     {
-       $url = array('show'       => route('office_invoices_detail.show', ['officeinvoice_dataId' => $id]),
-                     'edit'       => route('office_earning.edit', ['officeinvoice_dataId' => $id]),
-                     'delete_msg' => "/office_earning/{$id}/deleteMsg",
+       $url = array('show'       => route('office_invoices_detail.show', $id),
+                     'edit'       => route('officeInvoices.edit', $id),
+                     'delete_msg' => "/officeInvoices/{$id}/deleteMsg",
                      'id'         => $id);
 
         return DatatablesHelperController::getShowButton($url);
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
 
-    public function create($id,Request $request)
+    public function create(Request $request, $id = null)
     {
-		$office_from = Offices::find($id);
+		$office_from = $id ? Offices::findOrFail($id) : Offices::first();
+        if (!$office_from) return redirect()->route('office.create');
 		$offices_to = Offices::all();
 
         return view('office.office_invoices.create',compact("office_from","offices_to"));
@@ -83,38 +84,36 @@ class OfficeInvoiceController extends Controller {
 	
 public function store(Request $request)
 {
-
-    $data = $request->input('data');
-
-    // Create an officeinvoice_data record
-    try {
+    $request->validate([
+        'from_office' => 'required|integer|exists:office_fees,id',
+        'to_office' => 'required|integer|exists:office_fees,id|different:from_office',
+        'invoiceno' => 'required|string|max:55', 'dateoffice' => 'required|date',
+        'data' => 'required|array|min:1', 'data.*.officeinvoice_date' => 'required|date',
+        'data.*.office_item' => 'required|string|max:55', 'data.*.des' => 'nullable|string|max:100',
+        'data.*.officeinvoice_code' => 'required|string|max:55',
+        'data.*.officeinvoice_amount' => 'required|numeric|min:0|max:999999999.99',
+    ]);
+    $invoiceId = DB::transaction(function () use ($request) {
         $officeinvoiceData = DB::table('officeinvoice_data')->insertGetId([
 			'from_office' => $request->input('from_office'),
 			'to_office' => $request->input('to_office'),
             'invoice_no' => $request->input('invoiceno'),
             'date' => $request->input('dateoffice'),
-        ]);
-    } catch (\Exception $e) {
-        dd($e->getMessage());
-    }
-
-    foreach ($data as $row) {
-        try {
+        ], 'officeinvoice_dataId');
+    foreach ($request->input('data') as $row) {
             DB::table('office_invoices')->insert([
                 'officeinvoice_dataId' => $officeinvoiceData,
                 'officeinvoice_date' => $row['officeinvoice_date'],
                 'officeinvoice_item' => $row['office_item'],
-                'des' => $row['des'],
+                'des' => $row['des'] ?? '',
                 'officeinvoice_code' => $row['officeinvoice_code'],
                 'officeinvoice_amount' => $row['officeinvoice_amount'],
             ]);
-        } catch (\Exception $e) {
-            dd($e->getMessage());
-        }
     }
-
-    // Redirect or return response
-    return redirect()->back()->with('success', 'Office invoices saved successfully.');
+    return $officeinvoiceData;
+    });
+    if ($request->ajax()) return response()->json(['route' => route('office_invoices_detail.show', $invoiceId)]);
+    return redirect()->route('office_invoices_detail.show', $invoiceId)->with('success', 'Office invoice saved.');
 }
 
 	/**
@@ -151,7 +150,10 @@ public function store(Request $request)
    // ->get();
 		 
 		 $officeinvoice_dataId = $id;
-        return view('office.office_invoices.office_invoice_detail',compact('officeinvoice_dataId'));
+        $invoice = DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->first();
+        abort_if(!$invoice, 404);
+        $items = DB::table('office_invoices')->where('officeinvoice_dataId', $id)->get();
+        return view('office.office_invoices.office_invoice_detail',compact('officeinvoice_dataId', 'invoice', 'items'));
     }
 	//------ get invoice details ------>
 public function getOfficeInvoicesdeatailsdata($id)
@@ -182,26 +184,53 @@ public function getOfficeInvoicesdeatailsdata($id)
    
 }
 	
-    public function edit($id, Request $request){
-		$office_earnings = Office_Earnings::find($id);
-		return view('office.office_earning.edit', compact('office_earnings'));
-	}
+    public function edit($id, Request $request)
+    {
+        $invoice = DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->first();
+        abort_if(!$invoice, 404);
+        $items = DB::table('office_invoices')->where('officeinvoice_dataId', $id)->get();
+        $offices = Offices::all();
+        return view('office.office_invoices.edit', compact('invoice', 'items', 'offices'));
+    }
+
+    public function index() { return redirect()->route('office.index'); }
+    public function show($id, Request $request) { return $this->office_invoice_details($request, $id); }
+
+    public function update($id, Request $request)
+    {
+        $request->validate([
+            'from_office' => 'required|integer|exists:office_fees,id', 'to_office' => 'required|integer|exists:office_fees,id|different:from_office',
+            'invoiceno' => 'required|string|max:55', 'dateoffice' => 'required|date',
+            'data' => 'required|array|min:1', 'data.*.officeinvoice_date' => 'required|date',
+            'data.*.office_item' => 'required|string|max:55', 'data.*.des' => 'nullable|string|max:100',
+            'data.*.officeinvoice_code' => 'required|string|max:55', 'data.*.officeinvoice_amount' => 'required|numeric|min:0|max:999999999.99',
+        ]);
+        DB::transaction(function () use ($id, $request) {
+            $header = DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->lockForUpdate()->first();
+            abort_if(!$header, 404);
+            DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->update(['from_office' => $request->from_office, 'to_office' => $request->to_office, 'invoice_no' => $request->invoiceno, 'date' => $request->dateoffice]);
+            DB::table('office_invoices')->where('officeinvoice_dataId', $id)->delete();
+            foreach ($request->data as $row) DB::table('office_invoices')->insert(['officeinvoice_dataId' => $id, 'officeinvoice_date' => $row['officeinvoice_date'], 'officeinvoice_item' => $row['office_item'], 'des' => $row['des'] ?? '', 'officeinvoice_code' => $row['officeinvoice_code'], 'officeinvoice_amount' => $row['officeinvoice_amount']]);
+        });
+        return redirect()->route('office_invoices_detail.show', $id);
+    }
     public function DeleteMsg($id, Request $request)
     {
-        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/office_earning/' . $id . '/delete');
+        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/officeInvoices/' . $id . '/delete');
 
         if ($request->ajax()) {
             return $msg;
         }
     }
-	public function destroy($id)
+    public function destroy($id)
     {
-
-        $office_earnings = Office_Earnings::find($id);
-        $office_earnings->find($id)->delete();
-      LaravelFlashSessionHelper::setFlashMessage("Office $office_earnings->month deleted", 'success');
-
-        return URL::to('office');
+        DB::transaction(function () use ($id) {
+            $invoice = DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->lockForUpdate()->first();
+            abort_if(!$invoice, 404);
+            DB::table('office_invoices')->where('officeinvoice_dataId', $id)->delete();
+            DB::table('officeinvoice_data')->where('officeinvoice_dataId', $id)->delete();
+        });
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
      
     

@@ -16,7 +16,8 @@ return [
     |
     */
 
-    'driver' => env('MAIL_DRIVER', 'smtp'),
+    // MAIL_MAILER is the Laravel 6+ name (.env uses it); MAIL_DRIVER is still accepted
+    'driver' => env('MAIL_MAILER', env('MAIL_DRIVER', 'smtp')),
 
     /*
     |--------------------------------------------------------------------------
@@ -56,8 +57,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', env('MAIL_USERNAME', 'hello@example.com')),
+        'name' => env('MAIL_FROM_NAME', 'EETS Travel'),
     ],
 
     /*

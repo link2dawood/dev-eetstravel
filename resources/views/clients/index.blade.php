@@ -41,39 +41,35 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <input type="text" id="clients-search" class="form-control" placeholder="Search clients..." onkeyup="filterTable('clients-table', this.value)">
+                                <input type="text" id="clients-search" class="form-control" placeholder="Search by name, email, phone, country or city..." name="search" value="{{ request('search') }}" data-list-search>
                             </div>
                         </div>
                         <div class="table-responsive">
                             <table id="clients-table" class="table card-table table-vcenter text-nowrap datatable" style='background:#fff; width: 100%;'>
                                 <thead>
                                     <tr>
-                                        <th onclick="sortTable(0, 'clients-table')">ID <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(1, 'clients-table')">{!!trans('main.Name')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(2, 'clients-table')">{!!trans('main.Country')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(3, 'clients-table')">{!!trans('main.City')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(4, 'clients-table')">{!!trans('main.Address')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(5, 'clients-table')">{!!trans('Account No')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(6, 'clients-table')">{!!trans('Company Address')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(7, 'clients-table')">{!!trans('Invoice Address')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(8, 'clients-table')">{!!trans('main.WorkPhone')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th onclick="sortTable(9, 'clients-table')">{!!trans('main.WorkEmail')!!} <i class="ti ti-arrows-sort"></i></th>
-                                        <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
+                                        <th>ID</th>
+                                        <th>{!!trans('main.Name')!!}</th>
+                                        <th>{!!trans('main.Country')!!}</th>
+                                        <th>{!!trans('main.City')!!}</th>
+                                        <th class="d-none d-md-table-cell">{!!trans('main.WorkPhone')!!}</th>
+                                        <th class="d-none d-md-table-cell">{!!trans('main.WorkEmail')!!}</th>
+                                        <th class="d-none d-xxl-table-cell">Account No</th>
+                                        <th class="d-none d-xxl-table-cell">{!!trans('main.Address')!!}</th>
+                                        <th class="actions-button text-end" style="width: 140px">{!!trans('main.Actions')!!}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($clients as $client)
                                     <tr>
-                                        <td>{{ $client->id }}</td>
-                                        <td>{{ $client->name }}</td>
-                                        <td>{{ $client->country_name ?? '' }}</td>
-                                        <td>{{ $client->city_name ?? '' }}</td>
-                                        <td>{{ $client->address }}</td>
-                                        <td>{{ $client->account_no }}</td>
-                                        <td>{{ $client->company_address }}</td>
-                                        <td>{{ $client->invoice_address }}</td>
-                                        <td>{{ $client->work_phone }}</td>
-                                        <td>{{ $client->work_email }}</td>
+                                        <td class="text-muted">#{{ $client->id }}</td>
+                                        <td data-delete-label class="fw-bold"><a href="{{ route('clients.show', $client->id) }}" class="text-reset">{{ $client->name }}</a></td>
+                                        <td>{{ $client->country_name ?: '-' }}</td>
+                                        <td>{{ $client->city_name ?: '-' }}</td>
+                                        <td class="d-none d-md-table-cell text-nowrap">{{ $client->work_phone ?: '-' }}</td>
+                                        <td class="d-none d-md-table-cell">{{ $client->work_email ?: '-' }}</td>
+                                        <td class="d-none d-xxl-table-cell">{{ $client->account_no ?: '-' }}</td>
+                                        <td class="d-none d-xxl-table-cell text-muted">{{ \Illuminate\Support\Str::limit($client->address, 40) ?: '-' }}</td>
                                         <td>
                                             <div class="btn-list flex-nowrap">
                                                 @include('component.action_buttons', [
@@ -85,7 +81,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="11" class="text-center">No clients found</td>
+                                        <td colspan="9" class="text-center text-muted py-4">{{ request('search') ? 'No clients match your search' : 'No clients yet' }}</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -107,6 +103,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/bootstrap-tables.js') }}"></script>
+<script src="{{ asset('js/list-search.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initializeBootstrapTable('clients-table');

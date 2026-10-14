@@ -9,14 +9,16 @@ use Illuminate\Http\Request;
 
 class CitiesHelper
 {
+    // Views read getCityById(...)['name'] directly: a record without a (valid) city
+    // used to crash the page, so an empty City/Country is returned instead of null.
     public static function getCityById($id)
     {
-        return City::where('id', '=', $id)->get()->first();
+        return ($id ? City::where('id', '=', $id)->first() : null) ?? new City();
     }
 
     public static function getCountryById($id)
     {
-        return Country::where('alias', '=', $id)->get()->first();
+        return ($id ? Country::where('alias', '=', $id)->first() : null) ?? new Country();
     }
 
     public static function changeCityNameToID($cityName){

@@ -1,34 +1,34 @@
 @php
 use App\Tour;
-$tours = Tour::all();
+$tours = Tour::query()->orderBy('name')->get(['id', 'name']);
 @endphp
-<div id="modalCreate" class="modal fade in" role="dialog" aria-labelledby="modalCreateLabel">
-    <div class="modal-dialog" role="document">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title">Choose folder</h3>
+<div id="modalCreate" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalCreateLabel">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCreateLabel">Move email</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="CloseMoveToModal"></button>
             </div>
-            <!-- /.box-header -->
-            <div class="box box-body" style="border-top: none">
-                <div class="form-group" v-if="folders && folders.INBOX">
-                    <select  name="folder" class="form-control select2" v-model="folderSend">
-						@foreach($tours as $tour)
-						<option value="{{$tour->id}}">{{$tour->name}}</option>
-						@endforeach
-						<option v-if="folders.INBOX" v-for="(folder, index) in folders.INBOX"  :value="index">@{{ index }}</option>
-                    </select>
-
-                </div>
-
-                <div class="box-footer">
-                    <div class="pull-right">
-                        <button type="submit" class="btn btn-primary " @click="moveToFolder"><i class="fa fa-envelope-o"></i> Send</button>
-                    </div>
-                    <button type="reset" class="btn btn-default" @click="CloseMoveToModal" ><i class="fa fa-times"></i> Discard</button>
-                </div>
+            <div class="modal-body">
+                <label class="form-label" for="move-email-target">Move to</label>
+                {{-- plain select: Select2 would break the v-model binding --}}
+                <select id="move-email-target" name="folder" class="form-select" v-model="folderSend" v-if="folders && folders.INBOX">
+                    <optgroup label="Mail folders">
+                        <option value="INBOX">Inbox</option>
+                        <option v-for="(folder, index) in folders.INBOX" v-if="index !== 'Drafts'" :value="index">@{{ index }}</option>
+                    </optgroup>
+                    <optgroup label="Tours (file the email under a tour)">
+                        @foreach($tours as $tour)
+                            <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                        @endforeach
+                    </optgroup>
+                </select>
+                <div class="text-muted small" v-else>Loading folders...</div>
             </div>
-            <!-- /.box-body -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary me-auto" @click="CloseMoveToModal">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="moveToFolder"><i class="fa fa-folder-open me-1"></i>Move</button>
+            </div>
         </div>
     </div>
 </div>
-

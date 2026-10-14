@@ -10,7 +10,7 @@
         <div class="box-body">
             <div>
                 <div id="tour_create">
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\Tour::class) !!}
+                    {!! \App\Helper\PermissionHelper::getCreateButton(route('accounting.create'), \App\ClientInvoices::class) !!}
                 </div>
 
             </div>
@@ -40,13 +40,13 @@
                 <table id="transactions-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
                     <thead>
                         <tr>
-                            <th onclick="sortTable(0, 'transactions-table')">id <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(1, 'transactions-table')">Date <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(2, 'transactions-table')">Invoice No <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(3, 'transactions-table')">Tour Name <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(4, 'transactions-table')">Client Name <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(5, 'transactions-table')">Amount Receivable <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(6, 'transactions-table')">Status <i class="fa fa-sort"></i></th>
+                            <th>id <i class="fa fa-sort"></i></th>
+                            <th>Date <i class="fa fa-sort"></i></th>
+                            <th>Invoice No <i class="fa fa-sort"></i></th>
+                            <th>Tour Name <i class="fa fa-sort"></i></th>
+                            <th>Client Name <i class="fa fa-sort"></i></th>
+                            <th>Amount Receivable <i class="fa fa-sort"></i></th>
+                            <th>Status <i class="fa fa-sort"></i></th>
                             <th class="actions-button">Actions</th>
                         </tr>
                     </thead>
@@ -83,11 +83,3 @@
 @endsection
 
 @include('component.delete_modal_simple')
-@push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeBootstrapTable('transactions-table');
-    });
-</script>
-@endpush

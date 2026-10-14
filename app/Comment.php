@@ -41,6 +41,12 @@ class Comment extends Model
     protected $table = 'comments';
     protected $guarded = [];
 
+    /** Comments are printed as HTML: never store scripts or event handlers. */
+    public function setContentAttribute($value)
+    {
+        $this->attributes['content'] = \App\Helper\HtmlSanitizer::clean($value);
+    }
+
     public static $services = [
         'tour' => '1',
         'task' => '2',

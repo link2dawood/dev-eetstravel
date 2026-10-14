@@ -13,7 +13,7 @@
     <section class="content">
         <div class="box box-primary">
             <div class="box box-body border_top_none">
-                <form method='POST' action="{{route('taxes_update', ['tax' => $tax->id])}}"  id="data-form" enctype="multipart/form-data">
+                <form method='POST' action="{{route('taxes_update', $tax->id)}}"  id="data-form" enctype="multipart/form-data">
                     {{ csrf_field() }}
                     @if (count($errors) > 0)
                         <br>
@@ -49,7 +49,7 @@
 
                             <div class="form-group">
                                 <label for="name">{!! trans('Percentage') !!} *</label>
-                                {!! Form::number('percentageInput', $tax->value, ['class' => 'form-control', 'id' => 'percentageInput','min' => 1, 'max'=>100]) !!}
+                                {!! Form::number('percentageInput', $tax->value, ['class' => 'form-control', 'id' => 'percentageInput','min' => 0, 'max'=>100, 'step'=>0.01]) !!}
                                
                             </div>
 

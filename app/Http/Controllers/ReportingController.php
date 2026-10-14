@@ -28,60 +28,37 @@ class ReportingController extends Controller
 {
     use FileTrait;
     use HelperTrait;
-    public function index()
+    public function index(Request $request)
     {
-
-		$targetMonths = array('June', 'May', 'April', 'March', 'Febuary');
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $totalAmounts = array();
-		$accounts = Account::all();
-        foreach ($targetMonths as $month) {
-            $monthValue = date('m', strtotime($month));
-            $yearValue = $monthValue > $currentMonth ? $currentYear - 1 : $currentYear;
-
-            $totalResult = 0;
-            foreach($accounts as $account){
-				$totalResult = $account->getTotalAmountForDateRange($monthValue,$yearValue);
-
-		}
-
-            $totalAmounts[$month] = $totalResult;
+        $options = ['Event', 'Hotel', 'Restaurant', 'Guide'];
+        $union = null;
+        foreach ($options as $type) {
+            if (in_array($request->input('service'), $options) && $request->input('service') !== $type) continue;
+            $class = 'App\\' . $type;
+            $table = (new $class)->getTable();
+            $query = $class::query()->select('id', 'name')->selectRaw('? as supplier_type', [$type]);
+            if ($request->filled('q')) $query->where('name', 'like', '%' . $request->input('q') . '%');
+            $union = $union ? $union->unionAll($query->toBase()) : $query->toBase();
         }
-        $date = date("Y-m-d");
-
-        $transactions_by_date = ClientInvoices::where("date", $date)->get();
-
-        $transactions = ClientInvoices::all();
-       
-		
-		
-
-        $options =  ["Event","Hotel", "Restaurant", "Guide"];
-	
-        // Get default "All" services data for initial table display
-        $services = $this->getCollection(null, null, null, null, null);
-        $collection = collect($services);
-        $servicesData = $collection->unique()->map(function ($service) {
-            $type = class_basename(get_class($service));
-            $id = $service->id;
-            $low = strtolower($type);
-            if (strtolower($type) == 'flight') $low .= 's';
-
-            $can = 0;
-            if (\Auth::user()->can('tour_package.create')) {
-                $can = 1;
-            }
-
-            // Action buttons will be generated in the view using the action_buttons component
-            // Store the service type and link for the view
-            $service->service_type = $low;
-            $service->show_link = route("reporting.{$low}.show", ['id' => $service->id]);
-            $service->can_show = $can;
+        $servicesData = DB::query()->fromSub($union, 'suppliers')->orderBy('name')->orderBy('supplier_type')->orderBy('id')->paginate(50)->withQueryString();
+        $models = [];
+        foreach ($servicesData->getCollection()->groupBy('supplier_type') as $type => $rows) {
+            $class = 'App\\' . $type;
+            foreach ($class::whereIn('id', $rows->pluck('id'))->get() as $model) $models[$type . ':' . $model->id] = $model;
+        }
+        $cityIds = collect($models)->pluck('city')->filter()->unique();
+        $cities = DB::table('cities')->whereIn('id', $cityIds)->pluck('name', 'id');
+        $countries = DB::table('countries')->pluck('name', 'alias');
+        $servicesData->setCollection($servicesData->getCollection()->map(function ($row) use ($models, $cities, $countries) {
+            $service = $models[$row->supplier_type . ':' . $row->id];
+            $service->nameService = $service->name . ' (' . $row->supplier_type . ')';
+            $service->city = $cities[$service->city] ?? '';
+            $service->country = $countries[$service->country] ?? $service->country;
+            $service->show_link = route('reporting.' . strtolower($row->supplier_type) . '.show', $service->id);
             return $service;
-        });
-
-        return view('reporting.index', compact( "options","accounts","targetMonths", "servicesData"));
+        }));
+        $accounts = collect(); $targetMonths = [];
+        return view('reporting.index', compact('options', 'accounts', 'targetMonths', 'servicesData'));
     }
 
     public function show(Request $request)
@@ -93,7 +70,8 @@ class ReportingController extends Controller
         $criterias      = $request->criterias;
         $rates          = $request->rates;
 
-        if ($request->search['value']) $searchName = $request->search['value'];
+        if ($request->input('search.value')) $searchName = $request->input('search.value');
+        abort_unless(in_array($request->service, ['Service', 'All', 'Hotel', 'Event', 'Guide', 'Restaurant']), 422);
 
         if ($request->service === 'Service' || $request->service === 'All') {
             $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
@@ -182,7 +160,7 @@ class ReportingController extends Controller
     public function getCollection($criterias, $rates = null, $cityCode = null, $searchName = null, $countryAlias = null)
     {
         $data = [];
-        foreach ($this->services as $service) {
+        foreach (['Hotel', 'Event', 'Guide', 'Restaurant'] as $service) {
             if ($service == 'Transfer') {
                 continue;
             }
@@ -289,252 +267,20 @@ class ReportingController extends Controller
 
     public function hotel_show($id, Request $request)
     {
-
-
-        /*this amd route*/
-        
-        $hotel = Hotel::leftJoin('rates', 'rates.id', '=', 'hotels.rate')
-            ->select('hotels.*', 'rates.name as rate_name')
-            ->where('hotels.id', $id)
-            ->first();
-
-        $hotel->getCriterias();
-        if ($hotel == null) {
-            return abort(404);
-        }
-
-        $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
-            ->orderBy('criterias.name', 'asc')
-            ->select('criterias.*', 'criteria_types.name as criteria_name')
-            ->where('criteria_types.service_type', '=', 'hotel')
-            ->get();
-        
-        $invoice_tours = [];
-        $invoices = [];
-        $tour_packages = TourPackage::where("name", $hotel->name)->get();
-        foreach ($tour_packages as $tour_package) {
-            $invoice_tourss =  InvoicesTours::where("package_id", $tour_package->id)->get();
-
-            if (count($invoice_tourss) != 0) {
-                array_push($invoice_tours, $invoice_tourss);
-            }
-        }
-
-        foreach ($invoice_tours as $invoice_tour) {
-
-            foreach ($invoice_tour as $tour_invoice) {
-                # code...
-                $invoicess = Invoices::find($tour_invoice->invoices_id);
-                array_push($invoices, $invoicess);
-            }
-        }
-
-        $targetMonths = array('June', 'May', 'April', 'March', 'Febuary');
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $totalAmounts = array();
-
-        foreach ($targetMonths as $month) {
-            $monthValue = date('m', strtotime($month));
-            $yearValue = $monthValue > $currentMonth ? $currentYear - 1 : $currentYear;
-
-            $invoice_total = 0;
-            $totalResult = 0;
-            foreach ($invoices as $invoice) {
-
-                $invoice_total  = $invoice_total + $invoice->total_amount;
-                $totalResult = $invoice->getTotalAmountForMonth($monthValue, $yearValue) ?? 0;
-            }
-
-            $totalAmounts[$month] = $totalResult;
-        }
-        return view('reporting.hotel_show', compact(
-            'hotel',
-            'criterias',
-            'invoice_total',
-            'totalAmounts'
-        ));
+        return $this->supplierReport(Hotel::findOrFail($id), 0);
     }
     public function restaurant_show($id, Request $request)
     {
-
-        $restaurant = Restaurant::leftJoin('rates', 'rates.id', '=', 'restaurants.rate')
-            ->select('restaurants.*', 'rates.name as rate_name')
-            ->where('restaurants.id', $id)
-            ->first();
-        $restaurant->getCriterias();
-
-        if($restaurant == null){
-            return abort(404);
-        }
-
-        $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
-            ->orderBy('criterias.name','asc')
-            ->select('criterias.*', 'criteria_types.name as criteria_name')
-            ->where('criteria_types.service_type', '=', 'restaurant')
-            ->get();
-        $invoice_tours = [];
-        $invoices = [];
-        $tour_packages = TourPackage::where("name", $restaurant->name)->get();
-        foreach ($tour_packages as $tour_package) {
-            $invoice_tourss =  InvoicesTours::where("package_id", $tour_package->id)->get();
-
-            if (count($invoice_tourss) != 0) {
-                array_push($invoice_tours, $invoice_tourss);
-            }
-        }
-
-        foreach ($invoice_tours as $invoice_tour) {
-
-            foreach ($invoice_tour as $tour_invoice) {
-                # code...
-                $invoicess = Invoices::find($tour_invoice->invoices_id);
-                array_push($invoices, $invoicess);
-            }
-        }
-
-        $targetMonths = array('June', 'May', 'April', 'March', 'Febuary');
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $totalAmounts = array();
-
-        foreach ($targetMonths as $month) {
-            $monthValue = date('m', strtotime($month));
-            $yearValue = $monthValue > $currentMonth ? $currentYear - 1 : $currentYear;
-
-            $invoice_total = 0;
-            $totalResult = 0;
-		
-            foreach ($invoices as $invoice) {
-
-                $invoice_total  = $invoice_total + $invoice->total_amount;
-                $totalResult = $invoice->getTotalAmountForMonth($monthValue, $yearValue) ?? 0;
-            }
-
-            $totalAmounts[$month] = $totalResult;
-        }
-
-
-
-        return view('reporting.restaurant_show', compact("restaurant", "criterias", "invoice_total", "totalAmounts"));
+        return $this->supplierReport(Restaurant::findOrFail($id), 4);
     }
    
     public function event_show($id, Request $request)
     {
-
-
-        /*this amd route*/
-        $event = Event::leftJoin('rates', 'rates.id', '=', 'events.rate')
-            ->select('events.*', 'rates.name as rate_name')
-            ->where('events.id', $id)
-            ->first();
-        $event->getCriterias();
-        $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
-            ->orderBy('criterias.name', 'asc')
-            ->select('criterias.*', 'criteria_types.name as criteria_name')
-            ->where('criteria_types.service_type', '=', 'event')
-            ->get();
-        $invoice_tours = [];
-        $invoices = [];
-        $tour_packages = TourPackage::where("name", $event->name)->get();
-        foreach ($tour_packages as $tour_package) {
-            $invoice_tourss =  InvoicesTours::where("package_id", $tour_package->id)->get();
-
-            if (count($invoice_tourss) != 0) {
-                array_push($invoice_tours, $invoice_tourss);
-            }
-        }
-
-        foreach ($invoice_tours as $invoice_tour) {
-
-            foreach ($invoice_tour as $tour_invoice) {
-                # code...
-                $invoicess = Invoices::find($tour_invoice->invoices_id);
-                array_push($invoices, $invoicess);
-            }
-        }
-
-        $targetMonths = array('June', 'May', 'April', 'March', 'Febuary');
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $totalAmounts = array();
-
-        foreach ($targetMonths as $month) {
-            $monthValue = date('m', strtotime($month));
-            $yearValue = $monthValue > $currentMonth ? $currentYear - 1 : $currentYear;
-
-            $invoice_total = 0;
-            $totalResult = 0;
-            foreach ($invoices as $invoice) {
-
-                $invoice_total  = $invoice_total + $invoice->total_amount;
-                $totalResult = $invoice->getTotalAmountForMonth($monthValue, $yearValue) ?? 0;
-            }
-
-            $totalAmounts[$month] = $totalResult;
-        }
-
-        return view('reporting.event_show', compact("event", "criterias", "invoice_total", "totalAmounts"));
+        return $this->supplierReport(Event::findOrFail($id), 1);
     }
     public function guide_show($id, Request $request)
     {
-
-
-        $guide = Guide::leftJoin('rates', 'rates.id', '=', 'guides.rate')
-            ->select('guides.*', 'rates.name as rate_name')
-            ->where('guides.id', $id)
-            ->first();
-        $guide->getCriterias();
-        if($guide == null){
-            return abort(404);
-        }
-        $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
-            ->orderBy('criterias.name','asc')
-            ->select('criterias.*', 'criteria_types.name as criteria_name')
-            ->where('criteria_types.service_type', '=', 'guide')
-            ->get();
-        $invoice_tours = [];
-        $invoices = [];
-        $tour_packages = TourPackage::where("name", $guide->name)->get();
-        foreach ($tour_packages as $tour_package) {
-            $invoice_tourss =  InvoicesTours::where("package_id", $tour_package->id)->get();
-
-            if (count($invoice_tourss) != 0) {
-                array_push($invoice_tours, $invoice_tourss);
-            }
-        }
-
-        foreach ($invoice_tours as $invoice_tour) {
-
-            foreach ($invoice_tour as $tour_invoice) {
-                # code...
-                $invoicess = Invoices::find($tour_invoice->invoices_id);
-                array_push($invoices, $invoicess);
-            }
-        }
-
-        $targetMonths = array('June', 'May', 'April', 'March', 'Febuary');
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $totalAmounts = array();
-
-        foreach ($targetMonths as $month) {
-            $monthValue = date('m', strtotime($month));
-            $yearValue = $monthValue > $currentMonth ? $currentYear - 1 : $currentYear;
-
-            $invoice_total = 0;
-            $totalResult = 0;
-            foreach ($invoices as $invoice) {
-
-                $invoice_total  = $invoice_total + $invoice->total_amount;
-                $totalResult = $invoice->getTotalAmountForMonth($monthValue, $yearValue) ?? 0;
-            }
-
-            $totalAmounts[$month] = $totalResult;
-        }
-
-
-        return view('reporting.guide_show', compact("guide", "criterias", "invoice_total", "totalAmounts"));
+        return $this->supplierReport(Guide::findOrFail($id), 2);
     }
 	
 	
@@ -545,4 +291,15 @@ public function getTotalAmountForDateRange($accountId, $month, $year)
 
     return $totalAmount;
 }
+
+    private function supplierReport($supplier, int $type)
+    {
+        $invoices = \App\Helper\SupplierInvoices::forService($type, $supplier->id);
+        $months = [];
+        for ($offset = 4; $offset >= 0; $offset--) {
+            $date = now()->startOfMonth()->subMonths($offset);
+            $months[$date->format('F Y')] = $invoices->filter(fn ($invoice) => $invoice->received_date && \Carbon\Carbon::parse($invoice->received_date)->format('Y-m') === $date->format('Y-m'))->sum('total_amount');
+        }
+        return view('reporting.supplier_show', compact('supplier', 'invoices', 'months'));
+    }
 }

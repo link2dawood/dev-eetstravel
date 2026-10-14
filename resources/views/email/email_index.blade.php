@@ -3,6 +3,16 @@
 @section('main-content')
 
 
+    <style>
+        /* long sender addresses used to push the date out of view */
+        #emaillists table { table-layout: fixed; width: 100%; }
+        #emaillists .mailbox-star { width: 8px; }
+        #emaillists .mailbox-name { width: 34%; overflow-wrap: anywhere; }
+        #emaillists .mailbox-subject { overflow-wrap: anywhere; }
+        #emaillists .mailbox-attachment { width: 28px; }
+        #emaillists .mailbox-date { width: 150px; white-space: nowrap; color: #6c7a91; }
+        .email-folders .nav-link { padding: .4rem .9rem; }
+    </style>
     <div class="box-body no-padding" id="emailList">
 
         <div class="mailbox-controls">

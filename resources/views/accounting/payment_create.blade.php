@@ -6,7 +6,7 @@
         'sub_title' => 'Edit Billing',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
+            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('accounting.index')],
             ['title' => 'Create', 'route' => null],
         ],
     ])
@@ -205,7 +205,7 @@
 
             $.ajax({
                 type: "GET",
-                url: `api/getTourquotation/${tour_id}`,
+                url: `/accounting/api/getTourquotation/${tour_id}`,
                 success: function(result) {
                     $("#quotation").html(result);
                     console.log(result);

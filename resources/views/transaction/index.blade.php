@@ -41,13 +41,13 @@
                 <table id="inovices-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
                     <thead>
                         <tr>
-                            <th onclick="sortTable(0, 'inovices-table')">Id <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(1, 'inovices-table')">Date <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(2, 'inovices-table')">Payment To <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(3, 'inovices-table')">Transaction No <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(4, 'inovices-table')">Invoice No <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(5, 'inovices-table')">Amount <i class="fa fa-sort"></i></th>
-                            <th onclick="sortTable(6, 'inovices-table')">Unallocated <i class="fa fa-sort"></i></th>
+                            <th>Id <i class="fa fa-sort"></i></th>
+                            <th>Date <i class="fa fa-sort"></i></th>
+                            <th>Payment To <i class="fa fa-sort"></i></th>
+                            <th>Transaction No <i class="fa fa-sort"></i></th>
+                            <th>Invoice No <i class="fa fa-sort"></i></th>
+                            <th>Amount <i class="fa fa-sort"></i></th>
+                            <th>Unallocated <i class="fa fa-sort"></i></th>
                             <th class="actions-button">Action</th>
                         </tr>
                     </thead>
@@ -57,7 +57,7 @@
                             <td>{{ $transaction->id }}</td>
                             <td>{{ $transaction->date }}</td>
                             <td>{{ $transaction->pay_to }}</td>
-                            <td>{{ $transaction->transaction_no }}</td>
+                            <td>{{ $transaction->trans_no }}</td>
                             <td>{{ $transaction->invoice_no }}</td>
                             <td>{{ $transaction->amount }}</td>
                             <td>{{ $transaction->unallocated }}</td>
@@ -76,11 +76,3 @@
 </section>
 
 @endsection
-@push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeBootstrapTable('inovices-table');
-    });
-</script>
-@endpush

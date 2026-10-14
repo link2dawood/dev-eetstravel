@@ -57,10 +57,10 @@
                     @foreach ($templates as $template)
                             <div class="col-lg-3">
                                 <div class="thumbnail preview" align="center" style="min-height: 374px;max-height: 374px;" >
-                                    <a data-toggle="modal" data-target="#myModal" href="#" onclick="initModalTemplate({!! $template->id !!},'{!! $template->name !!}');" >
+                                    <a href="#" onclick="initModalTemplate({{ $template->id }}, {{ json_encode($template->name) }}); return false;">
                                         <canvas id="canvas_{!! $template->id !!}" class="my_shadow" width="200" height="200" style="margin: 20px"></canvas></a>
                                     <div class="caption">
-                                        <form method="POST" action="/templates/{!! $template->id !!}/delete" id="deleteForm_{{ $template->id }}" ><p>{{$template->name}}</p><p>{{ date("d F Y",strtotime($template->created_at)) }}</p><p><a data-toggle="modal" data-target="#myModal" href="#" onclick="initModalTemplate({!! $template->id !!},'{!! $template->name !!}');" ><button type="button" class="btn btn-primary btn-sm" ><i class="fa fa-pencil-square-o"></i></button></a>@if($template->name !='Header' && $template->name !='Footer') <button type="button" class="btn btn-danger btn-sm remove_templ" id="{!! $template->id !!}" ><i class="fa fa-trash-o"></i></button>@endif</p>
+                                        <form method="POST" action="/templates/{!! $template->id !!}/delete" id="deleteForm_{{ $template->id }}" ><p>{{$template->name}}</p><p>{{ date("d F Y",strtotime($template->created_at)) }}</p><p><a href="#" onclick="initModalTemplate({{ $template->id }}, {{ json_encode($template->name) }}); return false;"><button type="button" class="btn btn-primary btn-sm" ><i class="fa fa-pencil-square-o"></i></button></a>@if($template->name !='Header' && $template->name !='Footer') <button type="button" class="btn btn-danger btn-sm remove_templ" id="{!! $template->id !!}" ><i class="fa fa-trash-o"></i></button>@endif</p>
                                             <div class="template" id="{!! $template->id !!}" style="display: none">
                                                 {!! $template->content !!}
                                             </div>
@@ -127,45 +127,42 @@
         <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-                        <h4 class="modal-title" id="myModalLabel">{!!trans('main.Warning')!!}!!</h4></div>
-                    <div class="modal-body">
-                        <div class="modal-body">{!!trans('main.WouldyouliketoremoveThis')!!}?</div></div>
+                        <h5 class="modal-title" id="myModalLabelDelete"><i class="ti ti-alert-triangle text-danger me-1"></i>{!!trans('main.Warning')!!}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">{!!trans('main.WouldyouliketoremoveThis')!!}?</div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">{!!trans('main.Close')!!}</button>
-                        <button type="button" class="destroy btn btn-primary" onclick="deleteTemplate();" >{!!trans('main.Agree')!!}</button>
+                        <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteTemplate();"><i class="ti ti-trash me-1"></i>Delete</button>
                     </div></div></div>
                 </div>
         </div>
     </div>
 
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="padding-left: 17px;padding-right: 17px;">
-        <div class="modal-dialog modal-lg" style="width: 90%;">
-            <form class="modal-content" action="#" method="POST" id="myModal">
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="templateModalTitle">
+        <div class="modal-dialog modal-xl">
+            <form class="modal-content" action="#" method="POST" id="templateForm">
                 <input name="_token" type="hidden" value="{{ csrf_token() }}">
                 <input name="id" type="hidden" value="{{ $service->id }}">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"></h3>
-                    </div>
-                    <!-- /.box-header -->
-                    <div class="box-body">
-                        <div class="form-group">
-                            <input name="name" id="name" class="form-control" placeholder="Name:" required  oninvalid="this.setCustomValidity('Field required for filling')" onchange="this.setCustomValidity('')" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title box-title" id="templateModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required" for="name">Template name</label>
+                            <input name="name" id="name" class="form-control" placeholder="e.g. Booking request" required maxlength="191" oninvalid="this.setCustomValidity('Field required for filling')" oninput="this.setCustomValidity('')" value="">
                         </div>
                         <div class="form-group">
                             <textarea name="content" id="compose-textarea" class="form-control" style="height: 800px; visibility: hidden; display: none;">
                             </textarea>
                         </div>
                     </div>
-                    <!-- /.box-body -->
-                    <div class="box-footer">
-                        <div class="pull-right">
-                        <button type="submit" class="btn btn-primary" id="save"><i class="fa fa-file-code-o"></i> {!!trans('main.Save')!!}</button>
-                        </div>
-                        <button type="reset" class="btn btn-default modal-close" data-dismiss="modal"><i class="fa fa-times"></i> {!!trans('main.Discard')!!}</button>
+                    <div class="modal-footer">
+                        <button type="reset" class="btn btn-link link-secondary me-auto modal-close" data-bs-dismiss="modal">{!!trans('main.Discard')!!}</button>
+                        <button type="submit" class="btn btn-primary" id="save"><i class="fa fa-file-code-o me-1"></i>{!!trans('main.Save')!!}</button>
                     </div>
-                    <!-- /.box-footer -->
                 </div>
 
             </form>
@@ -210,17 +207,13 @@
                     height: '400px'
                 } );
 
-                $.fn.modal.Constructor.prototype.enforceFocus = function () {
-                    modal_this = this;
-                    $(document).on('focusin.modal', function (e) {
-                        if (modal_this.$element[0] !== e.target && !modal_this.$element.has(e.target).length
-                            // add whatever conditions you need here:
-                            &&
-                            !$(e.target.parentNode).hasClass('cke_dialog_ui_input_select') && !$(e.target.parentNode).hasClass('cke_dialog_ui_input_text')) {
-                            modal_this.$element.focus()
-                        }
-                    })
-                };
+                // Bootstrap 5 keeps focus inside the open modal; let CKEditor's own dialogs
+                // (link, image, colours...) take focus. (The Bootstrap 3 enforceFocus patch no longer applies.)
+                document.addEventListener('focusin', function (e) {
+                    if (e.target.closest && e.target.closest('.cke_dialog, .cke_panel, .cke')) {
+                        e.stopImmediatePropagation();
+                    }
+                }, true);
 
             }
         });
@@ -240,6 +233,7 @@
             $('#myModal').find('form').attr('action', '{{ route('templates.store') }}' );
             $('#myModal').find('.box-title').text('Add Template');
             $('#myModal').find('#name').val('');
+            $('#myModal').find('#save').prop('disabled', false);
             CKEDITOR.instances['compose-textarea'].setData($('#header').html() + '<br><----- Place content here -----><br>' + $('#footer').html());
             $('#myModal').modal('show');
         }
@@ -251,9 +245,14 @@
            $('#myModal').find('.box-title').text('Edit Template');
            $('#myModal').find('form').attr('action', '/templates/'+id+'/update');
            CKEDITOR.instances['compose-textarea'].setData(content);
+           $('#myModal').find('#save').prop('disabled', false);
+           $('#myModal').modal('show');
         }
 
-        $("#myModal" ).submit(function( event ) {
+        $("#templateForm").on('submit', function( event ) {
+            if (CKEDITOR.instances['compose-textarea']) {
+                CKEDITOR.instances['compose-textarea'].updateElement();
+            }
             $("#myModal").find("#save").prop('disabled', true);
         });
 

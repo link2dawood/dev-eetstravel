@@ -12,7 +12,7 @@
 			
             <div>
                 <div id="tour_create">
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('office.create'), \App\Tour::class) !!}
+                    {!! \App\Helper\PermissionHelper::getCreateButton(route('office.create'), \App\Offices::class) !!}
                 </div>
 
             </div>

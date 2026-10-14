@@ -150,7 +150,7 @@ class TaxController extends Controller
             return URL::to('taxes/' . $id);
         }
 
-        $tax = Tax::find($id);
+        $tax = Tax::findOrFail($id);
 
         if($tax == null){
             return abort(404);
@@ -172,7 +172,7 @@ class TaxController extends Controller
             return URL::to('taxes/' . $id . '/edit');
         }
 
-        $tax = Tax::find($id);
+        $tax = Tax::findOrFail($id);
 
         return view('taxes.edit', compact('tax'));
     }
@@ -189,11 +189,11 @@ class TaxController extends Controller
         
         $this->validateTax($request);
        
-        $tax = Tax::find($id)->update([
+        $tax = Tax::findOrFail($id)->update([
             "name" => $request->name,
             "value" => $request->percentageInput,
         ]);
-        $tax =Tax::find($id);
+        $tax =Tax::findOrFail($id);
 
 
 		LaravelFlashSessionHelper::setFlashMessage("Client $tax->name edited", 'success');
@@ -212,7 +212,7 @@ class TaxController extends Controller
      */
     public function DeleteMsg($id, Request $request)
     {
-        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/clients/' . $id . '/delete');
+        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/taxes/' . $id . '/delete');
 
         if ($request->ajax()) {
             return $msg;
@@ -227,20 +227,17 @@ class TaxController extends Controller
      */
     public function destroy($id)
     {
-        $client = $this->clients->getById($id);
-        $this->removeFile($client);
-        $this->clients->deleteById($id);
-        Comment::query()->where('reference_type', Comment::$services['client'])->where('reference_id', $id)->delete();
-        LaravelFlashSessionHelper::setFlashMessage("Client $client->name deleted", 'success');
-
-        return URL::to('clients');
+        $tax = Tax::findOrFail($id);
+        $tax->delete();
+        LaravelFlashSessionHelper::setFlashMessage("Tax {$tax->name} deleted", 'success');
+        return request()->ajax() ? URL::to('taxes') : redirect()->route('taxes.index');
     }
 
     public function validateTax(Request $request)
     {
         $this->validate($request, [
-            'name'  => 'required',
-            'percentageInput'     => 'required',
+            'name' => 'required|string|max:191',
+            'percentageInput' => 'required|numeric|between:0,100',
         ]);
     }
 	

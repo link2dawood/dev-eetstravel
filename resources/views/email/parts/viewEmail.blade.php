@@ -23,9 +23,13 @@
     </div>
     <!-- /.mailbox-read-info -->
     <div class="mailbox-read-message">
-        <span v-html="(email.message.html)?email.message.html.body:email.message.text">
-
-        </span>
+        {{-- Shown in a sandboxed frame: an email's HTML can't run code in the app or restyle it
+             (it used to be inserted with v-html, where e.g. <img onerror> runs). --}}
+        <iframe class="w-100 border-0" style="min-height: 300px;" title="Email message"
+                sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                referrerpolicy="no-referrer"
+                :srcdoc="'<base target=&quot;_blank&quot;>' + ((email.message.html && email.message.html.body) ? email.message.html.body : '<pre style=&quot;white-space:pre-wrap;font-family:inherit;margin:0&quot;>' + String(email.message.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>')"
+                @load="$event.target.style.height = (($event.target.contentDocument && $event.target.contentDocument.documentElement.scrollHeight) || 300) + 20 + 'px'"></iframe>
 
     </div>
     <!-- /.mailbox-read-message -->

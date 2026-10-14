@@ -63,8 +63,9 @@ class TourExpenseController extends Controller {
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
-    public function create(Request $request, $id)
+    public function create(Request $request, $id = null)
     {
+        if (!$id) return redirect()->route('office.index')->with('info', 'Choose an office before adding financial records.');
     	
         $tours = Tour::all();
         $clients = Client::all();
@@ -75,52 +76,41 @@ class TourExpenseController extends Controller {
 
         $options = array("Event","Restaurant");
 		
-		$office = Offices::find($id);
+		$office = Offices::findOrFail($id);
         return view('office.tour_expenses.create', compact('tours','clients','hotels','options','events','buses','restaurants','office'));
     }
     public function store(Request $request){
-		$this->validateData($request);
-        Office_Tours::create($request->except(["attach"]));
-        return redirect()->back();
+		$validated = $this->validateData($request);
+        Office_Tours::create($validated);
+        return redirect()->route('office.show', $request->office_id);
     }
 	public function validateData(Request $request){
 	
-		$this->validate($request, [
-            'tour_name'  => 'required',
-            'tour_expenses'     => 'required',
-            'tour_departure_date'     => 'required',
-			'tour_return_date'     => 'required',
+		return $this->validate($request, [
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'tour_name'  => 'required|string|max:200',
+            'tour_expenses'     => 'required|numeric|min:0|max:999999999.99',
+            'tour_departure_date' => 'required|date',
+			'tour_return_date' => 'required|date|after_or_equal:tour_departure_date',
         ]);
 	}
     public function edit($id, Request $request){
-		$office_tours = Office_Tours::find($id);
+		$office_tours = Office_Tours::findOrFail($id);
 		$tours = Tour::all();
        
         $options = array("Event","Restaurant");
 		return view('office.tour_expenses.edit', compact('tours','office_tours'));
 	}
 	public function update($id,Request $request){
-        $office_tours = Office_Tours::find($id);
-        $office_tours->update($request->except(["attach"]));
-		return redirect()->back();
+        $validated = $this->validateData($request);
+        $office_tours = Office_Tours::findOrFail($id);
+        $office_tours->update($validated);
+		return redirect()->route('office.show', $request->office_id);
 	}
     public function show($id, Request $request)
     {
-  
-        $title = 'Show - Payments';
-
-        if ($request->ajax()) {
-            return URL::to('office/' . $id);
-        }
-
-        $office_Tours =Office_Tours::find($id);
-
-        if($office_Tours == null){
-            return abort(404);
-        }
-
-      
-        return view('office.show', compact('office_Tours','title'));
+        $record = Office_Tours::findOrFail($id);
+        return redirect()->route('office.show', $record->office_id);
     }
      
      public function DeleteMsg($id, Request $request)
@@ -134,11 +124,12 @@ class TourExpenseController extends Controller {
 	public function destroy($id)
     {
 
-        $office_tours = Office_Tours::find($id);
+        $office_tours = Office_Tours::findOrFail($id);
         $office_tours->find($id)->delete();
       LaravelFlashSessionHelper::setFlashMessage("Tour Expense $office_tours->tour_name deleted", 'success');
 
-        return URL::to('office');
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
     
+    public function index() { return redirect()->route('office.index'); }
 }

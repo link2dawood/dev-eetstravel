@@ -77,10 +77,14 @@
                         </div>
                     @yield('main-content')
                     <div v-if="loading">
-                        <div style="height: 300px;display: flex;align-items: center;justify-content: center; font-size:30px">
-                            <div class="">Kindly Connect To Email Server First</div>
-
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted" style="height: 300px;">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <span>Loading emails...</span>
                         </div>
+                    </div>
+                    <div v-if="!loading && mailError" class="alert alert-warning m-3" role="alert">
+                        <div class="fw-bold mb-1"><i class="ti ti-mail-off me-1"></i>Emails could not be loaded</div>
+                        <div>@{{ mailError }}</div>
                     </div>
 
                    
@@ -207,6 +211,7 @@
                         reply:false,
                         loading: false,
                         loadingFolders: false,
+                        mailError: '',
                         userId:$('meta[name="user-id"]').attr('content'),
                         reg: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
 
@@ -282,7 +287,9 @@
 
 // console.log(formData, this.newEmail);
 // return false;
-                        this.CloseNewEmailModal();
+                        // keep the draft until the server confirms (a failed send used to lose it)
+                        const draftContent = this.newEmail.content;
+                        $("#NewEmail").modal('hide');
                         axios.post( `/api/v1/users/${this.userId}/emails/send`,
                             formData,
                             {
@@ -292,6 +299,7 @@
                             }
                         ).then((result)=>{
                             // this.getListEmailsByUser(true,"Sent");
+                            this.CloseNewEmailModal();
                             localStorage.setItem(`emails[Sent]`,JSON.stringify(result.data));
 
 
@@ -309,16 +317,16 @@
                             });
                             return false;
                         }).catch((e)=>{
-                            $.toast({
-                                heading: 'Error',
-                                text: "Send message"+e,
-                                icon: 'error',
-                                loader: true,        // Change it to false to disable loader
-                                hideAfter : 1500,
-                                position: 'top-right',
-                            });
-
-
+                            const message = (e.response && e.response.data && e.response.data.message) || 'The email could not be sent. Please try again.';
+                            if (typeof window.appToast === 'function') {
+                                window.appToast(message, 'error');
+                            } else {
+                                $.toast({ heading: 'Error', text: message, icon: 'error', hideAfter: 6000, position: 'top-right' });
+                            }
+                            // reopen the draft so nothing is lost
+                            this.newEmail.content = draftContent;
+                            if (CKEDITOR.instances['editor1']) CKEDITOR.instances['editor1'].setData(draftContent || '');
+                            $("#NewEmail").modal('show');
                         });
                         return false;
                     },
@@ -358,11 +366,11 @@
                             // if(CKEDITOR.instances['editor'])
                             // CKEDITOR.instances['editor'].setData('')
                         }
-                        $("#NewEmail").modal();
+                        $("#NewEmail").modal("show");
                     },
 
                     openCreateFolderModal(){
-                        $("#modalAddFolder").modal();
+                        $("#modalAddFolder").modal("show");
                     },
 
                     createFolder(){
@@ -452,6 +460,7 @@
                             })
                                 .then((result)=>{
                                     this.loading = false;
+                                    this.mailError = '';
                                     this.emailsArray = result.data.emails;
                                     this.page = result.data.page;
                                     this.count = result.data.count;
@@ -509,6 +518,7 @@
                             })
                                 .then((result)=>{
                                     this.loading = false;
+                                    this.mailError = '';
                                     this.emailsArray = result.data.emails;
                                     this.page = result.data.page;
                                     this.count = result.data.count;
@@ -520,11 +530,11 @@
 
 
                                 }).catch((err)=>{
-                                jSuites.notification({
-									error: 1,
-									name: 'Error message',
-									message: 'An  Error Occured',
-								});
+                                // the server explains why (e.g. mailbox unreachable); keep it on screen
+                                this.mailError = (err.response && err.response.data && err.response.data.message) || 'An error occurred while loading the emails.';
+                                if (typeof window.appToast === 'function') {
+                                    window.appToast(this.mailError, 'error');
+                                }
                                 this.loading = false;
                             });
                         }
@@ -534,7 +544,7 @@
 
                     openModal(email){
                         this.currentMail = email;
-                         $("#modalCreate").modal();
+                         $("#modalCreate").modal("show");
                     },
 
                     infoEmail(email){
@@ -696,6 +706,9 @@
                                     this.loadingFolders = false;
                                     this.folders = res.data.folders;
                                     localStorage.setItem('folders',JSON.stringify(res.data.folders));
+                                }).catch((err)=>{
+                                    this.loadingFolders = false;
+                                    this.mailError = this.mailError || (err.response && err.response.data && err.response.data.message) || 'The mail folders could not be loaded.';
                                 });
                         }
                     },

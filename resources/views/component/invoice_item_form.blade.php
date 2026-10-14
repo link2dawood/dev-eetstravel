@@ -1,20 +1,21 @@
+@php $item = $item ?? []; @endphp
 <div class="item-contact row " style="margin-bottom: 0px">
     <div class="col-md-2">
         <div class="form-group">
             <label for="item_name">{!!trans('Item Name')!!}</label>
-            <input id="item_name" name="items[{{$count}}][item_name]" type="text" class="form-control" value="" required>
+            <input id="item_name" name="items[{{$count}}][item_name]" type="text" class="form-control" required value="{{ $item['item_name'] ?? '' }}">
         </div>
     </div>
     <div class="col-md-2">
     <div class="form-group" style="padding-left: 0">
         <label for="item_desc">{!!trans('Quantity')!!}</label>
-        <input id="item_desc" name="items[{{$count}}][quantity]" type="number" class="form-control" onchange = "calculateItemTotal(this)" value="" required>
+        <input id="item_desc" name="items[{{$count}}][quantity]" type="number" min="0" step="0.01" class="form-control" onchange = "calculateItemTotal(this)" required value="{{ $item['quantity'] ?? '' }}">
     </div>
 </div>
 <div class="col-md-2">
     <div class="form-group " style="padding-right: 0">
         <label for="amount">{!!trans('Price(excl. VAT)')!!}</label>
-        <input id="amount" name="items[{{$count}}][amount]" type="number" class="form-control" onchange = "calculateItemTotal(this)"  required>
+        <input id="amount" name="items[{{$count}}][amount]" type="number" min="0" step="0.01" class="form-control" onchange = "calculateItemTotal(this)"  required value="{{ $item['amount'] ?? '' }}">
     </div>
 	</div>
 	<div class="col-md-2">
@@ -23,7 +24,7 @@
                                 <select name="items[{{$count}}][vat]"  id="vat" class="form-control" onchange = "calculateItemTotal(this)" required>
 									<option value="" disabled="disabled" selected="selected"  >Choose option</option>
 									@foreach($taxes as $tax)
-									<option value="{{$tax->value/100}}">{{$tax->name}}</option>
+									<option value="{{$tax->value/100}}" {{ isset($item['vat']) && (float)$item['vat'] === (float)($tax->value/100) ? 'selected' : '' }}>{{$tax->name}}</option>
 									@endforeach
                                   
                                 </select>
@@ -32,7 +33,7 @@
 <div class="col-md-2">
     <div class="form-group " style="padding-right: 0">
         <label for="total_amount">{!!trans('Total  Amount')!!}</label>
-        <input id="total_amount" name="items[{{$count}}][total_amount]" type="number" class="form-control item_total" value="" readonly>
+        <input id="total_amount" name="items[{{$count}}][total_amount]" type="number" min="0" step="0.01" class="form-control item_total" readonly value="{{ $item['total_amount'] ?? '' }}">
     </div>
 	</div>								
 <div class="col-md-1">
@@ -40,3 +41,5 @@
 </div>
    
 
+
+</div>

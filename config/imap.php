@@ -38,8 +38,9 @@ return [
             'port'  => env('IMAP_PORT', 993),
             'encryption'    => env('IMAP_ENCRYPTION', 'tls'), // Supported: false, 'ssl', 'tls'
             'validate_cert' => env('IMAP_VALIDATE_CERT', true),
-            'username' => env('IMAP_USERNAME', 'root@example.com'),
-            'password' => env('IMAP_PASSWORD', ''),
+            // the shared booking mailbox; falls back to the SMTP login
+            'username' => env('IMAP_USERNAME', env('MAIL_USERNAME')),
+            'password' => env('IMAP_PASSWORD', env('MAIL_PASSWORD')),
         ],
 
         /*

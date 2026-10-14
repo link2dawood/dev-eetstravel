@@ -23,6 +23,7 @@ class SupplierInvoices
             ->whereNull('tp.deleted_at')
             ->select(
                 'si.id',
+                'it.id as link_id',
                 'si.invoice_no',
                 'si.dueDate as due_date',
                 'si.receivedDate as received_date',

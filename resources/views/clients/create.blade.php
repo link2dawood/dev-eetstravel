@@ -44,18 +44,19 @@
                                     </ul>
                                 </div>
                             @endif
-                            <form method='POST' action='{{route('clients.store')}}' enctype="multipart/form-data">
+                            <form method='POST' action='{{route('clients.store')}}' enctype="multipart/form-data" class="client-form">
+                                <style>.client-form .select2-container { width: 100% !important; } .client-form .form-label.required:after { content: " *"; color: #d63939; }</style>
                                 {{csrf_field()}}
 
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
-                                            <label for="name" class="form-label">{!!trans('main.Name')!!}</label>
+                                            <label for="name" class="form-label required">{!!trans('main.Name')!!}</label>
                                             <input id="name" name="name" type="text" class="form-control" value="{{old('name')}}">
                                         </div>
 
                                         <div class="form-group mb-3">
-                                            <label for="address" class="form-label">{!!trans('main.Address')!!}</label>
+                                            <label for="address" class="form-label required">{!!trans('main.Address')!!}</label>
                                             <input id="address" name="address" type="text" class="form-control" value="{{old('address')}}">
                                         </div>
 
@@ -81,33 +82,34 @@
 
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
-                                            <label for="work_phone" class="form-label">{!!trans('main.WorkPhone')!!}</label>
-                                            <input id="work_phone" name="work_phone" type="text" class="form-control" value="{{old('work_phone')}}">
+                                            <label for="work_phone" class="form-label required">{!!trans('main.WorkPhone')!!}</label>
+                                            <input id="work_phone" name="work_phone" type="tel" class="form-control" value="{{old('work_phone')}}">
                                         </div>
 
                                         <div class="form-group mb-3">
                                             <label for="contact_phone" class="form-label">{!!trans('main.ContactPhone')!!}</label>
-                                            <input id="contact_phone" name="contact_phone" type="text" class="form-control" value="{{old('contact_phone')}}">
+                                            <input id="contact_phone" name="contact_phone" type="tel" class="form-control" value="{{old('contact_phone')}}">
                                         </div>
 
                                         <div class="form-group mb-3">
-                                            <label for="work_email" class="form-label">{!!trans('main.WorkEmail')!!}</label>
-                                            <input id="work_email" name="work_email" type="text" class="form-control" value="{{old('work_email')}}">
+                                            <label for="work_email" class="form-label required">{!!trans('main.WorkEmail')!!}</label>
+                                            <input id="work_email" name="work_email" type="email" class="form-control" value="{{old('work_email')}}">
                                         </div>
 
                                         <div class="form-group mb-3">
                                             <label for="contact_email" class="form-label">{!!trans('main.ContactEmail')!!}</label>
-                                            <input id="contact_email" name="contact_email" type="text" class="form-control" value="{{old('contact_email')}}">
+                                            <input id="contact_email" name="contact_email" type="email" class="form-control" value="{{old('contact_email')}}">
                                         </div>
 
                                         <div class="form-group mb-3">
-                                            <label for="password" class="form-label">{!!trans('password')!!}</label>
-                                            <input id="password" name="password" type="password" class="form-control" >
+                                            <label for="password" class="form-label">Client portal password</label>
+                                            <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" minlength="6">
+                                            <div class="form-hint">Used to sign in to the client portal. At least 6 characters.</div>
                                         </div>
 
                                         <div class="form-group mb-3">
                                             <label for="work_fax" class="form-label">{!!trans('main.WorkFax')!!}</label>
-                                            <input id="work_fax" name="work_fax" type="text" class="form-control" value="{{old('work_fax')}}">
+                                            <input id="work_fax" name="work_fax" type="tel" class="form-control" value="{{old('work_fax')}}">
                                         </div>
 
                                         <div class="form-group mb-3">

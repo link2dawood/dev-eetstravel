@@ -13,7 +13,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="margin_button">
-                        <a href="javascript:history.back()">
+                        <a href="{{ route('invoices.index') }}">
                             <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
                         </a>
 						
@@ -26,13 +26,13 @@
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
                 <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
-                    <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>{!!trans('main.Info')!!}</a></li>
+                    <li role='presentation' class="active"><a class="nav-link active" href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{!!trans('main.Info')!!}</a></li>
 				</ul>
                  
                    
             </div>
             <div class="tab-content">
-                <div class="tab-pane fade in active" role='tabpanel' id='info-tab'>
+                <div class="tab-pane fade show active" role='tabpanel' id='info-tab'>
 					<input id="invoice_id" type="hidden" name="invoice_id" value ="{{$invoices->id}}">
 					<div class="row">
 					<div class="col-lg-6">
@@ -43,19 +43,19 @@
                             <td>
                                 <b><i>{!!trans('Due Date')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$invoices->dueDate!!}</td>
+                            <td class="info_td_show">{{ $invoices->dueDate }}</td>
                         </tr>
 						<tr>
                             <td>
                                 <b><i>{!!trans('Received Date')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$invoices->receivedDate!!}</td>
+                            <td class="info_td_show">{{ $invoices->receivedDate }}</td>
                         </tr>
                         <tr>
                             <td>
                                 <b><i>{!!trans('Invoice No')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{!!$invoices->invoice_no;!!}</td>
+                            <td class="info_td_show">{{ $invoices->invoice_no; }}</td>
                         </tr>
                         </tbody>
                     </table>
@@ -115,29 +115,7 @@
 					<div id="payment_create" style="margin-bottom : 20px;">
                     	{!! \App\Helper\PermissionHelper::getCreateButton(route('add_payment',$invoices->id), \App\Invoices::class) !!}
                		 </div>
-					<table id="service-transactions-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 100%; display = "none"'>
-                <thead>
-                    <tr>
-				<th>Id</th>
-                <th>Date</th>
-				<th>Transaction No</th>
-				<th>Invoice No</th>
-				<th>Amount</th>
-                <th>Unallocated</th>
-            </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-				<th>Id</th>
-                <th>Date</th>
-				<th>Transaction No</th>
-				<th>Invoice No</th>
-				<th>Amount</th>
-                <th>Unallocated</th>
-            </tr>
-                </tfoot>
-              
-            </table>
+					@include('component.invoice_payment_table', ['invoice' => $invoices, 'payTo' => 'Supplier'])
 						</div>
 				</div>
            
@@ -166,6 +144,7 @@
                             <div class="box-footer">
                                 <form method='POST' action='{{ route('comment.store') }}' enctype="multipart/form-data"
                                     id="form_comment">
+                                    @csrf
                                     <div class="input-group" style="width: 100%">
                                         <span id="author_name" class="input-group-addon">
                                             <span id="name"></span>
@@ -200,131 +179,3 @@
 @section('post_scripts')
     <script src="{{ asset('js/comment.js') }}"></script>
 @endsection
-@push('scripts')
-<script>
- $(document).ready(function() {
-	  let invoice_id = $("#invoice_id").val();
-        let permission = $('#permission').attr('data-permission');
-        let classNameStatus = permission ? 'touredit-status' : '';
-        let table = $('#service-transactions-table').DataTable({
-            dom: "<'row'<'col-sm-4'l><'col-sm-4'B><'col-sm-4'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Payments List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Payments List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Payments List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths = 
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "/accountingServiceTransaction/api/data/2/"+ invoice_id,
-            },
-            columns: [{
-                    data: 'id',
-                    name: 'id'
-                },
-				{
-                    data: 'date',
-                    name: 'date',
-                    className: 'touredit-name'
-                }
-					,
-				
-				
-					  {
-                    data: 'trans_no',
-                    name: 'trans_no',
-                    className: 'touredit-name'
-                },
-					  {
-                    data: 'invoice_no',
-                    name: 'invoice_no',
-                    className: 'touredit-name'
-                },
-				 {
-                    data: 'amount',
-                    name: 'amount',
-                    className: 'touredit-name'
-                },
-                {
-                    data: 'unallocated',
-                    name: 'unallocated',
-                    className: 'touredit-name'
-                },
-                
-               
-            ],
-            'columnDefs': [{
-                'targets': 5,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                    var url = "{{ route('tour.update', ['tour' => '__ID__']) }}".replace('__ID__', rowData.id);
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $('<select class="form-control"><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#service-transactions-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#service-transactions-table tfoot th').appendTo('#service-transactions-table thead');
-
-    })
-		</script>
-@endpush

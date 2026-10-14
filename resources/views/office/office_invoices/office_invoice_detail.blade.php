@@ -1,204 +1,22 @@
 @extends('scaffold-interface.layouts.tabler-app')
-
-@section('title', 'Office Invoice Details')
-
+@section('title', 'Office invoice')
 @section('content')
-    @include('layouts.title', [
-        'title' => 'Invoice Items',
-        'sub_title' => 'Office Invoice Detail',
-        'breadcrumbs' => [
-            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'officeInvoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
-            ['title' => 'office_invoice_detail', 'route' => null],
-        ],
-    ])
-
-	<section class="content">
-    <div class="box box-primary">
-		<a class="btn btn-default"
-                                               
-                                               href="{{route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'pdf_type' => 'short'])}}" style = "float:right;">Invoice PDF</a>
-        <div class="box-body">
-            <div>
-             
-            </div>
-            @if(session('message_buses'))
-            <div class="alert alert-info col-md-12" style="text-align: center;">
-                {{session('message_buses')}}
-            </div>
-            @endif
-         
-            <br>
-            <br>
-      
-
-           <table id="officesinvoicedetail-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 90%; table-layout: fixed ; display = "none"'>
-			     <input id="offices_id" type="hidden" name="offices_id" value = {{$officeinvoice_dataId}}>
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>Items</th>
-                        <th>Date</th>
-                        <th>Item Code</th>
-						<th>Amount</th>
-						<th>Action</th>
-                        
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                       <th>id</th>
-                        <th>Items</th>
-                        <th>Date</th>
-                        <th>Item Code</th>
-						<th>Amount</th>
-						<th>Action</th>
-                        
-                    </tr>
-                </tfoot>
-              
-            </table>
-        </div>
+<div class="container-xl">
+    <div class="page-header mb-3"><h2 class="page-title">Office invoice {{ $invoice->invoice_no }}</h2></div>
+    <div class="btn-list mb-3">
+        <a class="btn btn-secondary" href="{{ route('office.show', $invoice->from_office) }}">Back to office</a>
+        <a class="btn btn-primary" href="{{ route('office_invoices_pdf_export', ['id' => $officeinvoice_dataId, 'pdf_type' => 'short']) }}">Download PDF</a>
+        @can('office.edit')<a class="btn btn-warning" href="{{ route('officeInvoices.edit', $officeinvoice_dataId) }}">Edit</a>@endcan
     </div>
-</section>
+    <div class="card"><div class="card-body">
+        <p>Date: {{ $invoice->date }}</p>
+        <div class="table-responsive"><table class="table table-striped">
+            <thead><tr><th>ID</th><th>Item</th><th>Date</th><th>Code</th><th>Description</th><th>Amount</th></tr></thead>
+            <tbody>@forelse($items as $item)
+                <tr><td>{{ $item->officeInvoiceId }}</td><td>{{ $item->officeinvoice_item }}</td><td>{{ $item->officeinvoice_date }}</td><td>{{ $item->officeinvoice_code }}</td><td>{{ $item->des }}</td><td>{{ number_format($item->officeinvoice_amount, 2) }}</td></tr>
+            @empty<tr><td colspan="6">No invoice items</td></tr>@endforelse</tbody>
+            <tfoot><tr><th colspan="5">Total</th><td>{{ number_format($items->sum('officeinvoice_amount'), 2) }}</td></tr></tfoot>
+        </table></div>
+    </div></div>
+</div>
 @endsection
-
-@section('post_scripts')
-    <script src="{{ asset('js/comment.js') }}"></script>
-@endsection
-@push('scripts')
-
- 		<script>
-					/// ------ Invoice Details datatable ----->
-    $(document).ready(function() {
-        let permission = $('#permission').attr('data-permission');
-        let classNameStatus = permission ? 'officeinvoiceedit-status' : '';
-		let office_id = $("#offices_id").val();
-        let table = $('#officesinvoicedetail-table').DataTable({
-            dom: "<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [{
-                    extend: 'csv',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'excel',
-                    title: 'Tours List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)'
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    title: 'Office Invoice List',
-                    exportOptions: {
-                        columns: ':not(.actions-button)',
-                    },
-                    // customize: function (doc) {
-                    //     doc.content[1].table.widths = 
-                    //     Array(doc.content[1].table.body[0].length + 1).join('*').split('');
-                    // },
-                },
-            ],
-            language: {
-                search: "Global Search :"
-            },
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: `{{url('office-invoices-details/api/data/${office_id}')}}`,
-				//dataSrc: 'data'
-            },columns: [
-    {
-        data: 'officeInvoiceId',
-        name: 'officeInvoiceId',
-    },
-    
-  
-				
-	{
-        data: 'officeinvoice_item',
-        name: 'officeinvoice_item',
-        className: 'officeinvoiceedit-name'
-    },
-				
-	{
-        data: 'officeinvoice_date',
-        name: 'officeinvoice_date',
-        className: 'officeinvoiceedit-name'
-    },
-	
-	{
-        data: 'officeinvoice_code',
-        name: 'officeinvoice_code',
-        className: 'officeinvoiceedit-name' 
-    },
-				
-	{
-        data: 'officeinvoice_amount',
-        name: 'officeinvoice_amount',
-        className: 'officeinvoiceedit-name'
-    },
-  
-    {
-        data: 'action',
-        name: 'action',
-        searchable: false,
-        sorting: false,
-        orderable: false
-    }
-],
-            'columnDefs': [{
-                'targets': 4,
-                'createdCell': function(td, cellData, rowData, row, col) {
-                    var url = "{{ route('tour.update', ['tour' => '__ID__']) }}".replace('__ID__', rowData.id);
-                    $(td).attr('data-status-link', url);
-                }
-            }],
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var column = this;
-                    if (column.footer().className == 'select_search') {
-                        var select = $('<select class="form-control"><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function() {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val ? '^' + val + '$' : '', true, false).draw();
-                            });
-
-                        column.data().unique().sort().each(function(d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    }
-                });
-            }
-        });
-        $('#officesinvoicedetail-table tfoot th').each(function() {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            } else {
-                $(this).html('<span> </span>');
-            }
-        });
-        table.columns().every(function() {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if (that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-        $('#officesinvoicedetail-table tfoot th').appendTo('#officesinvoicedetail-table thead');
-
-    })
-</script>
-@endpush
-	

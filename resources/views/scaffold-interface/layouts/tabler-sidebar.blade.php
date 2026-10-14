@@ -302,15 +302,15 @@
                 @endif
 
                 <!-- Accounting -->
-                <li class="nav-item dropdown {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index'], $route)) ? 'active' : ''}}">
+                <li class="nav-item dropdown {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index', 'transaction.index'], $route)) ? 'active' : ''}}">
                     <a class="nav-link dropdown-toggle" href="#navbar-accounting" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
-                       aria-expanded="{{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index'], $route)) ? 'true' : 'false'}}">
+                       aria-expanded="{{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index', 'transaction.index'], $route)) ? 'true' : 'false'}}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-calculator icon"></i>
                         </span>
                         <span class="nav-link-title">{{ trans('Accounting') }}</span>
                     </a>
-                    <div class="dropdown-menu {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index'], $route)) ? 'show' : ''}}">
+                    <div class="dropdown-menu {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index', 'transaction.index'], $route)) ? 'show' : ''}}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
                                 @if(Auth::user()->can('accounting.index'))
@@ -318,7 +318,7 @@
                                     <i class="ti ti-coin icon me-2"></i>{{trans('Billing')}}
                                 </a>
                                 @endif
-                                @if(Auth::user()->can('chat.main'))
+                                @if(Auth::user()->can('office.index'))
                                 <a class="dropdown-item" href="{{ route('office.index') }}">
                                     <i class="ti ti-building-bank icon me-2"></i>{{trans('Offices')}}
                                 </a>
@@ -328,10 +328,17 @@
                                     <i class="ti ti-file-invoice icon me-2"></i>{{trans('Invoices')}}
                                 </a>
                                 @endif
-                                @if(Auth::user()->can('reporting.index'))
+                                @if(Auth::user()->can('transaction.index'))
+                                <a class="dropdown-item" href="{{ route('transaction.index') }}">
+                                    <i class="ti ti-arrows-exchange icon me-2"></i>Transactions
+                                </a>
+                                @endif
+                                @if(Auth::user()->can('taxes.index'))
                                 <a class="dropdown-item" href="{{ route('taxes.index') }}">
                                     <i class="ti ti-receipt-tax icon me-2"></i>{{trans('Taxes')}}
                                 </a>
+                                @endif
+                                @if(Auth::user()->can('reporting.index'))
                                 <a class="dropdown-item" href="{{ route('reporting.index') }}">
                                     <i class="ti ti-report icon me-2"></i>{{trans('Reporting')}}
                                 </a>

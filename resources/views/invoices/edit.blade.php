@@ -262,6 +262,7 @@
             }).done((res) => {
                 contactItemCount++;
                 $('#payment-inputs').append(res);
+                $('#payment-inputs').append('<input type="hidden" name="payments_loaded" value="1">');
                 $('input[name="_token"]').each(function() {
                     // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");

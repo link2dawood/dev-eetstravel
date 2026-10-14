@@ -7,7 +7,7 @@
             <script>
                 $.toast({
                     heading: 'Success',
-                    text: "{!!$message!!}",
+                    text: {!! json_encode(e($message), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, // names in messages may contain quotes or markup
                     icon: 'success',
                     loader: true,        // Change it to false to disable loader
                     hideAfter : 15000,
@@ -23,7 +23,7 @@
             <script>
                 $.toast({
                     heading: 'Error',
-                    text: "{!!$message!!}",
+                    text: {!! json_encode(e($message), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, // names in messages may contain quotes or markup
                     icon: 'error',
 //                    loaderBg: '#9EC600',  // To change the background,
                     hideAfter : 15000,
@@ -39,7 +39,7 @@
             <script>
                 $.toast({
                     heading: 'Information',
-                    text: "{!!$message!!}",
+                    text: {!! json_encode(e($message), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, // names in messages may contain quotes or markup
                     icon: 'info',
                     loader: true,        // Change it to false to disable loader
                     loaderBg: '#9EC600',  // To change the background,
@@ -56,7 +56,7 @@
             <script>
                 $.toast({
                     heading: 'Information',
-                    text: "{!!$message!!}",
+                    text: {!! json_encode(e($message), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, // names in messages may contain quotes or markup
                     icon: 'info',
                     loader: true,        // Change it to false to disable loader
                     loaderBg: '#9EC600',  // To change the background,

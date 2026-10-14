@@ -52,7 +52,7 @@ function addSortingToTable(table) {
         header.addClass('sortable');
         header.css('cursor', 'pointer');
 
-        header.on('click', function() {
+        header.off('click.bootstrapTables').on('click.bootstrapTables', function() {
             sortTableByColumn(table, index, header);
         });
     });
@@ -90,6 +90,7 @@ function sortTableByColumn(table, columnIndex, header) {
 
     // Re-append sorted rows
     tbody.empty().append(rows);
+    if (table[0]._tablePagination) { table[0]._tablePagination.page = 1; renderTablePage(table[0]); }
 }
 
 function handleTableFilters() {
@@ -150,56 +151,41 @@ function handlePagination() {
 }
 
 function paginateTable(tbody, rows, itemsPerPage) {
-    const totalPages = Math.ceil(rows.length / itemsPerPage);
-    let currentPage = 1;
+    const table = tbody.closest('table')[0];
+    if (table._tablePagination) return;
+    const container = document.createElement('div');
+    container.className = 'pagination-container d-flex flex-wrap gap-1 mt-3';
+    container.setAttribute('aria-label', 'Table pages');
+    tbody.closest('.table-responsive').after(container);
+    table._tablePagination = {page: 1, size: itemsPerPage, query: '', container};
+    renderTablePage(table);
+}
 
-    // Create pagination controls
-    const paginationContainer = $('<div class="pagination-container text-center mt-3"></div>');
-    const pagination = $('<ul class="pagination"></ul>');
-
-    // Previous button
-    const prevButton = $('<li class="page-item"><a class="page-link" href="#">Previous</a></li>');
-    pagination.append(prevButton);
-
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        const pageItem = $(`<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
-        if (i === 1) pageItem.addClass('active');
-        pagination.append(pageItem);
+function renderTablePage(table) {
+    const state = table._tablePagination;
+    const rows = [...table.tBodies[0].rows].filter(row => !row.classList.contains('table-search-empty'));
+    table.querySelector('.table-search-empty')?.remove();
+    const matches = rows.filter(row => row.textContent.toLowerCase().includes(state.query));
+    const pages = Math.max(1, Math.ceil(matches.length / state.size));
+    state.page = Math.min(state.page, pages);
+    rows.forEach(row => row.style.display = 'none');
+    matches.slice((state.page - 1) * state.size, state.page * state.size).forEach(row => row.style.display = '');
+    if (!matches.length) {
+        const row = table.tBodies[0].insertRow(); row.className = 'table-search-empty';
+        const cell = row.insertCell(); cell.colSpan = table.tHead.rows[0].cells.length;
+        cell.className = 'text-center text-muted'; cell.textContent = 'No matching records';
     }
-
-    // Next button
-    const nextButton = $('<li class="page-item"><a class="page-link" href="#">Next</a></li>');
-    pagination.append(nextButton);
-
-    paginationContainer.append(pagination);
-    tbody.closest('.table-responsive').after(paginationContainer);
-
-    // Show first page
-    showPage(rows, 1, itemsPerPage);
-
-    // Handle pagination clicks
-    pagination.on('click', 'a', function(e) {
-        e.preventDefault();
-        const clickedPage = $(this).data('page');
-
-        if (clickedPage) {
-            currentPage = clickedPage;
-            showPage(rows, currentPage, itemsPerPage);
-
-            // Update active state
-            pagination.find('.page-item').removeClass('active');
-            $(this).parent().addClass('active');
-        } else if ($(this).text() === 'Previous' && currentPage > 1) {
-            currentPage--;
-            showPage(rows, currentPage, itemsPerPage);
-            updateActivePage(pagination, currentPage);
-        } else if ($(this).text() === 'Next' && currentPage < totalPages) {
-            currentPage++;
-            showPage(rows, currentPage, itemsPerPage);
-            updateActivePage(pagination, currentPage);
-        }
-    });
+    state.container.replaceChildren();
+    const button = (label, page, disabled) => {
+        const el = document.createElement('button'); el.type = 'button'; el.className = 'btn btn-sm btn-outline-secondary';
+        el.textContent = label; el.disabled = disabled;
+        el.onclick = () => { state.page = page; renderTablePage(table); };
+        state.container.append(el);
+    };
+    button('Previous', state.page - 1, state.page === 1);
+    const summary = document.createElement('span'); summary.className = 'align-self-center px-2';
+    summary.textContent = `Page ${state.page} of ${pages} (${matches.length} records)`; state.container.append(summary);
+    button('Next', state.page + 1, state.page === pages);
 }
 
 function showPage(rows, page, itemsPerPage) {
@@ -227,10 +213,12 @@ function addTableSearch(tableId, searchInputId) {
 
 // Global filter function for tables
 function filterTable(tableId, searchValue) {
-    const value = searchValue.toLowerCase();
-    $(`#${tableId} tbody tr`).filter(function() {
-        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-    });
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    if (!table._tablePagination) paginateTable($(table.tBodies[0]), $(table.tBodies[0].rows), 50);
+    table._tablePagination.query = searchValue.toLowerCase();
+    table._tablePagination.page = 1;
+    renderTablePage(table);
 }
 
 // Export functionality (basic CSV export)

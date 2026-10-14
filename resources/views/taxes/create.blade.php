@@ -49,7 +49,7 @@
 
                             <div class="form-group">
                                 <label for="name">{!! trans('Percentage') !!} *</label>
-                                {!! Form::number('percentageInput', '', ['class' => 'form-control', 'id' => 'percentageInput','min' => 1, 'max'=>100]) !!}
+                                {!! Form::number('percentageInput', '', ['class' => 'form-control', 'id' => 'percentageInput','min' => 0, 'max'=>100, 'step'=>0.01]) !!}
                                
                             </div>
 
@@ -63,16 +63,5 @@
        
        
     </section>
-    <script>
-        const percentageInput = document.getElementById("percentageInput");
-    
-        percentageInput.addEventListener("input", function () {
-            const value = parseInt(this.value);
-            if (isNaN(value)) {
-                this.value = "";
-            } else {
-                this.value = Math.min(100, Math.max(1, value)); // Ensure value is within 1-100
-            }
-        });
-    </script>
+
 @endsection

@@ -131,8 +131,8 @@ public function currentBookings()
             
                 $this->server = new ImapClient(
                     env('IMAP_HOST', 'webmail.eetstravel.com'),
-                    "booking-test@eetstravel.com",
-                    "Ffans82guQ9h",
+                    config('imap.accounts.default.username'),
+                    config('imap.accounts.default.password'),
                     ImapClient::ENCRYPT_SSL
                 );
            
@@ -156,9 +156,8 @@ public function currentBookings()
 	
   try{     
 		  
-		   $results = $this ->server->getMessagesByCriteria('test',$perPage,$page, 'DESC');
-		 
-$results = $this ->server->getMessages($perPage,$page, 'DESC');
+		   // (a leftover search for the invalid IMAP criterion "test" was removed here)
+$results = $this->server->getMessagesByCriteria('SUBJECT "Request #' . (int) $package_id . '"', 0, 0, 'DESC'); // the mail server searches; only matching emails are downloaded
 		  
 		
 		 $emails = [];
@@ -204,7 +203,7 @@ $results = $this ->server->getMessages($perPage,$page, 'DESC');
 
 		try {
 
-			$results = $this->server->getMessages($perPage, $page, 'DESC');
+			$results = $this->server->getMessagesByCriteria('SUBJECT "Request #' . (int) $package_id . '"', 0, 0, 'DESC'); // the mail server searches; only matching emails are downloaded
 
 			$emails = [];
 			foreach ($results as $result) {

@@ -249,11 +249,12 @@ $(document).ready(function() {
       type: $('#data-form').attr('method'),
       data: formData,
       success: function(result) {
-        location.reload();
+        window.location.assign(result.route);
         console.log(result);
       },
       error: function(result) {
-        console.log(result);
+        $('#office-invoice-feedback').remove();
+        $('<div id="office-invoice-feedback" class="alert alert-danger" role="alert"></div>').text(result.responseJSON?.message || 'The office invoice could not be saved. Check all fields and retry.').prependTo('#data-form');
       }
     });
   });

@@ -78,15 +78,19 @@ class TemplatesController extends Controller
            
                 $this->server = new ImapClient(
                     env('IMAP_HOST', 'eetstravel.com'),
-                    "booking-test@eetstravel.com",
-                    "Ffans82guQ9h",
+                    config('imap.accounts.default.username'),
+                    config('imap.accounts.default.password'),
                     ImapClient::ENCRYPT_SSL
                 );
            
 
             return $this->server->isConnected();
-        } catch (AuthenticationFailedException $e) {
-            echo "Authorization failed : " . $user->email_login . "\r\n";
+        } catch (\Throwable $e) {
+            // a clear JSON error instead of a 500 (wrong login, server down, PHP imap extension missing)
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+                'error' => true,
+                'message' => 'The mailbox could not be reached: ' . $e->getMessage(),
+            ], 503));
         }
     }
     public function setClient()
@@ -183,9 +187,10 @@ class TemplatesController extends Controller
 
     public function update(Request $request, $id)
     {
-        $template = Templates::query()->where('id', $id)->first();
+        $request->validate(['name' => 'required|string|max:191', 'content' => 'required|string']);
+        $template = Templates::query()->findOrFail($id);
         $template->name = ucfirst($request->input('name'));
-        $template->content = $request->input('content');
+        $template->content = \App\Helper\HtmlSanitizer::clean($request->input('content'));
         $template->save();
 
         LaravelFlashSessionHelper::setFlashMessage("Template $template->name edited", 'success');
@@ -194,10 +199,11 @@ class TemplatesController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate(['name' => 'required|string|max:191', 'content' => 'required|string', 'id' => 'required|integer']);
         $template = new Templates();
         $template->name = ucfirst($request->input('name'));
         $template->service_id = $request->input('id');
-        $template->content = $request->input('content');
+        $template->content = \App\Helper\HtmlSanitizer::clean($request->input('content'));
         $template->save();
 
         LaravelFlashSessionHelper::setFlashMessage("Template $template->name created", 'success');

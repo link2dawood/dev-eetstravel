@@ -377,12 +377,12 @@
 
                 openNewEmailModal(){
                     this.clearForm();
-                    $("#NewEmail").modal();
+                    $("#NewEmail").modal("show");
                 },
 
                 openModal(email){
                     this.currentMail = email;
-                    $("#modalCreate").modal();
+                    $("#modalCreate").modal("show");
                 },
 
                 fetchData(get = false, folder=false) {

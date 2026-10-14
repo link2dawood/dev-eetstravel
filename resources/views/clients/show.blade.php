@@ -69,11 +69,11 @@
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.Country')!!}</strong></td>
-                                                    <td>{!! \App\Helper\CitiesHelper::getCountryById($client->country)['name']!!}</td>
+                                                    <td>{{ \App\Helper\CitiesHelper::getCountryById($client->country)['name'] ?: '-' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.City')!!}</strong></td>
-                                                    <td>{!! \App\Helper\CitiesHelper::getCityById($client->city)['name']!!}</td>
+                                                    <td>{{ \App\Helper\CitiesHelper::getCityById($client->city)['name'] ?: '-' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.Address')!!}</strong></td>

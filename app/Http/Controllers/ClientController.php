@@ -41,29 +41,38 @@ class ClientController extends Controller
      *
      * @return  \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Index - client';
 
-        $cacheKey = 'clients_index_data_' . md5(request()->getQueryString());
-        $clients = \Cache::remember($cacheKey, 300, function () {
-            return Client::leftJoin('countries', 'countries.alias', '=', 'clients.country')
-                ->leftJoin('cities', 'cities.id', '=', 'clients.city')
-                ->select([
-                    'clients.id',
-                    'clients.name',
-                    'clients.address',
-                    'clients.account_no',
-                    'clients.company_address',
-                    'clients.invoice_address',
-                    'clients.work_phone',
-                    'clients.work_email',
-                    'countries.name as country_name',
-                    'cities.name as city_name'
-                ])
-                ->orderBy('clients.name', 'asc')
-                ->paginate(15);
-        });
+        // No cache: a new client used to stay invisible for up to 5 minutes
+        $search = trim((string) $request->input('search'));
+        $clients = Client::leftJoin('countries', 'countries.alias', '=', 'clients.country')
+            ->leftJoin('cities', 'cities.id', '=', 'clients.city')
+            ->select([
+                'clients.id',
+                'clients.name',
+                'clients.address',
+                'clients.account_no',
+                'clients.company_address',
+                'clients.invoice_address',
+                'clients.work_phone',
+                'clients.work_email',
+                'countries.name as country_name',
+                'cities.name as city_name'
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('clients.name', 'like', "%{$search}%")
+                        ->orWhere('clients.work_email', 'like', "%{$search}%")
+                        ->orWhere('clients.work_phone', 'like', "%{$search}%")
+                        ->orWhere('countries.name', 'like', "%{$search}%")
+                        ->orWhere('cities.name', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('clients.name', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('clients.index', compact('clients', 'title'));
     }
@@ -90,19 +99,21 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-		$request->password =  Crypt::encryptString($request->password);
 
-
-        $client = $this->clients->create($request->except(['attach']));
-		$client->password = $request->password;
-		$client->save();
+        // the password is stored encrypted only (it used to be saved in plain text first)
+        $client = $this->clients->create($request->except(['attach', 'password', 'files']));
+        if ($request->filled('password')) {
+            $client->password = Crypt::encryptString($request->input('password'));
+            $client->save();
+        }
 
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name created", 'success');
 
         $this->addFile($request, $client);
-        $data = ['route' => route('clients.index')];
-		return redirect()->back();
-        //return response()->json($data);
+
+        // the form saves over AJAX: a redirect reply left the user on the form
+        $route = route('clients.show', $client->id);
+        return $request->ajax() || $request->wantsJson() ? response()->json(['route' => $route]) : redirect($route);
     }
 
     /**
@@ -160,48 +171,44 @@ class ClientController extends Controller
      */
     public function update($id, UpdateClientRequest $request)
     {
-		$request->password =  Crypt::encryptString($request->password);
         $request = CitiesHelper::setCityGeneral($request);
-		$contacts = $request->get('contacts');
-		
+        $contacts = $request->get('contacts');
 
-        $this->clients->updateById($id, $request->except(['attach','contacts']));
-		$client = Client::find($id);
-		$client->password = $request->password;
-		$client->save();
-        $client = $this->clients->getById($id);
-
-		
-		if($contacts){
-            $data = ['hotelContacts' => true, 'fullNameErrorValidate' => trans('main.ContactsshouldnothaveanemptyFullName')];
-            foreach ($contacts as $itemContact){
-                if(!$itemContact['contact_full_name']){
-					return redirect()->back();
-                    return response()->json($data);
-                }
+        // every contact needs a name (this used to send the user back without a word)
+        foreach ((array) $contacts as $itemContact) {
+            if (!trim((string) ($itemContact['contact_full_name'] ?? ''))) {
+                $message = trans('main.ContactsshouldnothaveanemptyFullName');
+                return $request->ajax() || $request->wantsJson()
+                    ? response()->json(['message' => $message, 'errors' => ['contacts' => [$message]]], 422)
+                    : redirect()->back()->withInput()->with('error', $message);
             }
         }
 
-		ClientContacts::query()->where('client_id', $id)->delete();
-
-        if($contacts){
-            foreach ($contacts as $contact) {
-                $clientContact = new ClientContacts();
-                $clientContact->full_name = $contact['contact_full_name'];
-                $clientContact->mobile_phone = $contact['contact_mobile_phone'];
-                $clientContact->work_phone = $contact['contact_work_phone'];
-                $clientContact->email = $contact['contact_email'];
-                $clientContact->client_id = $id;
-                $clientContact->save();
-            }
+        $this->clients->updateById($id, $request->except(['attach', 'contacts', 'password', 'files']));
+        $client = Client::findOrFail($id);
+        // an empty password field keeps the current password (it used to be overwritten)
+        if ($request->filled('password')) {
+            $client->password = Crypt::encryptString($request->input('password'));
+            $client->save();
         }
 
-		LaravelFlashSessionHelper::setFlashMessage("Client $client->name edited", 'success');
+        ClientContacts::query()->where('client_id', $id)->delete();
+        foreach ((array) $contacts as $contact) {
+            $clientContact = new ClientContacts();
+            $clientContact->full_name = $contact['contact_full_name'];
+            $clientContact->mobile_phone = $contact['contact_mobile_phone'] ?? null;
+            $clientContact->work_phone = $contact['contact_work_phone'] ?? null;
+            $clientContact->email = $contact['contact_email'] ?? null;
+            $clientContact->client_id = $id;
+            $clientContact->save();
+        }
+
+        LaravelFlashSessionHelper::setFlashMessage("Client $client->name edited", 'success');
 
         $this->addFile($request, $client);
-        $data = ['route' => route('clients.index')];
-		return redirect()->back();
-        return response()->json($data);
+
+        $route = route('clients.show', $id);
+        return $request->ajax() || $request->wantsJson() ? response()->json(['route' => $route]) : redirect($route);
     }
 
     /**
@@ -234,7 +241,7 @@ class ClientController extends Controller
         Comment::query()->where('reference_type', Comment::$services['client'])->where('reference_id', $id)->delete();
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name deleted", 'success');
 
-        return URL::to('clients');
+        return request()->ajax() ? URL::to('clients') : redirect('clients');
     }
 
 	

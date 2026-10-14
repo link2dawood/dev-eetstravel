@@ -40,9 +40,9 @@
                     <td class="text-end">{{ number_format((float) $invoice->total_amount, 2) }}</td>
                     <td><span class="badge {{ $invoice->status === 'paid' ? 'bg-success' : ($invoice->status === 'partial' ? 'bg-warning' : 'bg-danger') }} text-white">{{ $invoice->status_label }}</span></td>
                     <td class="text-end text-nowrap">
-                        <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-warning btn-sm btn-icon" title="View"><i class="ti ti-eye"></i></a>
+                        <a href="{{ route('invoices.show', $invoice->link_id ?? $invoice->id) }}" class="btn btn-warning btn-sm btn-icon" title="View"><i class="ti ti-eye"></i></a>
                         @if(Auth::user()->can('invoices.edit'))
-                            <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn btn-primary btn-sm btn-icon" title="Edit"><i class="ti ti-edit"></i></a>
+                            <a href="{{ route('invoices.edit', $invoice->link_id ?? $invoice->id) }}" class="btn btn-primary btn-sm btn-icon" title="Edit"><i class="ti ti-edit"></i></a>
                         @endif
                     </td>
                 </tr>

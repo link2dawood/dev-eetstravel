@@ -36,6 +36,7 @@ use Amranidev\Ajaxis\Ajaxis;
 use URL;
 use App\Offices;
 use PDF;
+use App\Services\InvoicePayments;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Schema;
 
@@ -139,7 +140,7 @@ class ClientInvoiceController extends Controller
     {
 
         $tour = Tour::all()->first();
-        $quotation = Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first();
+        $quotation = $tour ? Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first() : null;
 
     $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
@@ -163,7 +164,7 @@ class ClientInvoiceController extends Controller
             return URL::to('clients/' . $id);
         }
 
-        $transactions = ClientInvoices::find($id);
+        $transactions = ClientInvoices::findOrFail($id);
 		//dd($transactions->client);
         $tour = Tour::find($transactions->tour_id);
 
@@ -189,118 +190,62 @@ class ClientInvoiceController extends Controller
     }
     public function store(Request $request)
     {
-
-        $validatedData = $this->validateTransaction($request);
-		$currentDate = Carbon::now();
-        $invoice_no = 'INV-' . uniqid();
-        $extra_amount = 0;
-        $items = $request->items;
-        if ($items) {
-            foreach ($items as $item) {
-                $extra = $item["quantity"] * $item["amount"];
-                $extra_amount += $extra ;
-            }
-        }
-        $total_amount =  $extra_amount;
-
-        $payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-        if(!empty($paid_amount)){
-            $payment_amount = 0;
-            foreach ($paid_amount as $paidamount) {
-                $payment_amount += $paidamount;
-            }
-         
-            if( $total_amount< $payment_amount){
-                LaravelFlashSessionHelper::setFlashMessage("Payments Cannot be  Greather than total Amount", 'error');
-             
-                return redirect()->back();
-             
-            }
-        }
-		
-        $transaction = ClientInvoices::create([
-            "invoice_no"=>$invoice_no,
-            "date"=> $currentDate->addWeek(2),
-			"currency"=> $request->currency,
-            "office_id"=> $request->office_id,
-            "tour_id"=> $request->tour_id,
-            "client_id"=> $request->client_id,
-            "amount_receiveable"=> $total_amount,
-			"extra_cost"=>  $request->extra_cost,
-			"note"=>  $request->note,
-        ]);
-        
-        if ($items) {
-            foreach ($items as $item) {
-                try {
-                    if (!empty($item["item_name"]) and !empty($item["quantity"]) and  !empty($item["amount"])) {
-                        DB::table('invoice_items')->insert([
-                            'item_name' => $item["item_name"],
-                            'quantity' => $item["quantity"],
-							'vat' => $item["vat"],
-                            'amount' => $item["amount"],
-							'total_amount' => $item["total_amount"],
-                            "invoice_id" => $transaction->id,
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    dd($e->getMessage());
-                }
-            }
-        }
-        $payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-        $i = 0;
-        if(!empty($payment_methods)){
-        foreach ($payment_methods as $payment_method) {
-            // dd($payment_method == "null");
-            if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-                dd("ok");
-            } else {
-               // dd($payment_method);
-                $transaction = Transaction::create([
-                    "date" =>  $payment_date[$i],
-                    "trans_no" => 'TXN-' . uniqid(),
-                    "amount" => $paid_amount[$i],
-                    "pay_to" => "Client",
-                    "invoice_id" => $transaction->id,
-                    "payment_method" => $payment_method,
-                ]);
-            }
-            $i += 1;
-        }
-        }
-        return redirect()->route('accounting.index');
+        return $this->saveInvoice($request);
     }
     public function validateTransaction(Request $request)
     {
-        // Build rules dynamically: require office only when the table exists and has rows.
-        $rules = [
-            'currency' => 'required',
-            'tour_id' => 'required',
-        ];
+        return $request->validate([
+            'currency' => 'required|in:EUR,USD,CHF',
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'tour_id' => 'required|integer|exists:tours,id',
+            'client_id' => 'required|integer|exists:clients,id',
+            'items' => 'required|array|min:1',
+            'items.*.item_name' => 'required|string|max:191',
+            'items.*.quantity' => 'required|numeric|min:0.01|max:999999',
+            'items.*.amount' => 'required|numeric|min:0|max:999999999',
+            'items.*.vat' => 'required|numeric|between:0,1',
+            'note' => 'nullable|string|max:400',
+            'extra_cost' => 'nullable|numeric|min:0',
+        ]);
+    }
 
-        try {
-            if (Schema::hasTable((new Offices)->getTable()) && Offices::count() > 0) {
-                $rules['office_id'] = 'required';
-            } else {
-                // No offices available (or table missing) — accept office_id as nullable so form can be submitted.
-                $rules['office_id'] = 'nullable';
-            }
-        } catch (\Exception $e) {
-            // In case of any DB/schema issues, fallback to nullable to avoid blocking the form.
-            \Log::warning('validateTransaction: could not check offices table: ' . $e->getMessage());
-            $rules['office_id'] = 'nullable';
+    private function saveInvoice(Request $request, $id = null)
+    {
+        $this->validateTransaction($request);
+        $payments = InvoicePayments::rows($request);
+        $items = [];
+        foreach ($request->items as $item) {
+            $items[] = [
+                'item_name' => $item['item_name'], 'quantity' => $item['quantity'],
+                'amount' => $item['amount'], 'vat' => $item['vat'],
+                'total_amount' => round($item['quantity'] * $item['amount'] * (1 + $item['vat']), 2),
+            ];
         }
-
-        $this->validate($request, $rules);
+        $total = round(array_sum(array_column($items, 'total_amount')), 2);
+        DB::transaction(function () use ($request, $id, $payments, $items, $total) {
+            $invoice = $id ? ClientInvoices::whereKey($id)->lockForUpdate()->firstOrFail() : new ClientInvoices();
+            $total = round($total + (float) $request->input('extra_cost', $invoice->extra_cost ?? 0), 2);
+            // Payment editing is explicit: a missing/failed async payment form must never erase existing payments.
+            $replacePayments = $request->boolean('payments_loaded');
+            $alreadyPaid = $id && !$replacePayments ? Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->sum('amount') : 0;
+            InvoicePayments::ensureWithinBalance($payments, $total, $alreadyPaid);
+            $invoice->fill($request->only(['currency', 'office_id', 'tour_id', 'client_id', 'note', 'extra_cost']));
+            $invoice->amount_receiveable = $total;
+            if (!$id) {
+                $invoice->invoice_no = 'INV-' . \Illuminate\Support\Str::uuid();
+                $invoice->date = Carbon::today()->format('Y-m-d');
+            }
+            $invoice->save();
+            DB::table('invoice_items')->where('invoice_id', $invoice->id)->delete();
+            foreach ($items as $item) DB::table('invoice_items')->insert($item + ['invoice_id' => $invoice->id]);
+            if ($id && $replacePayments) Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->delete();
+            InvoicePayments::save($payments, $invoice->id, 'Client');
+        });
+        return redirect()->route('accounting.index');
     }
     public function edit($id, Request $request)
     {
-        $transactions = ClientInvoices::find($id);
+        $transactions = ClientInvoices::findOrFail($id);
     $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
@@ -309,95 +254,7 @@ class ClientInvoiceController extends Controller
     }
     public function update($id, Request $request)
     {
-        $this->validateTransaction($request);
-		
-		$extra_amount = 0;
-        $items = $request->items;
-        if ($items) {
-            foreach ($items as $item) {
-                $extra = $item["quantity"] * $item["amount"];
-				$extra = $extra + ($extra *  $item["vat"] );
-                $extra_amount += $extra ;
-            }
-        }
-        $total_amount = $extra_amount;
-
-        $payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-        if(!empty($paid_amount)){
-            $payment_amount = 0;
-            foreach ($paid_amount as $paidamount) {
-                $payment_amount += $paidamount;
-            }
-         
-            if( $total_amount< $payment_amount){
-                LaravelFlashSessionHelper::setFlashMessage("Payments Cannot be  Greather than total Amount", 'error');
-             
-                return redirect()->back();
-             
-            }
-        }
-		
-        $transaction = ClientInvoices::find($id);
-        $transaction->update([
-			"currency"=> $request->currency,
-            "office_id"=> $request->office_id,
-            "tour_id"=> $request->tour_id,
-            "client_id"=> $request->client_id,
-            "amount_receiveable"=> $total_amount,
-		]);
-	
-		DB::table('invoice_items')->where("invoice_id", $id)->delete();
-			
-		if ($items) {
-            foreach ($items as $item) {
-                try {
-                    if (!empty($item["item_name"]) and !empty($item["quantity"]) and  !empty($item["amount"])) {
-                        DB::table('invoice_items')->insert([
-                            'item_name' => $item["item_name"],
-                            'quantity' => $item["quantity"],
-							'vat' => $item["vat"],
-                            'amount' => $item["amount"],
-							'total_amount' => $item["total_amount"],
-                            "invoice_id" => $transaction->id,
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    dd($e->getMessage());
-                }
-            }
-        }
-		
-		Transaction::where('invoice_id', $id)->where("pay_to", "Client")->delete();
-		
-		$payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-        $i = 0;
-        if(!empty($payment_methods)){
-			
-			foreach ($payment_methods as $payment_method) {
-				// dd($payment_method == "null");
-				if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-					dd("ok");
-				} else {
-				   // dd($payment_method);
-				
-					Transaction::create([
-						"date" =>  $payment_date[$i],
-						"trans_no" => 'TXN-' . uniqid(),
-						"amount" => $paid_amount[$i],
-						"pay_to" => "Client",
-						"invoice_id" => $transaction->id,
-						"payment_method" => $payment_method,
-					]);
-					
-				}
-				$i += 1;
-			}
-        }
-        return redirect()->route('accounting.index');
+        return $this->saveInvoice($request, $id);
     }
     public function DeleteMsg($id, Request $request)
     {
@@ -409,12 +266,15 @@ class ClientInvoiceController extends Controller
     }
     public function destroy($id)
     {
-
-        $transaction = ClientInvoices::find($id);
-        $transaction->find($id)->delete();
-        LaravelFlashSessionHelper::setFlashMessage("Transaction $transaction->tours deleted", 'success');
-
-        return URL::to('accounting');
+        DB::transaction(function () use ($id) {
+            $invoice = ClientInvoices::whereKey($id)->lockForUpdate()->firstOrFail();
+            if (Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['invoice' => 'An invoice with payments cannot be deleted.']);
+            }
+            DB::table('invoice_items')->where('invoice_id', $id)->delete();
+            $invoice->delete();
+        });
+        return request()->ajax() ? URL::to('accounting') : redirect()->route('accounting.index');
     }
     public function supplierdropdown($id, Request $request)
     {
@@ -503,40 +363,18 @@ class ClientInvoiceController extends Controller
 
     public function pdfExport(Request $request, $id)
     {
+        return PDF::loadView('export.accounting.invoice', $this->invoiceExportData($id))->setPaper('a4')->stream('invoice-' . $id . '.pdf');
+    }
 
-        $transactions = ClientInvoices::find($id);
-		$tour = Tour::find($transactions->tour_id);
-		$quot = $tour->quotations->where("is_confirm", 1)->first();
-		if(!empty($quot)){
-        $quotation = Quotation::findOrFail($quot->id);
-		$calculations = $quotation->calculation;
-		}
-		else{
-			$quotation = [];
-			$calculations =[];
-		}
-        
-    $office = Schema::hasTable((new Offices)->getTable()) ? Offices::find($transactions->office_id) : null;
-        $client = Client::find($transactions->client_id);
-        $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
-        $tourdays = $tour->tour_days;
-        $invoice_items = DB::table('invoice_items')->where("invoice_id", $transactions->id)->get();
-
-        view()->share([
-            'tour' => $tour,
-            'office' => $office,
-            'client' => $client,
-            'transactions' => $transactions,
-            'tourDates' => $tourDates,
-            'quotation' => $quotation,
-            'calculations' => $calculations,
-            'tourdays' => $tourdays,
-            'invoice_items' => $invoice_items,
-        ]);
-        PDF::setOptions(['isHtml5ParserEnabled' => true, 'defaultPaperSize' => 'a3']);
-        $pdf = PDF::loadView('export.accounting.billingPdf');
-        $pdfName = 'invoice.pdf';
-        return $pdf->stream(str_replace(" ", "_", $pdfName));
+    private function invoiceExportData($id): array
+    {
+        $invoice = ClientInvoices::findOrFail($id);
+        return [
+            'invoice' => $invoice, 'office' => Offices::findOrFail($invoice->office_id),
+            'client' => Client::findOrFail($invoice->client_id), 'tour' => Tour::findOrFail($invoice->tour_id),
+            'items' => DB::table('invoice_items')->where('invoice_id', $id)->get(),
+            'payments' => Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->orderBy('date')->get(),
+        ];
     }
     public function getItemInvoiceView(Request $request)
     {
@@ -560,7 +398,7 @@ class ClientInvoiceController extends Controller
     public function getTourquotation($tour_id)
     {
         $tour = Tour::find($tour_id);
-        $quotation = Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first();
+        $quotation = $tour ? Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first() : null;
         if (!empty($quotation)) {
             $input =$quotation->id;
         } else {
@@ -570,32 +408,13 @@ class ClientInvoiceController extends Controller
     }
     public function excelExport(Request $request, $id, string $export = "xlsx")
     {
-		
-        $transactions = ClientInvoices::find($id);
-		
-        $tour = Tour::find($transactions->tour_id);
-		$quot = $tour->quotations->where("is_confirm", 1)->first();
-		if(!empty($quot)){
-        $quotation = Quotation::findOrFail($quot->id);
-		$calculations = $quotation->calculation;
-		}
-		else{
-			$quotation = [];
-			$calculations =[];
-		}
-    $office = Schema::hasTable((new Offices)->getTable()) ? Offices::find($transactions->office_id) : null;
-        $client = Client::find($transactions->client_id);
-        $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
-        $tourdays = $tour->tour_days;
-        $invoice_items = DB::table('invoice_items')->where("invoice_id", $transactions->id)->get();
-
-        if ($export == 'csv') {
-            // $this->csvExport($tour, $type);
-            return back();
-        }
-
-        // Return the download; it was previously built, discarded, and the user sent back()
-        return $this->prepareExport($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items, $export);
+        $data = $this->invoiceExportData($id);
+        $sheet = new class($data) implements \Maatwebsite\Excel\Concerns\FromView {
+            private array $data;
+            public function __construct(array $data) { $this->data = $data; }
+            public function view(): \Illuminate\Contracts\View\View { return view('export.accounting.invoice', $this->data); }
+        };
+        return Excel::download($sheet, 'invoice-' . $id . '.xlsx');
     }
     public function prepareExport($tour, $office, $client, $transactions, $tourDates, $quotation, $calculations, $tourdays, $invoice_items, $export)
     {
@@ -648,45 +467,22 @@ class ClientInvoiceController extends Controller
     }
 	public function add_payment(Request $request,$id)
     {
-        $transactions = ClientInvoices::find($id);
+        $transactions = ClientInvoices::findOrFail($id);
     $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
         $tours = Tour::all();
         $clients = Client::all();
         $quotation = Quotation::find($transactions->quotation_id);
         return view('accounting.payment_create', compact('tours', 'clients', 'transactions', 'offices', 'quotation'));
     }
-	public function payment_store($id,Request $request)
+    public function payment_store($id, Request $request)
     {
-		
-		
-		$payment_methods = $request->payment_method;
-        $payment_date = $request->paymentdate;
-        $paid_amount = $request->paid_amount;
-        $i = 0;
-        if(!empty($payment_methods)){
-			
-			foreach ($payment_methods as $payment_method) {
-				// dd($payment_method == "null");
-				if ($payment_method == "null" ||  $payment_date[$i] == "null" ||   $paid_amount[$i] == "null"  ) {
-					dd("ok");
-				} else {
-				   // dd($payment_method);
-				
-					Transaction::create([
-						"date" =>  $payment_date[$i],
-						"trans_no" => 'TXN-' . uniqid(),
-						"amount" => $paid_amount[$i],
-						"pay_to" => "Client",
-						"invoice_id" => $id,
-						"payment_method" => $payment_method,
-					]);
-					
-				}
-				$i += 1;
-			}
-        }
-		
-
-        return redirect()->route("accounting.show" ,$id);
+        $rows = InvoicePayments::rows($request, true);
+        DB::transaction(function () use ($id, $rows) {
+            $invoice = ClientInvoices::whereKey($id)->lockForUpdate()->firstOrFail();
+            $paid = Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->sum('amount');
+            InvoicePayments::ensureWithinBalance($rows, $invoice->amount_receiveable, $paid);
+            InvoicePayments::save($rows, $id, 'Client');
+        });
+        return redirect()->route('accounting.show', $id);
     }
 }

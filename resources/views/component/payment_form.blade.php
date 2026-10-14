@@ -1,6 +1,5 @@
 <div class="item-contact row " style="margin-bottom: 0px">
     <div class="col-md-2">
-        <input type="hidden" name="_token" value="FoLCzxpWMutk0cpjxl0Br5sZz2YQFviZIvm1FuJv">
 
         <div class="form-group">
             <label for="date"> Date *</label>
@@ -16,7 +15,7 @@
     <div class="col-md-2">
         <div class="form-group">
             <label for="paid_amount">Paid *</label>
-            <input class="form-control" name="paid_amount[]" id="paid_amount" type="number" value="" required>
+            <input class="form-control" name="paid_amount[]" id="paid_amount" type="number" min="0.01" step="0.01" value="" required>
         </div>
     </div>
 
@@ -37,3 +36,5 @@
         <div class="form-group" style="margin-top: 20px"><button id="delete_contact_item"
                 class="delete btn btn-danger btn-sm" type="button"><i class="fa fa-trash-o"></i></button></div>
     </div>
+
+</div>

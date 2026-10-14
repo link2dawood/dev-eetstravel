@@ -63,33 +63,36 @@ class BalanceAmountController extends Controller {
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
-    public function create(Request $request, $id)
+    public function create(Request $request, $id = null)
     {
-		$office = Offices::find($id);
+        if (!$id) return redirect()->route('office.index')->with('info', 'Choose an office before adding financial records.');
+		$office = Offices::findOrFail($id);
         return view('office.office_balance.create', compact("office"));
     }
 	public function validateData(Request $request){
 	
-		$this->validate($request, [
-            'subject_of_balance'  => 'required',
-            'month'     => 'required',
-            'total_amount'     => 'required',
-			'due_date'     => 'required',
+		return $this->validate($request, [
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'subject_of_balance'  => 'required|string|max:200',
+            'month'     => 'required|date',
+            'total_amount'     => 'required|numeric|min:0|max:999999999.99',
+			'due_date' => 'required|date',
         ]);
 	}
     public function store(Request $request){
-		$this->validateData($request);
-        Office_Balance::create($request->except(["attach"]));
-        return redirect()->back();
+		$validated = $this->validateData($request);
+        Office_Balance::create($validated);
+        return redirect()->route('office.show', $request->office_id);
     }
     public function edit($id, Request $request){
-		$office_balance = Office_Balance::find($id);
+		$office_balance = Office_Balance::findOrFail($id);
 		return view('office.office_balance.edit',compact('office_balance'));
 	}
 	public function update($id,Request $request){
-        $office_balance = Office_Balance::find($id);
-        $office_balance->update($request->except(["attach"]));
-		return redirect()->back();
+        $validated = $this->validateData($request);
+        $office_balance = Office_Balance::findOrFail($id);
+        $office_balance->update($validated);
+		return redirect()->route('office.show', $request->office_id);
 	}
 	public function DeleteMsg($id, Request $request)
     {
@@ -102,13 +105,19 @@ class BalanceAmountController extends Controller {
 	public function destroy($id)
     {
 
-        $office_balance = Office_Balance::find($id);
+        $office_balance = Office_Balance::findOrFail($id);
         $office_balance->find($id)->delete();
       LaravelFlashSessionHelper::setFlashMessage("Office Balance $office_balance->subject_of_balance deleted", 'success');
 
-        return URL::to('office');
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
     
      
     
+    public function show($id, Request $request)
+    {
+        $record = Office_Balance::findOrFail($id);
+        return redirect()->route('office.show', $record->office_id);
+    }
+    public function index() { return redirect()->route('office.index'); }
 }

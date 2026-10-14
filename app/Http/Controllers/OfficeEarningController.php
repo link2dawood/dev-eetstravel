@@ -63,32 +63,35 @@ class OfficeEarningController extends Controller {
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
     
-    public function create(Request $request, $id)
+    public function create(Request $request, $id = null)
     {
-		$office = Offices::find($id);
+        if (!$id) return redirect()->route('office.index')->with('info', 'Choose an office before adding financial records.');
+		$office = Offices::findOrFail($id);
         return view('office.office_earning.create', compact('office'));
     }
     public function store(Request $request){
-		$this->validateData($request);
-        Office_Earnings::create($request->except(["attach"]));
-        return redirect()->back();
+		$validated = $this->validateData($request);
+        Office_Earnings::create($validated);
+        return redirect()->route('office.show', $request->office_id);
     }
 	public function validateData(Request $request){
 	
-		$this->validate($request, [
-            'month'  => 'required',
-            'revenue'     => 'required',
-            'profit'     => 'required',
+		return $this->validate($request, [
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'month'  => 'required|date',
+            'revenue'     => 'required|numeric|min:0|max:999999999.99',
+            'profit'     => 'required|numeric|min:0|max:999999999.99',
         ]);
 	}
     public function edit($id, Request $request){
-		$office_earnings = Office_Earnings::find($id);
+		$office_earnings = Office_Earnings::findOrFail($id);
 		return view('office.office_earning.edit', compact('office_earnings'));
 	}
 	public function update($id,Request $request){
-        $office_earnings = Office_Earnings::find($id);
-        $office_earnings->update($request->except(["attach"]));
-		return redirect()->back();
+        $validated = $this->validateData($request);
+        $office_earnings = Office_Earnings::findOrFail($id);
+        $office_earnings->update($validated);
+		return redirect()->route('office.show', $request->office_id);
 	}
     public function DeleteMsg($id, Request $request)
     {
@@ -101,12 +104,18 @@ class OfficeEarningController extends Controller {
 	public function destroy($id)
     {
 
-        $office_earnings = Office_Earnings::find($id);
+        $office_earnings = Office_Earnings::findOrFail($id);
         $office_earnings->find($id)->delete();
       LaravelFlashSessionHelper::setFlashMessage("Office $office_earnings->month deleted", 'success');
 
-        return URL::to('office');
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
      
     
+    public function show($id, Request $request)
+    {
+        $record = Office_Earnings::findOrFail($id);
+        return redirect()->route('office.show', $record->office_id);
+    }
+    public function index() { return redirect()->route('office.index'); }
 }

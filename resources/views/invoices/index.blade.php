@@ -41,15 +41,15 @@
             	<table id="inovices-table" class="table table-striped table-bordered table-hover bootstrap-table" style='background:#fff; width: 100%;'>
 					<thead>
 						<tr>
-							<th onclick="sortTable(0, 'inovices-table')">id <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(1, 'inovices-table')">Invoice No <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(2, 'inovices-table')">Due Date <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(3, 'inovices-table')">Received Date <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(4, 'inovices-table')">Tour <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(5, 'inovices-table')">Service <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(6, 'inovices-table')">Office Name <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(7, 'inovices-table')">Total Price <i class="fa fa-sort"></i></th>
-							<th onclick="sortTable(8, 'inovices-table')">Status <i class="fa fa-sort"></i></th>
+							<th>id <i class="fa fa-sort"></i></th>
+							<th>Invoice No <i class="fa fa-sort"></i></th>
+							<th>Due Date <i class="fa fa-sort"></i></th>
+							<th>Received Date <i class="fa fa-sort"></i></th>
+							<th>Tour <i class="fa fa-sort"></i></th>
+							<th>Service <i class="fa fa-sort"></i></th>
+							<th>Office Name <i class="fa fa-sort"></i></th>
+							<th>Total Price <i class="fa fa-sort"></i></th>
+							<th>Status <i class="fa fa-sort"></i></th>
 							<th class="actions-button">Actions</th>
 						</tr>
 					</thead>
@@ -89,11 +89,3 @@
 @endsection
 
 @include('component.delete_modal_simple')
-@push('scripts')
-<script src="{{ asset('js/bootstrap-tables.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeBootstrapTable('inovices-table');
-    });
-</script>
-@endpush

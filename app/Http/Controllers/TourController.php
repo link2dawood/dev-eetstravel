@@ -1329,7 +1329,7 @@ public function store(StoreTourRequest $request)
                     'invoices.receivedDate',
                     'invoices.total_amount',
                     'invoices.extra_amount',
-                    'invoices.amount_payable',
+                    'invoices.total_amount as amount_payable',
                     'offices.office_name',
                     'packages.name as package_name',
                     'invoices_tours.invoices_id'
@@ -1398,7 +1398,7 @@ public function store(StoreTourRequest $request)
                 ->leftJoin('office_fees as offices', 'offices.id', '=', 'client_invoices.office_id')
                 ->select(
                     'client_invoices.id',
-                    'client_invoices.total_amount',
+                    'client_invoices.amount_receiveable as total_amount',
                     'client_invoices.created_at',
                     'client_invoices.date',
                     'offices.office_name',

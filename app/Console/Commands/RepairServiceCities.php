@@ -39,7 +39,7 @@ class RepairServiceCities extends Command
 
     protected $description = 'Fix supplier cities left pointing to the wrong country by an old import';
 
-    const TABLES = ['hotels', 'events', 'restaurants', 'guides', 'transfers'];
+    const TABLES = ['hotels', 'events', 'restaurants', 'guides', 'transfers', 'clients'];
 
     // City names that are also common words in supplier names, addresses and email domains.
     const GENERIC = ['hof', 'orange', 'tours', 'mitte', 'centre', 'center', 'centrum', 'central', 'city', 'airport',
@@ -159,7 +159,9 @@ class RepairServiceCities extends Command
     private function plan($table)
     {
         $records = DB::table($table)->whereNull('deleted_at')
-            ->get(['id', 'name', 'address_first', 'address_second', 'city', 'country', 'website', 'work_email']);
+            ->get(array_values(array_filter(['id', 'name', 'address', 'address_first', 'address_second', 'city', 'country', 'website', 'work_email'], function ($column) use ($table) {
+                return \Illuminate\Support\Facades\Schema::hasColumn($table, $column); // clients have "address", suppliers "address_first"
+            })));
 
         // Countries this table really uses (at least 5 suppliers); keeps US/AU namesakes out of the hints
         $usedCountries = $records->map(function ($record) {

@@ -322,10 +322,17 @@ class ValidationService
             ? 'clients,work_email,' . $clientId
             : 'clients,work_email';
 
+        // a client keeps its own contact email when edited
+        $contactEmailUnique = $isUpdate && $clientId
+            ? 'clients,contact_email,' . $clientId
+            : 'clients,contact_email';
+
         return [
-            'first_name' => self::nameRules(true, 191, 2),
+            // the form field is "name" (it used to ask for first_name, so updates always failed);
+            // clients are often companies, so digits and & , ( ) / are allowed
+            'name' => ['required', 'string', 'max:191', 'min:2', 'regex:/^[\pL\pN\s\-\.\'&,()\/]+$/u'],
             'work_email' => self::emailRules(true, $emailUnique),
-            'contact_email' => self::emailRules(false, 'clients,contact_email'),
+            'contact_email' => self::emailRules(false, $contactEmailUnique),
             'work_phone' => self::phoneRules(true),
             'contact_phone' => self::phoneRules(false),
             'address' => self::addressRules(true, 500, 5)

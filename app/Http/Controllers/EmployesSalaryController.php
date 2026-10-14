@@ -66,35 +66,38 @@ class EmployesSalaryController extends Controller {
         return  DatatablesHelperController::getEditButton($url, $isQuotation, $perm).$action;
 //        return DatatablesHelperController::getActionButton($url, $isQuotation, $tour);
     }
-    public function create(Request $request, $id)
+    public function create(Request $request, $id = null)
     {
+        if (!$id) return redirect()->route('office.index')->with('info', 'Choose an office before adding financial records.');
         $options = array("Event","Restaurant");
-		$office = Offices::find($id);
+		$office = Offices::findOrFail($id);
         return view('office.employe_salary.create', compact('office'));
     }
     public function store(Request $request){
-		$this->validateData($request);
-        Office_Employes_Salary::create($request->except(["attach"]));
-        return redirect()->back();
+		$validated = $this->validateData($request);
+        Office_Employes_Salary::create($validated);
+        return redirect()->route('office.show', $request->office_id);
     }
 	public function validateData(Request $request){
 	
-		$this->validate($request, [
-            'employe_name'  => 'required',
-            'employe_salary'     => 'required',
-            'month'     => 'required',
-			'bonuses'     => 'required',
+		return $this->validate($request, [
+            'office_id' => 'required|integer|exists:office_fees,id',
+            'employe_name'  => 'required|string|max:200',
+            'employe_salary'     => 'required|numeric|min:0|max:999999999.99',
+            'month'     => 'required|date',
+			'bonuses'     => 'required|numeric|min:0|max:999999999.99',
         ]);
 	}
     public function edit($id, Request $request){
-		$office_employes_salary = Office_Employes_Salary::find($id);
+		$office_employes_salary = Office_Employes_Salary::findOrFail($id);
        
 		return view('office.employe_salary.edit', compact('office_employes_salary'));
 	}
 	public function update($id,Request $request){
-        $office_employes_salary = Office_Employes_Salary::find($id);
-        $office_employes_salary->update($request->except(["attach"]));
-		return redirect()->back();
+        $validated = $this->validateData($request);
+        $office_employes_salary = Office_Employes_Salary::findOrFail($id);
+        $office_employes_salary->update($validated);
+		return redirect()->route('office.show', $request->office_id);
 	}
      
 	public function DeleteMsg($id, Request $request)
@@ -108,12 +111,17 @@ class EmployesSalaryController extends Controller {
 	public function destroy($id)
     {
 
-        $office_employes_salary = Office_Employes_Salary::find($id);
+        $office_employes_salary = Office_Employes_Salary::findOrFail($id);
         $office_employes_salary->find($id)->delete();
       LaravelFlashSessionHelper::setFlashMessage("Employee Salary $office_employes_salary->employe_name deleted", 'success');
 
-        return URL::to('office');
+        return request()->ajax() ? URL::to('office') : redirect()->route('office.index');
     }
     
     
+    public function show($id, Request $request)
+    {
+        $record = Office_Employes_Salary::findOrFail($id);
+        return redirect()->route('office.show', $record->office_id);
+    }
 }

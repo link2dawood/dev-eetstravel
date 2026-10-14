@@ -6,7 +6,7 @@
         'sub_title' => 'Edit Billing',
         'breadcrumbs' => [
             ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('tour.index')],
+            ['title' => 'Invoices', 'icon' => 'suitcase', 'route' => route('accounting.index')],
             ['title' => 'Create', 'route' => null],
         ],
     ])
@@ -50,10 +50,10 @@
 								
                                 <select name="currency" id="currency" class="form-control" required>
                                     @php
-									 $currencies = ["Euro", "Dollar", "Swiss Franks"];
+									 $currencies = ["EUR", "USD", "CHF"];
 									@endphp
 									@foreach ($currencies as $currency)
-										<option value="{{ $currency }}" {{ $currency == $transactions->currency ? 'selected' : '' }}>
+										<option value="{{ $currency }}" {{ $currency == (['Euro' => 'EUR', 'Dollar' => 'USD', 'Swiss Franks' => 'CHF'][$transactions->currency] ?? $transactions->currency) ? 'selected' : '' }}>
 											{{ $currency }}
 										</option>
 									@endforeach
@@ -66,7 +66,7 @@
                                 <select name="office_id" id="office_id" class="form-control">
 
                                     @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}">{{ $office->office_name }}</option>
+                                        <option value="{{ $office->id }}" {{ $office->id == $transactions->office_id ? 'selected' : '' }}>{{ $office->office_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -129,7 +129,7 @@
                                 <select name="client_id" id="client_id" class="form-control">
 
                                     @foreach ($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                        <option value="{{ $client->id }}" {{ $client->id == $transactions->client_id ? 'selected' : '' }}>{{ $client->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -264,6 +264,7 @@
             }).done((res) => {
                 contactItemCount++;
                 $('#items-contacts').append(res);
+                contactItemCount = Math.max(contactItemCount, ...Array.from(document.querySelectorAll('[name^="items["]')).map(input => Number(input.name.match(/items\[(\d+)\]/)?.[1] || 0)));
                 $('input[name="_token"]').each(function() {
                     // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");
@@ -280,6 +281,7 @@
             }).done((res) => {
                 contactItemCount++;
                 $('#items-contacts').append(res);
+                contactItemCount = Math.max(contactItemCount, ...Array.from(document.querySelectorAll('[name^="items["]')).map(input => Number(input.name.match(/items\[(\d+)\]/)?.[1] || 0)));
                 $('input[name="_token"]').each(function() {
                     // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");
@@ -298,6 +300,7 @@
             }).done((res) => {
                 contactItemCount++;
                 $('#payment-inputs').append(res);
+                $('#payment-inputs').append('<input type="hidden" name="payments_loaded" value="1">');
                 $('input[name="_token"]').each(function() {
                     // Replace the 'value' attribute with your CSRF token value
                     $(this).val("{{ csrf_token() }}");
@@ -340,7 +343,7 @@
 
             $.ajax({
                 type: "GET",
-                url: `api/getTourquotation/${tour_id}`,
+                url: `/accounting/api/getTourquotation/${tour_id}`,
                 success: function(result) {
                     $("#quotation").html(result);
                     console.log(result);
@@ -352,7 +355,7 @@
         })
 		
 
-		function calculateItemTotal(iteminput) {
+		window.calculateItemTotal = function(iteminput) {
 			
             const itemContainer = iteminput.parentElement.parentElement.parentElement;
 			

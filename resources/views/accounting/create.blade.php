@@ -27,7 +27,7 @@
             {{-- Page Actions --}}
             <div class="col-auto ms-auto d-print-none">
                 <div class="btn-list">
-                    <a href="javascript:history.back()" class="btn btn-ghost-secondary">
+                    <a href="{{ route('accounting.index') }}" class="btn btn-ghost-secondary">
                         <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
                     </a>
                     <button type="submit" form="invoice-form" class="btn btn-success">
@@ -79,9 +79,9 @@
                         <label class="form-label required">Currency</label>
                         <select name="currency" id="currency" class="form-select" required>
                             <option value="" disabled selected>Choose currency...</option>
-                            <option value="EUR">Euro (EUR)</option>
-                            <option value="USD">Dollar (USD)</option>
-                            <option value="CHF">Swiss Franks (CHF)</option>
+                            <option value="EUR" {{ old('currency') === 'EUR' ? 'selected' : '' }}>Euro (EUR)</option>
+                            <option value="USD" {{ old('currency') === 'USD' ? 'selected' : '' }}>Dollar (USD)</option>
+                            <option value="CHF" {{ old('currency') === 'CHF' ? 'selected' : '' }}>Swiss Franks (CHF)</option>
                         </select>
                     </div>
 
@@ -91,7 +91,7 @@
                         <select name="office_id" id="office_id" class="form-select" required>
                             <option value="" disabled selected>Choose office...</option>
                             @foreach ($offices as $office)
-                                <option value="{{ $office->id }}">{{ $office->office_name }}</option>
+                                <option value="{{ $office->id }}" {{ old('office_id') == $office->id ? 'selected' : '' }}>{{ $office->office_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -102,7 +102,7 @@
                         <select name="tour_id" id="tour_id" class="form-select" required>
                             <option value="" disabled selected>Choose tour...</option>
                             @foreach ($tours as $tour)
-                                <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                                <option value="{{ $tour->id }}" {{ old('tour_id') == $tour->id ? 'selected' : '' }}>{{ $tour->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -113,7 +113,7 @@
                         <select name="client_id" id="client_id" class="form-select" required>
                             <option value="" disabled selected>Choose client...</option>
                             @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -125,14 +125,14 @@
                             <span class="input-group-text">
                                 <i class="ti ti-currency-dollar"></i>
                             </span>
-                            <input type="number" name="extra_cost" class="form-control" placeholder="0.00" step="0.01">
+                            <input type="number" name="extra_cost" value="{{ old('extra_cost', 0) }}" min="0" class="form-control" placeholder="0.00" step="0.01">
                         </div>
                     </div>
 
                     {{-- Note --}}
                     <div class="col-md-6">
                         <label class="form-label">Note</label>
-                        <textarea id="note" name="note" class="form-control" rows="3" placeholder="Add any additional notes..."></textarea>
+                        <textarea id="note" name="note" class="form-control" rows="3" placeholder="Add any additional notes...">{{ old('note') }}</textarea>
                     </div>
 
                     {{-- Hidden Service Fields --}}
@@ -165,40 +165,9 @@
             </div>
             <div class="card-body">
                 <div id="items-contacts" class="row g-3">
-                    <div class="item-contact col-12">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <label class="form-label">Item Name</label>
-                                <input id="item_name" name="items[1][item_name]" type="text" class="form-control" placeholder="Enter item name" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Quantity</label>
-                                <input id="item_desc" name="items[1][quantity]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Price (excl. VAT)</label>
-                                <input id="amount" name="items[1][amount]" type="number" class="form-control" onchange="calculateItemTotal(this)" placeholder="0.00" step="0.01" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">VAT Rate</label>
-                                <select name="items[{{$count}}][vat]" id="vat" class="form-select" onchange="calculateItemTotal(this)" required>
-                                    <option value="" disabled selected>Choose VAT...</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{$tax->value/100}}">{{$tax->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Total Amount</label>
-                                <input id="total_amount" name="items[1][total_amount]" type="number" class="form-control item_total" placeholder="0.00" readonly>
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-icon btn-ghost-danger" id="delete_contact_item" title="Delete item">
-                                    <i class="ti ti-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    @foreach(old('items', [1 => []]) as $count => $item)
+                        @include('component.invoice_item_form', ['count' => $count, 'item' => $item])
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -228,7 +197,7 @@
 
         {{-- Form Footer Actions --}}
         <div class="d-flex justify-content-end gap-2 mt-3 mb-3">
-            <a href="javascript:history.back()" class="btn btn-ghost-secondary">
+            <a href="{{ route('accounting.index') }}" class="btn btn-ghost-secondary">
                 <i class="ti ti-arrow-left me-1"></i>{!! trans('main.Back') !!}
             </a>
             <button class="btn btn-success" type="submit">
@@ -246,7 +215,7 @@
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        let contactItemCount = 1;
+        let contactItemCount = Math.max(1, ...Array.from(document.querySelectorAll('[name^="items["]')).map(input => Number(input.name.match(/items\[(\d+)\]/)?.[1] || 0)));
 
         // File upload preview
         function readURL(input) {
@@ -318,7 +287,7 @@
             const tour_id = $(this).val();
             $.ajax({
                 type: "GET",
-                url: `api/getTourquotation/${tour_id}`,
+                url: `/accounting/api/getTourquotation/${tour_id}`,
                 success: function(result) {
                     $("#quotation_id").val(result);
                     console.log('Quotation loaded:', result);

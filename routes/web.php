@@ -375,7 +375,7 @@ Route::group(['middleware'=> 'web'],function(){
 
     //Email Temlates
     Route::group(['middleware'=> 'web'],function(){
-        Route::resource('templates','\App\Http\Controllers\TemplatesController');
+        Route::resource('templates','\App\Http\Controllers\TemplatesController')->except(['create', 'edit']); // created and edited in a pop-up on the show page
         Route::post('templates/{id}/update','\App\Http\Controllers\TemplatesController@update');
         Route::post('templates/{id}/delete','\App\Http\Controllers\TemplatesController@destroy')->name('templates.destroy');
         Route::get('templates/api/load', '\App\Http\Controllers\TemplatesController@loadTemplate');
@@ -491,7 +491,7 @@ Route::group(['middleware'=> 'web'],function(){
 
 //Comments Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::resource('comment', 'CommentController');
+        Route::resource('comment', 'CommentController')->except(['create']); // comments are added on a record, not on a page of their own
         Route::get('/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
         Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
         Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
@@ -690,7 +690,7 @@ Route::group(['middleware' => 'web'], function () {
 	Route::post('email/addFolder', 'EmailController@addFolder')->name('email.addFolder');
 	Route::get('email/template', 'EmailController@composeEmailTemplate')->name('email.template');
 	Route::get('email/addFolderForm', 'EmailController@addFolderForm')->name('email.addFolderForm');
-	Route::get('email/{page?}', 'EmailController@index')->name('email.index');
+	Route::get('email/{page?}', 'EmailController@index')->where('page', '[0-9]+')->name('email.index'); // numbers only: it used to swallow /email/webmail and /email/configure
 	Route::get('email/folder/{name}/{page?}', 'EmailController@folder')->name('email.folder')
         ->where('name', '.*');
 	Route::get('email/mail/{id}/{currentFolder?}', 'EmailController@mail')->name('email.mail')

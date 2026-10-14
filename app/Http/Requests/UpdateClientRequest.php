@@ -23,7 +23,7 @@ class UpdateClientRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'first_name' => trim($this->first_name ?? ''),
+            'name' => trim($this->name ?? ''),
             'country' => trim($this->country ?? ''),
             'city' => trim($this->city ?? ''),
             'address' => trim($this->address ?? ''),
@@ -62,9 +62,9 @@ class UpdateClientRequest extends FormRequest
     public function messages()
     {
         return array_merge(ValidationService::getCommonMessages(), [
-            'first_name.required' => 'Client name is required.',
-            'first_name.regex' => 'Client name can only contain letters, spaces, hyphens, dots, and apostrophes.',
-            'first_name.min' => 'Client name must be at least 2 characters.',
+            'name.required' => 'Client name is required.',
+            'name.regex' => 'Client name can only contain letters, digits, spaces and & , . \' - ( ) /.',
+            'name.min' => 'Client name must be at least 2 characters.',
             'country.required' => 'Country is required.',
             'city.required' => 'City is required.',
             'address.required' => 'Address is required.',
@@ -91,7 +91,7 @@ class UpdateClientRequest extends FormRequest
     public function attributes()
     {
         return ValidationService::getCommonAttributes() + [
-            'first_name' => 'client name',
+            'name' => 'client name',
             'work_fax' => 'fax number'
         ];
     }

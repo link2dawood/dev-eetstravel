@@ -36,7 +36,7 @@ class EmailsController{
       
                 $this ->server = new ImapClient(
                     env( 'IMAP_HOST', 'eetstravel.com' ),
-                    "booking-test@eetstravel.com", "Ffans82guQ9h",
+                    config('imap.accounts.default.username'), config('imap.accounts.default.password'),
                     ImapClient::ENCRYPT_SSL
                 );
            
@@ -44,8 +44,12 @@ class EmailsController{
             return $this->server->isConnected();
 
 
-        } catch(AuthenticationFailedException $e){
-            echo "Authorization failed : " . $user->email_login . "\r\n";
+        } catch(\Throwable $e){
+            // a clear JSON error instead of a 500 (e.g. wrong login, server down, PHP imap extension missing)
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+                'error' => true,
+                'message' => 'The mailbox could not be reached: ' . $e->getMessage(),
+            ], 503));
         }
     }
 
@@ -92,7 +96,7 @@ class EmailsController{
 
 
          if($request->search ){
-			 $subject = 'SUBJECT "'.$request->search.'"';
+			 $subject = 'SUBJECT "' . str_replace(['"', chr(92)], '', (string) $request->search) . '"'; // a quote in the search text broke the IMAP command
             $result = $this ->server->getMessagesByCriteria($subject,self::$perPage,self::$page, 'DESC');
 		
         } else {
@@ -173,7 +177,7 @@ public function remove_element($string){
 			}
 
          if($request->search ){
-			 $subject = 'SUBJECT "'.$request->search.'"';
+			 $subject = 'SUBJECT "' . str_replace(['"', chr(92)], '', (string) $request->search) . '"'; // a quote in the search text broke the IMAP command
 			 $inbox_mes = $this->server->selectFolder($inboxFolder);
             $inboxMessages =  $this->server->getMessagesByCriteria($subject,self::$perPage,self::$page, 'DESC');
 			  $inbox_count  = count($inboxMessages);
@@ -203,33 +207,32 @@ public function remove_element($string){
 
     public function moveEmail($userId, $emailUid, Request $request)
     {
-		$moveFolder = 'Inbox.'.$request->moveFolder;
-		
+        // "INBOX", "Sent" or "INBOX.Sent" -> the mailbox's own name
+        $mailbox = function ($folder) {
+            $folder = preg_replace('/^INBOX\.?/i', '', (string) $folder);
+            return $folder === '' ? 'INBOX' : 'INBOX.' . $folder;
+        };
+
         $this ->setConnectionToServer($userId);
-	
-		self::$folder = 'INBOX.'.$request->folder;
-        $this ->server-> selectFolder(self::$folder);
-		if (is_numeric($request->moveFolder)) {
-		    // replace with the actual UID
-				$tourId = 456;  // replace with the actual tour ID
-			
-				// Using DB facade to perform the insert
-				DB::table('move_emails')->insert([
-					'email_id' => $request->message_id,
-					'tour_id' => $request->moveFolder,
-				]);
-			 $result = $this->server->moveMessage($emailUid, 'Inbox.Drafts');
-        return response()->json(['result'=>'succes','succes'=>$result, 'id'=>$emailUid,'folder'=>$moveFolder]);
-		} else {
-			echo "$request->all() is not a number or a numeric string.";
-		}
-        if($request->folder AND ($request->folder!= 'INBOX'))
-            self::$folder = 'Inbox.'.$request->folder;
+        $this ->server-> selectFolder($mailbox($request->folder));
 
+        // a number = file the email under that tour (it is kept in Drafts and linked in move_emails)
+        if (is_numeric($request->moveFolder)) {
+            DB::table('move_emails')->insert([
+                'email_id' => $request->message_id,
+                'tour_id' => $request->moveFolder,
+            ]);
+            $result = $this->server->moveMessage($emailUid, 'INBOX.Drafts');
+            return response()->json(['result' => 'succes', 'succes' => $result, 'id' => $emailUid, 'folder' => 'INBOX.Drafts']);
+        }
 
-        
-        $result = $this->server->moveMessage($emailUid, $moveFolder);
-        return response()->json(['result'=>'succes','succes'=>$result, 'id'=>$emailId,'folder'=>$moveFolder]);
+        // otherwise a mail folder (this branch used to print a debug line and fail)
+        $target = $mailbox($request->moveFolder);
+        $result = $this->server->moveMessage($emailUid, $target);
+        if (!$result) {
+            return response()->json(['error' => true, 'message' => 'The email could not be moved to ' . $target . '.'], 422);
+        }
+        return response()->json(['result' => 'succes', 'succes' => $result, 'id' => $emailUid, 'folder' => $target]);
     }
 
 

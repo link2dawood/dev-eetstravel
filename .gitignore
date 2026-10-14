@@ -56,3 +56,8 @@ auth.json
 storage/app/city-repair/
 storage/app/encoding-repair/
 storage/app/sample-data/
+
+# Local diagnostic output and runtime test/mail caches.
+/debug.log
+/storage/framework/testing/
+/public/snappymail/data/_data_/_default_/cache/

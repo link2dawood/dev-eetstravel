@@ -48,6 +48,7 @@ $(document).ready(function () {
 
   var form = $("#tourCreateForm");
 
+  if (form.length && $.fn.steps) {
   form.steps({
     headerTag: "h6",
     bodyTag: "formstep",
@@ -64,6 +65,7 @@ $(document).ready(function () {
     }
   });
   $('.actions ul li a').addClass('btn btn-primary');
+  }
 
 
 

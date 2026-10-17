@@ -10,9 +10,9 @@
 @endauth
 
 <!-- Page header -->
-<header class="navbar navbar-expand-md navbar-light d-print-none tms-header">
+<header class="navbar navbar-expand-lg navbar-light d-print-none tms-header">
     <div class="container-xl">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
@@ -22,7 +22,7 @@
         </h1>
         <div class="navbar-nav flex-row order-md-last">
             <!-- Notifications -->
-            <div class="nav-item dropdown d-none d-md-flex me-3 notifications-content" data-notifications-layout="tabler">
+            <div class="nav-item dropdown d-flex me-3 notifications-content" data-notifications-layout="tabler">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Show notifications">
                     <i class="ti ti-bell icon"></i>
                     @auth
@@ -59,7 +59,7 @@
 
             <!-- Messages -->
             @auth
-            <div class="nav-item dropdown d-none d-md-flex me-3">
+            <div class="nav-item dropdown d-flex me-3">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show messages">
                     <i class="ti ti-mail icon"></i>
                     @if($messages)
@@ -173,6 +173,39 @@
 
 @push('scripts')
 <style>
+@media (max-width: 767.98px) {
+    .tms-header .navbar-nav > .dropdown {
+        position: static;
+    }
+    .tms-header .navbar-nav > .dropdown > .dropdown-menu {
+        position: absolute !important;
+        inset: 100% 1rem auto !important;
+        transform: none !important;
+        width: auto;
+        min-width: 0;
+        max-height: calc(100dvh - 80px);
+        overflow-y: auto;
+    }
+}
+@media (max-width: 991.98px) {
+    .tms-sidebar {
+        min-height: 0;
+        padding: 0;
+        border: 0;
+    }
+    .tms-sidebar > .container-fluid > .navbar-nav {
+        display: none;
+    }
+    .page .tms-header {
+        min-height: 64px;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    .tms-header .navbar-brand {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
 .tms-header {
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;

@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Room Types')
 @section('content')
     @include('layouts.title',
            ['title' => 'Room Types', 'sub_title' => 'Room Types List',
@@ -12,7 +12,7 @@
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <div class="input-icon flex-grow-1" style="max-width: 420px;">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="room-types-search" class="form-control" placeholder="Search room types..." name="search" value="{{ request('search') }}" data-list-search>
+                        <input aria-label="Search room types..." type="text" id="room-types-search" class="form-control" placeholder="Search room types..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                     <div class="ms-auto d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-success" onclick="exportTableToCSV('room-types-table', 'room_types_export.csv')">

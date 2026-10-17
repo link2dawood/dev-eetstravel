@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Announcements')
 @section('content')
     @include('layouts.title', [
         'title' => 'Announcements',
@@ -17,7 +17,7 @@
                 <div class="mb-3 mt-3">
                     <div class="row">
                         <div class="col-md-6">
-                            <input type="text" id="announcements-search" class="form-control" placeholder="Search announcements..." onkeyup="filterTable('announcements-table', this.value)">
+                            <input aria-label="Search announcements..." type="text" id="announcements-search" class="form-control" placeholder="Search announcements..." onkeyup="filterTable('announcements-table', this.value)">
                         </div>
                         <div class="col-md-6 text-right">
                             <button class="btn btn-success btn-sm" onclick="exportTableToCSV('announcements-table', 'announcements_export.csv')">

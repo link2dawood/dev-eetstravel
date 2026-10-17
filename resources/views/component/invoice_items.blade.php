@@ -44,7 +44,7 @@
 		</div>
 	</div>								
 	<div class="col-md-1">
-		<div class="form-group" style="margin-top: 20px"><button id="delete_contact_item" class="delete btn btn-danger btn-sm" type ="button"><i class="fa fa-trash-o" ></i></button></div>
+		<div class="form-group" style="margin-top: 20px"><button aria-label="Remove row" title="Remove row" id="delete_contact_item" class="delete btn btn-danger btn-sm" type ="button"><i class="fa fa-trash-o" ></i></button></div>
 	</div>
 </div>
 @php $count++; @endphp

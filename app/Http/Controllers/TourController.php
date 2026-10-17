@@ -60,7 +60,6 @@ use App\RoomTypes;
 use App\Attachment;
 use Image;
 use App\Comparison;
-use App\ComparisonRow;
 use App\Childrens;
 class TourController extends Controller
 {
@@ -1287,20 +1286,8 @@ public function store(StoreTourRequest $request)
 
         $quotation = $quotation ?: ($quotation_id > 0 ? Quotation::find($quotation_id) : null);
 
-        // Root fix: Only create comparison if quotation exists
-        $comparison = null;
-        if ($quotation_id > 0) {
-            $comparison = Comparison::where(['id' => $quotation_id])->first();
+        $comparison = $quotation ? Comparison::forDisplay($quotation) : null;
 
-            if (!$comparison) {
-                $newComparison = new Comparison();
-                $newComparison->id = $quotation_id;
-                $newComparison->save();
-                $comparison = $newComparison;
-            }
-            $this->syncComparisonRows($comparison);
-        }
-        
        // dd($comparison->comparisonRowByDate("2018-04-02")->id);
 
         // Root fix: Only load active offices, not all offices
@@ -2756,25 +2743,6 @@ public function quotation_data(Request $request)
 	
 
 
-	
-	protected function syncComparisonRows($comparison)
-    {
-    	$quotation = Quotation::find($comparison->id);
-    	if ($quotation) {
-		    $tour = $quotation->tour;
-		    if ($tour) {
-			    foreach ($tour->tour_days as $tourDay) {
-					$comparisonRow = ComparisonRow::where(['date' => $tourDay->date, 'comparison_id' => $comparison->id])->first();
-					if (!$comparisonRow) {
-						$newComparisonRow = new ComparisonRow();
-						$newComparisonRow->date = $tourDay->date;
-						$newComparisonRow->comparison_id = $comparison->id;
-						$newComparisonRow->save();
-					}
-			    }
-		    }
-	    }
-    }
 	
 	public function get_cities($country_code){
         // Option values are city ids: names repeat across countries, so a name cannot identify the city

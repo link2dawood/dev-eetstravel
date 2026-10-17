@@ -58,8 +58,8 @@
 							<input type="password" name = "password" class = "form-control" placeholder = "Password">
 						</div>
 						<div class="form-group">
-							<label for="avatar">{{trans('main.Logo')}}</label>
-							<input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" >
+							<label for="avatar">Avatar</label>
+							<div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" ></div>
 						</div>
 						<div class="manage-form-actions-bottom">
 							<a href="{{ url('users') }}" class="btn btn-secondary">

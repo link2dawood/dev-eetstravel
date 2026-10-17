@@ -13,6 +13,21 @@ use URL;
 
 class PermissionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->only('show');
+    }
+
+    public function show($id)
+    {
+        $permission = Permission::with('roles')->findOrFail($id);
+        return view('scaffold-interface.resource-details', [
+            'heading' => 'Permission Details', 'listRoute' => 'permissions.index',
+            'fields' => ['ID' => $permission->id, 'Name' => $permission->name,
+                'Alias' => $permission->alias, 'Roles' => $permission->roles->pluck('name')->implode(', ')],
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      *

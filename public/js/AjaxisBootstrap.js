@@ -25,8 +25,35 @@ function POST(a, t) {
 }
 $(document).on("click", ".delete", function() {
     console.log("delete: " + $(this).data("link")), GET($(this).data("link"))
-}), $(document).on("click", ".add-direct-chat", function() {
-    GET($(this).data("link"))
+}), $(document).on("click", ".add-direct-chat", function(event) {
+    event.preventDefault();
+    var modal = document.getElementById('myModal');
+    var content = $(modal).find('.AjaxisModal');
+    var version = (content.data('chat-request-version') || 0) + 1;
+    content.data('chat-request-version', version);
+    content.html('<div class="modal-header"><h2 class="modal-title">Chat</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" role="status">Loading...</div>');
+    var trigger = this;
+    $(modal).off('hidden.bs.modal.chatDialog').one('hidden.bs.modal.chatDialog', function() {
+        if (document.contains(trigger)) trigger.focus();
+    });
+    $(modal).modal('show');
+    $.ajax({
+        type: 'GET',
+        url: $(this).data('link'),
+        success: function(html) {
+            if (content.data('chat-request-version') !== version) return;
+            // Chat fragments include legacy dialog wrappers; reuse the layout's dialog.
+            var fragment = $('<div>').append($.parseHTML(html, document, true));
+            var body = fragment.find('.modal-content').first();
+            content.html(body.length ? body.html() : html);
+            content.find('.modal-header').first().append('<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>');
+            $(modal).modal('handleUpdate');
+        },
+        error: function() {
+            if (content.data('chat-request-version') !== version) return;
+            content.find('.modal-body').attr('role', 'alert').text('Unable to load this chat dialog. Close it and try again.');
+        }
+    });
 }), $(document).on("click", ".create-email", function() {
     $.ajax({
         async: !0,

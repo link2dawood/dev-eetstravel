@@ -29,7 +29,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#main" data-toggle="tab">{{trans('main.Main')}}</a></li>
                         @if(Auth::user()->can('quotation.calculation'))
-                            <li><a href="#calculation" data-toggle="tab">{{trans('main.Calculation')}}</a></li>
+                            <li><a href="#calculation-tab" data-toggle="tab">{{trans('main.Calculation')}}</a></li>
                         @endif
                     </ul>
                     <div class="tab-content" style="overflow: hidden">
@@ -52,14 +52,14 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <div id="quotation_table" style="overflow-x: scroll;">
+                                        <div class="quotation-table-wrapper" style="overflow-x: scroll;">
                                             <button type="button"
                                                     data-link="{{route('quotation.add_column_message')}}"
                                                     class="btn btn-block btn-success btn-xs pull-right quotation-add-column"
                                                     style="width:100px">
                                                 {{trans('main.Addcolumn')}}
                                             </button>
-                                            <table class="table table-bordered">
+                                            <table id="quotation_table" class="table table-bordered">
 												@php $columns = array("date","cityName","hotelName","SIN","htlpp","lunchName","lunch","dinnerName","dinner","entrance","comments","local_g_d","bus","group_cost","driver","porterage"); 
 												
 												
@@ -132,7 +132,7 @@
                                                     >{{$column->name}}  <i class="fa fa-times pull-right remove-quotation-column"></i></th>
                                                 @endforeach
                                                 </thead>
-                                                <tbody id="quotation_table">
+                                                <tbody>
                                                 @php
                                                     $sortedQuotationRows = $quotation->rows->sortBy(function($quotationRow){
                                                       return $quotationRow->getValueByKey('date')->value??"";
@@ -339,7 +339,7 @@
 
                         </div>
                         <!-- /.tab-pane -->
-                        <div class="tab-pane" id="calculation">
+                        <div class="tab-pane" id="calculation-tab">
 
 
 

@@ -76,8 +76,8 @@
                 
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="table-responsive" id="quotation_table">
-                            <table class="table card-table table-vcenter table-nowrap">
+                        <div class="table-responsive quotation-table-wrapper">
+                            <table id="quotation_table" class="table card-table table-vcenter table-nowrap">
                                 <thead>
                                     <tr>
                                         <th>{{trans('main.Date')}}</th>
@@ -135,7 +135,7 @@
                                     </tr>
                                 </thead>
 								@if(empty($quotation))
-                                <tbody id="quotation_table">
+                                <tbody>
                                 @php
                                     $sortedTourDays = $tour->tour_days->sortBy(function($tourDay){
                                       return $tourDay->date;
@@ -243,7 +243,7 @@
                                 @endforeach
                                 </tbody>
 								@else
-								<tbody id="quotation_table">
+								<tbody>
                                     @php
 										$sortedTourDays = $tour->tour_days->sortBy(function($tourDay){
 										  return $tourDay->date;

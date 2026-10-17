@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\DB;
  */
 class BusSampleData extends Command
 {
-    protected $signature = 'bus:sample-data {--remove : Delete the QA Sample records instead of creating them}';
+    protected $signature = 'bus:sample-data {--remove : Delete the QA Sample records instead of creating them} {--standalone : Create standalone trips without linking to existing tours}';
 
     protected $description = 'Create (or remove) QA Sample bus companies, buses, drivers and calendar trips';
 
@@ -148,7 +148,7 @@ class BusSampleData extends Command
         });
 
         [$counts, $fleet] = $made;
-        $counts['tour transfers'] = $this->addTourTransfers($fleet, $today, $busDayHelper);
+        $counts['tour transfers'] = $this->option('standalone') ? 0 : $this->addTourTransfers($fleet, $today, $busDayHelper);
 
         $this->table(array_keys($counts), [array_values($counts)]);
         $this->info('Open Bus Company > Buses Calendar to see the trips. Remove them with: php artisan bus:sample-data --remove');

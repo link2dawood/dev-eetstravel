@@ -22,7 +22,7 @@ class ActivitiesController extends Controller
         // Add action and link columns to each activity
         $activitiesData->each(function ($activity) {
             $activity->action = $activity->getExtraProperty('action');
-            $activity->formatted_description = $activity->description;
+            $activity->formatted_description = \App\Helper\ActivityDescription::plainText($activity->description);
 
             $link = $activity->getExtraProperty('link');
             if ($link) {

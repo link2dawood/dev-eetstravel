@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title', 'Create Flight')
 @section('content')
 	@include('layouts.title',
    ['title' => 'Flight', 'sub_title' => 'Flight Create',
@@ -31,7 +31,7 @@
 								</div>
 
 								<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-									<label for="departure_date">{!!trans('main.DateFrom')!!}</label>
+									<label for="from_date">{!!trans('main.DateFrom')!!}</label>
 									<div class="input-group date">
 										<div class="input-group-addon">
 											<i class="fa fa-calendar"></i>
@@ -41,7 +41,7 @@
 								</div>
 
 								<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-									<label for="departure_date">{!!trans('main.TimeFrom')!!}</label>
+									<label for="from_time">{!!trans('main.TimeFrom')!!}</label>
 									<div class="input-group date">
 										<div class="input-group-addon">
 											<i class="fa fa-clock-o"></i>
@@ -51,7 +51,7 @@
 								</div>
 
 								<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-									<label for="departure_date">{!!trans('main.DateTo')!!}</label>
+									<label for="to_date">{!!trans('main.DateTo')!!}</label>
 									<div class="input-group date">
 										<div class="input-group-addon">
 											<i class="fa fa-calendar"></i>
@@ -61,7 +61,7 @@
 								</div>
 
 								<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-									<label for="departure_date">{!!trans('main.TimeTo')!!}</label>
+									<label for="to_time">{!!trans('main.TimeTo')!!}</label>
 									<div class="input-group date">
 										<div class="input-group-addon">
 											<i class="fa fa-clock-o"></i>
@@ -129,12 +129,12 @@
 									<input id="website" name="website" type="text" class="form-control" value="{{old('website')}}">
 								</div>
 								<div class="form-group">
-									<label for="criteria">{!!trans('main.Criteria')!!}</label>
+									<span class="form-label">{!!trans('main.Criteria')!!}</span>
 								</div>
 								@foreach($criterias as $criteria)
 									<div class="form-group criteria_block">
-										<input type="checkbox" value="{{ $criteria->id }}" name="criterias">
-										<label for="">{{ $criteria->name }}</label>
+										<input id="service-criteria-{{$criteria->id}}" type="checkbox" value="{{ $criteria->id }}" name="criterias">
+										<label for="service-criteria-{{$criteria->id}}">{{ $criteria->name }}</label>
 									</div>
 								@endforeach
 

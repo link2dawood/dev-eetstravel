@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Comparison Details')
 @section('content')
     @php
         $tour = $quotation->tour;

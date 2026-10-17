@@ -26,7 +26,7 @@
             <div class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
-                        <input type="text" id="accounting-search" class="form-control" placeholder="Search client invoices..." onkeyup="filterTable('transactions-table', this.value)">
+                        <input aria-label="Search client invoices..." type="text" id="accounting-search" class="form-control" placeholder="Search client invoices..." onkeyup="filterTable('transactions-table', this.value)">
                     </div>
                     <div class="col-md-6 text-right">
                         <button class="btn btn-success btn-sm" onclick="exportTableToCSV('transactions-table', 'client_invoices_export.csv')">

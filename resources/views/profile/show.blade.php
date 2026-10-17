@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'My Profile')
 @section('content')
 @include('layouts.title', [
     'title' => 'Profile',
@@ -66,9 +66,7 @@
                                 <div class="col-lg-4">
                                     <div class="card shadow-sm h-100">
                                         <div class="card-body text-center">
-                                            <img class="rounded-circle mb-3" width="120" height="120"
-                                                 src="{{ $user->avatar ? asset($user->avatar) : asset('img/avatar.png') }}"
-                                                 alt="{{ $user->name }}">
+                                            <div class="mb-3">@include('component.avatar-preview', ['avatarUser' => $user, 'avatarSize' => 120])</div>
                                             <h3 class="mb-1">{{ $user->name }}</h3>
                                             <p class="text-muted mb-3">{{ $user->email }}</p>
                                             <div class="text-start">
@@ -106,9 +104,6 @@
                                             <button class="btn btn-outline-secondary w-100" id="logout" onclick="event.preventDefault(); logoutForm();">
                                                 <i class="ti ti-logout me-1"></i>{{trans('main.Signout')}}
                                             </button>
-                                            <form id="logout-form" action="{{ url('/logout') }}" method="POST" class="d-none">
-                                                {{ csrf_field() }}
-                                            </form>
                                         </div>
                                     </div>
                                 </div>

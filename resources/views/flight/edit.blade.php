@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Edit')
+@section('title', 'Edit Flight')
 @section('content')
 	@include('layouts.title',
    ['title' => 'Flight', 'sub_title' => 'Flight Edit',
@@ -33,7 +33,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-								<label for="departure_date">{!!trans('main.DateFrom')!!}</label>
+								<label for="from_date">{!!trans('main.DateFrom')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-calendar"></i>
@@ -43,7 +43,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-								<label for="departure_date">{!!trans('main.TimeFrom')!!}</label>
+								<label for="from_time">{!!trans('main.TimeFrom')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-clock-o"></i>
@@ -53,7 +53,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-								<label for="departure_date">{!!trans('main.DateTo')!!}</label>
+								<label for="to_date">{!!trans('main.DateTo')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-calendar"></i>
@@ -63,7 +63,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-								<label for="departure_date">{!!trans('main.TimeTo')!!}</label>
+								<label for="to_time">{!!trans('main.TimeTo')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-clock-o"></i>
@@ -130,16 +130,16 @@
                                 <input id="website" name="website" type="text" class="form-control" value="{{$flight->website}}">
                             </div>
 							<div class="form-group">
-								<label for="criteria">{!!trans('main.Criteria')!!}</label>
+								<span class="form-label">{!!trans('main.Criteria')!!}</span>
 							</div>
 							@foreach($criterias as $criteria)
 								<div class="form-group criteria_block">
-									<input type="checkbox"
+									<input id="service-criteria-{{$criteria->id}}" type="checkbox"
 										   @foreach($flight->criterias as $item)
 										   {{ $criteria->id == $item->criteria_id ? 'checked' : '' }}
 										   @endforeach
 										   value="{{ $criteria->id }}" name="criterias">
-									<label for="">{{ $criteria->name }}</label>
+									<label for="service-criteria-{{$criteria->id}}">{{ $criteria->name }}</label>
 								</div>
 							@endforeach
 
@@ -152,7 +152,7 @@
 								</select>
 							</div>
 
-							<input type="text" hidden name="place_id" id="place_id">
+                            <input type="hidden" name="place_id" id="place_id" value="{{ old('place_id', $placeId) }}">
                             <div class="form-group">
                             	<label for="attach">Files</label>
                             	@component('component.file_upload_field')@endcomponent
@@ -166,6 +166,9 @@
 					<div class="col-md-6">
 						<span id="page" data-page="edit"></span>
 						<span id="place" data-info="{{ $place }}"></span>
+                        @if($placeId && !$place)
+                            <div class="alert alert-warning" role="status">Google location details are temporarily unavailable. You can edit the stored flight details; the saved location is retained.</div>
+                        @endif
 						<button class="btn btn-primary btn_google_maps" id="btn_generate_map">
 							@if($place != null)
 								{!!trans('main.ReGenerateLocation')!!}

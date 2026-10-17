@@ -51,7 +51,7 @@
                 <div class="col-md-6 mb-2 mb-md-0">
                     <div class="input-icon">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="guides-search" class="form-control" placeholder="Search guides..." name="search" value="{{ request('search') }}" data-list-search>
+                        <input aria-label="Search guides..." type="text" id="guides-search" class="form-control" placeholder="Search guides..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">

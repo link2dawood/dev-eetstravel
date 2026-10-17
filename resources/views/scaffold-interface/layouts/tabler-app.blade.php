@@ -662,6 +662,33 @@
             min-height: 96px;
         }
 
+        /* Match the native controls without constraining wrapping multi-select chips. */
+        .select2-container .select2-selection--single,
+        .select2-container .select2-selection--multiple {
+            min-height: calc(1.5 * .9375rem + 1.25rem + 2px);
+            height: auto;
+            box-sizing: border-box;
+            font-size: .9375rem;
+            line-height: 1.5;
+        }
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            padding: .625rem 2.25rem .625rem .875rem;
+            line-height: 1.5;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 0;
+        }
+        .select2-container .select2-selection--multiple .select2-selection__rendered {
+            display: block;
+            padding: .375rem .5rem;
+            white-space: normal;
+        }
+        .select2-container .select2-search--inline .select2-search__field {
+            margin-top: .25rem;
+            line-height: 1.5;
+        }
+
         .form-control:focus,
         .form-select:focus,
         input.form-control:focus,
@@ -716,6 +743,33 @@
         }
 
         /* Bootstrap fileinput control cleanup */
+        .avatar-upload-field,
+        .avatar-upload-field .file-input,
+        .avatar-upload-field .file-caption-main {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .avatar-upload-field .file-caption-main {
+            flex-wrap: wrap;
+        }
+        .avatar-upload-field .file-caption-main .input-group-btn {
+            flex: 1 1 auto;
+            flex-wrap: wrap;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .avatar-upload-field .file-caption-main .input-group-btn > .btn {
+            flex: 1 1 7rem;
+            min-width: 0;
+            max-width: 100%;
+        }
+        @media (max-width: 576px) {
+            .avatar-upload-field .file-caption-main .file-caption,
+            .avatar-upload-field .file-caption-main .input-group-btn {
+                flex: 1 1 auto;
+                width: 100% !important;
+            }
+        }
         .file-input .file-caption-main {
             display: flex;
             align-items: stretch;
@@ -1393,6 +1447,7 @@
         </div>
     </div>
 
+    <script src="{{asset('js/bootstrap-legacy-attributes.js')}}?v={{filemtime(public_path('js/bootstrap-legacy-attributes.js'))}}"></script>
     <!-- Tabler Core (includes Bootstrap 5) -->
     <script src="{{ asset('tabler/js/tabler.min.js') }}"></script>
 

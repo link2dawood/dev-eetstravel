@@ -36,12 +36,12 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label >{!!trans('main.Name')!!}*</label>
-                                <input type="text" value="{{ $agreement->name }}" name="name" class="form-control"  >
+                                <label  for="name">{!!trans('main.Name')!!}*</label>
+                                <input id="name" type="text" value="{{ $agreement->name }}" name="name" class="form-control"  >
                             </div>
                             <br>
                             <div class="form-group">
-                                <label for="departure_date">{!!trans('main.StartDate')!!} *</label>
+                                <label for="start_date">{!!trans('main.StartDate')!!} *</label>
 
                                 <div class="input-group date">
                                     <div class="input-group-addon">
@@ -53,7 +53,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="departure_date">{!!trans('main.EndDate')!!} *</label>
+                                <label for="end_date">{!!trans('main.EndDate')!!} *</label>
 
                                 <div class="input-group date">
                                     <div class="input-group-addon">
@@ -109,7 +109,7 @@
                             </div>
                             {{--
                             <div class="form-group">
-                                <label for="departure_date">{!!trans('main.Hotelrooms')!!}</label>
+                                <label for="type">{!!trans('main.Hotelrooms')!!}</label>
 
                                 @foreach($hotel->prices_room_type as $item)
                                     <span style="display: block">{!!$item->room_types->code . ' - ' . $item->price!!}</span>
@@ -127,7 +127,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="departure_date">{!!trans('main.Description')!!}</label>
+                                <label for="description">{!!trans('main.Description')!!}</label>
 
                                 {!! Form::textarea('description', $agreement->description, ['class' => 'form-control', 'id' => 'description']) !!}
                             </div>

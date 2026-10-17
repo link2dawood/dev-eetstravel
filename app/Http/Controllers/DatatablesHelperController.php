@@ -20,19 +20,19 @@ class DatatablesHelperController extends Controller
         
         // show button
         if(Auth::user()->can($permission_show)){
-            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
+            $action .= "<a aria-label='View details' title='View details' class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
             $btnCnt++;
         }
 
         // edit button
         if(Auth::user()->can($permission_edit)){
-            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
+            $action .= "<a aria-label='Edit' title='Edit' class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
             $btnCnt++;
         }
 
         // destroy button
         if (Auth::user()->can($permission_destroy)){
-            $action .= "<a class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
+            $action .= "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
             $btnCnt++;
         }
 
@@ -56,19 +56,19 @@ class DatatablesHelperController extends Controller
         
         // show button
         if($perm['show']){
-            $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
+            $action .= "<a aria-label='View details' title='View details' class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
             $btnCnt++;
         }
 
         // edit button
         if($perm['edit']){
-            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
+            $action .= "<a aria-label='Edit' title='Edit' class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
             $btnCnt++;
         }
 
         // destroy button
         if ($perm['destroy']){
-            $action .= "<a class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
+            $action .= "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
             $btnCnt++;
         }
 
@@ -95,10 +95,10 @@ class DatatablesHelperController extends Controller
 
         $action = "<div style='width:100px; text-align: center;'>";
         if(Auth::user()->can($permission_edit)){
-            $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
+            $action .= "<a aria-label='Edit' title='Edit' class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
         }
 
-        $action .= "<a class='btn btn-primary btn-sm' target=\"_blank\" href=\"{$url['print']}\" data-link=\"{$url['print']}\"><i class='ti ti-printer'></i></a>";
+        $action .= "<a aria-label='Print' title='Print' class='btn btn-primary btn-sm' target=\"_blank\" href=\"{$url['print']}\" data-link=\"{$url['print']}\"><i class='ti ti-printer'></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -106,7 +106,7 @@ class DatatablesHelperController extends Controller
     public static function getEditButton(array $url)
     {
         $action = "<div style='width:50px; text-align: center;'>";
-        $action .= "<a class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
+        $action .= "<a aria-label='Edit' title='Edit' class='btn btn-primary btn-sm' href=\"{$url['edit']}\" data-link=\"{$url['edit']}\"><i class='ti ti-edit'></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -114,7 +114,7 @@ class DatatablesHelperController extends Controller
     public static function getShowButton(array $url)
     {
         $action = "<div style='width:50px; text-align: center;'>";
-        $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
+        $action .= "<a aria-label='View details' title='View details' class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
         $action .= "</div>";
         return $action;
     }
@@ -124,10 +124,10 @@ class DatatablesHelperController extends Controller
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy[get_class($obj)];
 
         $action = "<div style='text-align: right;'>";
-        $action .= "<a class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
+        $action .= "<a aria-label='View details' title='View details' class='btn btn-warning btn-sm show-button' href=\"{$url['show']}\" data-link=\"{$url['show']}\"><i class='ti ti-eye'></i></a>";
 
         if(Auth::user()->can($permission_destroy)){
-            $action .= "<a class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
+            $action .= "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' data-bs-toggle=\"modal\" data-bs-target=\"#myModal\" data-link=\"{$url['delete_msg']}\"><i class='ti ti-trash'></i></a>";
         }
         $action .= "</div>";
         return $action;

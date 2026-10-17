@@ -26,8 +26,8 @@ class HolidayController extends Controller
 
     public function getButton($id, $holidaycalendarday)
     {
-        $url = array('show'       => route('holiday.show', ['id' => $id]),
-            'edit'       => route('holiday.edit', ['id' => $id]),
+        $url = array('show'       => route('holiday.show', ['holiday' => $id]),
+            'edit'       => route('holiday.edit', ['holiday' => $id]),
             'delete_msg' => "/holiday/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $holidaycalendarday);
@@ -36,7 +36,10 @@ class HolidayController extends Controller
     public function index()
     {
         $title = 'Index - Calendar holidays';
-        $holidaycalendarday = \App\Holidaycalendarday::query()->orderBy('start_time', 'asc')->paginate(10);
+        $holidaycalendarday = Holidaycalendarday::query()->orderBy('start_time', 'asc')->get();
+        foreach ($holidaycalendarday as $holiday) {
+            $holiday->action_buttons = $this->getButton($holiday->id, $holiday);
+        }
         return view('holidaycalendar.index', compact('holidaycalendarday', 'title'));
     }
 

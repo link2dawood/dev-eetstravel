@@ -30,7 +30,7 @@ class ComparisonController extends Controller
      */
     public function index()
     {
-        //
+        return view('comparison.context');
     }
 
     /**
@@ -40,7 +40,7 @@ class ComparisonController extends Controller
      */
     public function create()
     {
-        //
+        return view('comparison.context');
     }
 
     /**
@@ -64,15 +64,12 @@ class ComparisonController extends Controller
     {
         $quotation = Quotation::findOrFail($id);
         $tour = $quotation->tour;
+        abort_unless($tour, 404);
 	    $listRoomsHotel = TourRoomTypeHotel::where('tour_id', $tour->id )->get();
-	    $comparison = Comparison::where(['id' => $id])->first();
-	    if (!$comparison) {
-	    	$newComparison = new Comparison();
-	    	$newComparison->id = $id;
-	    	$newComparison->save();
-	    	$comparison = $newComparison;
-	    }
-		$this->syncComparisonRows($comparison);
+        $comparison = Comparison::forDisplay($quotation);
+        if ($comparison->needsInitialization()) {
+            return view('comparison.initialize', compact('quotation'));
+        }
 
         return view('comparison.show', compact('quotation', 'listRoomsHotel', 'comparison'));
     }
@@ -98,6 +95,16 @@ class ComparisonController extends Controller
     public function update(Request $request, $id)
     {
 	    $quotation = Quotation::findOrFail($id);
+        if ($request->boolean('initialize_front_sheet')) {
+            abort_unless($quotation->tour, 404);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+                $comparison = Comparison::firstOrCreate(['id' => $id]);
+                // Serialize initialization for this quotation.
+                Comparison::whereKey($id)->lockForUpdate()->firstOrFail();
+                $this->syncComparisonRows($comparison);
+            });
+            return redirect(route('comparison.show', ['comparison' => $id]));
+        }
 	    $comparison = Comparison::findOrFail($id);
 
 	    foreach ($comparison->comparison_rows as $row) {

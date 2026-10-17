@@ -9,7 +9,7 @@
                     <div class="panel-heading">
                         {{-- <form action="{{route('file_delete', ['id' => $image->id])}}" method="post"> --}}
                             {{-- {{csrf_field()}} --}}
-                            <button class="btn btn-danger btn-xs del-attach" data-attach-id="{{$image->id}}" data-attach-url="{{route('file_delete', ['id' => $image->id])}}">
+                            <button type="button" aria-label="Delete attachment" title="Delete attachment" class="btn btn-danger btn-xs del-attach" data-attach-id="{{$image->id}}" data-attach-url="{{route('file_delete', ['id' => $image->id])}}">
                                 <span class="glyphicon glyphicon-remove" aria-hidden="true" title="Delete"></span>
                             </button>
                             {{-- </form> --}}
@@ -73,7 +73,7 @@
                                 <div style="display: inline-block" class="pull-right">
                                     {{-- <form action="{{route('file_delete', ['id' => $attach->id])}}" method="post"> --}}
                                         {{-- {{csrf_field()}} --}}
-                                        <button class="btn btn-danger btn-xs del-attach" data-attach-url="{{route('file_delete', ['id' => $attach->id])}}">
+                                        <button type="button" aria-label="Delete attachment" title="Delete attachment" class="btn btn-danger btn-xs del-attach" data-attach-url="{{route('file_delete', ['id' => $attach->id])}}">
                                             <span class="glyphicon glyphicon-remove" aria-hidden="true" title="Delete"></span>
                                         </button>
                                         {{-- </form> --}}

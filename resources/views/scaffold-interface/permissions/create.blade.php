@@ -47,7 +47,7 @@
 						{!! csrf_field() !!}
 						<div class="form-group {{$errors->has('name') ? 'has-error' : ''}}">
 							<label for="name">{{trans('main.Permission')}}</label>
-							<input type="text" name="name" class="form-control" placeholder="Name" value="{{ old('name') }}">
+							<input id="name" type="text" name="name" class="form-control" placeholder="Name" value="{{ old('name') }}">
 							@if($errors->has('name'))
 								<span class="help-block">
 									<strong>{{$errors->first('name')}}</strong>
@@ -56,7 +56,7 @@
 						</div>
 						<div class="form-group {{$errors->has('alias') ? 'has-error' : ''}}">
 							<label for="alias">{{trans('main.Alias')}}</label>
-							<input type="text" name="alias" class="form-control" placeholder="Alias" value="{{ old('alias') }}">
+							<input id="alias" type="text" name="alias" class="form-control" placeholder="Alias" value="{{ old('alias') }}">
 							@if($errors->has('alias'))
 								<span class="help-block">
 									<strong>{{$errors->first('alias')}}</strong>

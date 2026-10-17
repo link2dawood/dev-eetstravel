@@ -33,7 +33,7 @@
                 <div class="col-md-6 mb-2 mb-md-0">
                     <div class="input-icon">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="cruise-search" class="form-control" placeholder="Search cruises..." onkeyup="filterTable('cruise-table', this.value)">
+                        <input aria-label="Search cruises..." type="text" id="cruise-search" class="form-control" placeholder="Search cruises..." onkeyup="filterTable('cruise-table', this.value)">
                     </div>
                 </div>
                 <div class="col-md-6 text-md-end">

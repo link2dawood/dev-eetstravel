@@ -42,6 +42,16 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function show($id)
+    {
+        $user = User::with('roles')->findOrFail($id);
+        return view('scaffold-interface.resource-details', [
+            'heading' => 'User Details', 'listRoute' => 'users.index',
+            'fields' => ['ID' => $user->id, 'Name' => $user->name, 'Email' => $user->email,
+                'Roles' => $user->roles->pluck('name')->implode(', ')],
+        ]);
+    }
+
     public function index()
     {
         $users = \App\User::all();

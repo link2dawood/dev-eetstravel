@@ -11,6 +11,8 @@ namespace App\Helper;
 
 use App\GooglePlaces;
 use SKAgarwal\GoogleApi\PlacesApi;
+use SKAgarwal\GoogleApi\Exceptions\GooglePlacesApiException;
+use GuzzleHttp\Exception\GuzzleException;
 
 class GooglePlacesHelper
 {
@@ -19,13 +21,13 @@ class GooglePlacesHelper
         if($infoPlace){
             try{
 //                $googlePlaces = new PlacesApi('AIzaSyBQt2AhjTda22hWbyq-FvG1xP806ZmzV1A');
-                $googlePlaces = new PlacesApi('AIzaSyBV706sie0bSi4QCwu06KbvH3QBiTSNJzY');
+                $googlePlaces = app(PlacesApi::class, ['key' => config('google.places.key')]);
 //                $googlePlaces = new PlacesApi('AIzaSyDvx-JKMyREociW9aPFqsBrnYysrCeV6us');
 //                $googlePlaces = new PlacesApi('AIzaSyDFcQzqTzcEMlfYSCPcSaM95aBLyugwDZk');
 //                $googlePlaces = new PlacesApi('AIzaSyCX-j9dFmFtiAZNfxv6oYYpbwO-2yKxvvA');
 //                $googlePlaces = new PlacesApi('AIzaSyB-Jw7JkQA2QbVZFQssictsimeqwSXPsBg');
                 $place = @$googlePlaces->placeDetails($infoPlace->place_id);
-            } catch (GooglePlacesApiException $e){
+            } catch (GooglePlacesApiException | GuzzleException $e){
                 return null;
             }
             return $place;

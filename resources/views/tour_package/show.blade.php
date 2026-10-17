@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Tour Package Details')
 @section('content')
 
 <section class="content">
@@ -33,7 +33,8 @@
                 <td>
                     <b><i>{!!trans('main.status')!!}: </i></b>
 
-                <td>{!!$tour_package->status!!}</td>
+                </td>
+                <td data-package-status>{{ $tour_package->getStatusName() ?: ($tour_package->status ? 'Status unavailable' : 'Not set') }}</td>
             </tr>
         </tbody>
     </table>

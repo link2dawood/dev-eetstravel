@@ -48,8 +48,8 @@
 					<div class="col-md-12">
 						{!! csrf_field() !!}
 						<div class="form-group">
-							<label for="">{{trans('main.Role')}}</label>
-							<input type="text" name = "name" class = "form-control" placeholder = "Name">
+							<label for="name">{{trans('main.Role')}}</label>
+							<input id="name" type="text" name = "name" class = "form-control" placeholder = "Name">
 						</div>
                 <div class="manage-form-actions-bottom">
                     <a href="{{ url('roles') }}" class="btn btn-secondary">

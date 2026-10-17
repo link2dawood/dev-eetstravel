@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Supplier Invoice Details')
 @section('content')
     @include('layouts.title',
    ['title' => 'Supplier Invoices', 'sub_title' => 'accounting Show',
@@ -13,19 +13,15 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="margin_button">
-                        <a href="{{ route('invoices.index') }}">
-                            <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                        </a>
+                        <a href="{{ route('invoices.index') }}" class="btn btn-primary">{!!trans('main.Back')!!}</a>
 						
 						{{--
-                        <a href="{!! route('invoices.edit', $invoices->id) !!}">
-                            <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                        </a>--}}
+                        <a href="{!! route('invoices.edit', $invoices->id) !!}" class="btn btn-warning">{!!trans('main.Edit')!!}</a>--}}
                     </div>
                 </div>
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
-                <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
+                <ul class="nav nav-tabs" role='tablist'>
                     <li role='presentation' class="active"><a class="nav-link active" href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{!!trans('main.Info')!!}</a></li>
 				</ul>
                  

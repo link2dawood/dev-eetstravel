@@ -412,7 +412,12 @@ class ClientInvoiceController extends Controller
         $sheet = new class($data) implements \Maatwebsite\Excel\Concerns\FromView {
             private array $data;
             public function __construct(array $data) { $this->data = $data; }
-            public function view(): \Illuminate\Contracts\View\View { return view('export.accounting.invoice', $this->data); }
+            public function view(): \Illuminate\Contracts\View\View
+            {
+                return view('export.accounting.invoice', $this->data + [
+                    'worksheetTitle' => 'Invoice ' . $this->data['invoice']->id,
+                ]);
+            }
         };
         return Excel::download($sheet, 'invoice-' . $id . '.xlsx');
     }

@@ -41,7 +41,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <input type="text" id="clients-search" class="form-control" placeholder="Search by name, email, phone, country or city..." name="search" value="{{ request('search') }}" data-list-search>
+                                <input aria-label="Search by name, email, phone, country or city..." type="text" id="clients-search" class="form-control" placeholder="Search by name, email, phone, country or city..." name="search" value="{{ request('search') }}" data-list-search>
                             </div>
                         </div>
                         <div class="table-responsive">

@@ -70,8 +70,8 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
                         </div>
 
                         <div class="form-group" id = "tour_div" style="display:none">
-                            <label for="tours">{{ trans('main.Tour') }}</label>
-                            <select name="tours" id="tours" class="form-control">
+                            <label for="task-tour">{{ trans('main.Tour') }}</label>
+                            <select name="tours" id="task-tour" class="form-control">
 
                                 @foreach($tours as $tour)
                                 <option value="{{ $tour->id }}">{{ $tour->name }}</option>
@@ -83,8 +83,8 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
                             {!! Form::select('task_type', \App\Task::$taskTypes, 0, ['class' => 'form-control task_type']) !!}
                         </div>
                         <div class="form-group">
-                            <label for="status">{!!trans('main.Status')!!}</label>
-                            <select name="status" id="status" class="form-control">
+                            <label for="task-legacy-status">{!!trans('main.Status')!!}</label>
+                            <select name="status" id="task-legacy-status" class="form-control">
                                 @foreach($statuses as $status)
                                 <option {{ old('status') == $status->id ? 'selected' : '' }} value="{{ $status->id }}">{{ $status->name }}</option>
                                 @endforeach
@@ -97,12 +97,12 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
 
                             <div v-else>
                                 {{--<div class="form-group">
-                                    <label for="tours">{{ trans('main.Tour') }}</label>
+                                    <label for="task-tour">{{ trans('main.Tour') }}</label>
                                 <select2 custom-first="true" custom-text="" custom-value="0" name="tour" id="tour" :options="toursAttachedUser">
 
                                 </select2>
 
-                                <select name="tours" id="tours" class="form-control">
+                                <select name="tours" id="task-tour" class="form-control">
 
                                     @foreach($tours as $tour)
                                     <option value="{{ $tour->id }}">{{ $tour->name }}</option>
@@ -144,8 +144,8 @@ $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')
                 </div>
 
                 <div class="form-group">
-                    <label for="status">{{ trans('main.Status') }}</label>
-                    <select2 name="status" id="status" :options="statuses" :allow-clear="true">
+                    <label for="task-status">{{ trans('main.Status') }}</label>
+                    <select2 name="status" id="task-status" :options="statuses" :allow-clear="true">
                     </select2>
                 </div>
                 --}}

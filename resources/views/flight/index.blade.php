@@ -111,12 +111,6 @@
                     </tbody>
                 </table>
             </div>
-            @if($flights->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="text-muted">Showing {{ $flights->firstItem() }} to {{ $flights->lastItem() }} of {{ $flights->total() }} entries</div>
-                <div>{{ $flights->links() }}</div>
-            </div>
-            @endif
         </div>
     </div>
 </div>

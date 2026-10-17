@@ -1,5 +1,5 @@
 @extends('email.layout')
-@section('title','Index')
+@section('title', 'Email')
 @section('main-content')
 
 

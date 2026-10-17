@@ -1,6 +1,6 @@
 @extends('scaffold-interface.layouts.tabler-app')
 
-@section('title', 'Create')
+@section('title', 'Create Office Invoice')
 
 @section('content')
     @include('layouts.title', [

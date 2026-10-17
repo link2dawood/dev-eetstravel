@@ -474,7 +474,8 @@ class HotelController extends Controller
 
     public function getItemContactView(Request $request){
         $count = $request->get('itemCount');
-        $view = View::make('component.hotel_contact_form', compact('count'));
+        $contact_name_required = $request->boolean('contact_name_required');
+        $view = View::make('component.hotel_contact_form', compact('count', 'contact_name_required'));
 
         return $view->render();
     }

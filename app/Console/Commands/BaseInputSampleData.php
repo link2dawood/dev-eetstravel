@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
  */
 class BaseInputSampleData extends Command
 {
-    protected $signature = 'base:sample-data {--remove : Delete the sample records instead of creating them}';
+    protected $signature = 'base:sample-data {--remove : Delete the sample records instead of creating them} {--safe : Keep existing currency codes and exchange rates unchanged}';
 
     protected $description = 'Create (or remove) QA Sample statuses, room types, rates, currencies, currency rates and criteria';
 
@@ -105,12 +105,18 @@ class BaseInputSampleData extends Command
                 ]);
             }
             foreach (self::CURRENCIES as [$name, $code, $symbol, $cent, $symbolCent]) {
+                if ($this->option('safe') && DB::table('currencies')->where('code', $code)->exists()) {
+                    continue;
+                }
                 $ids['currencies'][] = DB::table('currencies')->insertGetId([
                     'name' => self::PREFIX . $name, 'code' => $code, 'symbol' => $symbol, 'cent' => $cent, 'symbol_cent' => $symbolCent,
                     'created_at' => $now, 'updated_at' => $now,
                 ]);
             }
             foreach (self::CURRENCY_RATES as $currency => $rate) {
+                if ($this->option('safe')) {
+                    continue;
+                }
                 $ids['currency_rates'][] = DB::table('currency_rates')->insertGetId([
                     'currency' => $currency, 'rate' => $rate, 'date' => $today, 'created_at' => $now, 'updated_at' => $now,
                 ]);
@@ -131,7 +137,9 @@ class BaseInputSampleData extends Command
         file_put_contents($this->manifestPath(), json_encode($made, JSON_PRETTY_PRINT));
 
         $this->table(array_keys($made), [array_map('count', array_values($made))]);
-        $this->line('Currency rates are example values dated ' . $today . ' (EUR = 1), not live rates.');
+        $this->line($this->option('safe')
+            ? 'Existing currency codes and exchange rates were preserved.'
+            : 'Currency rates are example values dated ' . $today . ' (EUR = 1), not live rates.');
         $this->info('Remove them with: php artisan base:sample-data --remove');
 
         return 0;

@@ -1,4 +1,4 @@
-@if ($message->author->id !== Auth::id())
+@if (($message->author->id ?? null) !== Auth::id())
     @include('chats.component.chat_message')
     <!-- /.direct-chat-msg -->
 @else

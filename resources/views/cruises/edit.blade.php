@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Edit')
+@section('title', 'Edit Cruise')
 @section('content')
 	@include('layouts.title',
    ['title' => 'Cruise', 'sub_title' => 'Cruise Edit',
@@ -37,7 +37,7 @@
 																'city_label' => 'city_to','city_translation' =>'main.CityTo', 'city_default' =>  \App\Helper\CitiesHelper::getCityById($cruise->city_to)['name']])
 							@endcomponent
 							<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-								<label for="departure_date">{!!trans('main.DateFrom')!!}</label>
+								<label for="from_date">{!!trans('main.DateFrom')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-calendar"></i>
@@ -47,7 +47,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-								<label for="departure_date">{!!trans('main.TimeFrom')!!}</label>
+								<label for="from_time">{!!trans('main.TimeFrom')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-clock-o"></i>
@@ -57,7 +57,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-left: 0">
-								<label for="departure_date">{!!trans('main.DateTo')!!}</label>
+								<label for="to_date">{!!trans('main.DateTo')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-calendar"></i>
@@ -67,7 +67,7 @@
 							</div>
 
 							<div class="form-group col-md-6 col-lg-6" style="padding-right: 0">
-								<label for="departure_date">{!!trans('main.TimeTo')!!}</label>
+								<label for="to_time">{!!trans('main.TimeTo')!!}</label>
 								<div class="input-group date">
 									<div class="input-group-addon">
 										<i class="fa fa-clock-o"></i>
@@ -129,16 +129,16 @@
                                 <input id="website" name="website" type="text" class="form-control" value="{{$cruise->website}}">
                             </div>
 							<div class="form-group">
-								<label for="criteria">{!!trans('main.Criteria')!!}</label>
+								<span class="form-label">{!!trans('main.Criteria')!!}</span>
 							</div>
 							@foreach($criterias as $criteria)
 								<div class="form-group criteria_block">
-									<input type="checkbox"
+									<input id="service-criteria-{{$criteria->id}}" type="checkbox"
 										   @foreach($cruise->criterias as $item)
 										   {{ $criteria->id == $item->criteria_id ? 'checked' : '' }}
 										   @endforeach
 										   value="{{ $criteria->id }}" name="criterias">
-									<label for="">{{ $criteria->name }}</label>
+									<label for="service-criteria-{{$criteria->id}}">{{ $criteria->name }}</label>
 								</div>
 							@endforeach
 

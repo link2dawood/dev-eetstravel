@@ -171,20 +171,8 @@
 				</div>
                 <div class="form-group">
                     <label for="avatar">Avatar</label>
-                    @php
-                        $avatarPath = $user->avatar && file_exists(public_path($user->avatar)) ? asset($user->avatar) : null;
-                        $avatarInitials = collect(explode(' ', trim($user->name ?: $user->email)))->filter()->take(2)->map(function ($part) { return strtoupper(substr($part, 0, 1)); })->implode('');
-                    @endphp
-                    <div>
-                        <div class="user-avatar-preview">
-                            @if($avatarPath)
-                                <img src="{{ $avatarPath }}" alt="{{ $user->name ?: 'User' }} avatar">
-                            @else
-                                <span>{{ $avatarInitials ?: 'U' }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*">
+                    <div class="mb-2">@include('component.avatar-preview', ['avatarUser' => $user, 'avatarSize' => 100])</div>
+                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*"></div>
                     <small class="form-text text-muted">Upload a new avatar image (optional)</small>
                 </div>
 				<div class="user-edit-actions-bottom">
@@ -285,9 +273,7 @@
 </section>
 @endsection
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@section('post_scripts')
 <script>
 	$(document).ready(function() {
 		$('.select22').select2({
@@ -296,9 +282,4 @@
 		});
 	});
 </script>
-
-
-
-
-
-
+@endsection

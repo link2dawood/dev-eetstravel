@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Exchange Rates')
 @section('content')
     @include('layouts.title',
            ['title' => 'Currency Rates', 'sub_title' => 'Currency Rates List',
@@ -12,7 +12,7 @@
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                     <div class="input-icon flex-grow-1" style="max-width: 420px;">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="text" id="currency-search" class="form-control" placeholder="Search currency rates..." name="search" value="{{ request('search') }}" data-list-search>
+                        <input aria-label="Search currency rates..." type="text" id="currency-search" class="form-control" placeholder="Search currency rates..." name="search" value="{{ request('search') }}" data-list-search>
                     </div>
                     <div class="ms-auto d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-success" onclick="exportTableToCSV('currency-table', 'currency_rates_export.csv')">

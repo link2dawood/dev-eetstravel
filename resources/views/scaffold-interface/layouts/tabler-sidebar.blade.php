@@ -3,12 +3,9 @@
 @endphp
 
 <!-- Sidebar -->
-<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+<aside class="navbar navbar-vertical navbar-expand-lg tms-sidebar" data-bs-theme="dark">
     <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <h1 class="navbar-brand navbar-brand-autodark">
+        <h1 class="navbar-brand navbar-brand-autodark d-none d-lg-flex">
             <a href="{{url('home')}}">
                 <span class="navbar-brand-text">TMS</span>
             </a>
@@ -36,15 +33,15 @@
 
                 <!-- User Administration -->
                 @if(Auth::user()->hasRole('admin'))
-                <li class="nav-item dropdown {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'setting.index'], $route)) ? 'active' : ''}}">
+                <li class="nav-item dropdown {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'settings.index'], $route)) ? 'active' : ''}}">
                     <a class="nav-link dropdown-toggle" href="#navbar-users" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
-                       aria-expanded="{{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'setting.index'], $route)) ? 'true' : 'false'}}">
+                       aria-expanded="{{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'settings.index'], $route)) ? 'true' : 'false'}}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <i class="ti ti-users icon"></i>
                         </span>
                         <span class="nav-link-title">{{ trans('main.Users') }}</span>
                     </a>
-                    <div class="dropdown-menu {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'setting.index'], $route)) ? 'show' : ''}}">
+                    <div class="dropdown-menu {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['users.index', 'roles.index', 'permissions.index', 'settings.index'], $route)) ? 'show' : ''}}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('users.index', $route) !!}" href="{{url('/users')}}">
@@ -56,7 +53,7 @@
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('permissions.index', $route) !!}" href="{{url('/permissions')}}">
                                     <i class="ti ti-key icon me-2"></i>{{ trans('main.Permissions') }}
                                 </a>
-                                <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('setting.index', $route) !!}" href="{{route('settings.index')}}">
+                                <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('settings.index', $route) !!}" href="{{route('settings.index')}}">
                                     <i class="ti ti-settings icon me-2"></i>{{ trans('Settings') }}
                                 </a>
                             </div>
@@ -272,9 +269,13 @@
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('email.index', $route) !!}" href="{{route('email.index')}}">
                                     <i class="ti ti-mail icon me-2"></i>{{trans('main.Email')}} {{trans('main.Inbox')}}
                                 </a>
+                                @endif
+                                @if(Auth::user()->can('templates.index'))
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('templates.index', $route) !!}" href="{{route('templates.index')}}">
                                     <i class="ti ti-template icon me-2"></i>{{trans('main.Email')}} {{trans('main.Templates')}}
                                 </a>
+                                @endif
+                                @if(Auth::user()->can('email.main'))
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('snappymail.sso', $route) !!}" href="{{route('snappymail.sso')}}" target="_blank">
                                     <i class="ti ti-mail-opened icon me-2"></i>Webmail (SnappyMail)
                                 </a>
@@ -314,32 +315,32 @@
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
                                 @if(Auth::user()->can('accounting.index'))
-                                <a class="dropdown-item" href="{{ route('accounting.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('accounting.index', $route) }}" href="{{ route('accounting.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('accounting.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-coin icon me-2"></i>{{trans('Billing')}}
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('office.index'))
-                                <a class="dropdown-item" href="{{ route('office.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('office.index', $route) }}" href="{{ route('office.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('office.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-building-bank icon me-2"></i>{{trans('Offices')}}
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('invoices.index'))
-                                <a class="dropdown-item" href="{{ route('invoices.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('invoices.index', $route) }}" href="{{ route('invoices.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('invoices.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-file-invoice icon me-2"></i>{{trans('Invoices')}}
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('transaction.index'))
-                                <a class="dropdown-item" href="{{ route('transaction.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('transaction.index', $route) }}" href="{{ route('transaction.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('transaction.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-arrows-exchange icon me-2"></i>Transactions
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('taxes.index'))
-                                <a class="dropdown-item" href="{{ route('taxes.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('taxes.index', $route) }}" href="{{ route('taxes.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('taxes.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-receipt-tax icon me-2"></i>{{trans('Taxes')}}
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('reporting.index'))
-                                <a class="dropdown-item" href="{{ route('reporting.index') }}">
+                                <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('reporting.index', $route) }}" href="{{ route('reporting.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('reporting.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-report icon me-2"></i>{{trans('Reporting')}}
                                 </a>
                                 @endif

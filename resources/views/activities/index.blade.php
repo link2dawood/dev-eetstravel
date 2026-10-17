@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Activities')
 @section('content')
     @include('layouts.title',
         ['title' => 'Activities', 'sub_title' => 'Activities List',
@@ -9,6 +9,15 @@
 <section class="content">
   <div class="box box-primary">
     <div class="box-body">
+      <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+        <div><label for="activity-search" class="form-label">Global search</label><input id="activity-search" class="form-control" type="search"></div>
+        <div><label for="activity-page-size" class="form-label">Rows per page</label><select id="activity-page-size" class="form-select"><option>10</option><option>25</option><option selected>50</option><option>100</option></select></div>
+        <button type="button" class="btn btn-outline-secondary" data-activity-export="csv">Export CSV</button>
+        <button type="button" class="btn btn-outline-secondary" data-activity-export="xlsx">Export Excel</button>
+        <button type="button" class="btn btn-outline-secondary" data-activity-export="pdf">Export PDF</button>
+      </div>
+      <p class="text-muted">Exports include all matching records across pages.</p>
+      <div id="activity-export-error" class="alert alert-danger" role="alert" hidden></div>
       <table id="activity-table" class="table table-striped table-bordered table-hover" style='background:#fff'>
         <thead>
         <tr>
@@ -52,60 +61,10 @@
 </section>
 @endsection
 @push('scripts')
-  <script>
-      $(document).ready(function() {
-          let table = $('#activity-table').DataTable({
-              dom: "<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-              "<'row'<'col-sm-12'tr>>" +
-              "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-              buttons: [
-                  {
-                      extend: 'csv',
-                      title: 'Activities List',
-                      exportOptions: {
-                          columns: ':not(.actions-button)'
-                      }
-                  },
-                  {
-                      extend: 'excel',
-                      title: 'Activities List',
-                      exportOptions: {
-                          columns: ':not(.actions-button)'
-                      }
-                  },
-                  {
-                      extend: 'pdfHtml5',
-                      title: 'Activities List',
-                      exportOptions: {
-                          columns: ':not(.actions-button)'
-                      }
-                  }
-              ],
-              language : {
-                  search: "Global Search :"
-              },
-              pageLength: 50,
-              columnDefs: [
-                  { targets: [3], orderable: false } // Actions/Link column not sortable
-              ]
-          });
-          $('#activity-table tfoot th').each(function() {
-              let column = this;
-              if(column.className !== 'not') {
-                  let title = $(this).text();
-                  $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-              }
-          });
-          table.columns().every(function() {
-              let that = this;
-
-              $('input', this.footer()).on('keyup change', function() {
-                  if(that.search() !== this.value) {
-                      that.search(this.value).draw();
-                  }
-              });
-          });
-          $('#activity-table tfoot th').appendTo('#activity-table thead');
-      });
-  </script>
+<script src="{{ asset('js/lib/plugins/export/libs/jszip/jszip.min.js') }}"></script>
+<script src="{{ asset('js/lib/plugins/export/libs/FileSaver.js/FileSaver.min.js') }}"></script>
+<script src="{{ asset('js/lib/plugins/export/libs/xlsx/xlsx.min.js') }}"></script>
+<script src="{{ asset('js/lib/plugins/export/libs/pdfmake/pdfmake.min.js') }}"></script>
+<script src="{{ asset('js/lib/plugins/export/libs/pdfmake/vfs_fonts.js') }}"></script>
+<script src="{{ asset('js/activities-table.js') }}?v={{ filemtime(public_path('js/activities-table.js')) }}"></script>
 @endpush

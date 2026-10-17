@@ -64,7 +64,7 @@
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
                         </span>
-                        <input type="text" 
+                        <input aria-label="Search transfers by name, city, country..." type="text"
                                id="transfer-search" 
                                class="form-control" 
                                placeholder="Search transfers by name, city, country..."

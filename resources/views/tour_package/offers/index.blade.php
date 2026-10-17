@@ -1,5 +1,5 @@
 ﻿@extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Tour Package Offers')
 @section('content')
 <style>
 	.select2-container {

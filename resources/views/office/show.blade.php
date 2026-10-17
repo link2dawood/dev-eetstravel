@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Office Details')
 @section('content')
     @include('layouts.title',
    ['title' => 'Office', 'sub_title' => 'Office finances',
@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
-                <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
+                <ul class="nav nav-tabs" role='tablist'>
                     <li role='presentation' class="active"><a class="nav-link active" href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{!!trans('main.Info')!!}</a></li>
 					<li role='presentation'><a class="nav-link" href="#office-invoice-tab" aria-controls='office-invoice-tab' role='tab' data-bs-toggle='tab'>{!!trans('Office Invoice')!!}</a></li>
                     
@@ -91,7 +91,7 @@
 								</div>
 								</div>
 					
-                    <div id="tour_create" style="float: right;margin:50px 0px 50px 0px">
+                    <div class="office-create-control" style="float: right;margin:50px 0px 50px 0px">
                         @can('tour_expenses.create')<a class="btn btn-primary" href="{{ url('tour_expenses/create/'.$offices->id) }}">New</a>@endcan
                     </div>
 					<h3 style=" margin:50px 0px 50px 0px">{{ trans('TOUR EXPENSES') }}</h3>
@@ -127,7 +127,7 @@
 							</tbody>
 						</table>
 					</div>
-                    <div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
+                    <div class="office-create-control" style="float: right; margin:50px 0px 50px 0px">
                         @can('utility_expenses.create')<a class="btn btn-primary" href="{{ url('utility_expenses/create/'.$offices->id) }}">New</a>@endcan
                     </div>
 					<h3  style=" margin:50px 0px 50px 0px">{{ trans('UTILITY EXPENSES') }}</h3>
@@ -161,7 +161,7 @@
 							</tbody>
 						</table>
 					</div>
-            <div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
+            <div class="office-create-control" style="float: right; margin:50px 0px 50px 0px">
                 @can('employes-salary.create')<a class="btn btn-primary" href="{{ url('employes-salary/create/'.$offices->id) }}">New</a>@endcan
             </div>
 			<h3 style=" margin:50px 0px 50px 0px">{{ trans('EMPLOYEE SALARY') }}</h3>
@@ -198,7 +198,7 @@
 						</table>
 					</div>
 			
-			<div id="tour_create" style="float: right; margin:50px 0px 50px 0px">
+			<div class="office-create-control" style="float: right; margin:50px 0px 50px 0px">
                 @can('office_earning.create')<a class="btn btn-primary" href="{{ url('office_earning/create/'.$offices->id) }}">New</a>@endcan
             </div>		
 			<h3 style=" margin:50px 0px 50px 0px">{{ trans('OFFICE EARNINGS') }}</h3>

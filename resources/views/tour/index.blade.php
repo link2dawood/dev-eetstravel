@@ -80,7 +80,7 @@
                 <div class="col-md-6 col-lg-5">
                     <div class="input-icon table-search">
                         <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                        <input type="search" name="search" id="tour-search" class="form-control" placeholder="Search all tours..." value="{{ request('search') }}">
+                        <input aria-label="Search all tours..." type="search" name="search" id="tour-search" class="form-control" placeholder="Search all tours..." value="{{ request('search') }}">
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-7">

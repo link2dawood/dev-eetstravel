@@ -47,7 +47,13 @@ class DashboardHelper
     public static function isMenuActive($route, $currentRoute)
     {
 
-        return $currentRoute == $route ? 'active': '';
+        if (!is_string($route) || !is_string($currentRoute)) return '';
+        if ($currentRoute === $route) return 'active';
+        if (substr($route, -6) === '.index') {
+            $module = substr($route, 0, -6);
+            if (strpos($currentRoute, $module.'.') === 0) return 'active';
+        }
+        return '';
     }
 
 
@@ -60,6 +66,9 @@ class DashboardHelper
     public static function isMenuTreeViewActive($routes, $currentRoute)
     {
 
-        return in_array($currentRoute, $routes);
+        foreach ($routes as $route) {
+            if (self::isMenuActive($route, $currentRoute) === 'active') return true;
+        }
+        return false;
     }
 }

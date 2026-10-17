@@ -45,8 +45,10 @@ class GuestListController extends Controller {
 	 */
 	public function index() {
         $title = 'Index - guest list';
-        $guestList = \App\GuestList::all();
-                //Quotation::query()->get();
+        $guestList = GuestList::with('tour')
+            ->leftJoin('users', 'users.id', '=', 'guest_lists.author_id')
+            ->select('guest_lists.*', 'users.name as author_name')
+            ->orderBy('guest_lists.created_at', 'desc')->get();
 
         return view('guest_list.index', compact('guestList', 'title'));
 	}

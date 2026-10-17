@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Driver Details')
 @section('content')
     @include('layouts.title',
            ['title' => 'Driver', 'sub_title' => 'Driver Show',

@@ -92,6 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Calendar element found, initializing FullCalendar...');
 
+    if (!window.FullCalendar || typeof window.FullCalendar.Calendar !== 'function') {
+        calendarEl.hidden = true;
+        var unavailable = document.getElementById('calendar-unavailable');
+        if (unavailable) unavailable.hidden = false;
+        return;
+    }
+
     var task_permission = document.getElementById('task_create_permission')?.getAttribute('data-info') === 'true';
     var holiday_permission = document.getElementById('holiday_list_permission')?.getAttribute('data-info') === 'true';
 

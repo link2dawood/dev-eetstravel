@@ -22,7 +22,7 @@
 </div>
 
 {{-- Delete Confirmation Modal --}}
-<div class="modal fade" tabindex="-1" id="myModal">
+<div class="modal fade" tabindex="-1" id="dashboard-tour-delete-modal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -325,7 +325,7 @@ $(function () {
                 $('#deleteTourName').text(tour.name + ' (ID: ' + tour.id + ')');
                 
                 // Show the modal
-                $('#myModal').modal('show');
+                $('#dashboard-tour-delete-modal').modal('show');
             },
 
             confirmDelete: function() {
@@ -354,7 +354,7 @@ $(function () {
                         console.log('Delete successful:', response);
                         
                         // Close modal
-                        $('#myModal').modal('hide');
+                        $('#dashboard-tour-delete-modal').modal('hide');
                         $('.modal-backdrop').remove();
                         
                         if (typeof window.appToast === 'function') {
@@ -370,7 +370,7 @@ $(function () {
                         console.error('Delete error:', xhr, status, error);
                         
                         // Close modal
-                        $('#myModal').modal('hide');
+                        $('#dashboard-tour-delete-modal').modal('hide');
                         $('.modal-backdrop').remove();
                         
                         // Reset button
@@ -411,7 +411,7 @@ $(function () {
     });
 
     // Clean up modal when closed
-    $('#myModal').on('hidden.bs.modal', function () {
+    $('#dashboard-tour-delete-modal').on('hidden.bs.modal', function () {
         $('#confirmDeleteBtn').prop('disabled', false).text('{{ trans("main.Delete") }}');
     });
 });

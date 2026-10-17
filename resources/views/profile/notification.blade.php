@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Notifications')
 @section('content')
     @include('layouts.title',
    ['title' => 'Notifications', 'sub_title' => $user->name,

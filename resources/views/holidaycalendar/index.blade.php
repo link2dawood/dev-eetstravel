@@ -1,67 +1,36 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Holidays')
 @section('content')
-    @include('layouts.title',
-           ['title' => 'Holidays', 'sub_title' => 'Holidays List',
-           'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Holidays List', 'icon' => null, 'route' => null]]])
-    <section class="content">
-        <div class="box box-primary">
-
-            <br>
-            <div class="col-lg-12">
-                <div class="alert alert-danger" id="errors_message" style="text-align: center; display: none">
-                </div>
-            </div>
-
-            <div class="box-body">
-                <div>
-                    {!! \App\Helper\PermissionHelper::getCreateButton(route('holiday.create'), \App\Holidaycalendarday::class) !!}
-                </div>
-                <br>
-                <br>
-                <table id="holidaycalendar-table" class="table table-striped table-bordered table-hover" style='background:#fff;width: 100%;'>
-                    <thead>
-                    <th>ID</th>
-                    <th>{!!trans('main.Name')!!}</th>
-                    <th>{!!trans('main.Date')!!}</th>
-                    <th>{!!trans('main.Color')!!}</th>
-                    <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                    </thead>
-                </table>
+@include('layouts.title', ['title' => 'Holidays', 'sub_title' => 'Holidays List', 'breadcrumbs' => [
+    ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
+    ['title' => 'Holidays', 'icon' => null, 'route' => null]
+]])
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+            {!! \App\Helper\PermissionHelper::getCreateButton(route('holiday.create'), \App\Holidaycalendarday::class) !!}
+            <div>
+                <label class="form-label" for="holiday-search">Search holidays</label>
+                <input type="search" id="holiday-search" class="form-control" oninput="filterTable('holidaycalendar-table', this.value)">
             </div>
         </div>
-
-    </section>
+        <div class="alert alert-danger" id="errors_message" role="alert" style="display:none"></div>
+        <div class="table-responsive">
+            <table id="holidaycalendar-table" class="table table-striped table-bordered table-hover">
+                <thead><tr><th>ID</th><th>Name</th><th>Date</th><th>Color</th><th class="actions-button">Actions</th></tr></thead>
+                <tbody>
+                    @foreach($holidaycalendarday as $holiday)
+                        <tr data-holiday-id="{{ $holiday->id }}">
+                            <td>{{ $holiday->id }}</td>
+                            <td>{{ $holiday->name }}</td>
+                            <td>{{ $holiday->start_time ? \Carbon\Carbon::parse($holiday->start_time)->format('Y-m-d') : '—' }}</td>
+                            <td>{{ $holiday->backgroundcolor ?: '—' }}</td>
+                            <td>{!! $holiday->action_buttons !!}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 @endsection
-
-@push('scripts')
-
-<script>
-    $(document).ready(function() {
-        let table = $('#holidaycalendar-table').DataTable({
-            dom: 	"<'row'<'col-sm-5'l><'col-sm-2'B><'col-sm-5'f>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            buttons: [],
-            processing: true,
-            serverSide: true,
-            pageLength: 50,
-            ajax: {
-                url: "{{route('holidaycalendar_data')}}",
-            },
-            columns: [
-                {data: 'id', name: 'id'},
-                {data: 'name', name: 'name'},
-                {data: 'start_time', name: 'start_time',
-                    render: function(d){
-                    return moment(d).format("YYYY-MM-DD");}
-                },
-                {data: 'backgroundcolor', name: 'backgroundcolor'},
-                {data: 'action', name: 'action', searchable: false, sorting: false, orderable: false}
-            ],
-        });
-    })
-</script>
-@endpush

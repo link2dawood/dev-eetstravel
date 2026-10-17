@@ -9,7 +9,7 @@
               <div class="wrapper">
                 <div class="card">
                     <div class="card-body p-5">
-						<img src="https://eetstravel.com/wp-content/uploads/2022/05/final-1-300x263.jpg" class="img-fluid w-50 mx-auto d-block mb-4">
+						<img src="{{asset('img/eets_logo.png')}}" alt="EETS Travel" class="img-fluid w-50 mx-auto d-block mb-4">
                         <h1 class="title text-center fs-2">Login to your account</h1>
                         @if(session('error'))
                             <div class="alert alert-danger">{{ session('error') }}</div>

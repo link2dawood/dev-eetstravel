@@ -65,7 +65,8 @@
                                     />
 
                                     <x-form-input 
-                                        name="address_first" 
+                                        name="address_first"
+                                        :required="true"
                                         label="{{ trans('main.AddressFirst') }}" 
                                         col="col-12"
                                         value="{{ old('address_first') }}"
@@ -78,7 +79,7 @@
                                         value="{{ old('address_second') }}"
                                     />
 
-                                    @component('component.city_form', [
+                                    @component('component.city_form', ['location_required' => true,
                                         'country_label' => 'country', 
                                         'country_translation' => 'main.Country', 
                                         'country_default' => 0,
@@ -116,7 +117,8 @@
 
                                 <x-form-section title="Contact Information" icon="ti ti-phone">
                                     <x-form-input 
-                                        name="work_phone" 
+                                        name="work_phone"
+                                        :required="true"
                                         label="{{ trans('main.WorkPhone') }}" 
                                         type="tel"
                                         icon="ti ti-phone"
@@ -134,7 +136,8 @@
                                     />
 
                                     <x-form-input 
-                                        name="work_email" 
+                                        name="work_email"
+                                        :required="true"
                                         label="{{ trans('main.WorkEmail') }}" 
                                         type="email"
                                         icon="ti ti-mail"

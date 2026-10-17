@@ -275,7 +275,7 @@
   <script type="text/javascript" src="{{URL::asset('js/select2.min.js') }}"></script>
 
   <script type="text/javascript" src='{{asset('js/supplier-search.js')}}'></script>
-  <script type="text/javascript" src='{{asset('js/hide-elements.js')}}'></script>
+  <script type="text/javascript" src='{{asset('js/hide_elements.js')}}'></script>
   <script type="text/javascript" src='{{asset('js/roomlist.js')}}'></script>
  
   <script>

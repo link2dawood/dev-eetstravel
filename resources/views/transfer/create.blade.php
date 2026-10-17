@@ -35,7 +35,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label required">{!!trans('main.Name')!!}</label>
+                                <label class="form-label required" for="name">{!!trans('main.Name')!!}</label>
                                 <input id="name" 
                                        name="name" 
                                        type="text" 
@@ -48,7 +48,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Code')!!}</label>
+                                <label class="form-label" for="code">{!!trans('main.Code')!!}</label>
                                 <input id="code" 
                                        name="code" 
                                        type="text" 
@@ -57,7 +57,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label required">{!!trans('main.AddressFirst')!!}</label>
+                                <label class="form-label required" for="address_first">{!!trans('main.AddressFirst')!!}</label>
                                 <input id="address_first" 
                                        name="address_first" 
                                        type="text" 
@@ -67,7 +67,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.AddressSecond')!!}</label>
+                                <label class="form-label" for="address_second">{!!trans('main.AddressSecond')!!}</label>
                                 <input id="address_second" 
                                        name="address_second" 
                                        type="text" 
@@ -89,7 +89,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkPhone')!!}</label>
+                                <label class="form-label" for="work_phone">{!!trans('main.WorkPhone')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-phone"></i>
@@ -103,7 +103,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkFax')!!}</label>
+                                <label class="form-label" for="work_fax">{!!trans('main.WorkFax')!!}</label>
                                 <input id="work_fax" 
                                        name="work_fax" 
                                        type="text" 
@@ -112,7 +112,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkEmail')!!}</label>
+                                <label class="form-label" for="work_email">{!!trans('main.WorkEmail')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-mail"></i>
@@ -126,7 +126,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Website')!!}</label>
+                                <label class="form-label" for="website">{!!trans('main.Website')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-world"></i>
@@ -140,7 +140,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactName')!!}</label>
+                                <label class="form-label" for="contact_name">{!!trans('main.ContactName')!!}</label>
                                 <input id="contact_name" 
                                        name="contact_name" 
                                        type="text" 
@@ -149,7 +149,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactPhone')!!}</label>
+                                <label class="form-label" for="contact_phone">{!!trans('main.ContactPhone')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-phone"></i>
@@ -163,7 +163,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactEmail')!!}</label>
+                                <label class="form-label" for="contact_email">{!!trans('main.ContactEmail')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <i class="ti ti-mail"></i>
@@ -177,7 +177,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Comments')!!}</label>
+                                <label class="form-label" for="comments">{!!trans('main.Comments')!!}</label>
                                 <input id="comments" 
                                        name="comments" 
                                        type="text" 
@@ -186,7 +186,7 @@
                             </div>
 
                             <div class="col-md-12 mb-3">
-                                <label class="form-label">{!!trans('main.IntComments')!!}</label>
+                                <label class="form-label" for="int_comments">{!!trans('main.IntComments')!!}</label>
                                 <textarea id="int_comments" 
                                           name="int_comments" 
                                           rows="3" 
@@ -194,7 +194,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Rate')!!}</label>
+                                <label class="form-label" for="rate">{!!trans('main.Rate')!!}</label>
                                 <select name="rate" id="rate" class="form-select">
                                     @foreach($rates as $rate)
                                         <option value="{{ $rate->id }}" {{ old('rate') == $rate->id ? 'selected' : '' }}>

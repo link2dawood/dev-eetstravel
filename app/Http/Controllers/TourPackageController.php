@@ -126,8 +126,19 @@ class TourPackageController extends Controller
      *
      * @return  \Illuminate\Http\Response
      */
-    public function create($id, Request $request)
+    public function create(Request $request, $id = null)
     {
+        if ($id === null) {
+            $days = TourDay::whereHas('tour');
+            $selectedDay = $request->query('tour_day_id');
+            if ($selectedDay !== null) {
+                abort_unless(is_string($selectedDay) && ctype_digit($selectedDay) && (int) $selectedDay > 0, 422, 'Select a valid tour day.');
+                $day = $days->findOrFail($selectedDay);
+                return redirect()->route('tour_package.create', ['id' => $day->id]);
+            }
+            $days = $days->with('tour')->orderBy('date', 'desc')->get();
+            return view('tour_package.select_day', compact('days'));
+        }
         $serviceTypes = $this->serviceTypes;
         $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'service_in_tour')->get();
         $currencies = Currencies::all();
@@ -245,7 +256,7 @@ class TourPackageController extends Controller
             ])->get();
 
         // Cruises
-        $services['cruise'] = \App\Cruise::leftJoin('countries as countries_from', 'countries_from.alias', '=', 'cruises.country_from')
+        $services['cruise'] = \App\Cruises::leftJoin('countries as countries_from', 'countries_from.alias', '=', 'cruises.country_from')
             ->leftJoin('cities as cities_from', 'cities_from.id', '=', 'cruises.city_from')
             ->leftJoin('countries as countries_to', 'countries_to.alias', '=', 'cruises.country_to')
             ->leftJoin('cities as cities_to', 'cities_to.id', '=', 'cruises.city_to')
@@ -696,6 +707,9 @@ class TourPackageController extends Controller
 
 
         $tourPackage = TourPackage::findOrfail($id);
+        if (!$tourPackage->getTour()) {
+            return view('tour_package.missing_tour', compact('tourPackage'));
+        }
         $tourPackage['from_date'] = (new Carbon($tourPackage->time_from))->toDateString();
         $tourPackage['from_time'] = (new Carbon($tourPackage->time_from))->toTimeString();
         $tourPackage['to_date'] = (new Carbon($tourPackage->time_to))->toDateString();
@@ -904,8 +918,10 @@ class TourPackageController extends Controller
         $request['time_from'] = $request->get('from_date') . ' ' . $request->get('from_time');
         $request['time_to'] = $request->get('to_date') . ' ' . $request->get('to_time');
 
-        $tour_package = TourPackage::query()->where('id', $id)->first();
-        $tour_id = $tour_package->getTour()->id;
+        $tour_package = TourPackage::findOrFail($id);
+        $parentTour = $tour_package->getTour();
+        abort_unless($parentTour, 409, 'This package cannot be edited because its parent tour is unavailable.');
+        $tour_id = $parentTour->id;
 
         if (strtolower($request->serviceType) == 'transfer') {
 

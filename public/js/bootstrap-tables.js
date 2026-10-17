@@ -165,7 +165,8 @@ function renderTablePage(table) {
     const state = table._tablePagination;
     const rows = [...table.tBodies[0].rows].filter(row => !row.classList.contains('table-search-empty'));
     table.querySelector('.table-search-empty')?.remove();
-    const matches = rows.filter(row => row.textContent.toLowerCase().includes(state.query));
+    const matches = rows.filter(row => row.textContent.toLowerCase().includes(state.query) &&
+        (state.columnQueries || []).every((query, index) => !query || (row.cells[index]?.textContent || '').toLowerCase().includes(query)));
     const pages = Math.max(1, Math.ceil(matches.length / state.size));
     state.page = Math.min(state.page, pages);
     rows.forEach(row => row.style.display = 'none');

@@ -38,28 +38,28 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label required">{!!trans('main.Name')!!}</label>
+                                <label class="form-label required" for="name">{!!trans('main.Name')!!}</label>
                                 <input id="name" name="name" type="text" class="form-control" value="{{ old('name', $hotel->name) }}" required>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Code')!!}</label>
+                                <label class="form-label" for="code">{!!trans('main.Code')!!}</label>
                                 <input id="code" name="code" type="text" class="form-control" value="{{ old('code', $hotel->code) }}">
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.AddressFirst')!!}</label>
-                                <input id="address_first" name="address_first" type="text" class="form-control" value="{{ old('address_first', $hotel->address_first) }}">
+                                <label class="form-label required" for="address_first">{!!trans('main.AddressFirst')!!}</label>
+                                <input required id="address_first" name="address_first" type="text" class="form-control" value="{{ old('address_first', $hotel->address_first) }}">
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.AddressSecond')!!}</label>
+                                <label class="form-label" for="address_second">{!!trans('main.AddressSecond')!!}</label>
                                 <input id="address_second" name="address_second" type="text" class="form-control" value="{{ old('address_second', $hotel->address_second) }}">
                             </div>
 
                             <div class="col-12 mb-3">
                                 @if(!empty($hotel->city) && is_numeric($hotel->city))
-                                    @component('component.city_form', [
+                                    @component('component.city_form', ['location_required' => true,
                                         'country_label' => 'country',
                                         'country_translation' => 'main.Country',
                                         'country_default' => $hotel->country,
@@ -69,7 +69,7 @@
                                     ])
                                     @endcomponent
                                 @else
-                                    @component('component.city_form', [
+                                    @component('component.city_form', ['location_required' => true,
                                         'country_label' => 'country',
                                         'country_translation' => 'main.Country',
                                         'country_default' => $hotel->country,
@@ -82,28 +82,28 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkPhone')!!}</label>
+                                <label class="form-label required" for="work_phone">{!!trans('main.WorkPhone')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon"><i class="ti ti-phone"></i></span>
-                                    <input id="work_phone" name="work_phone" type="text" class="form-control" value="{{ old('work_phone', $hotel->work_phone) }}">
+                                    <input required id="work_phone" name="work_phone" type="text" class="form-control" value="{{ old('work_phone', $hotel->work_phone) }}">
                                 </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkFax')!!}</label>
+                                <label class="form-label" for="work_fax">{!!trans('main.WorkFax')!!}</label>
                                 <input id="work_fax" name="work_fax" type="text" class="form-control" value="{{ old('work_fax', $hotel->work_fax) }}">
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.WorkEmail')!!}</label>
+                                <label class="form-label required" for="work_email">{!!trans('main.WorkEmail')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon"><i class="ti ti-mail"></i></span>
-                                    <input id="work_email" name="work_email" type="email" class="form-control" value="{{ old('work_email', $hotel->work_email) }}">
+                                    <input required id="work_email" name="work_email" type="email" class="form-control" value="{{ old('work_email', $hotel->work_email) }}">
                                 </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Website')!!}</label>
+                                <label class="form-label" for="website">{!!trans('main.Website')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon"><i class="ti ti-world"></i></span>
                                     <input id="website" name="website" type="url" class="form-control" value="{{ old('website', $hotel->website) }}">
@@ -111,12 +111,12 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactName')!!}</label>
+                                <label class="form-label" for="contact_name">{!!trans('main.ContactName')!!}</label>
                                 <input id="contact_name" name="contact_name" type="text" class="form-control" value="{{ old('contact_name', $hotel->contact_name) }}">
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactPhone')!!}</label>
+                                <label class="form-label" for="contact_phone">{!!trans('main.ContactPhone')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon"><i class="ti ti-phone"></i></span>
                                     <input id="contact_phone" name="contact_phone" type="text" class="form-control" value="{{ old('contact_phone', $hotel->contact_phone) }}">
@@ -124,7 +124,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.ContactEmail')!!}</label>
+                                <label class="form-label" for="contact_email">{!!trans('main.ContactEmail')!!}</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon"><i class="ti ti-mail"></i></span>
                                     <input id="contact_email" name="contact_email" type="email" class="form-control" value="{{ old('contact_email', $hotel->contact_email) }}">
@@ -132,17 +132,17 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Comments')!!}</label>
+                                <label class="form-label" for="comments">{!!trans('main.Comments')!!}</label>
                                 <input id="comments" name="comments" type="text" class="form-control" value="{{ old('comments', $hotel->comments) }}">
                             </div>
 
                             <div class="col-12 mb-3">
-                                <label class="form-label">{!!trans('main.IntComments')!!}</label>
+                                <label class="form-label" for="int_comments">{!!trans('main.IntComments')!!}</label>
                                 <textarea id="int_comments" name="int_comments" rows="3" class="form-control">{{ old('int_comments', $hotel->int_comments) }}</textarea>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{!!trans('main.Rate')!!}</label>
+                                <label class="form-label" for="rate">{!!trans('main.Rate')!!}</label>
                                 <select name="rate" id="rate" class="form-select">
                                     @foreach($rates as $rate)
                                         <option value="{{ $rate->id }}" {{ old('rate', $hotel->rate) == $rate->id ? 'selected' : '' }}>

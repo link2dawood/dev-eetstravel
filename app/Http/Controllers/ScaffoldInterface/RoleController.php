@@ -25,6 +25,16 @@ class RoleController extends Controller
         $this->middleware('auth');
     }
 
+    public function show($id)
+    {
+        $role = Role::with('permissions')->findOrFail($id);
+        return view('scaffold-interface.resource-details', [
+            'heading' => 'Role Details', 'listRoute' => 'roles.index',
+            'fields' => ['ID' => $role->id, 'Name' => $role->name,
+                'Permissions' => $role->permissions->pluck('name')->implode(', ')],
+        ]);
+    }
+
     public function index()
     {
         $roles = Role::all();

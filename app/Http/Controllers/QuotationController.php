@@ -174,7 +174,8 @@ class QuotationController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function show( $id ) {
-		//
+        $quotation = Quotation::with('tour')->findOrFail($id);
+        return view('quotation.show', compact('quotation'));
 	}
 
 	/**

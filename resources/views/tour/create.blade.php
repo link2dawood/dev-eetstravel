@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title', 'Create Tour')
 @section('post_styles')
 <style>
     /* Enhanced checkbox/selectgroup styling */

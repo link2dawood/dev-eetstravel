@@ -171,37 +171,33 @@ class ClientController extends Controller
      */
     public function update($id, UpdateClientRequest $request)
     {
-        $request = CitiesHelper::setCityGeneral($request);
-        $contacts = $request->get('contacts');
-
-        // every contact needs a name (this used to send the user back without a word)
-        foreach ((array) $contacts as $itemContact) {
-            if (!trim((string) ($itemContact['contact_full_name'] ?? ''))) {
-                $message = trans('main.ContactsshouldnothaveanemptyFullName');
-                return $request->ajax() || $request->wantsJson()
-                    ? response()->json(['message' => $message, 'errors' => ['contacts' => [$message]]], 422)
-                    : redirect()->back()->withInput()->with('error', $message);
+        if ($request->exists('city')) $request = CitiesHelper::setCityGeneral($request);
+        $client = \Illuminate\Support\Facades\DB::transaction(function () use ($id, $request) {
+            $this->clients->updateById($id, $request->only([
+                'name', 'country', 'city', 'address', 'account_no', 'company_address', 'invoice_address',
+                'work_phone', 'contact_phone', 'work_email', 'contact_email', 'work_fax',
+            ]));
+            $client = Client::findOrFail($id);
+            if ($request->filled('password')) {
+                $client->password = Crypt::encryptString($request->input('password'));
+                $client->save();
             }
-        }
 
-        $this->clients->updateById($id, $request->except(['attach', 'contacts', 'password', 'files']));
-        $client = Client::findOrFail($id);
-        // an empty password field keeps the current password (it used to be overwritten)
-        if ($request->filled('password')) {
-            $client->password = Crypt::encryptString($request->input('password'));
-            $client->save();
-        }
-
-        ClientContacts::query()->where('client_id', $id)->delete();
-        foreach ((array) $contacts as $contact) {
-            $clientContact = new ClientContacts();
-            $clientContact->full_name = $contact['contact_full_name'];
-            $clientContact->mobile_phone = $contact['contact_mobile_phone'] ?? null;
-            $clientContact->work_phone = $contact['contact_work_phone'] ?? null;
-            $clientContact->email = $contact['contact_email'] ?? null;
-            $clientContact->client_id = $id;
-            $clientContact->save();
-        }
+            // A failed contact-list request must not turn a profile update into deletion.
+            if ($request->exists('contacts') || $request->boolean('contacts_loaded')) {
+                ClientContacts::query()->where('client_id', $id)->delete();
+                foreach ($request->input('contacts', []) as $contact) {
+                    $clientContact = new ClientContacts();
+                    $clientContact->full_name = $contact['contact_full_name'];
+                    $clientContact->mobile_phone = $contact['contact_mobile_phone'] ?? null;
+                    $clientContact->work_phone = $contact['contact_work_phone'] ?? null;
+                    $clientContact->email = $contact['contact_email'] ?? null;
+                    $clientContact->client_id = $id;
+                    $clientContact->save();
+                }
+            }
+            return $client;
+        });
 
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name edited", 'success');
 
@@ -257,7 +253,8 @@ public function getClientContacts(Request $request){
             $count++;
         }
 		$hotelContacts = $clientContacts ;
-        $view = View::make('component.get_hotel_contacts_form', compact('hotelContacts'));
+        $contact_name_required = true;
+        $view = View::make('component.get_hotel_contacts_form', compact('hotelContacts', 'contact_name_required'));
 
         $data = ['content' => $view->render(), 'count' => $count];
         return $data;

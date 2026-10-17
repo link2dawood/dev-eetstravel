@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title', 'Create Tour Expense')
 @section('content')
     @include('layouts.title',
    ['title' => 'Tour Expense', 'sub_title' => 'Expense Create',

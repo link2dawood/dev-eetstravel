@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Monthly Tour Chart')
 @section('content')
     @include('layouts.title',
    ['title' => 'Monthly Chart', 'sub_title' => 'Tours List',
@@ -41,7 +41,7 @@
 					</div>
 					<div class="col-md-4">
 						<label for="tour-search">Search:</label>
-						<input type="text" id="tour-search" class="form-control" placeholder="Search tours..." onkeyup="filterTable('monthly-chart-table', this.value)">
+						<input aria-label="Search tours..." type="text" id="tour-search" class="form-control" placeholder="Search tours..." onkeyup="filterTable('monthly-chart-table', this.value)">
 					</div>
 					<div class="col-md-2">
 						<label>&nbsp;</label>

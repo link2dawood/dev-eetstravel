@@ -61,3 +61,7 @@ storage/app/sample-data/
 /debug.log
 /storage/framework/testing/
 /public/snappymail/data/_data_/_default_/cache/
+
+# Local UI audit captures/backups and generated spreadsheet previews.
+/storage/app/ui-audit/
+/storage/app/laravel-excel-*.html

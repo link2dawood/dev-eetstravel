@@ -163,7 +163,7 @@ class OfficeController extends Controller {
 			$total_tour_expense = $total_tour_expense + $tour_expense->tour_expenses;
 			// Add action buttons
 			$url = ['edit' => route('tour_expenses.edit', $tour_expense->id), 'delete_msg' => "/tour_expenses/{$tour_expense->id}/deleteMsg"];
-			$tour_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+			$tour_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
 		$utility_expenses = Office_Utility_Expenses::where("office_id", $offices->id)->get() ;
@@ -171,7 +171,7 @@ class OfficeController extends Controller {
 			$total_utility_expense = $total_utility_expense + $utility_expense->monthly_expense;
 			// Add action buttons
 			$url = ['edit' => route('utility_expenses.edit', $utility_expense->id), 'delete_msg' => "/utility_expenses/{$utility_expense->id}/deleteMsg"];
-			$utility_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+			$utility_expense->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
 		$employee_salaries = Office_Employes_Salary::where("office_id", $offices->id)->get() ;
@@ -179,7 +179,7 @@ class OfficeController extends Controller {
 			$total_employee_salary = $total_employee_salary + $employee_salary->employe_salary;
 			// Add action buttons
 			$url = ['edit' => route('employes-salary.edit', $employee_salary->id), 'delete_msg' => "/employes-salary/{$employee_salary->id}/deleteMsg"];
-			$employee_salary->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+			$employee_salary->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
 		$office_earnings = Office_Earnings::where("office_id", $offices->id)->get() ;
@@ -187,7 +187,7 @@ class OfficeController extends Controller {
 			$total_office_earning = $total_office_earning + $office_earning->profit;
 			// Add action buttons
 			$url = ['edit' => route('office_earning.edit', $office_earning->id), 'delete_msg' => "/office_earning/{$office_earning->id}/deleteMsg"];
-			$office_earning->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+			$office_earning->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
 		$balances = Office_Balance::where("office_id", $offices->id)->get() ;
@@ -195,7 +195,7 @@ class OfficeController extends Controller {
 			$total_balance = $total_balance + $balance->total_amount;
 			// Add action buttons
 			$url = ['edit' => route('office_balance.edit', $balance->id), 'delete_msg' => "/office_balance/{$balance->id}/deleteMsg"];
-			$balance->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
+			$balance->action_buttons = DatatablesHelperController::getEditButton($url, false, $perm) . "<a aria-label='Delete' title='Delete' class='delete btn btn-danger btn-sm' href=\"{$url['delete_msg']}\" data-link=\"{$url['delete_msg']}\"><i class='fa fa-trash-o'></i></a>";
 		}
 
 		// Get office invoices data

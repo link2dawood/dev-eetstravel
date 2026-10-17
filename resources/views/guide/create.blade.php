@@ -29,73 +29,73 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label required">Name</label>
-                                <input name="name" type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+                                <label class="form-label required" for="name">Name</label>
+                                <input id="name" name="name" type="text" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Company</label>
-                                <input name="company" type="text" class="form-control" value="{{ old('company') }}">
+                                <label class="form-label" for="company">Company</label>
+                                <input id="company" name="company" type="text" class="form-control" value="{{ old('company') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Address 1</label>
-                                <input name="address_first" type="text" class="form-control" value="{{ old('address_first') }}">
+                                <label class="form-label" for="address_first">Address 1</label>
+                                <input id="address_first" name="address_first" type="text" class="form-control" value="{{ old('address_first') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Address 2</label>
-                                <input name="address_second" type="text" class="form-control" value="{{ old('address_second') }}">
+                                <label class="form-label" for="address_second">Address 2</label>
+                                <input id="address_second" name="address_second" type="text" class="form-control" value="{{ old('address_second') }}">
                             </div>
                             <div class="col-12 mb-3">
                                 @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' => 0, 'city_label' => 'city', 'city_translation' => 'main.City', 'city_default' => 0])@endcomponent
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Code</label>
-                                <input name="code" type="text" class="form-control" value="{{ old('code') }}">
+                                <label class="form-label" for="code">Code</label>
+                                <input id="code" name="code" type="text" class="form-control" value="{{ old('code') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Phone</label>
+                                <label class="form-label" for="work_phone">Work Phone</label>
                                 <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-phone"></i></span>
-                                <input name="work_phone" type="text" class="form-control" value="{{ old('work_phone') }}"></div>
+                                <input id="work_phone" name="work_phone" type="text" class="form-control" value="{{ old('work_phone') }}"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Fax</label>
-                                <input name="work_fax" type="text" class="form-control" value="{{ old('work_fax') }}">
+                                <label class="form-label" for="work_fax">Work Fax</label>
+                                <input id="work_fax" name="work_fax" type="text" class="form-control" value="{{ old('work_fax') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Work Email</label>
+                                <label class="form-label" for="work_email">Work Email</label>
                                 <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-mail"></i></span>
-                                <input name="work_email" type="email" class="form-control" value="{{ old('work_email') }}"></div>
+                                <input id="work_email" name="work_email" type="email" class="form-control" value="{{ old('work_email') }}"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Name</label>
-                                <input name="contact_name" type="text" class="form-control" value="{{ old('contact_name') }}">
+                                <label class="form-label" for="contact_name">Contact Name</label>
+                                <input id="contact_name" name="contact_name" type="text" class="form-control" value="{{ old('contact_name') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Phone</label>
+                                <label class="form-label" for="contact_phone">Contact Phone</label>
                                 <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-phone"></i></span>
-                                <input name="contact_phone" type="text" class="form-control" value="{{ old('contact_phone') }}"></div>
+                                <input id="contact_phone" name="contact_phone" type="text" class="form-control" value="{{ old('contact_phone') }}"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Contact Email</label>
+                                <label class="form-label" for="contact_email">Contact Email</label>
                                 <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-mail"></i></span>
-                                <input name="contact_email" type="email" class="form-control" value="{{ old('contact_email') }}"></div>
+                                <input id="contact_email" name="contact_email" type="email" class="form-control" value="{{ old('contact_email') }}"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Website</label>
+                                <label class="form-label" for="website">Website</label>
                                 <div class="input-icon"><span class="input-icon-addon"><i class="ti ti-world"></i></span>
-                                <input name="website" type="url" class="form-control" value="{{ old('website') }}"></div>
+                                <input id="website" name="website" type="url" class="form-control" value="{{ old('website') }}"></div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Comments</label>
-                                <input name="comments" type="text" class="form-control" value="{{ old('comments') }}">
+                                <label class="form-label" for="comments">Comments</label>
+                                <input id="comments" name="comments" type="text" class="form-control" value="{{ old('comments') }}">
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label">Internal Comments</label>
-                                <textarea name="int_comments" rows="3" class="form-control">{{ old('int_comments') }}</textarea>
+                                <label class="form-label" for="int_comments">Internal Comments</label>
+                                <textarea id="int_comments" name="int_comments" rows="3" class="form-control">{{ old('int_comments') }}</textarea>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Rate</label>
-                                <select name="rate" class="form-select">
+                                <label class="form-label" for="rate">Rate</label>
+                                <select id="rate" name="rate" class="form-select">
                                     @foreach($rates as $rate)
                                         <option value="{{ $rate->id }}" {{ old('rate') == $rate->id ? 'selected' : '' }}>{{ $rate->name }}</option>
                                     @endforeach
@@ -115,7 +115,7 @@
                                 </div>
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label">Files</label>
+                                <label class="form-label" for="attach">Files</label>
                                 @component('component.file_upload_field', ['enableAjaxUploads' => false])@endcomponent
                             </div>
                         </div>

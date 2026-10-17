@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Edit')
+@section('title', 'Edit Driver')
 @section('content')
     @include('layouts.title',
            ['title' => 'Driver', 'sub_title' => 'Driver Edit',
@@ -37,19 +37,19 @@
                             <div class="col-lg-6 mt-3">
                                 <div class="form-group mb-3">
                                     <label for="name">Name</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->name}}" name="name" class="form-control">
+                                    <input id="name" type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->name}}" name="name" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="phone">Phone</label>
-                                    <input type="text" name="phone" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->phone}}" class="form-control">
+                                    <input id="phone" type="text" name="phone" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->phone}}" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="email">Email</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->email}}" name="email" class="form-control">
+                                    <input id="email" type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->email}}" name="email" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
-                                    <label for="rate_type">Bus Company</label>
-                                    {!! Form::select('transfer_id', $transfers, $errors != null && count($errors) > 0 ? '' : $driver->transfer_id, ['class' => 'form-control']) !!}
+                                    <label for="transfer_id">Bus Company</label>
+                                    {!! Form::select('transfer_id', $transfers, $errors != null && count($errors) > 0 ? '' : $driver->transfer_id, ['class' => 'form-control', 'id' => 'transfer_id']) !!}
                                 </div>
 
                                 <div class="form-group mb-3">

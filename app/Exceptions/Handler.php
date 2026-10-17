@@ -63,7 +63,7 @@ class Handler extends ExceptionHandler
                     'sql' => $e->getSql() ?? 'Unknown query',
                     'bindings' => $e->getBindings() ?? [],
                     'trace' => $e->getTraceAsString(),
-                    'user_id' => auth()->id(),
+                    'user_id' => $this->userIdForLogging(),
                     'url' => request()->fullUrl(),
                     'ip' => request()->ip(),
                 ]);
@@ -75,7 +75,7 @@ class Handler extends ExceptionHandler
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                     'trace' => $e->getTraceAsString(),
-                    'user_id' => auth()->id(),
+                    'user_id' => $this->userIdForLogging(),
                     'url' => request()->fullUrl(),
                     'ip' => request()->ip(),
                     'user_agent' => request()->userAgent(),
@@ -232,6 +232,12 @@ class Handler extends ExceptionHandler
     {
         $errorCode = $exception->errorInfo[1] ?? null;
 
+        // A failed page load cannot recover by redirecting to the same page.
+        if ($request->isMethod('GET') || $request->isMethod('HEAD')
+            || !in_array($errorCode, [1062, 1451, 1452])) {
+            return response()->view('errors.database', [], 500);
+        }
+
         // Handle common database errors
         switch ($errorCode) {
             case 1062: // Duplicate entry
@@ -253,6 +259,15 @@ class Handler extends ExceptionHandler
         return redirect()->back()
             ->withInput($request->except($this->dontFlash))
             ->withErrors(['database' => $message]);
+    }
+
+    protected function userIdForLogging()
+    {
+        try {
+            return auth()->id();
+        } catch (Throwable $exception) {
+            return null;
+        }
     }
 
     /**

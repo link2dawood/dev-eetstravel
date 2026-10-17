@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Flight Details')
 @section('content')
 	@include('layouts.title',
    ['title' => 'Flight', 'sub_title' => 'Flight Show',
@@ -8,6 +8,9 @@
    ['title' => 'Flights', 'icon' => 'plane', 'route' => route('flights.index')],
    ['title' => 'Show', 'route' => null]]])
 	<section class="content">
+        @if($placeId && !$place)
+            <div class="alert alert-warning" role="status">Google location details are temporarily unavailable. Stored flight details are shown below.</div>
+        @endif
 		<div class="box box-primary">
 			<div class="box-body">
                 <div class="row">

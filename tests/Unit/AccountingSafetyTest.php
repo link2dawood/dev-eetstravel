@@ -52,6 +52,29 @@ class AccountingSafetyTest extends TestCase
         ]);
     }
 
+    public function test_excel_export_keeps_long_invoice_number_without_using_it_as_sheet_title()
+    {
+        foreach (['clients', 'tours'] as $table) {
+            Schema::table($table, function (Blueprint $table) { $table->softDeletes(); });
+        }
+        $controller = new ClientInvoiceController();
+        $controller->store($this->invoiceRequest());
+        $invoice = ClientInvoices::firstOrFail();
+        $invoice->invoice_no = 'INV-' . str_repeat('LONG/REFERENCE:', 5);
+        $invoice->save();
+
+        $response = $controller->excelExport(Request::create('/accounting/' . $invoice->id . '/excel'), $invoice->id);
+        $path = $response->getFile()->getPathname();
+        try {
+            $workbook = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+            $sheet = $workbook->getActiveSheet();
+            $this->assertSame('Invoice ' . $invoice->id, $sheet->getTitle());
+            $this->assertStringContainsString($invoice->invoice_no, json_encode($sheet->toArray(), JSON_UNESCAPED_SLASHES));
+        } finally {
+            unlink($path);
+        }
+    }
+
     public function test_create_recalculates_vat_and_keeps_multiple_payments_on_same_invoice()
     {
         (new ClientInvoiceController())->store($this->invoiceRequest([

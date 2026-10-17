@@ -25,6 +25,10 @@
                 $show_route = route('tour.show', ['tour' => $entity->id]);
                 $edit_route = route('tour.edit', ['tour' => $entity->id]);
                 $delete_route = route('tour.destroy', ['id' => $entity->id]);
+            } elseif ($prefix === 'flights') {
+                $show_route = route('flights.show', ['flight' => $entity->id]);
+                $edit_route = route('flights.edit', ['flight' => $entity->id]);
+                $delete_route = route('flight.destroy', ['id' => $entity->id]);
             } elseif ($prefix === 'users') {
                 $edit_route = route('users.edit', ['user' => $entity->id]);
                 $delete_route = route('users.destroy', ['user' => $entity->id]);

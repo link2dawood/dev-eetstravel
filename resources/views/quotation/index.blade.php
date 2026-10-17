@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Index')
+@section('title', 'Quotations')
 @section('content')
     @include('layouts.title',
    ['title' => 'Tour Quotations', 'sub_title' => 'Quotation List',
@@ -29,7 +29,7 @@
                     <div class="mb-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <input type="text" id="quotation-search" class="form-control" placeholder="Search quotations..." onkeyup="filterTable('quotation_table', this.value)">
+                                <input aria-label="Search quotations..." type="text" id="quotation-search" class="form-control" placeholder="Search quotations..." onkeyup="filterTable('quotation_table', this.value)">
                             </div>
                             <div class="col-md-6 text-right">
                                 <button class="btn btn-success btn-sm" onclick="exportTableToCSV('quotation_table', 'quotations_export.csv')">
@@ -70,7 +70,7 @@
                     <div class="mb-3" style="margin-top: 20px;">
                         <div class="row">
                             <div class="col-md-6">
-                                <input type="text" id="goahead-search" class="form-control" placeholder="Search go-ahead tours..." onkeyup="filterTable('go-ahead-table', this.value)">
+                                <input aria-label="Search go-ahead tours..." type="text" id="goahead-search" class="form-control" placeholder="Search go-ahead tours..." onkeyup="filterTable('go-ahead-table', this.value)">
                             </div>
                             <div class="col-md-6 text-right">
                                 <button class="btn btn-success btn-sm" onclick="exportTableToCSV('go-ahead-table', 'goahead_tours_export.csv')">

@@ -181,13 +181,9 @@
                 <div class="form-group">
                     <label for="">Avatar</label>
                     <div style="margin-bottom: 10px;">
-                        @if($user->avatar)
-                            <img src="{{ asset($user->avatar) }}" alt="Current Avatar" style="max-width: 150px; height: auto; border-radius: 50%;">
-                        @else
-                            <img src="{{ asset('img/avatar.png') }}" alt="Default Avatar" style="max-width: 150px; height: auto; border-radius: 50%;">
-                        @endif
+                        @include('component.avatar-preview', ['avatarUser' => $user, 'avatarSize' => 150])
                     </div>
-                    <input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*">
+                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*"></div>
                     <small class="form-text text-muted">Upload a new avatar image (optional)</small>
                 </div>
 

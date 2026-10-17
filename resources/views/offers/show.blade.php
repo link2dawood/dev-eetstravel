@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Hotel Offer Details')
 @section('content')
     @include('layouts.title',
    ['title' => 'Hotel Offer ', 'sub_title' => 'offer Show',
@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
-                <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
+                <ul class="nav nav-tabs" role='tablist'>
                     <li role='presentation' class="active"><a href="#info-tab" aria-controls='info-tab' role='tab' data-toggle='tab'>{!!trans('main.Info')!!}</a></li>
              
                  

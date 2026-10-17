@@ -50,8 +50,8 @@ class FlightController extends Controller
      */
     public function getButton($id, $flight)
     {
-        $url = array('show'       => route('flights.show', ['id' => $id]),
-                     'edit'       => route('flights.edit', ['id' => $id]),
+        $url = array('show'       => route('flights.show', ['flight' => $id]),
+                     'edit'       => route('flights.edit', ['flight' => $id]),
                      'delete_msg' => "/flights/{$id}/delete_msg");
         return DatatablesHelperController::getActionButton($url, false, $flight);
     }
@@ -188,12 +188,13 @@ class FlightController extends Controller
             ->get();
 
         $place = GooglePlacesHelper::getPlace($flight->id, GooglePlaces::$services['flight']);
+        $placeId = GooglePlaces::where('service_id', $flight->id)->where('type', GooglePlaces::$services['flight'])->value('place_id');
         $files  = $this->parseAttach($flight);
         $flight->date_from = (new Carbon($flight->date_from))->format('Y-m-d H:i');
         $flight->date_to  = (new Carbon($flight->date_to))->format('Y-m-d H:i');
 
         return view('flight.show', [ 'flight' => $flight, 'files' => $files,
-            'criterias' => $criterias, 'place' => $place]);
+            'criterias' => $criterias, 'place' => $place, 'placeId' => $placeId]);
     }
 
     /**
@@ -218,11 +219,12 @@ class FlightController extends Controller
         $flight['to_time'] = (new Carbon($flight->date_to))->toTimeString();
 
         $place = GooglePlacesHelper::getPlace($flight->id, GooglePlaces::$services['flight']);
+        $placeId = GooglePlaces::where('service_id', $flight->id)->where('type', GooglePlaces::$services['flight'])->value('place_id');
 
         $files = $this->parseAttach($flight);
         return view('flight.edit', ['flight' => $flight, 'files' => $files,
             'criterias' => $criterias,
-            'rates' => $rates, 'place' => $place]);
+            'rates' => $rates, 'place' => $place, 'placeId' => $placeId]);
     }
 
     /**

@@ -138,12 +138,14 @@
                                                         <span class="input-group-text">
                                                             <i class="ti ti-clock"></i>
                                                         </span>
-                                                        <input 
-                                                            type="text" 
-                                                            name="end_time" 
-                                                            id="end_time" 
-                                                            class="form-control timepicker" 
-                                                            value="{{ $task->end_time }}"
+                                                        <input
+                                                            type="time"
+                                                            step="1"
+                                                            required
+                                                            name="end_time"
+                                                            id="end_time"
+                                                            class="form-control"
+                                                            value="{{ old('end_time', $task->end_time) }}"
                                                         >
                                                     </div>
                                                 </div>
@@ -325,12 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
         format: 'yyyy-mm-dd',
         autoclose: true,
         todayHighlight: true
-    });
-
-    // Initialize time picker
-    $('.timepicker').timepicker({
-        showMeridian: false,
-        defaultTime: '18:00'
     });
 
     // Validate at least one user is selected

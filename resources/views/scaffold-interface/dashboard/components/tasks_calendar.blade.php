@@ -26,6 +26,18 @@
 
             </div>--}}
 			   <div class="calendar calendar-widget bootsnipp-calendar-container" id="bootsnipp-calendar"></div>
+            <div id="calendar-unavailable" class="alert alert-warning m-3" role="alert" hidden>
+                <p>The calendar is temporarily unavailable. You can retry or use the lists below.</p>
+                <div class="btn-list">
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">Retry calendar</button>
+                    @can('task.index')
+                        <a class="btn btn-primary" href="{{ route('task.index') }}">View tasks</a>
+                    @endcan
+                    @can('tour.index')
+                        <a class="btn btn-outline-primary" href="{{ route('tour.index') }}">View tours</a>
+                    @endcan
+                </div>
+            </div>
 
         </div>
         @else

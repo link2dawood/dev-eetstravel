@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>Invoice {{ $invoice->invoice_no }}</title>
+<html lang="en"><head><meta charset="utf-8"><title>{{ $worksheetTitle ?? ('Invoice ' . $invoice->invoice_no) }}</title>
 <style>body{font-family:DejaVu Sans,sans-serif;font-size:11px;color:#182433}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #ccd2d8;padding:7px;text-align:left}th{background:#f1f5f9}.amount{text-align:right}h1{font-size:22px}p{margin:5px 0}</style></head><body>
 <h1>Client invoice {{ $invoice->invoice_no }}</h1>
 <p>{{ $office->office_name }}</p><p>{{ $office->office_address }}</p>

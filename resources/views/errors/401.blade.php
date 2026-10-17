@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title', 'Unauthorized')
 @section('content')
     <section class="content">
         <div class="box box-danger">

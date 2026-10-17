@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Comment Details')
 @section('content')
     @include('layouts.title',
    ['title' => 'Comment', 'sub_title' => "{$comment->serviceName()}",

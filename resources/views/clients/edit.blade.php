@@ -49,6 +49,7 @@
                                 <style>.client-form .select2-container { width: 100% !important; } .client-form .form-label.required:after { content: " *"; color: #d63939; }</style>
                                 {{csrf_field()}}
                                 {{method_field('PUT')}}
+                                <input type="hidden" name="contacts_loaded" id="contacts_loaded" value="0">
 
                                 <div class="row">
                                     <div class="col-md-6">
@@ -133,6 +134,8 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
+                                                <div id="contacts-error" class="alert alert-danger" role="alert" hidden></div>
+                                                <button type="button" id="retry_contacts" class="btn btn-outline-primary mb-3" hidden>Retry loading contacts</button>
                                                 <div id="items-contacts">
 
                                                 </div>
@@ -165,8 +168,13 @@
 // add new empty contact item
 
 		 var contactItemCount = 0;
+
+        $('#add_contact').prop('disabled', true);
 		let clientId = $('#client_id_span').attr('data-info');
-		// get all items contacts at document ready
+        function loadClientContacts() {
+            $('#add_contact').prop('disabled', true);
+            $('#retry_contacts').prop('hidden', true);
+            $('#contacts-error').prop('hidden', true);
         $.ajax({
             url: '/api/getClientContacts',
             method: 'GET',
@@ -175,26 +183,43 @@
                 clientId: clientId
             }
         }).done((res) => {
-            contactItemCount = res.count;
-            $('#items-contacts').append(res.content);
+            contactItemCount = Number(res.count) || 0;
+            $('#items-contacts').html(res.content);
+            $('#contacts_loaded').val('1');
+            $('#add_contact').prop('disabled', false);
+        }).fail(() => {
+            $('#contacts-error').text('Contacts could not be loaded. Existing contacts will be kept if you save other client details.').prop('hidden', false);
+            $('#retry_contacts').prop('hidden', false);
         });
+        }
+        loadClientContacts();
+        $('#retry_contacts').on('click', loadClientContacts);
 
         $('#add_contact').on('click', function () {
+            const nextContactIndex = ++contactItemCount;
             $.ajax({
                 url: '/api/getItemContactView',
                 method: 'GET',
                 data: {
-                    itemCount: contactItemCount + 1
+                    itemCount: nextContactIndex,
+                    contact_name_required: true
                 }
             }).done((res) => {
-                contactItemCount++;
                 $('#items-contacts').append(res);
-            })
+                $('#contacts-error').prop('hidden', true);
+            }).fail(() => {
+                $('#contacts-error').text('The new contact row could not be loaded. Please try Add Contact again.').prop('hidden', false);
+            });
         });
 
         // delete item contact
-        $(document).on('click', '#delete_contact_item', function () {
-            $(this).closest('.item-contact').remove();
+        $(document).on('click', '.remove-contact', function () {
+            const row = $(this).closest('.item-contact');
+            const focusTarget = row.next('.item-contact').find('.remove-contact').first()[0]
+                || row.prev('.item-contact').find('.remove-contact').first()[0]
+                || document.getElementById('add_contact');
+            row.remove();
+            if (focusTarget) focusTarget.focus();
         });
     </script>
 @endpush

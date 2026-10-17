@@ -65,7 +65,7 @@
                             <span class="input-icon-addon">
                                 <i class="ti ti-search"></i>
                             </span>
-                            <input type="text" 
+                            <input aria-label="Search by name..." type="text"
                                    class="form-control" 
                                    id="searchTextField" 
                                    placeholder="Search by name..." 

@@ -50,7 +50,7 @@
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
                         </span>
-                        <input type="text" 
+                        <input aria-label="Search hotels by name, city, country..." type="text"
                                id="hotels-search" 
                                class="form-control" 
                                placeholder="Search hotels by name, city, country..."

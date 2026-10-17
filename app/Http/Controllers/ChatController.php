@@ -33,34 +33,27 @@ class ChatController extends Controller {
 	}
 
 	public function index() {
-		// Get all chats data (same as the AJAX data method)
-		$chatsData = Chat::distinct()
-			->leftJoin( 'users', 'users.id', '=', 'chats.author' )
-			->select(
-				'chats.id as id',
-				'chats.title as title',
-				'chats.description as description',
-				'chats.type as type',
-				'users.name as author'
-			)
-			->get();
+        return redirect()->route('chat.main');
+    }
 
-		// Add action buttons to each chat
-		$chatsData->each(function ($chat) {
-			$chat->action_buttons = $this->getActionButtons($chat->id);
-		});
+    public function create() {
+        return redirect()->route('chat.main');
+    }
 
-		return view( 'chats.index', compact('chatsData') );
-	}
+    public function edit($id) {
+        $chat = Chat::findOrFail($id);
+        abort_unless(Chat::isUserHasAccess($chat), 403);
+        return redirect()->route('chat.show', ['chat' => $chat->id]);
+    }
 
 	public function getActionButtons( $id ) {
 		$url = array(
-			'show'       => route( 'chat.show', [ 'id' => $id ] ),
-			'edit'       => route( 'chat.edit', [ 'id' => $id ] ),
+			'show'       => route( 'chat.show', [ 'chat' => $id ] ),
+			'edit'       => route( 'chat.edit', [ 'chat' => $id ] ),
 			'delete_msg' => "/chat/{$id}/deleteMsg"
 		);
 
-		return DatatablesHelperController::getActionButton( $url );
+		return DatatablesHelperController::getActionButton( $url, false, Chat::findOrFail($id) );
 	}
 
 
@@ -113,6 +106,8 @@ class ChatController extends Controller {
         if($chat == null){
             return abort(404);
         }
+		abort_unless(Chat::isUserHasAccess($chat), 403);
+        $chat->load('messages.author');
 		return view( 'chats.show', compact( 'chat' ) );
 	}
 

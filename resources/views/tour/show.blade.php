@@ -347,6 +347,9 @@
                 </h3>
                 
                 @if(!empty($quotation) && isset($quotation->id))
+                    @if($comparison && $comparison->needsInitialization())
+                        @include('comparison.initialization-notice')
+                    @endif
                     @if(!empty($serviceDays))
                     {{-- Summary Information --}}
                     <div class="row mb-3">

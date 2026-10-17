@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Client Invoice Details')
 @section('content')
     @include('layouts.title',
    ['title' => 'Client Invoices ', 'sub_title' => 'accounting Show',
@@ -13,9 +13,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="margin_button">
-                        <a href="{{ route('accounting.index') }}">
-                            <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                        </a>
+                        <a href="{{ route('accounting.index') }}" class="btn btn-primary">{!!trans('main.Back')!!}</a>
 						<a class="btn btn-default"
 
                                                href="{{route('accounting_pdf_export', ['id' => $transactions->id, 'pdf_type' => 'short'])}}">PDF</a>
@@ -23,14 +21,12 @@
                                                
                                                href="{{route('accounting_excel_export', ['id' => $transactions->id])}}">Excel</a>
                         {{--
-						<a href="{!! route('accounting.edit', $transactions->id) !!}">
-                            <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                        </a>--}}
+						<a href="{!! route('accounting.edit', $transactions->id) !!}" class="btn btn-warning">{!!trans('main.Edit')!!}</a>--}}
                     </div>
                 </div>
             </div>
             <div id="fixed-scroll" class="nav-tabs-custom">
-                <ul class="nav nav-tabs" id="fixed-scroll" role='tablist'>
+                <ul class="nav nav-tabs" role='tablist'>
                     <li role='presentation' class="active"><a class="nav-link active" href="#info-tab" aria-controls='info-tab' role='tab' data-bs-toggle='tab'>{!!trans('main.Info')!!}</a></li>
              
                  

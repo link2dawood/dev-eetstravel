@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Status Details')
 @section('content')
     @include('layouts.title',
            ['title' => 'Status', 'sub_title' => 'Status Show',
@@ -13,12 +13,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="margin_button">
-                            <a href="javascript:history.back()">
-                                <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
-                            </a>
-                            <a href="{!! route('status.edit', $status->id) !!}">
-                                <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
-                            </a>
+                            <button type="button" class="btn btn-primary" onclick="history.back()">{!!trans('main.Back')!!}</button>
+                            <a href="{!! route('status.edit', $status->id) !!}" class="btn btn-warning">{!!trans('main.Edit')!!}</a>
                         </div>
                     </div>
                 </div>

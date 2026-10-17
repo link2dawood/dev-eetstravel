@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Rate Details')
 @section('content')
     @include('layouts.title',
            ['title' => 'Rate', 'sub_title' => 'Rate Show',

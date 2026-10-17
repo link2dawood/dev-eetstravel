@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Show')
+@section('title', 'Chats')
 @section('content')
     @include('layouts.title',
     ['title' => 'Chats', 'sub_title' => 'Chat',
@@ -17,22 +17,12 @@
                         <h3 class="">{!!trans('main.Chats')!!}</h3>
                     </div>
                     <div class="box-footer no-padding">
-                        <a class='add-direct-chat' data-toggle="modal"
-                           data-target="#myModal"
-                           data-link="/chat/renderUsersForChat"><button type="button"
-                                                                        class="btn bg-olive btn-flat margin">{!!trans('main.AddUserChat')!!}</button></a>
-                        <a class='add-direct-chat' data-toggle="modal"
-                           data-target="#myModal"
-                           data-link="/chat/renderCustomChatCreateFrom"><button type="button"
-                                                                                class="btn bg-olive btn-flat margin">{!!trans('main.AddChat')!!}</button></a>
-                                                                                
-                                                                                
-                        <a class='add-direct-chat' data-toggle="modal" id="deleteChatButton"
-                           data-target="#myModal"
-                           data-link="/chat/renderCustomChatDeleteFrom"><button type="button"
-                                                                                class="btn bg-olive btn-flat margin">{!!trans('main.DeleteChat')!!}</button></a>
-                                                                                
-                                                                                
+                        <button type="button" class="add-direct-chat btn bg-olive btn-flat margin"
+                                data-link="/chat/renderUsersForChat">{!!trans('main.AddUserChat')!!}</button>
+                        <button type="button" class="add-direct-chat btn bg-olive btn-flat margin"
+                                data-link="/chat/renderCustomChatCreateFrom">{!!trans('main.AddChat')!!}</button>
+                        <button type="button" class="add-direct-chat btn bg-olive btn-flat margin" id="deleteChatButton"
+                                data-link="/chat/renderCustomChatDeleteFrom">{!!trans('main.DeleteChat')!!}</button>
                         <ul class="nav nav-stacked chats-list">
                             <li>
 

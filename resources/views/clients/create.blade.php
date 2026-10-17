@@ -75,7 +75,7 @@
                                             <input id="invoice_address" name="invoice_address" type="text" class="form-control" value="{{old('invoice_address')}}">
                                         </div>
 
-                                        @component('component.city_form', ['country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' =>0,
+                                        @component('component.city_form', ['location_required' => true, 'country_label' => 'country', 'country_translation' => 'main.Country', 'country_default' =>0,
                                                 'city_label' => 'city','city_translation' =>'main.City', 'city_default' => 0])
                                         @endcomponent
                                     </div>

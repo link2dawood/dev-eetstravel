@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Edit')
+@section('title', 'Edit Supplier Invoice')
 @section('content')
     @include('layouts.title', [
         'title' => 'Supplier Invoice',
@@ -82,15 +82,15 @@
                                 </select>
                             </div>
 							 <div class="form-group">
-                                <label for="name">{!! trans('Invoice No') !!} *</label>
-								 <input class="form-control" required="" name="invoice_no" type="text" value="{{$invoices->invoices->invoice_no}}">
+                                <label for="invoice_no">{!! trans('Invoice No') !!} *</label>
+								 <input id="invoice_no" class="form-control" required="" name="invoice_no" type="text" value="{{$invoices->invoices->invoice_no}}">
                             </div>
 
 
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="tours">{{ trans('main.Tour') }}</label>
+                                <label for="tour_id">{{ trans('main.Tour') }}</label>
                                 <select name="tours" id="tour_id" class="form-control">
 
                                     @foreach ($tours as $tour)
@@ -109,8 +109,8 @@
                         <div class="col-md-3">
                            
 							<div class="form-group" required>
-                                <label for="name">{!! trans('Total Amount') !!} *</label>
-								<input class="form-control" required="" name="total_amount" type="text" value="{{$invoices->invoices->total_amount}}">
+                                <label for="total_amount">{!! trans('Total Amount') !!} *</label>
+								<input id="total_amount" class="form-control" required="" name="total_amount" type="text" value="{{$invoices->invoices->total_amount}}">
                             </div>
                             
                         </div>

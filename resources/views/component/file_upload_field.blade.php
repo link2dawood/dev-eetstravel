@@ -11,7 +11,7 @@
     }
     .file-input .file-caption-main .btn { min-width: 0; }
 </style>
-<input id="attach" type="file" name="attach[]" multiple data-enable-ajax="{{ $enableAjaxUploads ? '1' : '0' }}">
+<input id="attach" type="file" name="attach[]" multiple aria-label="Attachments" data-enable-ajax="{{ $enableAjaxUploads ? '1' : '0' }}">
 <div id="err-container"></div>
 <script type="text/javascript">
 	$(document).on('ready', function(){
@@ -223,7 +223,16 @@
 				for (let key in fieldErrors) {
 					if (key === 'message' || key === 'success' || key === 'status_code' || key === 'debug') continue;
 					let errorMsg = Array.isArray(fieldErrors[key]) ? fieldErrors[key][0] : fieldErrors[key];
-					let targetInput = $("[name='" + key + "'], [name='" + key + "[]']").first();
+                    // Laravel uses dots for nested errors; form inputs use brackets.
+                    let parts = key.split('.');
+                    let inputName = parts.shift() + parts.map(part => '[' + part + ']').join('');
+                    let targetInput = targetForm.find(':input').filter(function () {
+                        return this.name === key || this.name === key + '[]' || this.name === inputName;
+                    }).first();
+                    if (!targetInput.length && /\.\d+$/.test(key)) {
+                        let arrayName = key.replace(/\.\d+$/, '') + '[]';
+                        targetInput = targetForm.find(':input').filter(function () { return this.name === arrayName; }).first();
+                    }
 					let par = targetInput.closest('.form-group, .mb-3, [class*="col-"]');
 					if (!par.length) continue;
 					$('<p class="alert alert-danger validation-error mt-1 mb-0"></p>').text(errorMsg).appendTo(par);

@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title','Create')
+@section('title', 'Create Driver')
 @section('content')
     @include('layouts.title',
        ['title' => 'Driver', 'sub_title' => 'Driver Create',
@@ -36,7 +36,7 @@
                             <input type='hidden' name='_token' value='{{Session::token()}}'>
                             <div class="form-group mb-3">
                                 <label for="name">{!!trans('main.Name')!!}</label>
-                                <input type="text" name="name" value="{{ old('name') }}" class="form-control">
+                                <input id="name" type="text" name="name" value="{{ old('name') }}" class="form-control">
                                 @if($errors->has('name'))
                                     <strong>{{$errors->first('name')}}</strong>
                                 @endif
@@ -44,18 +44,18 @@
 
                             <div class="form-group mb-3">
                                 <label for="phone">{!!trans('main.Phone')!!}</label>
-                                <input type="text" name="phone" value="{{ old('phone') }}" class="form-control">
+                                <input id="phone" type="text" name="phone" value="{{ old('phone') }}" class="form-control">
                                 @if($errors->has('phone'))
                                     <strong>{{$errors->first('phone')}}</strong>
                                 @endif
                             </div>
                             <div class="form-group mb-3">
-                                <label>{!!trans('main.Email')!!}</label>
-                                <input type="text" name="email" value="{{ old('email') }}" class="form-control">
+                                <label for="email">{!!trans('main.Email')!!}</label>
+                                <input id="email" type="text" name="email" value="{{ old('email') }}" class="form-control">
                             </div>
                             <div class="form-group mb-3">
-                                <label for="transfer">{!!trans('main.BusCompany')!!}</label>
-                                {!! Form::select('transfer_id', $transfers, 0,['class' => 'form-control']) !!}
+                                <label for="transfer_id">{!!trans('main.BusCompany')!!}</label>
+                                {!! Form::select('transfer_id', $transfers, 0,['class' => 'form-control', 'id' => 'transfer_id']) !!}
                             </div>
 
                             <div class="form-group mb-3">

@@ -61,7 +61,7 @@
 						
                         <p class="margin"></p>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="search" name="search" class="form-control" v-model="search">
+                            <input aria-label="Search" type="text" id="search" name="search" class="form-control" v-model="search">
                             <span class="input-group-btn">
                                    <button class="btn btn-primary" @click="getListEmailsByUser">Search</button>
                                 <button type="button" class="btn btn-danger btn-sm" @click="ClearSearchForm()" v-if="search!=null">Clear</button>

@@ -1,0 +1,598 @@
+[
+  {
+    "id": "UI-01",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-16",
+    "title": "Mobile header hamburger does nothing",
+    "paths": [
+      "/clients/9/edit"
+    ],
+    "steps": "At 390px width click the hamburger in the light header.",
+    "evidence": "It targets #navbar-menu, which does not exist. The sidebar hamburger works; the header hamburger does not. Resolution: the header now targets #sidebar-menu, including aria-controls. tests/Browser/mobile-navigation.cjs passed header/sidebar open and close, synchronized aria-expanded, tablet navigation at 820px and desktop navigation at 1440px. Original observation above is retained as audit history.",
+    "expected": "Use one working navigation control.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-header.blade.php:15"
+  },
+  {
+    "id": "UI-02",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-16",
+    "title": "Two navigation bars consume excessive mobile space",
+    "paths": [
+      "/clients/9/edit",
+      "/hotel/1/edit"
+    ],
+    "steps": "Open an authenticated page at 390px width.",
+    "evidence": "Both TMS brands and both hamburgers render. Measured heights: 100px sidebar bar plus 85px header bar. Resolution: removed the duplicate sidebar toggle, restricted its brand to desktop, eliminated the collapsed sidebar bar below 992px, and made the compact header toggle available through the tablet breakpoint. tests/Browser/mobile-navigation.cjs passed one visible brand/control and a header no taller than 72px at 320/390/820px, navigation open/close, the user dropdown, and the desktop sidebar. Original observation above is retained as audit history.",
+    "expected": "Combine mobile navigation into one compact bar.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php:8"
+  },
+  {
+    "id": "UI-03",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-16",
+    "title": "Notifications and message shortcuts disappear on phones",
+    "paths": [
+      "/clients/9/edit"
+    ],
+    "steps": "Compare header actions at desktop and phone widths.",
+    "evidence": "Both Show notifications and Show messages triggers become hidden; no replacement exists in the mobile sidebar placeholder. Resolution: notification and message shortcuts remain visible on phones; phone dropdowns fit within viewport gutters and scroll when tall. tests/Browser/mobile-navigation.cjs passed visibility, dropdown opening, visible links, viewport bounds and Escape dismissal at 320/390/820/1440px, plus compact navigation and the user menu. Notification loading and message actions retain their existing behavior; the read-only browser test blocks data requests and does not test live notification contents or submit actions. Original observation above is retained as audit history.",
+    "expected": "Expose equivalent mobile shortcuts.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-header.blade.php:26"
+  },
+  {
+    "id": "UI-04",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Chat Add User Chat / Add Chat popup does not open",
+    "paths": [
+      "/chat/main"
+    ],
+    "steps": "Click Add User Chat; do not select a user or submit.",
+    "evidence": "No visible modal appears. Buttons use data-toggle/data-target; the shared loader fills .AjaxisModal but does not open it under Bootstrap 5. Resolution: chat actions now use buttons; their AJAX handler opens the Bootstrap modal, displays loading/error states, reuses the existing dialog without nested wrappers, adds a close button, restores trigger focus and ignores stale responses. tests/Browser/chat-dialogs.cjs passed both real dialog GETs at desktop/phone widths, viewport bounds, close/Escape, simulated HTTP 500 and successful retry. The browser permits only the chat page, two read-only dialog endpoints and static assets; no chat was created, selected or deleted. Original observation above is retained as audit history.",
+    "expected": "Open the intended dialog with Bootstrap 5-compatible wiring.",
+    "source": "resources/views/chats/main.blade.php:20; public/js/AjaxisBootstrap.js:28"
+  },
+  {
+    "id": "UI-05",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Activities table enhancement fails",
+    "paths": [
+      "/activities"
+    ],
+    "steps": "Open Activities and inspect its filtering/export controls.",
+    "evidence": "JavaScript throws $(...).DataTable is not a function. The layout does not load DataTables; intended column filters and DataTables export controls are not initialized. Resolution: replaced the obsolete DataTables initializer with native pagination/sorting, labeled global search, combined column filters, page-size selection and CSV/Excel/PDF exports using local libraries. Export includes all matching pages and excludes action controls. The shared paginator accepts optional column filters while retaining its existing default behavior. tests/Browser/activities-table.cjs passed initialization on the real Activities page, no-results handling, combined searches, sorting, pagination and all three downloads using browser-memory fixtures; CSV and Excel contents were checked across pages. No activity records were created or changed. Original observation above is retained as audit history.",
+    "expected": "Load the matching table plugin or use the existing native table controls consistently.",
+    "source": "resources/views/activities/index.blade.php:57"
+  },
+  {
+    "id": "UI-06",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Task time picker initialization fails",
+    "paths": [
+      "/task/create",
+      "/task/133/edit"
+    ],
+    "steps": "Open either task form.",
+    "evidence": "JavaScript throws $(...).timepicker is not a function. The initializer stops at this point. Resolution: both forms use required native time inputs with one-second precision instead of the missing jQuery timepicker. Create retains the 18:00 default; edit retains stored time and both honor validation old input. tests/Browser/task-time.cjs passed both actual pages without JavaScript errors, initial values, midnight/end-of-day/seconds, required/invalid input, serialized time values and the assignment guard that previously failed to register. No tasks were saved. This verifies browser behavior, not changes to server-side validation. Original observation above is retained as audit history.",
+    "expected": "Initialize an available time picker or provide a working native control without exceptions.",
+    "source": "resources/views/task/create.blade.php:289; resources/views/task/edit.blade.php:331"
+  },
+  {
+    "id": "UI-07",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Flights list opens an error screen",
+    "paths": [
+      "/flights"
+    ],
+    "steps": "Open the flights list.",
+    "evidence": "HTTP 500: route flights.show requires flight but action URLs pass id. Resolution: controller action URLs use the resource flight parameter; the shared action component has a Flights-specific route branch so show/edit URLs and the existing GET deletion route resolve correctly. Removed the server-pagination footer that called paginator methods on the controller collection; native client pagination remains in use. tests/Browser/flights-list.cjs passed HTTP 200, all three existing flight rows and their action URL targets, search/reset, and phone/desktop rendering. No row actions were opened or records changed. Detail/edit Google lookup failures remain separately tracked in UI-08. Original observation above is retained as audit history.",
+    "expected": "Render the list and its row actions successfully.",
+    "source": "app/Http/Controllers/FlightController.php:53"
+  },
+  {
+    "id": "UI-08",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Flight detail/edit fail when Google Places rejects the lookup",
+    "paths": [
+      "/flights/1",
+      "/flights/1/edit"
+    ],
+    "steps": "Open existing flight 1.",
+    "evidence": "HTTP 500 with Google REQUEST_DENIED rather than a usable record page. This is an integration/configuration dependency, not a CSS defect. Resolution: corrected the Google Places exception namespace and catch expected API/network failures, while preserving successful lookups. Flights show/edit display a warning for unavailable saved locations; edit retains the stored place ID independently of the external response. GooglePlacesFallbackTest passed 3 tests/9 assertions in isolated SQLite memory for success, missing location, denied request and network failure without deleting saved locations. tests/Browser/flight-details.cjs passed both real pages with HTTP 200 during lookup failure, fallback messages and retained edit location data; no forms were submitted. This adds graceful fallback and does not repair Google credentials or prove live map availability. Original observation above is retained as audit history.",
+    "expected": "Display stored record data with a useful service-unavailable fallback.",
+    "source": "app/Http/Controllers/FlightController.php"
+  },
+  {
+    "id": "UI-09",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "New Tour Package button leads to a broken form URL",
+    "paths": [
+      "/tour_package",
+      "/tour_package/create"
+    ],
+    "steps": "Click New on the package list.",
+    "evidence": "The form navigates to /tour_package/create without the tour-day ID required by the controller; HTTP 500. Resolution: the context-free create route displays a labeled required tour-day selector, listing days belonging to active tours, and redirects the selected day to the existing contextual create form. An empty-state message explains when no days are available; malformed IDs return 422 and nonexistent/ineligible days return 404. Corrected the service loader reference from nonexistent App\\Cruise to the existing App\\Cruises model, which otherwise blocked the contextual form. tests/Browser/package-create.cjs passed the actual New button, required selection, contextual HTTP 200/form rendering, malformed IDs and nonexistent ID. No package save was submitted; package creation persistence is outside this check. Original observation above is retained as audit history.",
+    "expected": "Request the required context or link to a valid contextual create route.",
+    "source": "resources/views/tour_package/index.blade.php:13"
+  },
+  {
+    "id": "UI-10",
+    "severity": "High",
+    "status": "Handled; read-only fallback verified 2026-10-17",
+    "title": "An existing package edit fails with a missing parent tour",
+    "paths": [
+      "/tour_package/1/edit"
+    ],
+    "steps": "Open edit for package 1.",
+    "evidence": "HTTP 500: departure_date is read on a null parent in the edit view. This was reproduced for this legacy record; it is not a claim that every package fails. Resolution: orphaned packages display stored details with a clear missing-tour warning and a link back to packages instead of rendering a broken edit form. Editing remains disabled until the correct tour association is restored; no parent is invented or assigned. Direct updates without a parent return 409 before writes. tests/Browser/package-missing-tour.cjs passed package 1 at phone/desktop widths, details/warning/back link, absence of edit form, and nonexistent-record 404. OrphanPackageEditTest passed 1 isolated test/3 assertions for update rejection and unchanged data. No existing records were changed. Original observation above is retained as audit history.",
+    "expected": "Handle missing parent data and keep the edit page usable.",
+    "source": "resources/views/tour_package/edit.blade.php"
+  },
+  {
+    "id": "UI-11",
+    "severity": "High",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Guest list index cannot render",
+    "paths": [
+      "/guestlist"
+    ],
+    "steps": "Open the guest-list resource list.",
+    "evidence": "HTTP 500: the view refers to undefined route quotation.data. Resolution: replaced the copied quotation screen and nonexistent AJAX route with escaped server-rendered guest-list records, correct headings, existing show-by-ID links, native search/sorting/pagination and the existing CSV control. Controller eager-loads tours and joins author names, with missing-tour/author fallback labels. tests/Browser/guest-list.cjs passed HTTP 200, 49 existing record links, search/no-results/reset and phone/desktop rendering. No guest lists were changed and no send/delete endpoints were invoked. Original observation above is retained as audit history.",
+    "expected": "Render guest lists using an existing endpoint.",
+    "source": "resources/views/guest_list/index.blade.php:58"
+  },
+  {
+    "id": "UI-12",
+    "severity": "High",
+    "status": "Fixed; authorized preview verified 2026-10-17",
+    "title": "Holiday list refers to a missing data route",
+    "paths": [
+      "/holiday"
+    ],
+    "steps": "Review the authorized view preview; normal account access is 403.",
+    "evidence": "The authorized layout renders HTTP 500 because holidaycalendar_data is undefined. Its DataTables initializer also depends on the missing plugin described in UI-05. Resolution: replaced the nonexistent AJAX route and DataTables initializer with escaped server-rendered holiday rows and existing native search/sorting/pagination. Controller supplies all rows for client filtering and permission-checked action buttons with the correct holiday resource parameter. scripts/qa-holiday-preview.php rendered the actual route using in-memory permissions only; tests/Browser/holidays.cjs verified that the normal account still receives 403, then tested that preview at phone/desktop widths without JavaScript errors, seven existing row links and search/no-results/reset. No holiday or permission records were saved; successful create/update/delete operations are outside this check. Original observation above is retained as audit history.",
+    "expected": "Use a real endpoint and an available table implementation.",
+    "source": "resources/views/holidaycalendar/index.blade.php:52"
+  },
+  {
+    "id": "UI-13",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Chat resource screens are incomplete or crash",
+    "paths": [
+      "/chat",
+      "/chat/create",
+      "/chat/1",
+      "/chat/1/edit"
+    ],
+    "steps": "Open these direct resource URLs.",
+    "evidence": "List: missing chat route parameter. Create/edit: controller methods absent. Detail: null attachment URL call. The normal conversation page is /chat/main. Resolution: index/create redirect to the supported chat.main screen; edit resolves the requested chat and redirects to its access-checked read-only preview. Replaced dummy detail content and its unwired composer with actual messages and a link to the working conversation screen. Shared message partials use the current avatar URL accessor, tolerate missing authors and preserve escaped message text. Resource action generation uses the correct chat parameter and model. tests/Browser/chat-resources.cjs passed all four direct URLs, phone/desktop preview and missing-record 404. ChatMessageRenderingTest passed 1 isolated test/7 assertions for legacy avatars, self/other/missing authors and escaped text. No chats/messages were saved or deleted; chat metadata editing is not introduced. Original observation above is retained as audit history.",
+    "expected": "Implement supported screens or stop exposing unsupported resource routes.",
+    "source": "app/Http/Controllers/ChatController.php:58; resources/views/chats/component/chat_message.blade.php"
+  },
+  {
+    "id": "UI-14",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "User, role and permission detail routes have no show action",
+    "paths": [
+      "/users/1",
+      "/roles/1",
+      "/permissions/1"
+    ],
+    "steps": "Open the detail URLs directly.",
+    "evidence": "All return HTTP 500 because show() does not exist. Lists and edit forms are separate and can still load. Resolution: added show actions for users, roles and permissions and a shared escaped read-only detail view. User fields are explicitly limited to ID/name/email/roles; role and permission screens show their existing associations. Back links return to the respective list, missing IDs use findOrFail, and all three detail routes require authentication. tests/Browser/admin-details.cjs passed each detail page at phone/desktop widths, expected fields/back links, missing-record 404 and unauthenticated login redirects. PHP syntax checks passed. No account, role or permission data was changed. Original observation above is retained as audit history.",
+    "expected": "Implement details or remove unsupported view actions/routes.",
+    "source": "app/Http/Controllers/ScaffoldInterface/UserController.php; app/Http/Controllers/ScaffoldInterface/RoleController.php; app/Http/Controllers/ScaffoldInterface/PermissionController.php"
+  },
+  {
+    "id": "UI-15",
+    "severity": "Medium",
+    "status": "Fixed; browser/authorized preview verified 2026-10-17",
+    "title": "Some exposed pages return an empty screen",
+    "paths": [
+      "/quotation/2",
+      "/comparison",
+      "/comparison/create"
+    ],
+    "steps": "Open quotation detail, or inspect protected Comparison previews.",
+    "evidence": "Quotation detail has HTTP 200 with no content. Comparison index/create also return empty HTTP 200 in the preview. Resolution: quotation show renders an escaped read-only summary with its existing edit link when the parent tour exists and a missing-tour fallback otherwise; nonexistent records return 404. Comparison index/create render an explicit context-required page explaining that front sheets belong to quotations and linking to the quotation list. No redirect to comparison show is used because that existing GET action can write data (UI-41). tests/Browser/quotation-comparison-context.cjs passed real quotation detail and 404, both authorized Comparison previews at phone/desktop widths, links and unchanged real-account 403 restrictions. scripts/qa-comparison-context-preview.php uses in-memory permissions only. No quotation/comparison data was created or changed. Original observation above is retained as audit history.",
+    "expected": "Show meaningful content or an explicit unsupported/empty-state page.",
+    "source": "app/Http/Controllers/QuotationController.php; app/Http/Controllers/ComparisonController.php"
+  },
+  {
+    "id": "UI-16",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Avatar previews show broken-image placeholders",
+    "paths": [
+      "/profile",
+      "/profile/edit",
+      "/users/1/edit"
+    ],
+    "steps": "Open pages displaying the existing avatar.",
+    "evidence": "The stored local avatar file is unavailable. These previews have no usable fallback even though navigation uses an icon. Resolution: profile/show, profile/edit and user/edit share an escaped accessible avatar preview that resolves modern and legacy paths, skips missing local files and displays initials. An image load failure removes the image to reveal the underlying initials without a broken placeholder. tests/Browser/avatar-previews.cjs passed all three real pages at phone/desktop widths, nonempty initials/accessibility labels, viewport fit and no broken preview images. AvatarPreviewTest passed 2 tests/6 assertions for missing files, escaped names, retained existing paths and fallback markup; its temporary file was removed. No user records or existing uploaded files changed. Original observation above is retained as audit history.",
+    "expected": "Use initials or a default avatar when the file is absent.",
+    "source": "resources/views/profile/show.blade.php; resources/views/profile/edit.blade.php; resources/views/scaffold-interface/users/edit.blade.php"
+  },
+  {
+    "id": "UI-17",
+    "severity": "Medium",
+    "status": "Fixed; backed-up data repair verified 2026-10-17",
+    "title": "Currency symbols and some names contain mojibake",
+    "paths": [
+      "/currencies",
+      "/event",
+      "/guide",
+      "/transfer"
+    ],
+    "steps": "Read the currency symbols and affected names/dropdown choices.",
+    "evidence": "The Euro symbol renders as corrupted text rather than €. Several older symbols and accented names are also corrupted; new sample symbols render correctly. Resolution: the connection already uses UTF-8. Backed up exact original rows to storage/app/ui-audit/ui17-encoding-backup.json, then transactionally reversed valid Latin-1/Windows-1252 mojibake sequences in 150 targeted text fields across 149 rows: 7 currency fields, 138 archived event names and 5 transfer names. No guide name required repair. Every other field, including IDs, rates, amounts, timestamps and archived status, was verified unchanged. scripts/repair-ui17-encoding.php --verify confirmed all rows against the backup; a rescan found no further reversible errors in the targeted fields. LegacyEncodingRepairTest passed 1 test/34 assertions for valid text and single/double/mixed encoding. tests/Browser/legacy-encoding.cjs passed Euro and active accented transfer text/search plus Event/Guide rendering; archived names were verified in stored data, not via active list visibility. The repair does not guess irreversibly damaged characters or normalize unrelated database fields. Original observation above is retained as audit history.",
+    "expected": "Repair the affected stored encoding and maintain consistent UTF-8 handling.",
+    "source": "resources/views/currencies/index.blade.php"
+  },
+  {
+    "id": "UI-18",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Select2 controls are much shorter than adjacent fields",
+    "paths": [
+      "/clients/9/edit",
+      "/hotel/1/edit"
+    ],
+    "steps": "Compare country/city controls with nearby text inputs at 390px.",
+    "evidence": "Select2 selections measure 28px tall; text inputs measure 44.5px. Resolution: shared Tabler layout styles align Select2 font size, padding, minimum height and arrow position with native text inputs. Multiple selections keep automatic height and wrapping. tests/Browser/select2-sizing.cjs passed actual client/hotel edit pages at 390/1440px, single-select heights within 1px of adjacent text fields and at least 44px, dropdown opening/Escape dismissal, and browser-only multiple-selection wrapping/removal. No forms were submitted or records changed. Original observation above is retained as audit history.",
+    "expected": "Use consistent heights and comfortable mobile targets.",
+    "source": "public/css/select2.min.css; resources/views/component/city_form.blade.php"
+  },
+  {
+    "id": "UI-19",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Contact Email label focuses the company email instead",
+    "paths": [
+      "/clients/9/edit"
+    ],
+    "steps": "Add a contact and click its Email label without saving.",
+    "evidence": "The label focuses the top-level contact_email field because the same ID is reused. Two elements with that ID were measured. Resolution: loaded/new contact templates suffix each of the four field IDs with the contact index and point labels to those unique IDs, retaining the existing submission names and top-level company email ID. tests/Browser/contact-labels.cjs passed all four label clicks for two added rows at phone/desktop widths, uniqueness and submission names. Client 9 had no saved rows during this check; ContactLabelRenderingTest separately verified two loaded examples plus one new row, with 26 assertions. No contact records were saved or changed. Original observation above is retained as audit history.",
+    "expected": "Give each contact input a unique ID and matching label.",
+    "source": "resources/views/component/hotel_contact_form.blade.php:18; resources/views/component/get_hotel_contacts_form.blade.php:23"
+  },
+  {
+    "id": "UI-20",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Contact removal is not keyboard-accessible",
+    "paths": [
+      "/clients/9/edit"
+    ],
+    "steps": "Try to reach a contact row’s x removal control using Tab.",
+    "evidence": "The control is a span with no role or tabindex; it is not a native button. Resolution: both contact templates use a labeled native type=button removal control, a shared class rather than duplicate IDs, and a 44px minimum target positioned above the fields. The client edit handler removes the intended row and transfers focus to the next/previous removal button or Add Contact. tests/Browser/contact-removal.cjs passed Tab reachability, Enter/Space/mouse activation, neighbor preservation, focus transfer and no form submission using added unsaved rows. UI-19 contact-label regression passed, and ContactLabelRenderingTest passed 28 assertions including loaded/new button markup. No saved contacts were changed. Original observation above is retained as audit history.",
+    "expected": "Use a labelled, keyboard-operable button.",
+    "source": "resources/views/component/hotel_contact_form.blade.php:3"
+  },
+  {
+    "id": "UI-21",
+    "severity": "Medium",
+    "status": "Fixed; browser/authorized preview verified 2026-10-17",
+    "title": "Repeated IDs make shared selectors ambiguous",
+    "paths": [
+      "/",
+      "/home",
+      "/invoices/2",
+      "/accounting/1",
+      "/office/1",
+      "/profile",
+      "/quotation/3/create",
+      "/quotation/2/edit",
+      "/offer/28/show"
+    ],
+    "steps": "Inspect DOM IDs on these pages.",
+    "evidence": "Examples: myModal/tours/status, fixed-scroll, four tour_create IDs on an office page, logout-form, quotation_table and calculation. This confirms ambiguity, not that every selector already causes a visible failure. Resolution: dashboard tour deletion has its own modal ID and updated handlers; task tour/status fields and their labels have distinct IDs. Removed competing inner sticky-tab IDs, repeated office action IDs and the redundant profile logout form while retaining the shared logout target. Quotation IDs now belong to the actual data/calculation tables; wrapper/body duplicates were removed and the calculation tab has a separate ID with matching link. tests/Browser/unique-ids.cjs found no duplicate DOM IDs on all nine audited pages, including an authorized Office preview, and verified canonical quotation/modal/logout targets. Office permissions were changed only in CLI memory; no records, forms or destructive actions were submitted. This validates IDs/selectors, not every unrelated business workflow. Original observation above is retained as audit history.",
+    "expected": "Use unique IDs or scoped classes.",
+    "source": "resources/views/scaffold-interface/dashboard/dashboard.blade.php; resources/views/invoices/show.blade.php; resources/views/office/show.blade.php"
+  },
+  {
+    "id": "UI-22",
+    "severity": "Medium",
+    "status": "Fixed on audited forms; browser-verified 2026-10-17",
+    "title": "Many form fields have no associated label",
+    "paths": [
+      "/hotel/1/edit",
+      "/event/create",
+      "/guide/create",
+      "/restaurant/create",
+      "/transfer/create",
+      "/agreements/1/edit/1"
+    ],
+    "steps": "Use labels or inspect input.labels / label for attributes.",
+    "evidence": "Visible text is often adjacent to an input without being associated with it. The instance CSV lists all flagged fields; placeholder-only search inputs are included as review candidates. Resolution: linked adjacent labels and stable IDs across related hotel/event/guide/restaurant/transfer create/edit templates, preserved submission names, named the shared attachment field, and labeled agreement name/dates/description and per-room quantities. Added accessible names to the audited placeholder-only list/dashboard search controls. tests/Browser/form-labels.cjs passed all six cited service/agreement pages with no unnamed named-input/select/textarea fields or duplicate DOM IDs, tested Name label focus, and verified search names on four representative lists. Related service templates were also checked for duplicate ID attributes. No forms were submitted or business records changed. This records verification of the cited forms and shared/search fixes, not a new exhaustive manual review of every dormant template. Original observation above is retained as audit history.",
+    "expected": "Associate visible labels with stable input IDs; provide explicit names for search fields.",
+    "source": "resources/views/hotel/edit.blade.php; resources/views/event/create.blade.php"
+  },
+  {
+    "id": "UI-23",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Labels target nonexistent or wrong fields",
+    "paths": [
+      "/invoices/2/edit",
+      "/driver/create",
+      "/driver/1/edit",
+      "/flights/create",
+      "/cruises/create",
+      "/season/1/create",
+      "/roles/create",
+      "/permissions/create"
+    ],
+    "steps": "Click labels or inspect their for targets.",
+    "evidence": "Examples include invoice labels targeting name, several dates all targeting departure_date, driver labels targeting nonexistent names, and empty for attributes in admin forms. Resolution: corrected label targets and missing IDs for invoice number/amount/tour, driver fields/company select, flight/cruise date/time and criteria controls, season dates/type/description, role name and permission fields. Related edit templates received matching corrections. Criteria group headings are plain text rather than labels pointing to nonexistent controls; individual checkbox labels use unique IDs. tests/Browser/label-targets.cjs passed all eight cited real forms with no unresolved/empty label targets and plain-text label click focus. Date/time plugin associations were verified without requiring native focus retention from those plugins. Submission names and values were preserved; no forms were saved. Original observation above is retained as audit history.",
+    "expected": "Match every form label to the corresponding control.",
+    "source": "resources/views/driver/create.blade.php; resources/views/driver/edit.blade.php; resources/views/scaffold-interface/permissions/create.blade.php"
+  },
+  {
+    "id": "UI-24",
+    "severity": "Medium",
+    "status": "Fixed; browser/authorized preview verified 2026-10-17",
+    "title": "Some icon buttons have no accessible action name",
+    "paths": [
+      "/hotel/1",
+      "/guide/8",
+      "/clients/6",
+      "/accounting/create",
+      "/office/1",
+      "/room_types",
+      "/currencies"
+    ],
+    "steps": "Inspect icon-only buttons or navigate using assistive technology.",
+    "evidence": "Attachment-delete buttons and other icon controls lack text, title or aria-label. The per-page instance CSV records actual affected controls. Resolution: shared table action helpers and Office action links expose concise accessible names/tooltips for viewing, editing, deleting and printing. Attachment removers are named Delete attachment with type=button; reusable invoice/payment row controls are named Remove row. Existing destinations and handlers were retained. tests/Browser/action-names.cjs passed all seven cited pages including the authorized Office preview with no unnamed visible buttons/action links and verified non-submitting attachment buttons. PHP syntax checks passed. No removal or save actions were invoked and no records/files/permissions changed. Original observation above is retained as audit history.",
+    "expected": "Provide concise accessible action labels.",
+    "source": "resources/views/component; resources/views/hotel/show.blade.php"
+  },
+  {
+    "id": "UI-25",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Links contain buttons, creating conflicting interactive semantics",
+    "paths": [
+      "/invoices/2",
+      "/accounting/1",
+      "/chat/main",
+      "/status/1"
+    ],
+    "steps": "Inspect Back/Edit/Cancel and chat actions.",
+    "evidence": "An anchor wraps a button. This creates competing focus/click behavior rather than one action element. Resolution: invoice/accounting Back and Status Edit use single styled navigation links; Status history Back is a standalone type=button action. The chat controls already became native buttons in UI-04 and were regression-tested. tests/Browser/action-semantics.cjs passed all four cited pages without nested anchors/buttons, confirmed navigation destinations/classes and actual Status Edit navigation, checked history Back focus/non-submit type and chat button types. tests/Browser/chat-dialogs.cjs also passed both dialogs on phone/desktop, closing/Escape and failure/retry. No forms were submitted, chats created or records changed. Original observation above is retained as audit history.",
+    "expected": "Use an anchor styled as a button for navigation, and a button for actions.",
+    "source": "resources/views/accounting/show.blade.php; resources/views/chats/main.blade.php"
+  },
+  {
+    "id": "UI-26",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Avatar upload widget overflows its mobile card",
+    "paths": [
+      "/profile/edit",
+      "/users/create",
+      "/users/1/edit"
+    ],
+    "steps": "View the avatar field at 390px and scroll it into view.",
+    "evidence": "The caption and Browse row extend outside the card; Browse reaches the right viewport edge. The profile screenshot confirms the overflow despite global horizontal clipping. Resolution: scoped avatar-upload wrappers and layout rules constrain caption/action groups to their parent, permit wrapping, remove intrinsic minimum widths and give phone caption/actions full container width. Profile edit and user create/edit retain their existing file inputs and upload behavior. tests/Browser/avatar-upload-layout.cjs passed all three forms at 320/390/768/1440px with control bounds inside the wrapper, repeated with a long browser-local image filename, and verified that Remove clears the unsaved file. No uploads or form submissions were made and no user records or stored files changed. Original observation above is retained as audit history.",
+    "expected": "Make the caption/actions wrap within the card width.",
+    "source": "resources/views/profile/edit.blade.php; resources/views/scaffold-interface/users/create.blade.php"
+  },
+  {
+    "id": "UI-27",
+    "severity": "Medium",
+    "status": "Fixed; browser/authorized preview verified 2026-10-17",
+    "title": "Navigation loses current-module highlighting on detail/edit pages",
+    "paths": [
+      "/clients/9/edit",
+      "/hotel/1/edit",
+      "/driver/1/edit"
+    ],
+    "steps": "Compare sidebar state between a module list and its edit page.",
+    "evidence": "Active checks compare exact index route names. On client edit the Clients link has no active class. Resolution: DashboardHelper treats a resource index menu as active for routes in that exact resource namespace, and tree groups reuse the same matching so they remain expanded. Standalone routes keep exact matching; tab helpers are unchanged. MenuHighlightingTest passed 47 assertions covering index/create/show/edit/update, unrelated namespaces, null routes and grouped navigation. tests/Browser/menu-highlighting.cjs passed client/hotel/driver edit navigation and open parent groups. Where the current account hides a menu link, scripts/qa-menu-preview.php checks a CLI-only authorized layout with in-memory menu gates; no permission records were saved. No business records changed. Original observation above is retained as audit history.",
+    "expected": "Keep the current module highlighted throughout its create/show/edit flow.",
+    "source": "app/Helper/DashboardHelper.php; resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php"
+  },
+  {
+    "id": "UI-28",
+    "severity": "Low",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Accounting submenu does not mark the selected child",
+    "paths": [
+      "/accounting",
+      "/reporting",
+      "/invoices"
+    ],
+    "steps": "Inspect Accounting dropdown items on a corresponding page.",
+    "evidence": "Child links have a fixed dropdown-item class without selected-route styling. Resolution: all six Accounting child links use the existing resource-aware menu helper for active styling and expose aria-current=true only for the selected section. Parent group expansion remains controlled by the shared helper. tests/Browser/accounting-menu.cjs passed Accounting/Reporting/Invoices lists and client/supplier invoice detail pages: exactly one matching child was active, its destination and current-state attribute were correct, and the parent group remained active/expanded. No financial records or permissions changed. Original observation above is retained as audit history.",
+    "expected": "Highlight the active child as well as the Accounting group.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php:316"
+  },
+  {
+    "id": "UI-29",
+    "severity": "Low",
+    "status": "Fixed; authorized preview verified 2026-10-17",
+    "title": "Settings active-route check uses the wrong name",
+    "paths": [
+      "/settings"
+    ],
+    "steps": "Inspect the Settings menu route condition.",
+    "evidence": "The check uses setting.index; the actual route and destination are settings.index. Resolution: corrected all four sidebar checks from setting.index to settings.index, covering the child active state and administration group active/expanded/open states. tests/Browser/settings-menu.cjs passed Settings index/create authorized previews with exactly one active Settings child and an expanded parent group; the normal account still receives HTTP 403. scripts/qa-settings-menu-preview.php uses an unsaved in-memory admin role/permission context only. No settings, accounts or permission records changed. Original observation above is retained as audit history.",
+    "expected": "Use the actual route name.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php:59"
+  },
+  {
+    "id": "UI-30",
+    "severity": "Medium",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Required-field markers disagree with validation",
+    "paths": [
+      "/hotel/create",
+      "/event/create",
+      "/clients/9/edit"
+    ],
+    "steps": "Compare form markers with the corresponding request rules.",
+    "evidence": "Hotel address/email/phone requirements are not marked consistently; the shared country/city component displays stars in optional event fields; contact names are required after adding a row but have no required marker. Resolution: hotel create/edit address, work phone and email now have required controls/markers matching the existing hotel rules. Shared location fields use an explicit requirement flag: hotel forms and client create opt in, while optional event and client-edit location fields do not show misleading stars or require input. Client new/loaded contact-name controls receive an explicit required flag and star; other shared-contact contexts remain optional by default. Existing request rules were not changed. tests/Browser/required-markers.cjs passed hotel create/edit, optional event locations and required added client contact names without submitting forms. ContactLabelRenderingTest passed 2 tests/34 assertions including required/optional new and loaded contact markup. PHP syntax checks passed. No business records changed. Original observation above is retained as audit history.",
+    "expected": "Use the same requirement rules in labels, controls and server validation.",
+    "source": "resources/views/hotel/create.blade.php; resources/views/component/city_form.blade.php; resources/views/component/hotel_contact_form.blade.php"
+  },
+  {
+    "id": "UI-31",
+    "severity": "Low",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "User avatar upload is labelled Logo",
+    "paths": [
+      "/users/create"
+    ],
+    "steps": "Read the upload label.",
+    "evidence": "The form calls a user avatar Logo, while edit/profile pages call it Avatar. Resolution: the user-create upload label now says Avatar, consistent with profile/user-edit forms, and retains for=avatar. tests/Browser/avatar-label.cjs confirmed HTTP 200, displayed wording, association with the existing file input and unchanged input type/name. No file was selected or uploaded and no form was submitted. Original observation above is retained as audit history.",
+    "expected": "Use Avatar consistently.",
+    "source": "resources/views/scaffold-interface/users/create.blade.php:61"
+  },
+  {
+    "id": "UI-32",
+    "severity": "Low",
+    "status": "Fixed; browser/source verified 2026-10-17",
+    "title": "Generic browser titles make tabs difficult to identify",
+    "paths": [
+      "/status",
+      "/currencies",
+      "/accounting/1",
+      "/invoices/2"
+    ],
+    "steps": "Open several module pages in separate browser tabs.",
+    "evidence": "Many document titles are only Index, Show, Create, Edit or the generic application name. Resolution: replaced 99 literal Index/Show/Create/Edit template titles with explicit module/action titles, including client versus supplier invoices, nested Office financial forms, reports, calendars and the unauthorized page. Corrected edit pages previously titled Create. Existing descriptive and dynamic titles were retained. A source check verified all 99 mapped replacements (storage/app/ui-audit/ui32-title-changes.json); read-only browser checks passed the four cited pages with Statuses, Currencies, Client Invoice Details and Supplier Invoice Details. The remaining title-only changes were statically checked rather than individually opening every page. No form submissions or business-record changes were made. Original observation above is retained as audit history.",
+    "expected": "Include module/action and, where useful, record name.",
+    "source": "resources/views/status/index.blade.php; resources/views/accounting/show.blade.php"
+  },
+  {
+    "id": "UI-33",
+    "severity": "Low",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Activity descriptions expose HTML markup as text",
+    "paths": [
+      "/activities"
+    ],
+    "steps": "Read a comment-created activity row.",
+    "evidence": "Descriptions visibly contain <p>...</p> tags instead of readable comment text. Resolution: activity descriptions are converted to plain-text summaries for display: block/line boundaries become spaces, tags and script/style content are removed, entities are decoded and whitespace is normalized. Blade escaping remains enabled, and stored log records are untouched. ActivityDescriptionTest passed 6 assertions for paragraphs, line breaks, entities, Unicode, script/style/image markup and null text. The Activities browser regression verified real description cells contain no visible rich-text tags or injected script/images, then passed search/column filters/sorting/pagination and CSV/Excel/PDF exports with browser-only fixtures. No activity records were saved or changed. Original observation above is retained as audit history.",
+    "expected": "Present safe plain text or a deliberate formatted summary.",
+    "source": "resources/views/activities/index.blade.php:28"
+  },
+  {
+    "id": "UI-34",
+    "severity": "Low",
+    "status": "Fixed; browser-verified 2026-10-17",
+    "title": "Package detail shows numeric status rather than a label",
+    "paths": [
+      "/tour_package/1"
+    ],
+    "steps": "Read the Status row.",
+    "evidence": "The displayed status is 13. The view echoes the raw status ID. Resolution: the detail Status cell uses the existing getStatusName lookup and escaped output instead of the raw ID. Unset statuses show Not set; missing referenced statuses show Status unavailable. Closed the missing label-cell tag in that row. A read-only browser check confirmed HTTP 200 and Pending for package 1 instead of numeric ID 13. No package or status records changed. Original observation above is retained as audit history.",
+    "expected": "Show the related status name/badge.",
+    "source": "resources/views/tour_package/show.blade.php:36"
+  },
+  {
+    "id": "UI-35",
+    "severity": "Medium",
+    "status": "Fixed; blocked-CDN browser verified 2026-10-17",
+    "title": "Dashboard calendar has no unavailable-library fallback",
+    "paths": [
+      "/",
+      "/home"
+    ],
+    "steps": "Load with the FullCalendar CDN unavailable.",
+    "evidence": "The audit could not fetch the CDN; FullCalendar is not defined and the calendar does not initialize. This is not proof the CDN fails on a normal unrestricted connection. Resolution: dashboard initialization checks for FullCalendar before constructing the calendar. If unavailable, it hides the empty widget and shows a readable fallback with Retry and permission-gated task/tour list links. The pinned CDN and existing successful initialization path remain intact. tests/Browser/calendar-fallback.cjs deliberately blocked external scripts and passed root/home at phone/desktop widths, fallback bounds, task-list access, reload/retry and absence of FullCalendar exceptions. This verifies graceful library-load failure, not live CDN availability or successful calendar data loading. No calendar/task data or permissions changed. Original observation above is retained as audit history.",
+    "expected": "Provide a local/pinned library or a clear fallback instead of a blank calendar and uncaught error.",
+    "source": "resources/views/scaffold-interface/dashboard/dashboard.blade.php:82"
+  },
+  {
+    "id": "UI-36",
+    "severity": "Medium",
+    "status": "Fixed; blocked-CDN browser verified 2026-10-17",
+    "title": "Portal and user-edit JavaScript depends on remote jQuery assets",
+    "paths": [
+      "/TMS-Client/login",
+      "/TMS-Supplier/login",
+      "/users/1/edit"
+    ],
+    "steps": "Load with external script hosts unavailable.",
+    "evidence": "Portal pages throw jQuery/$ undefined errors. User edit also imports a separate CDN jQuery/Select2 initialization outside the main layout flow. Healthy online behavior was not verified. Resolution: both portals use the existing local jQuery 3.6.3, with local copies of jQuery Steps 1.1.0 and Validation 1.19.5 retaining their license headers. Removed the duplicate validation load and standalone Popper (Bootstrap 5 bundle includes Popper). Wizard setup only runs when a wizard form exists. User edit uses the main layout local jQuery/Select2 stack, with permission dropdown initialization in post_scripts instead of duplicate CDN dependencies. tests/Browser/local-jquery-stack.cjs passed both login pages and user edit with external requests blocked: no page errors, exactly one jQuery per page, local plugin availability, DOM-only wizard navigation and permissions dropdown opening. No forms submitted, data or permissions changed. Authenticated portal tour workflows were not exercised. Original observation above is retained as audit history.",
+    "expected": "Use one consistent script stack and handle unavailable dependencies.",
+    "source": "resources/views/scaffold-interface/users/edit.blade.php:289; resources/views/TMSClient; resources/views/TMSSupplier"
+  },
+  {
+    "id": "UI-37",
+    "severity": "Low",
+    "status": "Fixed; blocked-image browser verified 2026-10-17",
+    "title": "Portal branding has no local-image fallback",
+    "paths": [
+      "/TMS-Client/login",
+      "/TMS-Supplier/login"
+    ],
+    "steps": "Load without access to the external branding image.",
+    "evidence": "A remote eetstravel.com logo renders as a broken image during the restricted-network audit. Its normal online availability is unverified. Resolution: client and supplier login pages now use the existing local img/eets_logo.png directly, eliminating the remote logo dependency, with EETS Travel alternative text and existing responsive sizing retained. tests/Browser/portal-branding.cjs passed both login pages with external requests blocked at 390px and 1440px: logo decoded successfully, remained within viewport bounds and login button remained visible. No forms submitted or records changed. Original observation above is retained as audit history.",
+    "expected": "Provide local/default branding when remote images cannot load.",
+    "source": "resources/views/TMSClient; resources/views/TMSSupplier"
+  },
+  {
+    "id": "UI-38",
+    "severity": "Medium",
+    "status": "Fixed; asset and isolated browser behavior verified 2026-10-17",
+    "title": "Client portal references a nonexistent JavaScript filename",
+    "paths": [
+      "Client portal tour detail"
+    ],
+    "steps": "Inspect the portal tour-detail script include.",
+    "evidence": "It requests js/hide-elements.js. Only js/hide_elements.js exists locally. Resolution: client portal tour detail now references the existing js/hide_elements.js asset. Static HTTP check returned 200. An isolated browser DOM fixture loaded the actual local jQuery, Select2, datepicker and hide_elements scripts and verified scroll closes the service selector, scroll/mousewheel hide date and Places popups, datepickernoyear initializes, and no JavaScript errors occur. No authenticated portal tour was opened; full portal session behavior remains untested. No data changed. Original observation above is retained as audit history.",
+    "expected": "Reference the correct asset and verify the portal’s hide/show controls.",
+    "source": "resources/views/TMSClient/home/tour/show.blade.php:278"
+  },
+  {
+    "id": "UI-39",
+    "severity": "Medium",
+    "status": "Fixed; permission-matrix rendering verified 2026-10-17",
+    "title": "Templates menu permission gate does not match its destination",
+    "paths": [
+      "/templates"
+    ],
+    "steps": "Compare the menu gate with route middleware permissions.",
+    "evidence": "The Templates link is inside can(email.main), while the destination checks templates.index. A user can therefore see an unusable link or miss an otherwise allowed one. Current account destination access is 403. Resolution: Templates now has its own templates.index permission gate, matching the destination route. Inbox and Webmail retain their email.main gate. A read-only CLI rendering check used an unsaved user and in-memory Gate decisions to verify all four combinations of email.main/templates.index: Templates visibility follows templates.index independently, and Inbox/Webmail visibility follows email.main. No permission assignments, route authorization or records changed. Original observation above is retained as audit history.",
+    "expected": "Gate the link with the permission required by the destination.",
+    "source": "resources/views/scaffold-interface/layouts/tabler-sidebar.blade.php:271"
+  },
+  {
+    "id": "UI-40",
+    "severity": "Low",
+    "status": "Fixed via compatibility bridge; browser verified 2026-10-17",
+    "title": "Legacy Bootstrap interaction attributes remain in other templates",
+    "paths": [
+      "Comparison dialogs",
+      "shared add-tour dialog",
+      "notification components"
+    ],
+    "steps": "Review remaining data-toggle/data-dismiss attributes in active views.",
+    "evidence": "106 source occurrences were flagged, including comments and potentially inactive templates. Chat failure is independently reproduced in UI-04; the remaining occurrences need interaction verification before being called broken. Resolution: shared main layout and portal footer load bootstrap-legacy-attributes.js before their Bootstrap bundle. The bridge adds missing Bootstrap 5 data attributes for legacy modal/dropdown/tab/pill/collapse/alert/offcanvas controls, targets and options; it preserves explicit data-bs values and watches AJAX insertions/legacy attribute changes. Legacy tooltip data-original-title gains native title help when needed. Inactive templates/comments remain untouched. tests/Browser/bootstrap-legacy-controls.cjs passed modal open/close, dropdown, alerts, collapse, tabs, dynamic inserts and explicit-attribute precedence against both Tabler and portal bundles. tests/Browser/legacy-tour-dialog.cjs passed actual dashboard add-tour header/footer dismissal at 390/1440px without navigation; chat-dialogs.cjs regression passed. Comparison/tour detail pages were not opened because their GET handlers can write records; their legacy attribute patterns are covered by the isolated fixture, not full-page interaction verification. No forms submitted, chats created or records changed. Original observation above is retained as audit history.",
+    "expected": "Migrate active controls or document a compatibility bridge; do not blindly replace inactive code.",
+    "source": "resources/views/comparison/frontsheet.blade.php:338; resources/views/component/modal_add_tour.blade.php:223"
+  },
+  {
+    "id": "UI-41",
+    "severity": "Medium",
+    "status": "Fixed; read-only database and initialization tests verified 2026-10-17",
+    "title": "Opening a tour can create comparison records without a save",
+    "paths": [
+      "/tour/3"
+    ],
+    "steps": "Inspect the tour show flow without submitting a form.",
+    "evidence": "The GET display path initializes comparison rows. The audit created two empty rows; logs and timestamps identified them, and only those unchanged audit-created rows were archived and removed. A concurrent user edit was preserved. Resolution: tour and comparison display paths now use in-memory placeholders for missing comparison rows and never save them. Missing records require an explicit Initialize front sheet form on the existing comparison.update route, with CSRF and existing update authorization. Initialization runs transactionally, locks the comparison and adds only missing date rows; existing values remain untouched. Incomplete comparison detail shows initialization instructions before editing. tests/Unit/ComparisonInitializationTest.php passed 4 tests/24 assertions covering repeated read-only display, missing/partial initialization, idempotence, saved-value preservation and rollback. Actual /tour/3 and /comparison/2 rendered HTTP 200 inside a MySQL-enforced READ ONLY transaction, rolled back afterward. Browser preview checks passed prompt visibility/bounds at 390/1440px and POST/PUT/CSRF fields; denied-permission previews omit the action. Update permission was simulated only in CLI memory for the authorized preview, never assigned. No production initialization submitted and no comparison records or permissions changed. Explicit notification-click handling remains unchanged. Original observation above is retained as audit history.",
+    "expected": "Separate record initialization from display or make this behavior explicit. Future audit navigation excludes this GET mutation.",
+    "source": "app/Http/Controllers/TourController.php:1293; app/Http/Controllers/TourController.php:2760"
+  }
+]

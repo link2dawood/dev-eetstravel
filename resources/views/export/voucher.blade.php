@@ -107,6 +107,9 @@
         </table>
     </div>
 @empty
+    <h1 style="color:{{ $accent }}; font-size:22px;">Service Vouchers</h1>
+    <p><strong>{{ $summary['name'] }}</strong></p>
+    <p>{{ $summary['start'] }} &ndash; {{ $summary['end'] }}</p>
     <p style="color:{{ $muted }};">No services are marked for vouchers on this tour.</p>
 @endforelse
 @unless($isDoc)

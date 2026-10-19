@@ -123,9 +123,15 @@
 
     {{-- Day by day --}}
     <p class="section" style="font-weight:bold; font-size:13px; color:{{ $accent }};">Day by day</p>
+    @if(!count($days))
+        <p>No tour days are available for this itinerary.</p>
+    @endif
     @foreach($days as $day)
         <div class="day">
             <p class="day-head" style="background:{{ $band }}; font-weight:bold; font-size:13px; padding:7px 10px; margin:12px 0 0;">Day {{ $day['number'] }} <span style="font-weight:normal; color:{{ $muted }};">· {{ $day['date'] }}</span></p>
+            @if(!count($day['items']) && !count($day['notes']) && !$day['overnight'])
+                <p>No services are scheduled for this day.</p>
+            @endif
             @if(count($day['items']))
                 <table class="items">
                     @foreach($day['items'] as $item)

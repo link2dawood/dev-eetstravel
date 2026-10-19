@@ -169,7 +169,7 @@
                             <i class="ti ti-file-invoice me-1"></i>{!! trans('main.Voucher') !!}
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}"); return false;'>
+                            <a class="dropdown-item" href="{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'voucher']) }}">
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
                             <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_doc_export', ['id' => $tour->id, 'doc_type' => 'voucher']) }}"); return false;'>
@@ -184,7 +184,7 @@
                             <i class="ti ti-route me-1"></i>{!! trans('main.Itinerary') !!}
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}"); return false;'>
+                            <a class="dropdown-item" href="{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}">
                                 <i class="ti ti-file-type-pdf me-2"></i>PDF
                             </a>
                             <a class="dropdown-item" href="#" onclick='event.preventDefault(); export_to("{{ route('tour_html_export', ['id' => $tour->id, 'type' => 'html']) }}"); return false;'>
@@ -2196,7 +2196,7 @@ function exportNumber() {
 
 function exportItinerary() {
     const url = "{{ route('tour_pdf_export', ['id' => $tour->id, 'pdf_type' => 'short']) }}";
-    export_to(url);
+    window.location.assign(url);
 }
 
 function printAll() {

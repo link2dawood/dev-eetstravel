@@ -41,6 +41,7 @@ class SupplierSearchController extends Controller
      */
     public function show(Request $request)
     {
+        abort_unless(in_array($request->service, ['Service', 'All', 'Hotel', 'Event', 'Guide', 'Restaurant', 'Transfer', 'Flight', 'Cruises'], true), 422, 'Select a valid supplier service.');
         $cityCode       = $request->city_code;
         $countryAlias   = $request->countryalias;
         $searchName     = $request->searchname;

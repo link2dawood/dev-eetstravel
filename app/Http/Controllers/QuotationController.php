@@ -148,7 +148,10 @@ class QuotationController extends Controller {
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function create( $tourId ) {
+	public function create( $tourId = null ) {
+        if ($tourId === null) {
+            return redirect()->route('tour.create', ['is_quotation' => 1]);
+        }
 		$tour = Tour::findOrFail( $tourId );
 		$listRoomsHotel = TourRoomTypeHotel::where('tour_id', $tour->id )->get();
 		$quotation = Quotation::query()->where('tour_id',$tourId)->latest()->first();

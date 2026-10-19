@@ -781,7 +781,7 @@ ini_set('post_max_size', '62M');
         return view('export.bootstrap', compact('setting'));*/
 
         $pdfName = 'itinerary_'.$tour->name.'.pdf';
-        return $pdf->stream(str_replace(" ","_",$pdfName));
+        return $pdf->download(str_replace(" ","_",$pdfName));
     }
 
 

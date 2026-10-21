@@ -41,6 +41,16 @@ class ClientController extends Controller
      *
      * @return  \Illuminate\Http\Response
      */
+    public function getCountries()
+    {
+        return response()->json(\App\Country::orderBy('name')->get(['alias', 'name']));
+    }
+
+    public function getStates($countryCode)
+    {
+        return response()->json(\App\City::where('country', $countryCode)->orderBy('name')->get(['id', 'name']));
+    }
+
     public function index(Request $request)
     {
         $title = 'Index - client';

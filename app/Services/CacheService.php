@@ -35,6 +35,7 @@ class CacheService
      */
     public function remember(string $key, callable $callback, int $ttl = self::DEFAULT_TTL, array $tags = [])
     {
+        if ($ttl <= 0) return $callback();
         try {
             if (!empty($tags)) {
                 return Cache::tags($tags)->remember($key, $ttl, $callback);

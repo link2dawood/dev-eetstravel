@@ -12,13 +12,7 @@ use Illuminate\Support\Facades\Route;
 */
 Auth::routes();
 
-Route::get('/clear', function () {
 
-    Artisan::call('cache:clear');
-    Artisan::call('config:cache');
-    Artisan::call('view:clear');
-    return "Cleared!";
-});
 Route::get('getgooglecities/', 'ImportController@getGoogleCities');
 
 
@@ -46,7 +40,7 @@ Route::group(['middleware' => 'perm'], function () {
             '\App\Http\Controllers\HotelController'
         );
         Route::post('hotel/{id}/update', '\App\Http\Controllers\HotelController@update');
-        Route::get('hotel/{id}/delete', '\App\Http\Controllers\HotelController@destroy')->name('hotel.destroy');
+        Route::match(['POST', 'DELETE'], 'hotel/{id}/delete', '\App\Http\Controllers\HotelController@destroy')->name('hotel.destroy');
         Route::get('hotel/{id}/deleteMsg', '\App\Http\Controllers\HotelController@DeleteMsg');
         Route::get('api/getItemContactView', '\App\Http\Controllers\HotelController@getItemContactView');
         Route::get('api/getItemsContacts', '\App\Http\Controllers\HotelController@getItemsContacts');
@@ -56,7 +50,7 @@ Route::group(['middleware' => 'perm'], function () {
     Route::group(['middleware' => 'web'], function () {
         Route::resource('event', '\App\Http\Controllers\EventController');
         Route::post('event/{id}/update', '\App\Http\Controllers\EventController@update');
-        Route::get('event/{id}/delete', '\App\Http\Controllers\EventController@destroy')->name('event.destroy');
+        Route::match(['POST', 'DELETE'], 'event/{id}/delete', '\App\Http\Controllers\EventController@destroy')->name('event.destroy');
         Route::get('event/{id}/deleteMsg', '\App\Http\Controllers\EventController@DeleteMsg');
     });
 
@@ -69,7 +63,7 @@ Route::group(['middleware' => 'web'], function () {
     Route::group(['middleware' => 'web'], function () {
         Route::resource('guide', '\App\Http\Controllers\GuideController');
         Route::post('guide/{id}/update', '\App\Http\Controllers\GuideController@update');
-        Route::get('guide/{id}/delete', '\App\Http\Controllers\GuideController@destroy')->name('guide.destroy');
+        Route::match(['POST', 'DELETE'], 'guide/{id}/delete', '\App\Http\Controllers\GuideController@destroy')->name('guide.destroy');
         Route::get('guide/{id}/deleteMsg', '\App\Http\Controllers\GuideController@DeleteMsg');
     });
 
@@ -77,7 +71,7 @@ Route::group(['middleware' => 'web'], function () {
     Route::group(['middleware' => 'web'], function () {
         Route::resource('restaurant', '\App\Http\Controllers\RestaurantController');
         Route::post('restaurant/{id}/update', '\App\Http\Controllers\RestaurantController@update');
-        Route::get('restaurant/{id}/delete', '\App\Http\Controllers\RestaurantController@destroy')->name('restaurant.destroy');
+        Route::match(['POST', 'DELETE'], 'restaurant/{id}/delete', '\App\Http\Controllers\RestaurantController@destroy')->name('restaurant.destroy');
         Route::get('restaurant/{id}/deleteMsg', '\App\Http\Controllers\RestaurantController@DeleteMsg');
     });
 
@@ -85,7 +79,7 @@ Route::group(['middleware' => 'web'], function () {
 Route::group(['middleware' => 'web'], function () {
     Route::resource('clients', '\App\Http\Controllers\ClientController');
     Route::post('clients/{id}/update', '\App\Http\Controllers\ClientController@update');
-    Route::get('clients/{id}/delete', '\App\Http\Controllers\ClientController@destroy')->name('client.destroy');
+    Route::match(['POST', 'DELETE'], 'clients/{id}/delete', '\App\Http\Controllers\ClientController@destroy')->name('client.destroy');
     Route::get('clients/{id}/deleteMsg', '\App\Http\Controllers\ClientController@DeleteMsg');
 	Route::get('api/getClientContacts', '\App\Http\Controllers\ClientController@getClientContacts');
 	
@@ -97,7 +91,7 @@ Route::get('/states/{countryCode}','\App\Http\Controllers\ClientController@getSt
 Route::group(['middleware' => 'web'], function () {
    	Route::resource('invoices', '\App\Http\Controllers\InvoicesController');
    	Route::post('invoices/{id}/update', '\App\Http\Controllers\InvoicesController@update')->name('invoice.update');
-    Route::get('invoices/{id}/delete', '\App\Http\Controllers\InvoicesController@destroy')->name('invoices.destroy');
+    Route::match(['POST', 'DELETE'], 'invoices/{id}/delete', '\App\Http\Controllers\InvoicesController@destroy')->name('invoices.destroy');
     Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg');
 	Route::get('supplierdropdown/{id}', 'InvoicesController@supplierDropdown');
 	Route::get('add_payment/{id}', '\App\Http\Controllers\InvoicesController@add_payment')->name('add_payment');
@@ -107,11 +101,11 @@ Route::group(['middleware' => 'web'], function () {
 //Account of TMS
 Route::group(['middleware' => 'web'], function () {
 	Route::resource('transaction', '\App\Http\Controllers\TransactionController');
-	Route::get('transaction/{id}/delete', '\App\Http\Controllers\TransactionController@destroy')->name('transaction.destroy');
+	Route::match(['POST', 'DELETE'], 'transaction/{id}/delete', '\App\Http\Controllers\TransactionController@destroy')->name('transaction.destroy');
 	Route::get('transaction/{id}/deleteMsg', '\App\Http\Controllers\TransactionController@DeleteMsg');
    	Route::resource('accounting', '\App\Http\Controllers\ClientInvoiceController');
    	Route::post('accounting/{id}/update', '\App\Http\Controllers\ClientInvoiceController@update')->name('accounts.update');
-    Route::get('accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
+    Route::match(['POST', 'DELETE'], 'accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
     Route::get('accounting/{id}/deleteMsg', '\App\Http\Controllers\ClientInvoiceController@DeleteMsg');
 	Route::get('accountingServiceTransaction/create/{tour_id}', 'ClientInvoiceController@serviceTransactionCreate')->name('service_transaction_create');
 	Route::get('/accounting/{id}/export/{pdf_type}', 'ClientInvoiceController@pdfExport')->name('accounting_pdf_export');
@@ -127,10 +121,7 @@ Route::group(['middleware' => 'web'], function () {
 	
 //Reporting of TMS
 Route::group(['middleware' => 'web'], function () {
-   	Route::resource('reporting', '\App\Http\Controllers\ReportingController');
-   	Route::post('reporting/{id}/update', '\App\Http\Controllers\ReportingController@update')->name('reporting.update');
-    Route::get('reporting/{id}/delete', '\App\Http\Controllers\ReportingController@destroy')->name('reporting.destroy');
-    Route::get('reporting/{id}/deleteMsg', '\App\Http\Controllers\ReportingController@DeleteMsg');
+    Route::resource('reporting', '\App\Http\Controllers\ReportingController')->only(['index', 'show']);
 	Route::get('/reporting_supplier_show', 'ReportingController@show')->name('reporting_supplier_show');
 	Route::get('reporting/hotel/{id}/show', '\App\Http\Controllers\ReportingController@hotel_show')->name('reporting.hotel.show');
  	Route::get('reporting/event/{id}/show', '\App\Http\Controllers\ReportingController@event_show')->name('reporting.event.show');
@@ -142,7 +133,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('office', '\App\Http\Controllers\OfficeController');
 	
    	Route::post('office/{id}/update', '\App\Http\Controllers\OfficeController@update')->name('office.update');
-    Route::get('office/{id}/delete', '\App\Http\Controllers\OfficeController@destroy')->name('office.destroy');
+    Route::match(['POST', 'DELETE'], 'office/{id}/delete', '\App\Http\Controllers\OfficeController@destroy')->name('office.destroy');
     Route::get('office/{id}/deleteMsg', '\App\Http\Controllers\OfficeController@DeleteMsg');
 });
 	
@@ -158,7 +149,7 @@ Route::group(['middleware' => 'web'], function () {
 //------- Office Invoice details -----//
 		Route::get('officeInvoicesdetail/{id}', '\App\Http\Controllers\OfficeInvoiceController@office_invoice_details')->name('office_invoices_detail.show');
    	Route::post('officeInvoices/{id}/update', '\App\Http\Controllers\OfficeInvoiceController@update')->name('office_invoices.update');
-    Route::get('officeInvoices/{id}/delete', '\App\Http\Controllers\OfficeInvoiceController@destroy')->name('office_invoices.destroy');
+    Route::match(['POST', 'DELETE'], 'officeInvoices/{id}/delete', '\App\Http\Controllers\OfficeInvoiceController@destroy')->name('office_invoices.destroy');
     Route::get('officeInvoices/{id}/deleteMsg', '\App\Http\Controllers\OfficeInvoiceController@DeleteMsg');
 });
 //Taxes of TMS
@@ -175,7 +166,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('tour_expenses', '\App\Http\Controllers\TourExpenseController');
 	Route::get('tour_expenses/create/{id}', '\App\Http\Controllers\TourExpenseController@create')->name('tour_expenses.create');
    	Route::post('tour_expenses/{id}/update', '\App\Http\Controllers\TourExpenseController@update')->name('tour_expenses.update');
-    Route::get('tour_expenses/{id}/delete', '\App\Http\Controllers\TourExpenseController@destroy')->name('tour_expenses.destroy');
+    Route::match(['POST', 'DELETE'], 'tour_expenses/{id}/delete', '\App\Http\Controllers\TourExpenseController@destroy')->name('tour_expenses.destroy');
     Route::get('tour_expenses/{id}/deleteMsg', '\App\Http\Controllers\TourExpenseController@DeleteMsg');
 });
 //Utility Expenses of offices TMS
@@ -183,7 +174,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('utility_expenses', '\App\Http\Controllers\UtilityExpenseController');
 	Route::get('utility_expenses/create/{id}', '\App\Http\Controllers\UtilityExpenseController@create')->name('utility_expenses.create');
    	Route::post('utility_expenses/{id}/update', '\App\Http\Controllers\UtilityExpenseController@update')->name('utility_expenses.update');
-    Route::get('utility_expenses/{id}/delete', '\App\Http\Controllers\UtilityExpenseController@destroy')->name('utility_expenses.destroy');
+    Route::match(['POST', 'DELETE'], 'utility_expenses/{id}/delete', '\App\Http\Controllers\UtilityExpenseController@destroy')->name('utility_expenses.destroy');
     Route::get('utility_expenses/{id}/deleteMsg', '\App\Http\Controllers\UtilityExpenseController@DeleteMsg');
 });
 //Employee Salary  of offices of TMS
@@ -191,7 +182,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('employes-salary', '\App\Http\Controllers\EmployesSalaryController');
 	Route::get('employes-salary/create/{id}', '\App\Http\Controllers\EmployesSalaryController@create')->name('employes-salary.create');
    	Route::post('employes-salary/{id}/update', '\App\Http\Controllers\EmployesSalaryController@update')->name('employes-salary.update');
-    Route::get('employes-salary/{id}/delete', '\App\Http\Controllers\EmployesSalaryController@destroy')->name('employes-salary.destroy');
+    Route::match(['POST', 'DELETE'], 'employes-salary/{id}/delete', '\App\Http\Controllers\EmployesSalaryController@destroy')->name('employes-salary.destroy');
     Route::get('employes-salary/{id}/deleteMsg', '\App\Http\Controllers\EmployesSalaryController@DeleteMsg');
 });
 //Total Earning of offices TMS
@@ -199,7 +190,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('office_earning', '\App\Http\Controllers\OfficeEarningController');
 	Route::get('office_earning/create/{id}', '\App\Http\Controllers\OfficeEarningController@create')->name('office_earning.create');
    	Route::post('office_earning/{id}/update', '\App\Http\Controllers\OfficeEarningController@update')->name('office_earning.update');
-    Route::get('office_earning/{id}/delete', '\App\Http\Controllers\OfficeEarningController@destroy')->name('office_earning.destroy');
+    Route::match(['POST', 'DELETE'], 'office_earning/{id}/delete', '\App\Http\Controllers\OfficeEarningController@destroy')->name('office_earning.destroy');
     Route::get('office_earning/{id}/deleteMsg', '\App\Http\Controllers\OfficeEarningController@DeleteMsg');
 });
 //Balance Amount of offices TMS
@@ -207,7 +198,7 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('office_balance', '\App\Http\Controllers\BalanceAmountController');
 	Route::get('office_balance/create/{id}', '\App\Http\Controllers\BalanceAmountController@create')->name('office_balance.create');
    	Route::post('office_balance/{id}/update', '\App\Http\Controllers\BalanceAmountController@update')->name('office_balance.update');
-    Route::get('office_balance/{id}/delete', '\App\Http\Controllers\BalanceAmountController@destroy')->name('office_balance.destroy');
+    Route::match(['POST', 'DELETE'], 'office_balance/{id}/delete', '\App\Http\Controllers\BalanceAmountController@destroy')->name('office_balance.destroy');
     Route::get('office_balance/{id}/deleteMsg', '\App\Http\Controllers\BalanceAmountController@DeleteMsg');
 });
 // Google Calendar API
@@ -220,7 +211,7 @@ Route::group(['middleware' => 'web'], function () {
     Route::group(['middleware' => 'web'], function () {
         Route::resource('transfer', '\App\Http\Controllers\TransferController');
         Route::post('transfer/{id}/update', '\App\Http\Controllers\TransferController@update');
-        Route::get('transfer/{id}/delete', '\App\Http\Controllers\TransferController@destroy')->name('transfer.destroy');
+        Route::match(['POST', 'DELETE'], 'transfer/{id}/delete', '\App\Http\Controllers\TransferController@destroy')->name('transfer.destroy');
         Route::get('transfer/{id}/deleteMsg', '\App\Http\Controllers\TransferController@DeleteMsg');
     });
 
@@ -229,7 +220,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::resource('tour_package', '\App\Http\Controllers\TourPackageController');
         Route::post('tour_package/{id}/update', '\App\Http\Controllers\TourPackageController@update')->name('tour_package.update');
         Route::get('tour_package/{id}/create', '\App\Http\Controllers\TourPackageController@create')->name('tour_package.create');
-        Route::get('tour_package/{id}/delete', '\App\Http\Controllers\TourPackageController@destroy')->name('tour_package.destroy');
+        Route::match(['POST', 'DELETE'], 'tour_package/{id}/delete', '\App\Http\Controllers\TourPackageController@destroy')->name('tour_package.destroy');
         Route::get('tour_package/{id}/deleteMsg', '\App\Http\Controllers\TourPackageController@DeleteMsg');
         Route::post('tour_package/{id}/generateServices', '\App\Http\Controllers\TourPackageController@generateServices')->name('tour_package.generateServices');
         Route::get('/tour_package/{id}/api', '\App\Http\Controllers\TourPackageController@apiData')->name('service_api_data');
@@ -237,7 +228,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('/tour_package/{id}/change_time', 'TourPackageController@changeTime')->name('change_time');
         Route::post('/description_package', 'TourPackageController@descriptionPackage')->name('description_package');
         Route::get('/reorder_package', 'TourPackageController@reorderService')->name('reorder_package');
-        Route::get('/package/api/ajax_update', 'TourPackageController@ajaxUpdate');
+        Route::post('/package/api/ajax_update', 'TourPackageController@ajaxUpdate')->name('tour_package.edit');
         Route::post('/hotel_room_types', 'TourPackageController@viewHotelRoomType');
 		Route::post('/hotel_room_types_tours', 'TourPackageController@viewHotelRoomType');
         Route::post('/tour_package/api/update_status', 'TourPackageController@ajaxUpdateStatus');
@@ -252,7 +243,6 @@ Route::group(['middleware' => 'web'], function () {
 		Route::get('/fellowconfirmHotel/{id}', 'TourPackageController@fellowconfirmHotel');
 	    Route::get('/api/get_status/{id}', 'TourPackageController@apiGetStatus');
 	    Route::get('/api/get_tour_package_transfer_dates/{id}', 'TourPackageController@getTourPackageTransferDates');
-	    Route::get('/api/tour_package_transfer/{id}/delete', 'TourPackageController@deleteTransferTourPackage');
 
     });
 	Route::group(['middleware' => 'web'], function () {
@@ -266,7 +256,7 @@ Route::group(['middleware' => 'web'], function () {
 			;
 		Route::get('/tour_package/hotel_offers/{id}/emails', 'OfferController@offer_emails')->name('offers.emails');
 		Route::get('offer/{id}/deleteMsg','\App\Http\Controllers\OfferController@DeleteMsg')->name('offer.deleteMsg');
-    	Route::get('offer/{id}/delete','\App\Http\Controllers\OfferController@destroy')->name('offer.destroy');
+    Route::match(['POST', 'DELETE'], 'offer/{id}/delete','\App\Http\Controllers\OfferController@destroy')->name('offer.destroy');
 		Route::get('offer/{id}/assign_to_tour','\App\Http\Controllers\OfferController@assign_to_tour')->name('offer.assign_tour');
 		Route::post('offer/{id}/days_dropdown','\App\Http\Controllers\TourController@days_dropdown')->name('offer.days_dropdown');
 		Route::get('/monthly_chart_data', 'TourController@monthly_chart_data')->name('monthly_chart_data');
@@ -279,9 +269,9 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('tour/save', '\App\Http\Controllers\TourController@store');
         Route::resource('tour', '\App\Http\Controllers\TourController');
         Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
-        Route::get('tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
+        Route::match(['POST', 'DELETE'], 'tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
         Route::get('tour/{id}/deleteMsg', '\App\Http\Controllers\TourController@DeleteMsg')->name('tour.deleteMsg');
-        Route::get('tour/{id}/delete/{tab}', '\App\Http\Controllers\TourController@destroy')->name('tour_tab.destroy');
+        Route::match(['POST', 'DELETE'], 'tour/{id}/delete/{tab}', '\App\Http\Controllers\TourController@destroy')->name('tour_tab.destroy');
         Route::get('tour/{id}/deleteMsg/{tab}', '\App\Http\Controllers\TourController@DeleteMsg');
         Route::post('tour/{id}/generatePackages', '\App\Http\Controllers\TourController@generatePackages')->name('generate_packages');
         Route::get('/tour/{id}/api/{export}/{type?}', '\App\Http\Controllers\TourController@export')->name('tour_export');
@@ -298,7 +288,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('/get_tour_days', '\App\Http\Controllers\TourController@getTourDays');
         Route::post('/get_tour_days_id', '\App\Http\Controllers\TourController@getTourDaysId');
         Route::get('/checkTourDayConfirmedHotel', '\App\Http\Controllers\TourController@checkTourDayConfirmedHotel');
-        Route::post('/get_tour_days_id_hotel_service', '\App\Http\Controllers\TourController@getTourDaysIdHotelService');
 	    Route::get('tour/{id}/convert_to_tour', 'TourController@convertToTour')->name('tour.convert_to_tour');
 		Route::get('tour/{id}/convert_to_quotation', 'TourController@convertToQuotation')->name('tour.convertToQuotation');
 		Route::post('/update_voucherid', '\App\Http\Controllers\TourController@update_voucherid');
@@ -335,9 +324,9 @@ Route::group(['middleware'=> 'web'],function(){
 
     // Your other custom task routes
     Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
-    Route::get('task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
+    Route::match(['POST', 'DELETE'], 'task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
     Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
-    Route::get('task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
+    Route::match(['POST', 'DELETE'], 'task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
     Route::get('task/{id}/deleteMsg/{tab}','\App\Http\Controllers\TaskController@DeleteMsg');
     Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
     Route::get('/task/statuses/list', 'TaskController@statusesList');
@@ -353,7 +342,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('status','\App\Http\Controllers\StatusController');
         Route::post('status/{id}/update','\App\Http\Controllers\StatusController@update');
-        Route::get('status/{id}/delete','\App\Http\Controllers\StatusController@destroy')->name('status.destroy');
+        Route::match(['POST', 'DELETE'], 'status/{id}/delete','\App\Http\Controllers\StatusController@destroy')->name('status.destroy');
         Route::get('status/{id}/deleteMsg','\App\Http\Controllers\StatusController@DeleteMsg');
     });
     
@@ -361,7 +350,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('holiday','\App\Http\Controllers\HolidayController');
         Route::post('holiday/{id}/update','\App\Http\Controllers\HolidayController@update');
-        Route::get('holiday/{id}/delete','\App\Http\Controllers\HolidayController@destroy')->name('holiday.destroy');
+        Route::match(['POST', 'DELETE'], 'holiday/{id}/delete','\App\Http\Controllers\HolidayController@destroy')->name('holiday.destroy');
         Route::get('holiday/{id}/deleteMsg','\App\Http\Controllers\HolidayController@DeleteMsg');
     });
 
@@ -369,7 +358,7 @@ Route::group(['middleware'=> 'web'],function(){
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('room_types','\App\Http\Controllers\RoomTypesController');
     Route::post('room_types/{id}/update','\App\Http\Controllers\RoomTypesController@update');
-    Route::get('room_types/{id}/delete','\App\Http\Controllers\RoomTypesController@destroy')->name('room_types.destroy');
+    Route::match(['POST', 'DELETE'], 'room_types/{id}/delete','\App\Http\Controllers\RoomTypesController@destroy')->name('room_types.destroy');
     Route::get('room_types/{id}/deleteMsg','\App\Http\Controllers\RoomTypesController@DeleteMsg');
 });
 
@@ -377,7 +366,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('templates','\App\Http\Controllers\TemplatesController')->except(['create', 'edit']); // created and edited in a pop-up on the show page
         Route::post('templates/{id}/update','\App\Http\Controllers\TemplatesController@update');
-        Route::post('templates/{id}/delete','\App\Http\Controllers\TemplatesController@destroy')->name('templates.destroy');
+        Route::match(['POST', 'DELETE'], 'templates/{id}/delete','\App\Http\Controllers\TemplatesController@destroy')->name('templates.destroy');
         Route::get('templates/api/load', '\App\Http\Controllers\TemplatesController@loadTemplate');
 		Route::get('desctemplates/api/load', '\App\Http\Controllers\TemplatesController@loadDescTemplate');
         Route::get('templates/api/loadServiceTemplates', '\App\Http\Controllers\TemplatesController@loadServiceTemplates');
@@ -390,12 +379,12 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::get('agreements/{id}/create','\App\Http\Controllers\AgreementsController@create')->name('create_agreements');
         Route::get('agreements/{hotel_id}/edit/{id}','\App\Http\Controllers\AgreementsController@edit')->name('edit_agreements');
-        Route::get('agreements/{hotel_id}/delete/{id}','\App\Http\Controllers\AgreementsController@destroy')->name('delete_agreements');
+        Route::match(['POST', 'DELETE'], 'agreements/{hotel_id}/delete/{id}','\App\Http\Controllers\AgreementsController@destroy')->name('delete_agreements');
         Route::post('agreements/store','\App\Http\Controllers\AgreementsController@store')->name('store_agreements');
         Route::post('agreements/update','\App\Http\Controllers\AgreementsController@update')->name('update_agreements');
         Route::get('agreements/kontingent','\App\Http\Controllers\AgreementsController@kontingent')->name('kontingent_agreements');
         Route::get('agreements/kontingent_save','\App\Http\Controllers\AgreementsController@kontingent_save')->name('kontingent_save');
-        Route::get('agreements/kontingent_delete','\App\Http\Controllers\AgreementsController@kontingent_delete')->name('kontingent_delete');
+        Route::post('agreements/kontingent_delete','\App\Http\Controllers\AgreementsController@kontingent_delete')->name('kontingent_delete');
         Route::post('/agreement_hotel_room_types','\App\Http\Controllers\AgreementsController@viewAgreementHotelRoomType');
     });
 
@@ -403,7 +392,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::get('season/{id}/create','\App\Http\Controllers\SeasonsController@create')->name('create_season');
         Route::get('season/{hotel_id}/edit/{id}','\App\Http\Controllers\SeasonsController@edit')->name('edit_season');
-        Route::get('season/{hotel_id}/delete/{id}','\App\Http\Controllers\SeasonsController@destroy')->name('delete_season');
+        Route::match(['POST', 'DELETE'], 'season/{hotel_id}/delete/{id}','\App\Http\Controllers\SeasonsController@destroy')->name('delete_season');
         Route::post('season/store','\App\Http\Controllers\SeasonsController@store')->name('store_season');
         Route::post('season/update','\App\Http\Controllers\SeasonsController@update')->name('update_season');
         Route::post('/season_hotel_room_types','\App\Http\Controllers\SeasonsController@viewSeasonHotelRoomType');
@@ -415,7 +404,7 @@ Route::group(['middleware'=> 'web'],function(){
         Route::get('bus/calendar','\App\Http\Controllers\BusController@calendar')->name('bus_calendar');
         Route::resource('bus','\App\Http\Controllers\BusController');
         Route::post('bus/{id}/update','\App\Http\Controllers\BusController@update');
-        Route::get('bus/{id}/delete','\App\Http\Controllers\BusController@destroy')->name('bus.destroy');
+        Route::match(['POST', 'DELETE'], 'bus/{id}/delete','\App\Http\Controllers\BusController@destroy')->name('bus.destroy');
         Route::get('bus/{id}/deleteMsg','\App\Http\Controllers\BusController@DeleteMsg');
         Route::get('/driver_bus_transfer/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransfer');
         Route::get('/driver_bus_transfer/table/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransferForTable');
@@ -441,7 +430,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('rate','\App\Http\Controllers\RateController');
         Route::post('rate/{id}/update','\App\Http\Controllers\RateController@update');
-        Route::get('rate/{id}/delete','\App\Http\Controllers\RateController@destroy')->name('rate.destroy');
+        Route::match(['POST', 'DELETE'], 'rate/{id}/delete','\App\Http\Controllers\RateController@destroy')->name('rate.destroy');
         Route::get('rate/{id}/deleteMsg','\App\Http\Controllers\RateController@DeleteMsg');
     });
 
@@ -450,16 +439,16 @@ Route::group(['middleware'=> 'web'],function(){
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('currency_rate','\App\Http\Controllers\CurrencyRateController');
     Route::post('currency_rate/{id}/update','\App\Http\Controllers\CurrencyRateController@update');
-    Route::get('currency_rate/{id}/delete','\App\Http\Controllers\CurrencyRateController@destroy')->name('currency_rate.destroy');
+    Route::match(['POST', 'DELETE'], 'currency_rate/{id}/delete','\App\Http\Controllers\CurrencyRateController@destroy')->name('currency_rate.destroy');
     Route::get('currency_rate/{id}/deleteMsg','\App\Http\Controllers\CurrencyRateController@DeleteMsg');
 });
 
 // Notifications
-    Route::get('/notifications/{id}/delete', '\App\Http\Controllers\NotificationsController@destroy')->name('notifications.destroy');
+    Route::match(['POST', 'DELETE'], '/notifications/{id}/delete', '\App\Http\Controllers\NotificationsController@destroy')->name('notifications.destroy');
     Route::get('/notifications/{id}/deleteMsg', '\App\Http\Controllers\NotificationsController@deleteMsg');
     Route::post('/delete_notifications', '\App\Http\Controllers\NotificationsController@deleteNotification');
     Route::get('/read_all_notifications', '\App\Http\Controllers\NotificationsController@readAllNotifications');
-    Route::get('/delete_all_notifications', '\App\Http\Controllers\NotificationsController@deleteAllNotifications');
+    Route::post('/delete_all_notifications', '\App\Http\Controllers\NotificationsController@deleteAllNotifications');
     Route::get('/getNotifications', '\App\Http\Controllers\NotificationsController@getNotifications');
 
 //Profile User
@@ -477,7 +466,7 @@ Route::group(['middleware'=> 'web'],function(){
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('currencies','\App\Http\Controllers\CurrenciesController');
         Route::post('currencies/{id}/update','\App\Http\Controllers\CurrenciesController@update');
-        Route::get('currencies/{id}/delete','\App\Http\Controllers\CurrenciesController@destroy')->name('currencies.destroy');
+        Route::match(['POST', 'DELETE'], 'currencies/{id}/delete','\App\Http\Controllers\CurrenciesController@destroy')->name('currencies.destroy');
         Route::get('currencies/{id}/deleteMsg','\App\Http\Controllers\CurrenciesController@DeleteMsg');
     });
 
@@ -485,16 +474,15 @@ Route::group(['middleware'=> 'web'],function(){
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('criteria','\App\Http\Controllers\CriteriaController');
     Route::post('criteria/{id}/update','\App\Http\Controllers\CriteriaController@update');
-    Route::get('criteria/{id}/delete','\App\Http\Controllers\CriteriaController@destroy')->name('criteria.destroy');
+    Route::match(['POST', 'DELETE'], 'criteria/{id}/delete','\App\Http\Controllers\CriteriaController@destroy')->name('criteria.destroy');
     Route::get('criteria/{id}/deleteMsg','\App\Http\Controllers\CriteriaController@DeleteMsg');
 });
 
 //Comments Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('comment', 'CommentController')->except(['create']); // comments are added on a record, not on a page of their own
-        Route::get('/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
+        Route::match(['POST', 'DELETE'], '/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
         Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
-        Route::get('/comment/{id}/reply', 'CommentController@reply')->name('comment_reply');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
 Route::group(['middleware' => ['web', 'auth']], function () {
@@ -515,9 +503,8 @@ Route::group(['middleware' => ['web', 'auth']], function () {
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('cruises', 'CruisesController');
-        Route::get('/cruises/{id}/delete', 'CruisesController@destroy')->name('cruise.destroy');
+        Route::match(['POST', 'DELETE'], '/cruises/{id}/delete', 'CruisesController@destroy')->name('cruise.destroy');
         Route::get('/cruises/{id}/delete_msg', 'CruisesController@deleteMsg');
-        Route::post('/cruises/{id}/api/attach', 'CruisesController@getAttach')->name('cruises_attach');
     });
     
     Route::group(['middleware' => 'web'], function () {
@@ -537,9 +524,8 @@ Route::group(['middleware' => ['web', 'auth']], function () {
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('flights', 'FlightController');
-        Route::get('flights/{id}/delete', 'FlightController@destroy')->name('flight.destroy');
+        Route::match(['POST', 'DELETE'], 'flights/{id}/delete', 'FlightController@destroy')->name('flight.destroy');
         Route::get('flights/{id}/delete_msg', 'FlightController@deleteMsg')->name('flights_delete_msg');
-        Route::post('/flights/{id}/api/attach', 'FlightController@getAttach')->name('flights_attach');
     });
 
     Route::group(['middleware' => 'web'], function(){
@@ -627,29 +613,28 @@ Route::group(['middleware' => 'web'], function () {
     Route::post('announcements/{announcement}/reply', 'AnnouncementController@reply')
         ->name('announcements.reply');
     
-    Route::get('announcements/{announcement}/generate', 'AnnouncementController@generateAnnouncements')
-        ->name('announcements.generate');
+
 });
 
 Route::group(['middleware' => 'web'], function () {
     Route::get('/chat/{id}/renderChat', 'ChatController@renderChat')->name('chat.renderChat');
     Route::get('/chat/main', 'ChatController@main')->name('chat.main');
 	Route::get('/chat/{id}/deleteMsg', 'ChatController@delete')->name('chat.deleteMsg');
-	Route::get('/chat/{id}/destroy_chat', 'ChatController@destroy')->name('chat.destroy_chat');
+	Route::match(['POST', 'DELETE'], '/chat/{id}/destroy_chat', 'ChatController@destroy')->name('chat.destroy_chat');
     Route::get('/chat/renderUsersForChat', 'ChatController@renderUsersForChat')->name('chat.renderUsersForChat');
     Route::get('/chat/{id}/getMessage', 'ChatController@getMessage')->name('chat.getMessage');
     Route::get('/chat/{id}/getNewChat', 'ChatController@getNewChat')->name('chat.getNewChat');
     Route::get('/chat/getOrCreateChat', 'ChatController@getOrCreateChat')->name('chat.getOrCreateChat');
     Route::get('/chat/renderCustomChatCreateFrom', 'ChatController@renderCustomChatCreateFrom')->name('chat.renderCustomChatCreateFrom');
     Route::get('/chat/renderCustomChatDeleteFrom', 'ChatController@renderCustomChatDeleteFrom')->name('chat.renderCustomChatDeleteFrom');
-    Route::get('/chat/deleteChat', 'ChatController@deleteChat')->name('chat.deleteChat');
+    Route::post('/chat/deleteChat', 'ChatController@deleteChat')->name('chat.deleteChat');
     Route::get('/chat/createCustomChat', 'ChatController@createCustomChat')->name('chat.createCustomChat');
     Route::get('/chat/{id}/renderUsersForCustomChat', 'ChatController@renderUsersForCustomChat')->name('chat.renderUsersForCustomChat');
     Route::get('/chat/{id}/renderDirectChat', 'ChatController@renderDirectChat')->name('chat.renderDirectChat');
     Route::get('/chat/addUserToCustomChat', 'ChatController@addUserToCustomChat')->name('chat.addUserToCustomChat');
     Route::get('/chat/removeUserFromChat', 'ChatController@removeUserFromChat')->name('chat.removeUserFromChat');
     Route::get('/chat/getChatNotifications', 'ChatController@getChatNotifications')->name('chat.getChatNotifications');
-    Route::resource('chat', 'ChatController');
+    Route::resource('chat', 'ChatController')->except(['store', 'update']);
 });
 
 Route::group(['middleware' => 'web'], function () {
@@ -683,7 +668,7 @@ Route::group(['middleware' => 'web'], function () {
 	Route::post('email/send', 'EmailController@send')->name('email.send');
 	Route::any('users/{userId}/emails/sending', 'EmailController@sendingEmail');
 	Route::any('users/{userId}/emails/reply', 'EmailController@replyEmail');
-	Route::any('users/{id}/emails/delete', 'EmailController@deleteEmail');
+	Route::post('users/{id}/emails/delete', 'EmailController@deleteEmail');
 	Route::get('email/getComposeForm', 'EmailController@getComposeForm')->name('email.getComposeForm');
 	Route::get('email/getMoveToForm', 'EmailController@getMoveToForm')->name('email.getMoveToForm');
 	Route::post('email/moveEmail', 'EmailController@moveEmail')->name('email.moveEmail');
@@ -736,7 +721,7 @@ Route::group(['middleware' => ['auth', 'web']], function () {
 //Driver Routes
 Route::group(['middleware' => 'web'], function () {
 	Route::resource('driver', '\App\Http\Controllers\DriverController');
-    Route::get('/driver/{id}/delete', 'DriverController@destroy')->name('driver.destroy');
+    Route::match(['POST', 'DELETE'], '/driver/{id}/delete', 'DriverController@destroy')->name('driver.destroy');
     Route::get('/driver/{id}/delete_msg', 'DriverController@deleteMsg');
 });
 
@@ -764,7 +749,7 @@ Route::group(['middleware' => 'web'], function () {
 	Route::get('guestlist/{id}/showbyid', 'GuestListController@showById')->name('guestList.showbyid');
 	Route::get('guestlist/{id}/showhotelemailsbyid', 'GuestListController@showHotelEmailsById')->name('guestList.showhotelemailsbyid');
 	Route::get('guestlist/{id}/send/{guestlistid?}', 'GuestListController@send')->name('guestlist.send');
-	Route::get('guestlist/{id}/delete/{guestlistid?}', 'GuestListController@delete')->name('guestlist.delete');
+	Route::post('guestlist/{id}/delete/{guestlistid}', 'GuestListController@delete')->name('guestlist.delete');
 	Route::resource('guestlist', 'GuestListController');
 });
 
@@ -776,7 +761,7 @@ Route::group(['middleware' => 'web'], function () {
 Route::group(['middleware' => 'web'], function () {
     Route::get('places', 'ImportController@addPlaces')->name('config_places');
 	Route::get('/places/{name}', 'ImportController@addPlaces')->name('add_places');
-	Route::get('/menu/destroy/{id}', 'MenuController@destroy')->name('menu.destroy_menu');
+	Route::match(['POST', 'DELETE'], '/menu/destroy/{id}', 'MenuController@destroy')->name('menu.destroy_menu');
 	Route::get('/menu/delete/{id}', 'MenuController@delete')->name('menu.delete');
 	Route::resource('menu', 'MenuController');	
 });
@@ -792,7 +777,7 @@ Route::get('booking/offers/{id}/{supplier}', '\App\Http\Controllers\BookingReque
 // Links already sent to suppliers only carry the encrypted package id
 Route::get('booking/{generatedlink}', '\App\Http\Controllers\BookingRequestController@generated_link_encrypted');
 Route::get('offer/{id}/show', 'OfferController@show')->name('show');
-Route::get('offer/{id}/supplier_delete', 'OfferController@supplier_delete')->name('supplier_delete');
+Route::post('offer/{id}/supplier_delete', 'OfferController@supplier_delete')->name('supplier_delete');
 Route::get('/offer/api/status_list', 'OfferController@statusList');
 Route::put('offer//updatestatus/{id}', 'OfferController@updatestatus')->name('offerupdatestatus');
 Route::post('tour_package/{id}/offer_update', '\App\Http\Controllers\BookingRequestController@offerUpdate')->name('tour_package.offer_update');
@@ -807,7 +792,7 @@ Route::get('TMS-Client/logout', '\App\Http\Controllers\TMSClient\LoginController
 Route::get('TMS-Client/home', '\App\Http\Controllers\TMSClient\LoginController@home')->name('TMS-Client.home');
 Route::get('TMS-Client/quotation_requests', '\App\Http\Controllers\TMSClient\LoginController@quotation_requests')->name('TMS-Client.quotation_requests');
  Route::resource('client_tour_package', '\App\Http\Controllers\TMSClient\TourPackageController');
-Route::resource('TMS-Client-tours', '\App\Http\Controllers\TMSClient\TourController');
+Route::resource('TMS-Client-tours', '\App\Http\Controllers\TMSClient\TourController')->only(['create', 'store', 'show']);
 	Route::get('TMS-Client-simpletours/create', '\App\Http\Controllers\TMSClient\TourController@simple_create');
 //Route::post('/customLogin', '\App\Http\Controllers\TMSClient\LoginController@customLogin')->name('custom.login');
 Route::any('/sevice_modal/show/{id}', '\App\Http\Controllers\TMSClient\ModalController@show')->name('service_modal.show');
@@ -846,3 +831,9 @@ Auth::routes();
 
 
 
+
+Route::get('mail-attachments/{user}/{token}', 'MailAttachmentController@show')->middleware(['auth', 'signed'])->name('mail.attachments.show');
+
+Route::match(['POST', 'DELETE'], 'users/{id}/delete', ['uses' => 'ScaffoldInterface\\UserController@destroy', 'permissions' => 'users.destroy'])->middleware(['auth', 'permissions.required'])->name('users.legacy.destroy');
+Route::match(['POST', 'DELETE'], 'roles/{id}/delete', ['uses' => 'ScaffoldInterface\\RoleController@destroy', 'permissions' => 'roles.destroy'])->middleware(['auth', 'permissions.required']);
+Route::match(['POST', 'DELETE'], 'permissions/{id}/delete', ['uses' => 'ScaffoldInterface\\PermissionController@destroy', 'permissions' => 'permissions.destroy'])->middleware(['auth', 'permissions.required']);

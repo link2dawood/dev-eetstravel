@@ -54,6 +54,7 @@ class UpdateClientRequest extends FormRequest
     public function rules()
     {
         $clientId = $this->route('id') ?? $this->route('client');
+        if ($clientId instanceof \App\Client) $clientId = $clientId->getKey();
 
         $rules = ValidationService::clientBusinessRules(true, $clientId);
         $client = $clientId ? \App\Client::findOrFail($clientId) : null;

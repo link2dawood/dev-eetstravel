@@ -1,44 +1,37 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up()
-    {
-        Schema::table('media', function (Blueprint $table) {
-            // Add any missing columns
-            if (!Schema::hasColumn('media', 'file_name')) {
+return new class extends Migration {
+    public function up() {
+        if (!Schema::hasTable('media')) {
+            Schema::create('media', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->nullableMorphs('model');
+                $table->uuid('uuid')->nullable()->unique();
+                $table->string('collection_name')->default('default');
+                $table->string('name')->default('');
                 $table->string('file_name')->nullable();
-            }
-            if (!Schema::hasColumn('media', 'file_path')) {
                 $table->string('file_path')->nullable();
-            }
-            if (!Schema::hasColumn('media', 'mime_type')) {
                 $table->string('mime_type')->nullable();
-            }
-            if (!Schema::hasColumn('media', 'size')) {
-                $table->integer('size')->nullable();
-            }
-            if (!Schema::hasColumn('media', 'original_name')) {
+                $table->unsignedBigInteger('size')->nullable();
                 $table->string('original_name')->nullable();
-            }
-            if (!Schema::hasColumn('media', 'user_id')) {
-                $table->unsignedBigInteger('user_id')->nullable();
-            }
-
-            // Optional: Add foreign key
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
-        });
+                $table->unsignedInteger('user_id')->nullable();
+                $table->string('disk')->default('public');
+                $table->string('conversions_disk')->nullable();
+                foreach (['manipulations','custom_properties','generated_conversions','responsive_images'] as $column) $table->json($column)->nullable();
+                $table->unsignedInteger('order_column')->nullable()->index();
+                $table->timestamps();
+            });
+        }
+        foreach (['file_name','file_path','mime_type','original_name'] as $column) {
+            if (!Schema::hasColumn('media',$column)) Schema::table('media',function(Blueprint $table) use($column) { $table->string($column)->nullable(); });
+        }
+        foreach (['size','user_id'] as $column) {
+            if (!Schema::hasColumn('media',$column)) Schema::table('media',function(Blueprint $table) use($column) { $table->unsignedInteger($column)->nullable(); });
+        }
     }
-
-    public function down()
-    {
-        Schema::table('media', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropColumn(['file_name', 'file_path', 'mime_type', 'size', 'original_name', 'user_id']);
-        });
+    public function down() {
+        // Preserve existing uploaded-file metadata when rolling back.
     }
 };

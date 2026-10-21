@@ -64,6 +64,7 @@ class AddPerformanceIndexesToTables extends Migration
 
     private function indexExists($table, $name)
     {
-        return !empty(DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$name]));
+        $indexes = DB::connection()->getDoctrineSchemaManager()->listTableIndexes($table);
+        return isset($indexes[strtolower($name)]);
     }
 }

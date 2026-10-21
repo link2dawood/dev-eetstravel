@@ -28,6 +28,9 @@ class TourServiceTest extends TestCase
         $this->tourService = new TourService();
 
         // Create a test user
+        \App\Country::create(['name'=>'Egypt','alias'=>'EG','phone_code'=>'20']);
+        \App\City::create(['name'=>'Cairo','country'=>'EG','code'=>'cairo']);
+        \App\City::create(['name'=>'Luxor','country'=>'EG','code'=>'luxor']);
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
 
@@ -175,7 +178,7 @@ class TourServiceTest extends TestCase
         $clonedTour = $this->tourService->cloneTour($originalTour, $newData);
 
         $this->assertNotEquals($originalTour->id, $clonedTour->id);
-        $this->assertStringContains('(Copy)', $clonedTour->name);
+        $this->assertStringContainsString('(Copy)', $clonedTour->name);
         $this->assertEquals($newData['departure_date'], $clonedTour->departure_date);
         $this->assertTrue($clonedTour->responsibleUsers->contains($responsibleUser));
     }

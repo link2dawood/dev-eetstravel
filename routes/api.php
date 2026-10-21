@@ -17,8 +17,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Modern API Routes with Sanctum Authentication
-Route::middleware(['auth:sanctum'])->group(function () {
+// Same-origin API: existing session authentication and CSRF protection.
+Route::middleware(['web', 'auth', 'api.permissions'])->group(function () {
 
     // Tour API Routes
     Route::prefix('tours')->name('api.tours.')->group(function () {
@@ -37,12 +37,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Dashboard API Routes
     Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
-        Route::get('/', 'Api\DashboardController@index')->name('index');
-        Route::get('/statistics', 'Api\DashboardController@statistics')->name('statistics');
-        Route::get('/recent-activity', 'Api\DashboardController@recentActivity')->name('recent-activity');
-        Route::get('/upcoming-deadlines', 'Api\DashboardController@upcomingDeadlines')->name('upcoming-deadlines');
-        Route::get('/charts', 'Api\DashboardController@charts')->name('charts');
-        Route::post('/cache/clear', 'Api\DashboardController@clearCache')->name('cache.clear');
+        Route::get('/', 'Api\DashboardApiController@index')->name('index');
+        Route::get('/statistics', 'Api\DashboardApiController@statistics')->name('statistics');
+        Route::get('/recent-activity', 'Api\DashboardApiController@recentActivity')->name('recent-activity');
+        Route::get('/upcoming-deadlines', 'Api\DashboardApiController@upcomingDeadlines')->name('upcoming-deadlines');
+        Route::get('/charts', 'Api\DashboardApiController@charts')->name('charts');
+        Route::post('/cache/clear', 'Api\DashboardApiController@clearCache')->name('cache.clear');
     });
 
     // Client API Routes
@@ -86,20 +86,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
-Route::group(['prefix' => 'v1'], function () {
+Route::group(['prefix' => 'v1', 'middleware' => ['web', 'auth', 'api.permissions']], function () {
     //    Route::resource('task', 'TasksController');
 
     Route::post('users/{userId}/emailfolders', '\App\Http\Controllers\Api\EmailsController@getFolderList');
-    Route::any('users/{userId}/emails', '\App\Http\Controllers\Api\EmailsController@getEmails');
-	Route::any('users/{userId}/touremails', '\App\Http\Controllers\Api\EmailsController@touremails');
-    Route::any('users/{userId}/emails/createFolder', '\App\Http\Controllers\Api\EmailsController@createFolder');
+    Route::post('users/{userId}/emails', '\App\Http\Controllers\Api\EmailsController@getEmails');
+	Route::post('users/{userId}/touremails', '\App\Http\Controllers\Api\EmailsController@touremails');
+    Route::post('users/{userId}/emails/createFolder', '\App\Http\Controllers\Api\EmailsController@createFolder');
 
     Route::post('users/{userId}/attachment', '\App\Http\Controllers\Api\EmailsController@downloadAttachments');
-    Route::any('users/{userId}/emails/send', '\App\Http\Controllers\Api\EmailsController@sendEmail');
+    Route::post('users/{userId}/emails/send', '\App\Http\Controllers\Api\EmailsController@sendEmail');
 
     Route::post('users/{userId}/email/{emailId}/delete', '\App\Http\Controllers\Api\EmailsController@deleteEmail');
     Route::post('users/{userId}/email/{emailId}/move', '\App\Http\Controllers\Api\EmailsController@moveEmail');
-    Route::any('users/{userId}/email/{emailId}/get', '\App\Http\Controllers\Api\EmailsController@getEmail');
+    Route::post('users/{userId}/email/{emailId}/get', '\App\Http\Controllers\Api\EmailsController@getEmail');
 	Route::any('getTours', '\App\Http\Controllers\Api\EmailsController@getTours');
 	Route::any('getArchiveTours', '\App\Http\Controllers\Api\EmailsController@getArchiveTours');
 
@@ -116,4 +116,3 @@ Route::group(['prefix' => 'v1'], function () {
     #adminlte_api_routes
 
 });
-Route::any('test', '\App\Http\Controllers\Api\EmailsController@parseEmails');

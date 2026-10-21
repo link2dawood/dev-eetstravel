@@ -273,26 +273,26 @@
     $deleteMethodOverrides = [
         'announcements' => 'DELETE',
         'users' => 'DELETE',
-        'notifications' => 'GET',
-        'tour' => 'GET',
-        'tour_package' => 'GET',
-        'transfer' => 'GET',
-        'bus' => 'GET',
-        'driver' => 'GET',
-        'status' => 'GET',
-        'room_types' => 'GET',
-        'rate' => 'GET',
-        'currency_rate' => 'GET',
-        'currencies' => 'GET',
-        'criteria' => 'GET',
-        'comment' => 'GET',
-        'clients' => 'GET',
-        'office' => 'GET',
-        'invoices' => 'GET',
-        'taxes' => 'GET',
-        'accounting' => 'GET',
+        'notifications' => 'POST',
+        'tour' => 'POST',
+        'tour_package' => 'POST',
+        'transfer' => 'POST',
+        'bus' => 'POST',
+        'driver' => 'POST',
+        'status' => 'POST',
+        'room_types' => 'POST',
+        'rate' => 'POST',
+        'currency_rate' => 'POST',
+        'currencies' => 'POST',
+        'criteria' => 'POST',
+        'comment' => 'POST',
+        'clients' => 'POST',
+        'office' => 'POST',
+        'invoices' => 'POST',
+        'taxes' => 'POST',
+        'accounting' => 'POST',
     ];
-    $delete_method = $deleteMethodOverrides[$prefix] ?? 'GET';
+    $delete_method = $deleteMethodOverrides[$prefix] ?? 'POST';
 @endphp
 
 <div class="btn-list flex-nowrap">
@@ -363,7 +363,7 @@ function actionButtonConfirm(message) {
 }
 
 function submitDeleteRequest(deleteUrl, deleteMethod, button) {
-    if (deleteMethod === 'GET') {
+    if (deleteMethod === 'POST') {
         window.location.href = deleteUrl;
         return;
     }
@@ -422,7 +422,7 @@ function submitDeleteRequest(deleteUrl, deleteMethod, button) {
 function confirmDelete(element) {
     const deleteUrl = element.dataset.deleteUrl;
     const entityName = element.dataset.entityName || 'this item';
-    const deleteMethod = (element.dataset.deleteMethod || 'GET').toUpperCase();
+    const deleteMethod = (element.dataset.deleteMethod || 'POST').toUpperCase();
 
     actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
         if (!confirmed) return;
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
 
         const deleteUrl = deleteBtn.dataset.deleteUrl;
-        const deleteMethod = (deleteBtn.dataset.deleteMethod || 'GET').toUpperCase();
+        const deleteMethod = (deleteBtn.dataset.deleteMethod || 'POST').toUpperCase();
         const entityName = deleteBtn.dataset.entityName || 'this item';
 
         actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {

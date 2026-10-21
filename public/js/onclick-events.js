@@ -430,6 +430,8 @@ let tourServiceChanger = {
 	changeDescription: () => {
 		$.ajax({
 			url: '/package/api/ajax_update',
+            type: 'POST',
+            headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content},
 			data: {
 				package_id: tourServiceChanger.packageId,
 				fieldName: tourServiceChanger.fieldName,

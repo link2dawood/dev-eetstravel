@@ -115,7 +115,7 @@
                     chatId = chatContainer.data('id');
                     
                     $.ajax({
-                        type: "GET",
+                        type: "POST",
                         url: "/chat/deleteChat",
                         data: {
                             'id': chatId,

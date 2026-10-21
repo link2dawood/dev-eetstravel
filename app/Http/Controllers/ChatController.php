@@ -172,7 +172,8 @@ class ChatController extends Controller {
 
 	public function deleteChat(Request $request ) {
         $id = $request->id;
-        $chat = Chat::find($id);
+        $chat = Chat::findOrFail($id);
+        abort_unless((int) $chat->author === (int) \Auth::id() || \Auth::user()->can('chat.destroy'), 403);
         $chat->users()->sync( [] );
         $chat = Chat::destroy($id);
 		

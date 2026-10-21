@@ -11,11 +11,15 @@ class ChangeRefToStringOnHotelOffersTable extends Migration
      */
     public function up()
     {
-        DB::statement('ALTER TABLE hotel_offers MODIFY ref VARCHAR(100) NULL');
+        if (!\Illuminate\Support\Facades\Schema::hasTable('hotel_offers')) return;
+        \Illuminate\Support\Facades\Schema::table('hotel_offers', function ($table) {
+            $column = $table->string('ref', 100)->nullable();
+            if (\Illuminate\Support\Facades\Schema::hasColumn('hotel_offers', 'ref')) $column->change();
+        });
     }
 
     public function down()
     {
-        DB::statement('ALTER TABLE hotel_offers MODIFY ref INT(100) NULL');
+        // Retain alphanumeric booking references on rollback.
     }
 }

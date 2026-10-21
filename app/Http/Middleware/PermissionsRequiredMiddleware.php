@@ -28,6 +28,7 @@ class PermissionsRequiredMiddleware
         // Get the current route actions.
         $actions = $route->getAction();
         $routeName = $route->getName();
+        $usesRoutePermission = !isset($actions['permissions']);
         
         // Root fix: Check ignored routes first before any permission checks
         if ($routeName && in_array($routeName, self::$ignoredRoutes)) {
@@ -74,6 +75,14 @@ class PermissionsRequiredMiddleware
         if (!isset($actions['permissions']) || $actions['permissions'] === $routeName) {
             $permissions = $accountingAliases[$routeName] ?? $permissions;
         }
+
+        // Resource saves use the same capabilities as their create/edit forms.
+        // Explicit route permissions and the billing aliases above take precedence.
+        if ($usesRoutePermission && !isset($accountingAliases[$routeName]) && is_string($permissions)) {
+            $permissions = preg_replace_callback('/\.(store|update)$/', function ($match) {
+                return $match[1] === 'store' ? '.create' : '.edit';
+            }, $permissions);
+        }
         
         // If no permissions specified, allow access
         if (!$permissions) {
@@ -91,15 +100,14 @@ class PermissionsRequiredMiddleware
                 return $next($request);
             }
         } catch (\Exception $e) {
-            // Root fix: Log the error but allow access to prevent redirect loops
+            // A missing permission or failed lookup must not authorize the request.
             \Log::warning('Permission check failed in PermissionsRequiredMiddleware', [
                 'user_id' => $request->user()->id ?? null,
                 'permission' => $permissions,
                 'route' => $routeName,
                 'error' => $e->getMessage()
             ]);
-            // Allow access to prevent redirect loops - let the application handle authorization
-            return $next($request);
+            abort(403, 'You do not have permission to access this resource.');
         }
 
         // Root fix: Instead of aborting 401 (which causes redirect loops), redirect to a safe page

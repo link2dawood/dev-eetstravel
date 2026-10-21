@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class Tour extends Model
 {
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
     //use Trackable;
 
 
@@ -75,6 +76,16 @@ class Tour extends Model
 
     protected $table = 'tours';
     protected $guarded = [];
+
+    public function tourPackages() { return TourPackage::whereHas('tourDays', function ($q) { $q->where('tour_days.tour', $this->id); }); }
+    public function getTourPackagesAttribute() { return $this->tourPackages()->get(); }
+    public function comments() { return $this->hasMany(Comment::class, 'reference_id')->where('reference_type', Comment::$services['tour']); }
+
+    public function responsibleUsers() { return $this->belongsToMany(User::class, 'tour_responsible_user'); }
+    public function assignedUsers() { return $this->users(); }
+    public function tourDays() { return $this->tour_days(); }
+    public function getResponsibleUserNamesAttribute() { return $this->responsibleUsers->pluck('name')->implode(', '); }
+    public function getAssignedUserNamesAttribute() { return $this->assignedUsers->pluck('name')->implode(', '); }
 
     public function attachments(){
         return $this->morphMany('App\Attachment', 'attachable');

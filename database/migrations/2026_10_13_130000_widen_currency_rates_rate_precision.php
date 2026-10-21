@@ -11,11 +11,12 @@ class WidenCurrencyRatesRatePrecision extends Migration
 {
     public function up()
     {
-        DB::statement('ALTER TABLE `currency_rates` MODIFY `rate` DECIMAL(18,6) NOT NULL');
+        if (!\Illuminate\Support\Facades\Schema::hasTable('currency_rates')) return;
+        \Illuminate\Support\Facades\Schema::table('currency_rates', function ($table) { $table->decimal('rate', 18, 6)->change(); });
     }
 
     public function down()
     {
-        DB::statement('ALTER TABLE `currency_rates` MODIFY `rate` DOUBLE(8,2) NOT NULL');
+        // Preserve exchange-rate precision on rollback.
     }
 }

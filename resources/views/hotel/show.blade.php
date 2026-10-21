@@ -565,7 +565,7 @@
         modal.find('.btn-danger').attr('onclick', null).off('click').one('click', function () {
             modal.modal('hide');
             $.ajax({
-                type: 'GET',
+                type: 'POST',
                 url: '{{ route('kontingent_delete') }}',
                 data: { package_id: package_id },
                 success: function () {

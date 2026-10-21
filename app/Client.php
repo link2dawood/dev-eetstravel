@@ -45,13 +45,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Client extends Model
 {
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
     use SoftDeletes;
     //use Trackable;
 
     protected $table = 'clients';
+    protected $hidden = ['password'];
     protected $dates = ['deleted_at'];
     protected $guarded = [];
 
+
+    public function tours()
+    {
+        return $this->hasMany(Tour::class, 'client_id');
+    }
 
     public function files()
     {

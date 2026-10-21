@@ -21,14 +21,13 @@ class AllowCentsInHotelOfferAmounts extends Migration
     public function up()
     {
         foreach ($this->columns as [$table, $column, , $null]) {
-            DB::statement("ALTER TABLE {$table} MODIFY {$column} DECIMAL(12,2) {$null}");
+            if (!\Illuminate\Support\Facades\Schema::hasTable($table) || !\Illuminate\Support\Facades\Schema::hasColumn($table, $column)) continue;
+            \Illuminate\Support\Facades\Schema::table($table, function ($blueprint) use ($column, $null) { $blueprint->decimal($column, 12, 2)->nullable($null === 'NULL')->change(); });
         }
     }
 
     public function down()
     {
-        foreach ($this->columns as [$table, $column, $type, $null]) {
-            DB::statement("ALTER TABLE {$table} MODIFY {$column} {$type} {$null}");
-        }
+        // Preserve cents on rollback.
     }
 }

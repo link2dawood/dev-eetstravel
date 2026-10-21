@@ -15,11 +15,12 @@ class TaskApiController extends Controller
     public function __construct(CacheService $cacheService)
     {
         $this->cacheService = $cacheService;
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth');
     }
 
     public function index(Request $request): JsonResponse
     {
+        $request->validate(['per_page' => 'nullable|integer|min:1|max:100', 'page' => 'nullable|integer|min:1', 'search' => 'nullable|string|max:255']);
         $cacheKey = $this->cacheService->generateKey('tasks_index', $request->all());
 
         $tasks = $this->cacheService->remember($cacheKey, function () use ($request) {
@@ -31,15 +32,15 @@ class TaskApiController extends Controller
             }
 
             if ($request->filled('status')) {
-                $query->where('status_id', $request->input('status'));
+                $query->where('status', $request->input('status'));
             }
 
             if ($request->filled('priority')) {
                 $query->where('priority', $request->input('priority'));
             }
 
-            return $query->orderBy('deadline', 'asc')->paginate($request->input('per_page', 15));
-        }, 300);
+            return $query->orderBy('dead_line', 'asc')->paginate($request->input('per_page', 15));
+        }, 0);
 
         return response()->json($tasks);
     }
@@ -51,12 +52,14 @@ class TaskApiController extends Controller
                 'content' => 'required|string',
                 'deadline' => 'nullable|date',
                 'tour_id' => 'nullable|exists:tours,id',
-                'assigned_to' => 'nullable|exists:users,id',
-                'status_id' => 'nullable|exists:statuses,id',
-                'priority' => 'nullable|in:low,medium,high',
-                'task_type' => 'nullable|string'
+                'assigned_to' => 'sometimes|required|exists:users,id',
+                'status_id' => 'required|exists:status,id',
+                'priority' => 'nullable|boolean',
+                'task_type' => 'sometimes|required|in:1,2'
             ]);
 
+            $validated = $this->toStorage($validated);
+            $validated += ['assign' => (string) $request->user()->id, 'task_type' => '1', 'tour' => null];
             $task = Task::create($validated);
             $task->load(['status', 'tour', 'assignedTo']);
 
@@ -68,6 +71,8 @@ class TaskApiController extends Controller
                 'data' => $task
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -94,13 +99,13 @@ class TaskApiController extends Controller
                 'content' => 'sometimes|string',
                 'deadline' => 'sometimes|nullable|date',
                 'tour_id' => 'sometimes|nullable|exists:tours,id',
-                'assigned_to' => 'sometimes|nullable|exists:users,id',
-                'status_id' => 'sometimes|nullable|exists:statuses,id',
-                'priority' => 'sometimes|nullable|in:low,medium,high',
-                'task_type' => 'sometimes|nullable|string'
+                'assigned_to' => 'sometimes|required|exists:users,id',
+                'status_id' => 'sometimes|required|exists:status,id',
+                'priority' => 'sometimes|nullable|boolean',
+                'task_type' => 'sometimes|in:1,2'
             ]);
 
-            $task->update($validated);
+            $task->update($this->toStorage($validated));
             $task->load(['status', 'tour', 'assignedTo']);
 
             $this->cacheService->flushTags(['tasks', 'dashboard']);
@@ -111,6 +116,8 @@ class TaskApiController extends Controller
                 'data' => $task
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -131,6 +138,8 @@ class TaskApiController extends Controller
                 'message' => 'Task deleted successfully'
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -154,7 +163,7 @@ class TaskApiController extends Controller
 
     public function overdue(Request $request): JsonResponse
     {
-        $tasks = Task::where('deadline', '<', now())
+        $tasks = Task::where('dead_line', '<', now())
             ->whereHas('status', function ($q) {
                 $q->where('name', '!=', 'Completed');
             })
@@ -168,10 +177,10 @@ class TaskApiController extends Controller
     {
         try {
             $validated = $request->validate([
-                'status_id' => 'required|exists:statuses,id'
+                'status_id' => 'required|exists:status,id'
             ]);
 
-            $task->update($validated);
+            $task->update($this->toStorage($validated));
             $task->load(['status', 'tour', 'assignedTo']);
 
             $this->cacheService->flushTags(['tasks', 'dashboard']);
@@ -182,6 +191,8 @@ class TaskApiController extends Controller
                 'data' => $task
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -189,5 +200,12 @@ class TaskApiController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+    private function toStorage(array $data): array
+    {
+        foreach (['deadline' => 'dead_line', 'tour_id' => 'tour', 'assigned_to' => 'assign', 'status_id' => 'status'] as $api => $column) {
+            if (array_key_exists($api, $data)) { $data[$column] = $data[$api]; unset($data[$api]); }
+        }
+        return $data;
     }
 }

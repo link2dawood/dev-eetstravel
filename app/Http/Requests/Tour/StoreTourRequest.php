@@ -53,15 +53,15 @@ class StoreTourRequest extends FormRequest
                 'max:500'
             ],
             'country_begin' => 'required|string|max:100',
-            'city_begin' => 'required|string|max:100',
+            'city_begin' => 'required|integer|exists:cities,id',
             'country_end' => 'nullable|string|max:100',
-            'city_end' => 'nullable|string|max:100',
-            'invoice' => 'nullable|string|max:255',
-            'ga' => 'nullable|string|max:255',
+            'city_end' => 'nullable|integer|exists:cities,id',
+            'invoice' => 'nullable|date',
+            'ga' => 'nullable|date',
             'status' => [
                 'required',
                 'integer',
-                'exists:statuses,id'
+                'exists:status,id'
             ],
             'responsible_users' => 'nullable|array',
             'responsible_users.*' => 'exists:users,id',
@@ -126,6 +126,7 @@ class StoreTourRequest extends FormRequest
             'pax' => $this->pax ? (int) $this->pax : null,
             'rooms' => $this->rooms ? (int) $this->rooms : null,
         ]);
+        $this->merge(\App\Support\TourLocations::normalize($this->all()));
     }
 
     /**
@@ -134,6 +135,7 @@ class StoreTourRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) return;
             // Custom validation logic
             if ($this->departure_date && $this->retirement_date) {
                 $departure = \Carbon\Carbon::parse($this->departure_date);

@@ -47,6 +47,9 @@ use Spatie\Activitylog\Traits\CausesActivity;
  */
 class User extends Authenticatable
 {
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    protected static function newFactory() { return \Database\Factories\ModernUserFactory::new(); }
+
     use Notifiable;
     use HasRoles;
     use CausesActivity;
@@ -62,6 +65,7 @@ class User extends Authenticatable
         'password',
         'avatar_path',
         'lastUID',
+        'is_active',
         'education',
         'location',
         'note'
@@ -75,6 +79,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_password',
     ];
 
     /**
@@ -84,6 +89,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     /**

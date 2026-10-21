@@ -613,7 +613,7 @@ let addService = {
 
         }else{
             $.ajax({
-                method: 'GET',
+                method: 'POST',
                 url: `/tour_package/${addService.package_id}/delete`,
                 data: {}
             }).done((res) => {
@@ -661,7 +661,7 @@ let addService = {
             else{
                 if(change_service === 'true'){
                     $.ajax({
-                        method: 'GET',
+                        method: 'POST',
                         url: `/tour_package/${addService.package_id}/delete`,
                         data: {}
                     }).done((data_delete) => {

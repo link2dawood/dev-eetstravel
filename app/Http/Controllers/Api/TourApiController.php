@@ -21,12 +21,12 @@ class TourApiController extends Controller
     public function __construct(TourService $tourService)
     {
         $this->tourService = $tourService;
-        $this->middleware('auth:sanctum');
-        $this->middleware('permission:tour.index')->only('index');
-        $this->middleware('permission:tour.create')->only('store');
-        $this->middleware('permission:tour.show')->only('show');
-        $this->middleware('permission:tour.edit')->only('update');
-        $this->middleware('permission:tour.delete')->only('destroy');
+        $this->middleware('auth');
+        $this->middleware('can:tour.index')->only(['index', 'search', 'calendar', 'statistics']);
+        $this->middleware('can:tour.create')->only(['store', 'clone']);
+        $this->middleware('can:tour.show')->only('show');
+        $this->middleware('can:tour.edit')->only('update');
+        $this->middleware('can:tour.destroy')->only('destroy');
     }
 
     /**
@@ -37,6 +37,7 @@ class TourApiController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate(['per_page' => 'nullable|integer|min:1|max:100', 'page' => 'nullable|integer|min:1', 'search' => 'nullable|string|max:255']);
         try {
             $filters = $request->only([
                 'status', 'departure_from', 'departure_to', 'search',
@@ -144,7 +145,7 @@ class TourApiController extends Controller
                 'assignedUsers',
                 'tourDays.tourPackages',
                 'tasks',
-                'comments.user'
+                'comments.author'
             ]);
 
             return response()->json([
@@ -463,7 +464,7 @@ class TourApiController extends Controller
             'action' => 'required|in:delete,update_status,assign_user',
             'tour_ids' => 'required|array|min:1|max:100',
             'tour_ids.*' => 'integer|exists:tours,id',
-            'status' => 'required_if:action,update_status|exists:statuses,id',
+            'status' => 'required_if:action,update_status|exists:status,id',
             'user_id' => 'required_if:action,assign_user|exists:users,id',
         ]);
 

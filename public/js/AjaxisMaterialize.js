@@ -39,7 +39,8 @@ $(document).on("click", ".save", function() {
 $('body').on('click', '.remove', function() {
     $.ajax({
         async: true,
-        method: 'get',
+        method: 'post',
+        headers: {"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content},
         url: baseURL + $(this).data('link'),
         success: function(response) {
             window.location = response;

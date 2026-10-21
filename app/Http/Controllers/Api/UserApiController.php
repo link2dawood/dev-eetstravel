@@ -15,11 +15,12 @@ class UserApiController extends Controller
     public function __construct(CacheService $cacheService)
     {
         $this->cacheService = $cacheService;
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth');
     }
 
     public function index(Request $request): JsonResponse
     {
+        $request->validate(['per_page' => 'nullable|integer|min:1|max:100', 'page' => 'nullable|integer|min:1', 'search' => 'nullable|string|max:255']);
         $cacheKey = $this->cacheService->generateKey('users_index', $request->all());
 
         $users = $this->cacheService->remember($cacheKey, function () use ($request) {
@@ -38,7 +39,7 @@ class UserApiController extends Controller
             }
 
             return $query->paginate($request->input('per_page', 15));
-        }, 300);
+        }, 0);
 
         return response()->json($users);
     }
@@ -54,11 +55,12 @@ class UserApiController extends Controller
     public function update(Request $request, User $user): JsonResponse
     {
         try {
-            $user->update($request->validate([
+            $data = $request->validate([
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|unique:users,email,' . $user->id,
                 'is_active' => 'sometimes|boolean'
-            ]));
+            ]);
+            $user->update($data);
 
             $this->cacheService->flushTags(['users']);
 
@@ -68,6 +70,8 @@ class UserApiController extends Controller
                 'data' => $user
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -81,9 +85,10 @@ class UserApiController extends Controller
     {
         $query = $request->input('q', '');
 
-        $users = User::where('name', 'like', "%{$query}%")
-            ->orWhere('email', 'like', "%{$query}%")
-            ->where('is_active', true)
+        $users = User::where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%");
+            })->where('is_active', true)
+
             ->limit(10)
             ->get(['id', 'name', 'email']);
 
@@ -92,14 +97,14 @@ class UserApiController extends Controller
 
     public function tours(User $user): JsonResponse
     {
-        $tours = $user->tours()->with(['status', 'city'])->paginate(15);
+        $tours = $user->tours()->with('status')->paginate(15);
 
         return response()->json($tours);
     }
 
     public function tasks(User $user): JsonResponse
     {
-        $tasks = $user->assignedTasks()->with(['status', 'tour'])->paginate(15);
+        $tasks = $user->tasks()->with(['status', 'tour'])->paginate(15);
 
         return response()->json($tasks);
     }

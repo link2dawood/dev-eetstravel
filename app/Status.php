@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class Status extends Model
 {
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
     protected $table = 'status';
 
     protected $fillable = ['name', 'type', 'color', 'sort_order', 'status', 'is_completed', 'is_aborted'];

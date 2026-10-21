@@ -437,8 +437,13 @@ public function remove_element($string){
 
     public function downloadAttachments(Request $request)
     {
-        file_put_contents(public_path('attach').'/'.$request-> attach['name'], base64_decode($request-> attach['body']));
-        return url('attach').'/'.$request-> attach['name'];
+        $request->validate(['attach.name' => 'required|string|max:255', 'attach.body' => 'required|string|max:14000000']);
+        $body = base64_decode($request->input('attach.body'), true);
+        abort_if($body === false || strlen($body) > 10 * 1024 * 1024, 422);
+        $token = (string) \Illuminate\Support\Str::uuid();
+        $user = $request->user()->id;
+        \Illuminate\Support\Facades\Storage::disk('local')->put('mail-attachments/' . $user . '/' . $token, $body);
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute('mail.attachments.show', now()->addMinutes(10), ['user' => $user, 'token' => $token, 'name' => basename(str_replace('\\', '/', $request->input('attach.name')))]);
     }
 	
 	   

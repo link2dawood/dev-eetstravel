@@ -334,7 +334,7 @@ class UserController extends Controller
                 $msg = Ajaxis::BtDeleting(
                     trans('main.Warning') . '!',
                     'Would you like to remove ' . $user->name . '?',
-                    route('users.destroy', $id)  // Using named route
+                    route('users.legacy.destroy', $id)  // Using named route
                 );
             }
             

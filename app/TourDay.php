@@ -29,6 +29,8 @@ class TourDay extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = ['tour', 'date'];
+
     protected $dates = ['deleted_at'];
 
 
@@ -45,6 +47,8 @@ class TourDay extends Model
      *
      * @return  \Illuminate\Support\Collection;
      */
+    public function tourPackages() { return $this->packages(); }
+
     public function packages()
     {
         return $this->belongsToMany('App\TourPackage', 'packages_tour_days')->orderBy('time_from');

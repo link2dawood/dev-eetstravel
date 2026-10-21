@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
+        if (Schema::hasTable('media')) return;
         Schema::create('media', function (Blueprint $table) {
             $table->id(); // auto-incrementing bigInteger
             $table->string('file_name');
@@ -24,6 +25,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('media');
+        // The first media migration owns this table.
     }
 };

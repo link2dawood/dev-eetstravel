@@ -2076,7 +2076,7 @@ $(function() {
         if (confirm('Are you sure you want to delete this guest list?')) {
             let url = $(this).data('url');
             $.ajax({
-                method: 'GET',
+                method: 'POST',
                 url: url,
                 success: function() {
                     location.reload(true);
@@ -2131,7 +2131,7 @@ function handleToggleConversion(isCurrentlyQuotation) {
         $('body').append(loadingHtml);
         
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: url,
             success: function(response) {
                 console.log('Conversion successful:', response);
@@ -2428,7 +2428,7 @@ function deleteService(packageId) {
                 // Fallback: direct delete with confirmation
                 if (confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
                     const deleteUrl = '/tour_package/' + packageId + '/delete';
-                    window.location.href = deleteUrl;
+                    fetch(deleteUrl, {method: 'POST', headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content}}).then(function(response) { if (response.ok) window.location.reload(); else alert('Unable to delete service.'); });
                 }
             });
     }

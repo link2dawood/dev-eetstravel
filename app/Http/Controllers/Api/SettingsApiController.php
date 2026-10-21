@@ -16,7 +16,7 @@ class SettingsApiController extends Controller
     public function __construct(CacheService $cacheService)
     {
         $this->cacheService = $cacheService;
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth');
     }
 
     public function cacheStatus(): JsonResponse

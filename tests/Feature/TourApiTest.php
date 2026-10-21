@@ -9,7 +9,7 @@ use App\Status;
 use App\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Laravel\Sanctum\Sanctum;
+use Illuminate\Support\Facades\Gate;
 
 class TourApiTest extends TestCase
 {
@@ -21,7 +21,11 @@ class TourApiTest extends TestCase
     {
         parent::setUp();
 
+        \App\Country::create(['name'=>'Egypt','alias'=>'EG','phone_code'=>'20']);
+        \App\City::create(['name'=>'Cairo','country'=>'EG','code'=>'cairo']);
+        \App\City::create(['name'=>'Luxor','country'=>'EG','code'=>'luxor']);
         $this->user = User::factory()->create();
+        Gate::before(function ($user, $ability) { return $user->id === $this->user->id ? true : null; });
 
         // Create test statuses
         Status::factory()->create(['id' => 1, 'name' => 'Draft', 'type' => 'tour']);
@@ -41,9 +45,9 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_list_tours()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
-        Tour::factory()->count(3)->create();
+        Tour::factory()->count(3)->create(['status' => 1]);
 
         $response = $this->getJson('/api/tours');
 
@@ -73,7 +77,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_create_a_tour_via_api()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $client = Client::factory()->create();
 
@@ -125,7 +129,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_validates_tour_creation_data()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $invalidData = [
             'name' => '', // Required field missing
@@ -149,7 +153,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_show_a_tour()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $tour = Tour::factory()->create();
 
@@ -181,7 +185,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_returns_404_for_non_existent_tour()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $response = $this->getJson('/api/tours/999999');
 
@@ -191,7 +195,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_update_a_tour()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $tour = Tour::factory()->create([
             'name' => 'Original Name',
@@ -225,7 +229,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_delete_a_tour()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $tour = Tour::factory()->create([
             'departure_date' => now()->addDays(30)->toDateString()
@@ -246,7 +250,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_clone_a_tour()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $originalTour = Tour::factory()->create([
             'name' => 'Original Tour'
@@ -275,7 +279,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_search_tours()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         Tour::factory()->create(['name' => 'Egypt Adventure Tour']);
         Tour::factory()->create(['name' => 'Turkey Cultural Tour']);
@@ -299,7 +303,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_get_tour_statistics()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         // Create test data
         Tour::factory()->create(['status' => 2, 'pax' => 10]);
@@ -326,7 +330,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_get_calendar_data()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $startDate = now()->startOfMonth()->toDateString();
         $endDate = now()->endOfMonth()->toDateString();
@@ -361,7 +365,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_can_perform_bulk_actions()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $tours = Tour::factory()->count(3)->create([
             'departure_date' => now()->addDays(30)->toDateString()
@@ -397,7 +401,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_filters_tours_by_status()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         Tour::factory()->create(['status' => 1]); // Draft
         Tour::factory()->create(['status' => 2]); // Active
@@ -418,7 +422,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_filters_tours_by_date_range()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         $futureDate = now()->addDays(30)->toDateString();
         $pastDate = now()->subDays(30)->toDateString();
@@ -438,7 +442,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_includes_pagination_metadata()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         Tour::factory()->count(25)->create();
 
@@ -470,7 +474,7 @@ class TourApiTest extends TestCase
     /** @test */
     public function it_handles_api_errors_gracefully()
     {
-        Sanctum::actingAs($this->user);
+        $this->actingAs($this->user);
 
         // Try to update a tour with invalid status transition
         $tour = Tour::factory()->create(['status' => 4]); // Completed

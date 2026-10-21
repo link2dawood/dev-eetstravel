@@ -1587,8 +1587,14 @@ public function descriptionPackage(Request $request)
 
     public function ajaxUpdate(Request $request)
     {
-        $package = TourPackage::find($request->package_id);
-        $package[$request->fieldName] = $request->fieldValue;
+        abort_unless($request->user()->can('tour_package.edit'), 403);
+        $data = $request->validate([
+            'package_id' => 'required|integer',
+            'fieldName' => 'required|in:description',
+            'fieldValue' => 'nullable|string|max:20000',
+        ]);
+        $package = TourPackage::findOrFail($data['package_id']);
+        $package->description = $data['fieldValue'] ?? null;
         $package->save();
         return response('done');
     }

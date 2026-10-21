@@ -24,9 +24,8 @@ class StatusFactory extends Factory
         return [
             'name' => $this->faker->word(),
             'type' => $this->faker->randomElement(['tour', 'hotel', 'restaurant', 'transfer', 'guide', 'event']),
+            'status' => 1,
             'color' => $this->faker->hexColor(),
-            'description' => $this->faker->optional()->sentence(),
-            'is_active' => true,
             'sort_order' => $this->faker->numberBetween(1, 100),
             'created_at' => now(),
             'updated_at' => now(),

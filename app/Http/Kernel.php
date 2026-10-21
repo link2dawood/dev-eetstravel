@@ -70,6 +70,9 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'api.permissions' => \App\Http\Middleware\ApiPermissions::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
         'permissions.required' => \App\Http\Middleware\PermissionsRequiredMiddleware::class,
 		'preventBackHistory' => \App\Http\Middleware\PreventBackHistory::class,
     ];

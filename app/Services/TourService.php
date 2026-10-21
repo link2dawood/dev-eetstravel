@@ -20,11 +20,16 @@ class TourService
      */
     public function createTour(array $data): Tour
     {
+        $data = \App\Support\TourLocations::normalize($data);
         DB::beginTransaction();
 
         try {
+            if (empty($data['name']) || empty($data['departure_date']) || empty($data['pax']) || !isset($data['status'])) throw new BusinessLogicException('Missing required tour data.');
+            if (Tour::where('name', $data['name'])->exists()) throw new BusinessLogicException('A tour with this name already exists.');
+            if (!empty($data['rooms']) && $data['pax'] / $data['rooms'] > 6) throw new BusinessLogicException('Too many passengers per room.');
             // Create the tour
             $tour = Tour::create([
+                'author' => auth()->id(),
                 'name' => $data['name'],
                 'overview' => $data['overview'] ?? null,
                 'remark' => $data['remark'] ?? null,
@@ -39,13 +44,14 @@ class TourService
                 'invoice' => $data['invoice'] ?? null,
                 'ga' => $data['ga'] ?? null,
                 'status' => $data['status'],
-                'external_name' => $data['external_name'] ?? null,
+                'external_name' => $data['external_name'] ?? ('EETS-' . \Illuminate\Support\Str::uuid()),
                 'client_id' => $data['client_id'] ?? null,
             ]);
 
             // Assign responsible users
             if (!empty($data['responsible_users'])) {
                 $tour->responsibleUsers()->sync($data['responsible_users']);
+                $tour->forceFill(['responsible' => $data['responsible_users'][0] ?? 0])->save();
             }
 
             // Assign assigned users
@@ -91,6 +97,7 @@ class TourService
      */
     public function updateTour(Tour $tour, array $data): Tour
     {
+        $data = \App\Support\TourLocations::normalize($data);
         DB::beginTransaction();
 
         try {
@@ -98,28 +105,15 @@ class TourService
             $this->validateTourCanBeModified($tour, $data);
 
             // Update tour data
-            $tour->update([
-                'name' => $data['name'],
-                'overview' => $data['overview'] ?? null,
-                'remark' => $data['remark'] ?? null,
-                'departure_date' => $data['departure_date'],
-                'retirement_date' => $data['retirement_date'] ?? null,
-                'pax' => $data['pax'],
-                'rooms' => $data['rooms'] ?? null,
-                'country_begin' => $data['country_begin'],
-                'city_begin' => $data['city_begin'],
-                'country_end' => $data['country_end'] ?? null,
-                'city_end' => $data['city_end'] ?? null,
-                'invoice' => $data['invoice'] ?? null,
-                'ga' => $data['ga'] ?? null,
-                'status' => $data['status'],
-                'external_name' => $data['external_name'] ?? null,
-                'client_id' => $data['client_id'] ?? null,
-            ]);
+            $tour->update(array_intersect_key($data, array_flip([
+                'name', 'overview', 'remark', 'departure_date', 'retirement_date', 'pax', 'rooms',
+                'country_begin', 'city_begin', 'country_end', 'city_end', 'invoice', 'ga', 'status', 'external_name', 'client_id'
+            ])));
 
             // Update user assignments
             if (isset($data['responsible_users'])) {
                 $tour->responsibleUsers()->sync($data['responsible_users']);
+                $tour->forceFill(['responsible' => $data['responsible_users'][0] ?? 0])->save();
             }
 
             if (isset($data['assigned_users'])) {
@@ -215,7 +209,7 @@ class TourService
         DB::beginTransaction();
 
         try {
-            $cloneData = $originalTour->toArray();
+            $cloneData = $originalTour->getAttributes();
 
             // Remove fields that shouldn't be cloned
             unset($cloneData['id'], $cloneData['created_at'], $cloneData['updated_at'], $cloneData['deleted_at']);
@@ -228,6 +222,10 @@ class TourService
                 $cloneData['name'] = $this->generateUniqueCloneName($originalTour->name);
             }
 
+            if (isset($newData['departure_date']) && !isset($newData['retirement_date']) && $originalTour->retirement_date) {
+                $duration = Carbon::parse($originalTour->departure_date)->diffInDays(Carbon::parse($originalTour->retirement_date));
+                $cloneData['retirement_date'] = Carbon::parse($newData['departure_date'])->addDays($duration)->toDateString();
+            }
             // Create the cloned tour
             $clonedTour = $this->createTour($cloneData);
 
@@ -242,7 +240,7 @@ class TourService
 
             DB::commit();
 
-            return $clonedTour;
+            return $clonedTour->load(['responsibleUsers', 'assignedUsers', 'client']);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -300,8 +298,8 @@ class TourService
         }
 
         // Apply sorting
-        $sortBy = $filters['sort_by'] ?? 'departure_date';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
+        $sortBy = in_array($filters['sort_by'] ?? '', ['name', 'departure_date', 'retirement_date', 'created_at', 'pax', 'status']) ? $filters['sort_by'] : 'departure_date';
+        $sortDirection = ($filters['sort_direction'] ?? '') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDirection);
 
         return $query->paginate($perPage);
@@ -366,11 +364,8 @@ class TourService
 
         while ($currentDate <= $endDate) {
             TourDay::create([
-                'tour_id' => $tour->id,
+                'tour' => $tour->id,
                 'date' => $currentDate->toDateString(),
-                'day_number' => $dayNumber,
-                'title' => "Day {$dayNumber}",
-                'description' => null,
             ]);
 
             $currentDate->addDay();
@@ -443,18 +438,15 @@ class TourService
     /**
      * Check if status transition is valid
      */
-    protected function isValidStatusTransition(int $fromStatus, int $newStatus): bool
+    protected function isValidStatusTransition(?int $fromStatus, int $newStatus): bool
     {
-        // Define valid status transitions
-        $validTransitions = [
-            1 => [2, 3, 4], // Draft -> Active, Cancelled, Completed
-            2 => [3, 4],    // Active -> Cancelled, Completed
-            3 => [],        // Cancelled -> (no transitions)
-            4 => [],        // Completed -> (no transitions)
-        ];
-
-        return $fromStatus === $newStatus ||
-               in_array($newStatus, $validTransitions[$fromStatus] ?? []);
+        if ($fromStatus === $newStatus) return true;
+        $current = Status::find($fromStatus);
+        $next = Status::find($newStatus);
+        if (!$next || $next->type !== 'tour') return false;
+        if (!$current) return true;
+        return !$current->is_completed && !$current->is_aborted
+            && !in_array(strtolower($current->name), ['completed', 'cancelled']);
     }
 
     /**

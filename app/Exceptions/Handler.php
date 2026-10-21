@@ -162,6 +162,9 @@ class Handler extends ExceptionHandler
             $statusCode = 422;
             $message = 'The given data was invalid.';
             $errors = $exception->errors();
+        } elseif ($exception instanceof TokenMismatchException) {
+            $statusCode = 419;
+            $message = 'Security token expired. Please refresh the page and try again.';
         } elseif ($exception instanceof ModelNotFoundException) {
             $statusCode = 404;
             $message = 'The requested resource was not found.';

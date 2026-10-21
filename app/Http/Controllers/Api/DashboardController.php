@@ -264,4 +264,8 @@ class DashboardController
     }
 
 
+    public function getChatGroups(Request $request)
+    {
+        return ['chats' => \App\Chat::whereHas('users', function ($q) use ($request) { $q->where('users.id', $request->user()->id); })->get()];
+    }
 }

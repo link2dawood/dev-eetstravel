@@ -36,13 +36,13 @@ class TourFactory extends Factory
             'pax' => $this->faker->numberBetween(10, 50),
             'rooms' => $this->faker->numberBetween(5, 25),
             'country_begin' => $this->faker->country(),
-            'city_begin' => $this->faker->city(),
+            'city_begin' => null,
             'country_end' => $this->faker->optional()->country(),
-            'city_end' => $this->faker->optional()->city(),
-            'invoice' => $this->faker->optional()->numerify('INV-####'),
-            'ga' => $this->faker->optional()->company(),
-            'status' => $this->faker->numberBetween(1, 4),
-            'external_name' => $this->faker->optional()->words(2, true),
+            'city_end' => null,
+            'invoice' => null,
+            'ga' => null,
+            'status' => 1,
+            'external_name' => 'EETS-' . $this->faker->unique()->uuid(),
             'client_id' => null, // Will be set in states or when needed
             'created_at' => now(),
             'updated_at' => now(),
@@ -284,11 +284,8 @@ class TourFactory extends Factory
 
         while ($currentDate <= $endDate) {
             \App\TourDay::create([
-                'tour_id' => $tour->id,
+                'tour' => $tour->id,
                 'date' => $currentDate->toDateString(),
-                'day_number' => $dayNumber,
-                'title' => "Day {$dayNumber}",
-                'description' => $this->faker->optional()->sentence(),
             ]);
 
             $currentDate->addDay();

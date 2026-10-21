@@ -219,6 +219,16 @@ class TourPackage extends Model
         return Tour::find($tourDay->tour);
     }
 
+    public function setDescriptionAttribute($value)
+    {
+        $this->attributes['description'] = \App\Support\SafeHtml::clean($value);
+    }
+
+    public function getDescriptionAttribute($value)
+    {
+        return \App\Support\SafeHtml::clean($value);
+    }
+
     public function descriptionPackage()
     {
         return $this->description_package ? true : false;

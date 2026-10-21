@@ -8,6 +8,7 @@ class PreserveClientInvoiceExtraCostDecimals extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('client_invoices') || !Schema::hasColumn('client_invoices', 'extra_cost')) return;
         Schema::table('client_invoices', function (Blueprint $table) {
             $table->decimal('extra_cost', 15, 2)->nullable()->change();
         });

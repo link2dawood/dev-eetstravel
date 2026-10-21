@@ -43,7 +43,7 @@ let notifications = {
 
     deleteAllNotification : () => {
         $.ajax({
-            method: 'GET',
+            method: 'POST',
             url: '/delete_all_notifications',
             data: {}
         }).done((res) => {

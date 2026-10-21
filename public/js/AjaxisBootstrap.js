@@ -118,7 +118,8 @@ $(document).on("click", ".delete", function() {
 }), $(document).on("click", ".destroy", function() {
     $.ajax({
         async: !0,
-        type: "get",
+        type: "post",
+        headers: {"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content},
         url: baseURL + $(this).data("link"),
         success: function(a) {
             if (a.error) {

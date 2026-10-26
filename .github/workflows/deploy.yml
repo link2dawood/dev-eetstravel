@@ -165,9 +165,14 @@ jobs:
 
             echo "🧱 Running Laravel optimizations"
             php artisan config:cache
-            php artisan route:cache
+            # Routes are deliberately not cached, and "optimize" is not used because it
+            # runs route:cache too. routes/web.php registers 43 duplicate route names
+            # (a Route::resource plus a hand-written route that reuses the same name),
+            # and route:cache refuses to serialize duplicates. Those names are also the
+            # permission names checked by PermissionsRequiredMiddleware, so they cannot
+            # be renamed without changing who is allowed to call each endpoint.
+            php artisan route:clear
             php artisan view:clear
-            php artisan optimize
 
             echo "🚀 Restarting web services"
             sudo systemctl reload php8.4-fpm || sudo systemctl reload php-fpm || true

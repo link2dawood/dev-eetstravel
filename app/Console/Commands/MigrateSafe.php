@@ -32,7 +32,7 @@ class MigrateSafe extends Command
         {--force : Run without confirmation in production}
         {--dry-run : Report what would happen without touching the database}
         {--allow-destructive : Also run pending migrations that drop tables, columns or indexes}
-        {--path=* : Migration directories (defaults to database/migrations)}';
+        {--path=* : Migration directories or single migration files (defaults to database/migrations)}';
 
     protected $description = 'Run pending migrations without ever dropping existing tables, columns or rows';
 
@@ -350,6 +350,17 @@ class MigrateSafe extends Command
 
         $files = [];
         foreach ($paths as $path) {
+            // A single migration file is accepted too, the way migrate --path does it.
+            if (substr($path, -4) === '.php') {
+                if (is_file($path)) {
+                    $files[basename($path, '.php')] = $path;
+                } else {
+                    $this->warn('No such migration file: '.$path);
+                }
+
+                continue;
+            }
+
             foreach (glob(rtrim($path, '/').'/*_*.php') ?: [] as $file) {
                 $files[basename($file, '.php')] = $file;
             }

@@ -185,6 +185,23 @@ PHP);
         $this->assertTrue($this->hasRun('2030_01_01_000000_create_safe_widgets_table'));
     }
 
+    /** @test */
+    public function it_accepts_a_single_migration_file_path()
+    {
+        $exitCode = $this->artisan('migrate:safe', [
+            '--force' => true,
+            '--path' => [$this->path.'/2030_01_01_000000_create_safe_widgets_table.php'],
+        ])->run();
+
+        $this->assertSame(0, $exitCode);
+        $this->assertTrue(Schema::hasTable('safe_widgets'));
+        $this->assertTrue($this->hasRun('2030_01_01_000000_create_safe_widgets_table'));
+
+        // Only the named file was considered.
+        $this->assertFalse(Schema::hasColumn('safe_widgets', 'label'));
+        $this->assertFalse($this->hasRun('2030_01_02_000000_add_label_to_safe_widgets_table'));
+    }
+
     private function hasRun(string $migration): bool
     {
         return Schema::hasTable('migrations')

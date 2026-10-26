@@ -1,46 +1,166 @@
-name: Deploy TMS App (Ubuntu Server)
+name: CI/CD
 
 on:
   push:
     branches:
-      - main   # or whatever branch you deploy from
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  ci:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: laravel
+          MYSQL_USER: laravel
+          MYSQL_PASSWORD: secret
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --timeout=5s
+          --retries=10
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: true
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, ctype, json, pdo, pdo_mysql, tokenizer, xml, zip, gd, exif
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-suggest
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Install Node dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend assets
+        run: npm run production
+
+      - name: Run Laravel tests
+        run: php artisan test
+
   deploy:
+    name: Deploy to production
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Validate SSH configuration
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -e
 
-      - name: Deploy to Ubuntu via SSH
+          if [ -z "$SSH_HOST" ]; then
+            echo "::error::SSH_HOST is missing. Add the server hostname or public IP to GitHub Actions secrets."
+            exit 1
+          fi
+
+          if [ -z "$SSH_USER" ]; then
+            echo "::error::SSH_USER is missing. Add the SSH username to GitHub Actions secrets."
+            exit 1
+          fi
+
+          if [ -z "$SSH_PASSWORD" ]; then
+            echo "::error::SSH_PASSWORD is missing. Add the SSH password to GitHub Actions secrets."
+            exit 1
+          fi
+
+          if [ -z "$SSH_PORT" ]; then
+            SSH_PORT=22
+          fi
+
+          echo "Target: $SSH_USER@$SSH_HOST:$SSH_PORT"
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          timeout: 30s
+          command_timeout: 20m
           script: |
-            echo "🔄 Starting Deployment..."
-            cd /var/www/html
+            set -e
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            if [ -z "$DEPLOY_PATH" ]; then
+              DEPLOY_PATH="/var/www/html"
+            fi
 
-            echo "📦 Pulling latest code..."
-            git fetch origin main
+            echo "🔄 Starting deployment in $DEPLOY_PATH"
+
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "Repository not found at $DEPLOY_PATH; cloning is required."
+              mkdir -p "$DEPLOY_PATH"
+              git clone "${{ github.server_url }}/${{ github.repository }}.git" "$DEPLOY_PATH"
+            fi
+
+            cd "$DEPLOY_PATH"
+            git fetch origin main --prune
+            git checkout main
             git reset --hard origin/main
 
-            echo "🧩 Installing composer dependencies..."
-            composer install --no-dev --optimize-autoloader
+            echo "📦 Installing PHP dependencies"
+            composer install --no-interaction --prefer-dist --no-progress --no-suggest --no-dev --optimize-autoloader
 
-            echo "⚙️ Running Laravel optimizations..."
+            echo "📦 Installing Node dependencies"
+            npm ci --no-audit --no-fund
+
+            echo "⚙️ Building production assets"
+            npm run production
+
+            echo "🧱 Running Laravel optimizations"
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:clear
-            php artisan optimize:clear
             php artisan optimize
 
-            echo "🚀 Restarting services..."
-            sudo systemctl reload php8.4-fpm
-            sudo systemctl restart nginx
+            echo "🚀 Restarting web services"
+            sudo systemctl reload php8.4-fpm || sudo systemctl reload php-fpm || true
+            sudo systemctl reload nginx || true
 
-            echo "✅ Deployment complete!"
+            echo "✅ Deployment complete"

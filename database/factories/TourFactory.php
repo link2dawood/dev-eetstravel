@@ -26,6 +26,8 @@ class TourFactory extends Factory
     {
         $departureDate = $this->faker->dateTimeBetween('now', '+6 months');
         $retirementDate = (clone $departureDate)->modify('+' . $this->faker->numberBetween(3, 14) . ' days');
+        $pax = $this->faker->numberBetween(10, 50);
+        $rooms = max(1, (int) ceil($pax / 6));
 
         return [
             'name' => $this->faker->unique()->words(3, true) . ' Tour',
@@ -33,8 +35,8 @@ class TourFactory extends Factory
             'remark' => $this->faker->optional()->paragraph(),
             'departure_date' => $departureDate->format('Y-m-d'),
             'retirement_date' => $retirementDate->format('Y-m-d'),
-            'pax' => $this->faker->numberBetween(10, 50),
-            'rooms' => $this->faker->numberBetween(5, 25),
+            'pax' => $pax,
+            'rooms' => $rooms,
             'country_begin' => $this->faker->country(),
             'city_begin' => null,
             'country_end' => $this->faker->optional()->country(),

@@ -14,10 +14,12 @@ class AddMondayFieldsToTasksTable extends Migration
     public function up()
     {
         Schema::table('tasks', function (Blueprint $table) {
-            // Add epic_id column if it doesn't exist
+            // Add epic_id column if it doesn't exist. The foreign key is added by
+            // 2025_10_23_211536_create_epics_table, which is where the epics table
+            // first exists: adding it here fails with "Failed to open the referenced
+            // table 'epics'" on any database that has not run that migration yet.
             if (!Schema::hasColumn('tasks', 'epic_id')) {
                 $table->unsignedInteger('epic_id')->nullable()->after('priority');
-                $table->foreign('epic_id')->references('id')->on('epics')->onDelete('set null');
             }
 
             // Add story_points column if it doesn't exist

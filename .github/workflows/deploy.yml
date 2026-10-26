@@ -152,13 +152,18 @@ jobs:
             echo "⚙️ Building production assets"
             npm run production
 
+            # The deploy never touches the database. The live schema is already
+            # complete, so the migration history is reconciled by hand when needed:
+            #
+            #   php artisan migrate:safe --dry-run   # see what it would do
+            #   php artisan migrate:safe --force     # apply it
+            #
+            # Never run plain "php artisan migrate" on the server: it loads
+            # database/schema/mysql-schema.dump (112 DROP TABLE statements) whenever the
+            # migrations table has no rows, which would destroy the live data.
+            echo "⏭️ Skipping database migrations; the deploy does not change the database"
+
             echo "🧱 Running Laravel optimizations"
-            if php artisan migrate:status 2>/dev/null | grep -q "No"; then
-              echo "Pending migrations detected; running database migrations."
-              php artisan migrate --force
-            else
-              echo "Database already initialized or no pending migrations; skipping migrate."
-            fi
             php artisan config:cache
             php artisan route:cache
             php artisan view:clear

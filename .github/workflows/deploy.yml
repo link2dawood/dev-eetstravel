@@ -26,8 +26,8 @@ jobs:
         options: >-
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
-          --timeout=5s
-          --retries=10
+          --health-timeout=5s
+          --health-retries=10
 
     env:
       APP_ENV: testing

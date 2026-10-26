@@ -1029,8 +1029,30 @@
                             </td>
                             <td class="" align="left" valign="top"><span class="text_color"> @if ($loop->iteration == 1 && $countDay == 1) @if (isset($package->service()->service_type)) {{ $package->service()->service_type }} @endif @endif </span>{{str_replace("&", "and", $package->name)}}<br>@if(@$package->service()->service_type == 'Transfer' || @$package->service()->service_type == 'Guide')
 Pickup:{{ $tourDay->date. " " .$package->time_from }}/{{ $package->pickup_des }} at {{ $package->time_to }} Dropoff: {{ $tourDay->date. " " .$package->time_to }}/{{ $package->drop_des }} at {{ $package->time_to }}</span>
-										@endif<br><?php $srv = $package->service(); ?>  @if ($srv) @if ($srv->work_phone) <span class="text_color"> {!! trans('main.Tel') !!}:
- </span>{{ $srv->work_phone }}@endif @if ($srv->work_fax) Fax: {{ $srv->work_fax }} @endif <br> @if ($srv->address_first)@php$city_name = ''; $country_name = ''; if (!empty($srv->city)) { $city_name = \App\Helper\CitiesHelper::getCityById($srv->city)['name'] ?? '';}if (!empty($srv->country)) { $country_name = \App\Helper\CitiesHelper::getCountryById($srv->country)['name'] ?? '';} @endphp <span class="text_color"> {!! trans('main.Address') !!}: </span>{!! $srv->address_first . ' ' . $srv->address_second . ' ' . $city_name . ' ' . $country_name !!}<br> @endif @endif
+										@endif<br><?php $srv = $package->service(); ?>
+                                @if ($srv)
+                                    @php
+                                        $city_name = '';
+                                        $country_name = '';
+
+                                        if (!empty($srv->city)) {
+                                            $city_name = \App\Helper\CitiesHelper::getCityById($srv->city)['name'] ?? '';
+                                        }
+                                        if (!empty($srv->country)) {
+                                            $country_name = \App\Helper\CitiesHelper::getCountryById($srv->country)['name'] ?? '';
+                                        }
+                                    @endphp
+                                    @if ($srv->work_phone)
+                                        <span class="text_color"> {!! trans('main.Tel') !!}: </span>{{ $srv->work_phone }}
+                                    @endif
+                                    @if ($srv->work_fax)
+                                        Fax: {{ $srv->work_fax }}
+                                    @endif
+                                    <br>
+                                    @if ($srv->address_first)
+                                        <span class="text_color"> {!! trans('main.Address') !!}: </span>{!! $srv->address_first . ' ' . $srv->address_second . ' ' . $city_name . ' ' . $country_name !!}<br>
+                                    @endif
+                                @endif
                             </td>
                         </tr>
                     @endif

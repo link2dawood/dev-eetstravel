@@ -45,7 +45,7 @@ return [
     | SnappyMail default admin password (CHANGE AFTER INSTALLATION!)
     |
     */
-    'admin_password' => env('SNAPPYMAIL_ADMIN_PASSWORD', '12345'),
+    'admin_password' => env('SNAPPYMAIL_ADMIN_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------

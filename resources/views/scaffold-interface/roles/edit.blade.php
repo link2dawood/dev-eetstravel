@@ -26,6 +26,21 @@
 	position: absolute;
 }
    </style>
+<style>
+    .manage-form-actions-top {
+        margin-bottom: 1.5rem;
+    }
+
+    .manage-form-actions-bottom {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+        margin-bottom: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+</style>
 <section class="content">
 	<div class="box box-primary">
 
@@ -42,14 +57,11 @@
 
 		<div class="box box-body border_top_none">
 			<form action="{{url('roles/update')}}" method = "post">
-                <div class="row">
+                <div class="row manage-form-actions-top">
                     <div class="col-md-12">
-                        <div class="margin_button">
-                            <a href="javascript:history.back()">
-                                <button class='btn btn-primary back_btn' type="button">{{trans('main.Back')}}</button>
-                            </a>
-                            <button class='btn btn-success' type='submit'>{{trans('main.Save')}}</button>
-                        </div>
+                        <a href="javascript:history.back()" class="btn btn-primary back_btn">
+                            <i class="ti ti-arrow-left me-1"></i>{{trans('main.Back')}}
+                        </a>
                     </div>
                 </div>
 				{!! csrf_field() !!}
@@ -58,10 +70,14 @@
 				<label for="">Role</label>
 					<input type="text" name = "name" class = "form-control" placeholder = "Name" value = "{{$role->name}}">
 				</div>
-					<button class = 'btn btn-success' type = "submit">{{trans('main.Save')}}</button>
-                    <a href="{{\App\Helper\AdminHelper::getBackButton(route('roles.index'))}}">
-                        <button class='btn btn-warning' type='button'>{{trans('main.Cancel')}}</button>
+                <div class="manage-form-actions-bottom">
+                    <a href="{{ \App\Helper\AdminHelper::getBackButton(route('roles.index')) }}" class="btn btn-secondary">
+                        <i class="ti ti-x me-1"></i>{{trans('main.Cancel')}}
                     </a>
+                    <button class="btn btn-success" type="submit">
+                        <i class="ti ti-device-floppy me-1"></i>{{trans('main.Save')}}
+                    </button>
+                </div>
 			</form>
 		</div>
 	</div>

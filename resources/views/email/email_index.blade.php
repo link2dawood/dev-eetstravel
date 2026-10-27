@@ -4,14 +4,81 @@
 
 
     <style>
-        /* long sender addresses used to push the date out of view */
-        #emaillists table { table-layout: fixed; width: 100%; }
-        #emaillists .mailbox-star { width: 8px; }
-        #emaillists .mailbox-name { width: 34%; overflow-wrap: anywhere; }
-        #emaillists .mailbox-subject { overflow-wrap: anywhere; }
-        #emaillists .mailbox-attachment { width: 28px; }
-        #emaillists .mailbox-date { width: 150px; white-space: nowrap; color: #6c7a91; }
-        .email-folders .nav-link { padding: .4rem .9rem; }
+        /* Header: Back + folder name on the left, search fills the rest */
+        .email-box-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .75rem 1rem;
+        }
+        .email-box-header .email-box-title {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+        .email-box-header .email-box-title .btn { display: inline-flex; align-items: center; }
+        .email-box-header .email-search { flex: 1 1 320px; width: auto; }
+
+        /* Folder lists */
+        .email-folders .nav-link {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .5rem .9rem;
+            margin: 1px .5rem;
+        }
+        .email-folders .nav-link .ti {
+            flex: 0 0 18px;
+            width: 18px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        /* Mail rows */
+        #emaillists table { table-layout: fixed; width: 100%; min-width: 760px; margin-bottom: 0; }
+        #emaillists td { vertical-align: middle; padding: .75rem; border-color: #eef0f3; }
+        #emaillists .email-row { cursor: pointer; }
+        #emaillists .mailbox-name { width: 36%; }
+        #emaillists .mailbox-attachment { width: 44px; text-align: center; color: #64748b; }
+        #emaillists .mailbox-date { width: 150px; }
+        #emaillists .mailbox-actions { width: 112px; }
+
+        #emaillists .mailbox-sender { display: flex; align-items: center; gap: .625rem; min-width: 0; }
+        #emaillists .mailbox-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 32px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: .75rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        #emaillists .mailbox-sender-text { display: flex; flex-direction: column; min-width: 0; }
+        #emaillists .mailbox-sender-name,
+        #emaillists .mailbox-sender-email,
+        #emaillists .mailbox-subject-text {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #emaillists .mailbox-sender-name { color: #1f2937; font-weight: 600; }
+        #emaillists .mailbox-sender-email { color: #6b7280; font-size: .8125rem; }
+        #emaillists .mailbox-subject-text { color: #6b7280; }
+        #emaillists .email-unread .mailbox-subject-text { color: #1f2937; font-weight: 600; }
+        #emaillists .mailbox-date-text {
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            color: #6b7280;
+            font-size: .8125rem;
+            white-space: nowrap;
+        }
+        #emaillists .mailbox-actions-group { display: flex; justify-content: flex-end; gap: .375rem; }
     </style>
     <div class="box-body no-padding" id="emailList">
 
@@ -23,34 +90,36 @@
             <div  v-if="view">
                 @include('email.parts.viewEmail')
             </div>
-            <table class="table table-hover table-striped finder-disable" v-if="emailsArray && !view && !loading">
+            <table class="table table-hover finder-disable" v-if="emailsArray && !view && !loading">
                 <tbody>
-                <tr v-if="emailsArray" style="cursor: pointer" v-for="(email, index) in emailsArray" >
-                    <td class="mailbox-star onclick_redirect">
-                    </td>
-
+                <tr v-if="emailsArray" v-for="(email, index) in emailsArray" class="email-row" :class="{ 'email-unread': email.header.seen == 0 }">
                     <td class="mailbox-name" @click="infoEmail(email)">
-                        <a >
-                            <div v-if="currentFolder == 'INBOX.Sent'">@{{email.header.to}}</div>
-                            <div v-else>@{{email.header.from}}</div>
-                        </a></td>
+                        <div class="mailbox-sender">
+                            <span class="mailbox-avatar" :style="'background-color: ' + getColorFromEmail(mailParty(email))">@{{ getInitials(mailParty(email)) }}</span>
+                            <span class="mailbox-sender-text">
+                                <span class="mailbox-sender-name" :title="extractName(mailParty(email))">@{{ extractName(mailParty(email)) }}</span>
+                                <span class="mailbox-sender-email" :title="extractEmail(mailParty(email))">@{{ extractEmail(mailParty(email)) }}</span>
+                            </span>
+                        </div>
+                    </td>
                     <td class="mailbox-subject onclick_redirect" @click="infoEmail(email)">
-                        <b v-if="email.header.seen == 0">@{{email.header.subject}}</b>
-                        <span v-else>@{{email.header.subject}}</span>
+                        <span class="mailbox-subject-text" :title="email.header.subject">@{{ email.header.subject }}</span>
                     </td>
 
-                    <td class="mailbox-attachment onclick_redirect">
-                            <i v-if="email.attachments" class="fa fa-paperclip"></i>
-
+                    <td class="mailbox-attachment onclick_redirect" @click="infoEmail(email)">
+                        <i v-if="email.attachments" class="ti ti-paperclip"></i>
                     </td>
-                    <td class="mailbox-date onclick_redirect">
-                        @{{moment(email.header.date).format('YYYY-MM-DD H:m:s')}}
+                    <td class="mailbox-date onclick_redirect" @click="infoEmail(email)">
+                        <span class="mailbox-date-text">
+                            <i class="ti ti-clock"></i>
+                            @{{ moment(email.header.date).format('YYYY-MM-DD HH:mm') }}
+                        </span>
                     </td>
-                    <td style="width: 150px;">
-                        <div class="btn-group pull-right">
-                            <a href="#" class="btn btn-sm btn-default " @click="openModal(email)"><i class="fa fa-folder-open" aria-hidden="true"></i></a>
+                    <td class="mailbox-actions">
+                        <div class="mailbox-actions-group">
+                            <a href="#" class="btn btn-sm dash-act dash-act-edit" @click.prevent="openModal(email)" title="Move to folder"><i class="ti ti-folder-share" aria-hidden="true"></i></a>
                             {{--<a class="btn btn-default btn-sm" @click="replyEmail(email)"><i class="fa fa-reply" aria-hidden="true"></i></a>--}}
-                            <a class="btn btn-danger btn-sm " @click="deleteMail(email)"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
+                            <a href="#" class="btn btn-sm dash-act dash-act-delete" @click.prevent="deleteMail(email)" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></a>
                         </div>
                     </td>
 

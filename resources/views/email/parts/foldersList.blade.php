@@ -17,19 +17,19 @@
         <ul class="nav nav-pills flex-column email-folders py-2" v-if="folders" >
 			<li class="nav-item">
                 <a href="#" class="nav-link" :class="{active: currentFolder == 'INBOX'}" @click.prevent="changeFolder('INBOX')">
-                    <i class="fa fa-inbox" ></i> Inbox
+                    <i class="ti ti-inbox"></i><span>Inbox</span>
                 </a>
 
             </li>
             <li class="nav-item" v-for="(folder, index) in folders.INBOX" v-if="index !== 'Drafts'">
                 <a href="#" class="nav-link" :class="{active: currentFolder == index || currentFolder == 'INBOX.' + index}" @click.prevent="changeFolder(index)">
-                    <i class="fa fa-inbox" ></i> @{{index}}
+                    <i class="ti" :class="folderIcon(index)"></i><span>@{{index}}</span>
                 </a>
 
             </li>
             <li class="nav-item">
                 <a href="#" class="nav-link text-muted" @click.prevent="openCreateFolderModal()">
-                    <i class="fa fa-plus"></i> Add Folder
+                    <i class="ti ti-plus"></i><span>Add Folder</span>
                 </a>
             </li>
 {{--

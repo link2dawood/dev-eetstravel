@@ -1,88 +1,55 @@
-<div class="box box-primary" style="height: 55rem;">
+<div class="box box-primary dashboard-inbox">
     @if(Auth::user()->can('dashboard.inbox'))
         <div id="inbox">
             <div class="box-header">
-                <h4>Inbox</h4>
-                <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <h4 class="mb-0">Inbox</h4>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{route('email.index')}}" class="btn btn-default btn-sm inbox-view-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <rect x="3" y="5" width="18" height="14" rx="2" />
+                            <polyline points="3 7 12 13 21 7" />
                         </svg>
-                    </button>
-                    <button type="button" class="btn btn-box-tool" data-widget="remove">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <a @click="openNewEmailModal()">
-                            <button class="btn btn-default btn-flat" style="display:none">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                    <polyline points="3 7 12 13 21 7" />
-                                </svg>
-                                New Email
-                            </button>
-                        </a>
-                        <a href="{{route('email.index')}}">
-                            <button href="javascript:void(0)" class="btn btn-default btn-flat pull-right">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                    <polyline points="3 7 12 13 21 7" />
-                                </svg>
-                                View All Emails
-                            </button>
-                        </a>
+                        View All Emails
+                    </a>
+                    <div class="box-tools">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-md-12" style="margin-bottom: 20px">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="search_emails" style="margin-top: 20px">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <circle cx="10" cy="10" r="7" />
-                                        <line x1="21" y1="21" x2="15" y2="15" />
-                                    </svg>
-                                </span>
-                                <input aria-label="Search emails..." type="text" id="search" name="search" class="form-control" v-model="search" placeholder="Search emails...">
-                                <button class="btn btn-primary" @click="fetchData">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <circle cx="10" cy="10" r="7" />
-                                        <line x1="21" y1="21" x2="15" y2="15" />
-                                    </svg>
-                                    {{ trans('main.Search') }}
-                                </button>
-                                <button type="button" class="btn btn-danger btn-sm" @click="ClearSearchForm()" v-if="search!=null">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
+
             <div class="box-body">
-                <div class="row">
-                    <div class="col-md-3"></div>
+                <div class="search_emails mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <circle cx="10" cy="10" r="7" />
+                                <line x1="21" y1="21" x2="15" y2="15" />
+                            </svg>
+                        </span>
+                        <input aria-label="Search emails..." type="text" id="search" name="search" class="form-control" v-model="search" @keyup.enter="fetchData(true)" placeholder="Search emails...">
+                        <button type="button" class="btn btn-primary" @click="fetchData(true)">
+                            {{ trans('main.Search') }}
+                        </button>
+                        <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null">
+                            Clear
+                        </button>
+                    </div>
                 </div>
+
                 <div>
                     <div v-if="loading">
                         <div style="height: 300px;">
@@ -91,12 +58,12 @@
                     </div>
 
                     <div v-else>
-                        <div class="table-responsive mailbox-messages" style="height: 600px;">
-                            <table class="table table-hover table-striped finder-disable emails-inbox">
+                        <div class="table-responsive mailbox-messages">
+                            <table class="table table-hover finder-disable emails-inbox mb-0">
                                 <tbody>
-                                    <tr v-if="!mails" class="row">
-                                        <td class="col-md-12">
-                                            <div class="empty-state text-center py-5">
+                                    <tr v-if="!mails || !mails.length">
+                                        <td colspan="6">
+                                            <div class="empty-state text-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-muted mb-3" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                     <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -107,54 +74,51 @@
                                         </td>
                                     </tr>
 
-                                    <tr v-for="mail in mails" v-cloak style="cursor: pointer" class="email-row">
-                                        <td class="mailbox-star" style="width: 40px;">
+                                    <tr v-for="mail in mails" v-cloak class="email-row" :class="{ 'email-unread': mail.header.seen == 0 }">
+                                        <td class="mailbox-star">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon text-yellow" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
                                             </svg>
                                         </td>
-                                        <td class="mailbox-name" @click="OpenEmail(mail)" style="width: 200px;">
-                                            <a :href="mail.click_redirect" class="d-flex align-items-center text-decoration-none">
-                                                <span class="avatar avatar-sm me-2" :style="'background-color: ' + getColorFromEmail(mail.header.from)">
-                                                    @{{getInitials(mail.header.from)}}
+                                        <td class="mailbox-name" @click="OpenEmail(mail)">
+                                            <a :href="mail.click_redirect" class="mailbox-sender text-decoration-none">
+                                                <span class="mailbox-avatar" :style="'background-color: ' + getColorFromEmail(mail.header.from)">@{{getInitials(mail.header.from)}}</span>
+                                                <span class="mailbox-sender-text">
+                                                    <strong class="mailbox-sender-name" :title="extractName(mail.header.from)">@{{extractName(mail.header.from)}}</strong>
+                                                    <small class="mailbox-sender-email" :title="extractEmail(mail.header.from)">@{{extractEmail(mail.header.from)}}</small>
                                                 </span>
-                                                <div class="d-flex flex-column">
-                                                    <strong class="text-dark">@{{extractName(mail.header.from)}}</strong>
-                                                    <small class="text-muted">@{{extractEmail(mail.header.from)}}</small>
-                                                </div>
                                             </a>
                                         </td>
                                         <td class="mailbox-subject" @click="OpenEmail(mail)">
-                                            <b v-if="mail.header.seen == 0">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm text-blue me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <span class="mailbox-subject-text" :title="mail.header.subject">
+                                                <svg v-if="mail.header.seen == 0" xmlns="http://www.w3.org/2000/svg" class="icon icon-sm text-blue" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                     <rect x="3" y="5" width="18" height="14" rx="2" />
                                                     <polyline points="3 7 12 13 21 7" />
                                                 </svg>
-                                                @{{mail.header.subject}}
-                                            </b>
-                                            <span v-else class="text-muted">@{{mail.header.subject}}</span>
+                                                <span>@{{mail.header.subject}}</span>
+                                            </span>
                                         </td>
-                                        <td class="mailbox-attachment" @click="OpenEmail(mail)" style="width: 40px;">
+                                        <td class="mailbox-attachment" @click="OpenEmail(mail)">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                 <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" />
                                             </svg>
                                         </td>
-                                        <td class="mailbox-date" @click="OpenEmail(mail)" style="width: 180px;">
-                                            <div v-if="mail.header.date" class="text-muted small">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <td class="mailbox-date" @click="OpenEmail(mail)">
+                                            <span v-if="mail.header.date" class="mailbox-date-text">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                     <circle cx="12" cy="12" r="9" />
                                                     <polyline points="12 7 12 12 15 15" />
                                                 </svg>
-                                                @{{moment(mail.header.date).format('YYYY-MM-DD H:m:s')}}
-                                            </div>
+                                                @{{moment(mail.header.date).format('YYYY-MM-DD HH:mm')}}
+                                            </span>
                                         </td>
-                                        <td style="width: 150px;">
-                                            <div class="btn-group pull-right">
-                                                <a href="#" class="btn btn-sm btn-icon btn-ghost-warning dash-act dash-act-edit" @click="openModal(mail)" title="Move to folder">
+                                        <td class="mailbox-actions">
+                                            <div class="mailbox-actions-group">
+                                                <a href="#" class="btn btn-sm dash-act dash-act-edit" @click.prevent="openModal(mail)" title="Move to folder">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                         <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -162,7 +126,7 @@
                                                         <path d="M16 5l3 3" />
                                                     </svg>
                                                 </a>
-                                                <a class="btn btn-sm btn-icon btn-ghost-danger dash-act dash-act-delete" @click="deleteMail(mail)" title="Delete">
+                                                <a href="#" class="btn btn-sm dash-act dash-act-delete" @click.prevent="deleteMail(mail)" title="Delete">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                         <path d="M4 7l16 0" />
@@ -219,57 +183,140 @@
         overflow-y: hidden;
     }
     
+    .dashboard-inbox .box-header {
+        flex-wrap: wrap;
+    }
+
+    .dashboard-inbox .inbox-view-all {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .dashboard-inbox .mailbox-messages {
+        max-height: 600px;
+        overflow-y: auto;
+        border: 1px solid var(--tblr-border-color, #e5e7eb);
+        border-radius: 8px;
+    }
+
+    .dashboard-inbox .emails-inbox {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 760px;
+    }
+
+    .dashboard-inbox .emails-inbox td {
+        vertical-align: middle;
+        padding: 0.75rem;
+        border-color: #eef0f3;
+    }
+
     .email-row {
+        cursor: pointer;
         transition: background-color 0.2s ease;
     }
-    
+
     .email-row:hover {
         background-color: #f8f9fa;
     }
-    
+
+    .dashboard-inbox .mailbox-star { width: 44px; text-align: center; }
+    .dashboard-inbox .mailbox-name { width: 34%; }
+    .dashboard-inbox .mailbox-attachment { width: 44px; text-align: center; }
+    .dashboard-inbox .mailbox-date { width: 150px; }
+    .dashboard-inbox .mailbox-actions { width: 112px; }
+
+    .dashboard-inbox .mailbox-sender {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-width: 0;
+    }
+
+    .dashboard-inbox .mailbox-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .dashboard-inbox .mailbox-sender-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .dashboard-inbox .mailbox-sender-name,
+    .dashboard-inbox .mailbox-sender-email,
+    .dashboard-inbox .mailbox-subject-text > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .dashboard-inbox .mailbox-sender-name {
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .dashboard-inbox .mailbox-sender-email {
+        color: #6b7280;
+        font-size: 0.8125rem;
+    }
+
+    .dashboard-inbox .mailbox-subject-text {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-width: 0;
+        color: #6b7280;
+    }
+
+    .dashboard-inbox .email-unread .mailbox-subject-text {
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .dashboard-inbox .mailbox-subject-text .icon {
+        flex: 0 0 auto;
+    }
+
+    .dashboard-inbox .mailbox-date-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: #6b7280;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .dashboard-inbox .mailbox-actions-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.375rem;
+    }
+
     .mailbox-star svg {
         cursor: pointer;
         transition: fill 0.2s ease;
     }
-    
+
     .mailbox-star svg:hover {
         fill: currentColor;
     }
-    
-    .btn-ghost-primary {
-        color: #206bc4;
-    }
-    
-    .btn-ghost-primary:hover {
-        background-color: #e6f2ff;
-    }
-    
-    .btn-ghost-warning {
-        color: #f59f00;
-    }
-    
-    .btn-ghost-warning:hover {
-        background-color: #fff4e6;
-    }
-    
-    .btn-ghost-danger {
-        color: #d63939;
-    }
-    
-    .btn-ghost-danger:hover {
-        background-color: #ffe6e6;
-    }
-    
+
     .empty-state {
         padding: 3rem 0;
     }
     
-    .btn-icon {
-        padding: 0.375rem 0.5rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
 </style>
 
 <script>

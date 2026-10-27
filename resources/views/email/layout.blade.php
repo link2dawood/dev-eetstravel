@@ -51,22 +51,18 @@
             <!-- /.col -->
             <div class="col-md-9" id="email_box">
                 <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">@{{ currentFolder }}</h3>
-							<a href="javascript:history.back()" style=
-
-"float: right;">
-                                <button class="btn btn-primary">Back</button>
+                    <div class="box-header with-border email-box-header">
+                        <div class="email-box-title">
+                            <a href="javascript:history.back()" class="btn btn-primary">
+                                <i class="ti ti-arrow-left me-1"></i>Back
                             </a>
-						
-                        <p class="margin"></p>
-                        <div class="input-group input-group-sm">
-                            <input aria-label="Search" type="text" id="search" name="search" class="form-control" v-model="search">
-                            <span class="input-group-btn">
-                                   <button class="btn btn-primary" @click="getListEmailsByUser">Search</button>
-                                <button type="button" class="btn btn-danger btn-sm" @click="ClearSearchForm()" v-if="search!=null">Clear</button>
-                            </span>
-
+                            <h3 class="box-title mb-0">@{{ currentFolder }}</h3>
+                        </div>
+                        <div class="input-group email-search">
+                            <span class="input-group-text"><i class="ti ti-search"></i></span>
+                            <input aria-label="Search" type="text" id="search" name="search" class="form-control" v-model="search" placeholder="Search emails..." @keyup.enter="getListEmailsByUser">
+                            <button type="button" class="btn btn-primary" @click="getListEmailsByUser">Search</button>
+                            <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null">Clear</button>
                         </div>
                         {{--</form>--}}
                         <!-- /.box-tools -->
@@ -238,6 +234,38 @@
                     },
                 },
                 methods:{
+                    // "Name <a@b.com>" for the row: recipient in Sent, sender everywhere else
+                    mailParty(email) {
+                        let value = this.currentFolder == 'INBOX.Sent' ? email.header.to : email.header.from;
+                        return Array.isArray(value) ? value.join(', ') : (value || '');
+                    },
+                    extractName(value) {
+                        if (!value) return '';
+                        const match = value.match(/^"?(.+?)"?\s*<.+>$/);
+                        return match ? match[1].trim() : value.split('@')[0];
+                    },
+                    extractEmail(value) {
+                        if (!value) return '';
+                        const match = value.match(/<(.+?)>/);
+                        return match ? match[1] : value;
+                    },
+                    getInitials(value) {
+                        const words = this.extractName(value).split(/\s+/).filter(Boolean);
+                        if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+                        return (words[0] || '?').substring(0, 2).toUpperCase();
+                    },
+                    getColorFromEmail(value) {
+                        const colors = ['#206bc4', '#4299e1', '#0ca678', '#f59f00', '#d63939', '#ae3ec9', '#fd7e14', '#20c997'];
+                        let hash = 0;
+                        for (let i = 0; i < (value || '').length; i++) {
+                            hash = value.charCodeAt(i) + ((hash << 5) - hash);
+                        }
+                        return colors[Math.abs(hash) % colors.length];
+                    },
+                    folderIcon(name) {
+                        const icons = { Sent: 'ti-send', Trash: 'ti-trash', Spam: 'ti-alert-octagon', Junk: 'ti-alert-octagon', Favorite: 'ti-star', Duplicate: 'ti-copy' };
+                        return icons[name] || 'ti-folder';
+                    },
                     isEmailValid: function() {
                         return (this.newEmail.to == "")? "" : (this.reg.test(this.newEmail.to)) ? true : false;
                     },

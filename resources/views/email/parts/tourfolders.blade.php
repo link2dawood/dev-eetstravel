@@ -14,17 +14,17 @@
 
             </div>
         </div>
-        <ul class="nav nav-pills nav-stacked" v-if="folders" >
+        <ul class="nav nav-pills flex-column email-folders py-2" v-if="folders" >
 
-            <li >
-                <a href="#" class="" @click="changeTourFolder('active')">
-                    Active Tour
+            <li class="nav-item">
+                <a href="#" class="nav-link" @click.prevent="changeTourFolder('active')">
+                    <i class="ti ti-map-pin"></i><span>Active Tour</span>
                 </a>
 
             </li>
-            <li>
-                <a href="#" class="" @click="changeTourFolder('archive')">
-                    Archiver Tours
+            <li class="nav-item">
+                <a href="#" class="nav-link" @click.prevent="changeTourFolder('archive')">
+                    <i class="ti ti-archive"></i><span>Archiver Tours</span>
                 </a>
             </li>
 

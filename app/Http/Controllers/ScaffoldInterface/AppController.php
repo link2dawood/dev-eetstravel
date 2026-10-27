@@ -173,6 +173,16 @@ class AppController extends Controller
             $task->action_buttons = $this->generateActionButtons($task, $routes);
         }
 
+        // AJAX pagination of the tasks widget only needs the tasks partial
+        if (request()->ajax() && request()->hasHeader('X-Tasks-Partial')) {
+            return view('scaffold-interface.dashboard.components.tasks_list', [
+                'todoTasks' => $todoTasks,
+                'completedTasks' => $completedTasks,
+                'abortedTasks' => $abortedTasks,
+                'statuses' => $taskStatuses
+            ]);
+        }
+
         // Get users with their tour counts
         $tourUsers = \App\User::withCount('tours')
             ->having('tours_count', '>', 0)

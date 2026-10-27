@@ -1459,6 +1459,57 @@
             }
         }
 
+        // Paginate task groups via AJAX instead of reloading the whole dashboard
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.monday-board .monday-pagination-btn');
+            if (!btn) return;
+
+            e.preventDefault();
+            const url = btn.getAttribute('href');
+            const group = btn.closest('.monday-group');
+            if (!url || url === '#' || btn.classList.contains('disabled') || !group || group.dataset.loading) return;
+
+            const groupName = group.dataset.group;
+            const content = document.getElementById(`group-${groupName}`);
+            group.dataset.loading = '1';
+            content.style.opacity = '0.5';
+            content.style.pointerEvents = 'none';
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Tasks-Partial': '1', 'Accept': 'text/html' },
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+                if (!response.ok || response.redirected) {
+                    throw new Error('Failed to load tasks: ' + response.status);
+                }
+                return response.text();
+            })
+            .then(function (html) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const newContent = doc.getElementById(`group-${groupName}`);
+                const newCount = doc.querySelector(`[data-group="${groupName}"] .monday-group-count`);
+                if (!newContent) {
+                    throw new Error('Tasks group not found in response');
+                }
+
+                content.innerHTML = newContent.innerHTML;
+                const count = group.querySelector('.monday-group-count');
+                if (count && newCount) {
+                    count.textContent = newCount.textContent;
+                }
+                history.replaceState(null, '', url);
+            })
+            .catch(function () {
+                showTaskToast('Could not load tasks. Please try again.', 'Tasks', 'error');
+            })
+            .finally(function () {
+                delete group.dataset.loading;
+                content.style.opacity = '';
+                content.style.pointerEvents = '';
+            });
+        });
+
         function editInline(element) {
             event.stopPropagation();
             event.preventDefault();

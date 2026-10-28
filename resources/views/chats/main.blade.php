@@ -293,7 +293,7 @@
                 user : userId,
                 '_token': $('input[name=_token]').val()
             };
-            $.post('/chat/message', data).success(sendMessageSuccess);
+            $.post('/chat/message', data).done(sendMessageSuccess);
             scrollChatToBottom();
             // Ensure the normal browser event doesn't take place
             return false;

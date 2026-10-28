@@ -212,7 +212,7 @@
             chat  : chatId,
             user : userId
         };
-        $.post('/chat/message', data).success(function(){
+        $.post('/chat/message', data).done(function(){
             
             sendMessageSuccess();
             return false;

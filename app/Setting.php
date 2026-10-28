@@ -23,5 +23,45 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Setting extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['name', 'description', 'value'];
+
+    /**
+     * Settings read by name in scheduled commands; deleting one breaks or silently changes them.
+     */
+    const SYSTEM = [
+        'tour_service_notification',          // TourPackageNotification (days)
+        'hotel_seasons_date',                 // RunImport (date and time)
+        'client_fio_text',
+        \App\Helper\SettingsHelper::TASK_DEADLINE, // TaskDeadlineNotification (days)
+    ];
+
+    /**
+     * The value type follows the name, the same way the edit form picks its input.
+     */
+    public static function valueType($name)
+    {
+        if (preg_match('/date/', (string) $name)) {
+            return 'date';
+        }
+
+        return preg_match('/text/', (string) $name) ? 'text' : 'number';
+    }
+
+    public static function valueRules($name)
+    {
+        switch (self::valueType($name)) {
+            case 'date':
+                return 'required|date_format:Y-m-d H:i:s';
+            case 'text':
+                return 'required|string|max:191';
+            default:
+                // Day counts are passed to Carbon::addDays(); keep them whole and non-negative.
+                return 'required|integer|min:0|max:3650';
+        }
+    }
+
+    public function isSystem()
+    {
+        return in_array($this->name, self::SYSTEM, true);
+    }
 }

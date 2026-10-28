@@ -29,6 +29,13 @@ class ApiPermissions
         $permission = $module . '.' . $action;
         if ($module === 'email') $permission = in_array($method, ['getTours', 'getArchiveTours']) ? 'tour.index' : 'email.main';
         if ($module === 'settings' || $method === 'clearCache') $permission = 'settings.index';
+        // Dashboard widgets are gated by the same per-widget permissions the views check.
+        if ($controller === 'DashboardController') {
+            $permission = ['getAnnouncements' => 'dashboard.announcements', 'getInbox' => 'dashboard.inbox',
+                'getActivities' => 'dashboard.activities', 'getTasks' => 'dashboard.tasks',
+                'getLatestTours' => 'dashboard.latest_tours', 'getChatGroups' => 'dashboard.chat_groups',
+                'getTourUsers' => 'tour.index'][$method] ?? $permission;
+        }
         if ($method === 'getTaskCreatePopup') $permission = 'task.create';
         if ($method === 'getModalAddTour') $permission = 'tour.create';
         if ($module === 'users' && in_array($method, ['tasks', 'tours'])) $permission = $method === 'tasks' ? 'task.index' : 'tour.index';

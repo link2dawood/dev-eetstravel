@@ -131,8 +131,6 @@
                                                   enctype="multipart/form-data">
                                                 {!! csrf_field() !!}
 
-                                                <input type="hidden" name="user_id" value="{{$user->id}}">
-
                                                 <div class="col-md-6">
                                                     <label for="email" class="form-label">{{trans('main.Email')}}</label>
                                                     <input type="email" name="email"
@@ -153,7 +151,11 @@
                                                     <small class="text-muted">{{ __('Leave blank to keep current password') }}</small>
                                                 </div>
 
-                                                <div class="col-md-6"></div>
+                                                <div class="col-md-6">
+                                                    <label for="password_confirmation" class="form-label">Confirm {{trans('main.Password')}}</label>
+                                                    <input type="password" name="password_confirmation" id="password_confirmation"
+                                                           class="form-control" placeholder="••••••" autocomplete="new-password">
+                                                </div>
 
                                                 <div class="col-md-6">
                                                     <label for="email_login" class="form-label">{{trans('main.EmailLogin')}}</label>
@@ -202,7 +204,7 @@
 
                                                 <div class="col-12">
                                                     <label for="avatar" class="form-label">{{trans('main.Image')}}</label>
-                                                    <input id="avatar" name="avatar" type="file" class="form-control">
+                                                    <input id="avatar" name="avatar" type="file" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
                                                 </div>
 
                                                 <input type="hidden" name="edit_profile" value="1">

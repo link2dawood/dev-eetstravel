@@ -11,7 +11,16 @@
     <section class="content">
         <div class="box box-primary">
             <div class="box-body">
-                <a href="{{url('permissions/create')}}" class="btn btn-success"><i class="fa fa-plus fa-md" aria-hidden="true"></i> {{trans('main.New')}}</a>
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <a href="{{url('permissions/create')}}" class="btn btn-success"><i class="fa fa-plus fa-md" aria-hidden="true"></i> {{trans('main.New')}}</a>
+                    <form method="GET" action="{{ route('permissions.index') }}" class="d-flex gap-2">
+                        <input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Search name or alias" aria-label="Search permissions">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        @if($search !== '')
+                            <a href="{{ route('permissions.index') }}" class="btn btn-secondary">Clear</a>
+                        @endif
+                    </form>
+                </div>
 
 <table class="table table-striped mt-3"> {{-- Added mt-3 class for clean spacing --}}
                     <thead>
@@ -28,7 +37,7 @@
                             <td>{{$permission->alias}}</td>
                             <td>
                                 <div class="btn-list flex-nowrap table-actions-inline">
-                                    <a href="{{url('/permissions')}}/{{$permission->id}}/edit" class="btn btn-icon btn-ghost-warning" title="Edit">
+                                    <a href="{{url('/permissions')}}/{{$permission->id}}/edit" class="btn btn-icon btn-primary" title="Edit" aria-label="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -42,12 +51,16 @@
                                         @method('DELETE')
                                         @php
                                             $permissionRoles = $permission->roles->pluck('name')->implode(', ');
+                                            $usedBy = collect([
+                                                $permissionRoles !== '' ? 'roles: ' . $permissionRoles : null,
+                                                $permission->users_count ? $permission->users_count . ' user(s)' : null,
+                                            ])->filter()->implode(' and ');
                                         @endphp
-                                        {{-- force=1: the user has seen (and confirmed) which roles lose this permission --}}
-                                        <input type="hidden" name="force" value="1">
-                                        <button type="submit" class="btn btn-icon btn-ghost-danger js-confirm-delete-form" title="Delete"
-                                                data-confirm-message="{{ $permissionRoles !== ''
-                                                    ? 'Permission "' . $permission->name . '" is assigned to: ' . $permissionRoles . '. Deleting it will remove this access from those roles. Delete anyway?'
+                                        {{-- force=1 is added by the confirm handler, only after the in-use warning was accepted --}}
+                                        <button type="submit" class="btn btn-icon btn-danger js-confirm-delete-form" title="Delete" aria-label="Delete"
+                                                data-in-use="{{ $usedBy !== '' ? '1' : '0' }}"
+                                                data-confirm-message="{{ $usedBy !== ''
+                                                    ? 'Permission "' . $permission->name . '" is assigned to ' . $usedBy . '. Deleting it will remove this access from them. Delete anyway?'
                                                     : 'Are you sure you want to delete this permission?' }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -71,6 +84,9 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="mt-3">
+                    {{ $permissions->links() }}
+                </div>
             </div>
         </div>
     </section>
@@ -119,6 +135,13 @@ document.addEventListener('submit', function (event) {
 
     confirmPromise.then(function (confirmed) {
         if (!confirmed) return;
+        if (button.dataset.inUse === '1' && !form.querySelector('input[name="force"]')) {
+            const force = document.createElement('input');
+            force.type = 'hidden';
+            force.name = 'force';
+            force.value = '1';
+            form.appendChild(force);
+        }
         form.dataset.confirmed = 'true';
         form.submit();
     });

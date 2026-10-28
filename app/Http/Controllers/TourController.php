@@ -544,121 +544,87 @@ public function getButton($id, $isQuotation = false, $tour, array $perm)
     $cancelledPage = request()->get('cancelled_page', 1);
     $archivedPage = request()->get('archived_page', 1);
 
-    // Single optimized query to get all tours with proper eager loading
-    $allToursQuery = Tour::with([
-        'users:id,name',
-        'status:id,name,color',
-        'city_begin:id,name',
-        'city_end:id,name',
-        'client:id,name'
-    ])
-    ->select('id', 'name', 'departure_date', 'external_name', 'status', 'responsible', 'client_id', 'city_begin', 'city_end')
-    ->orderBy('departure_date', 'desc');
-
-    // Pre-load all responsible users to avoid N+1 queries
-    $allTours = $allToursQuery->get();
-    $responsibleUserIds = $allTours->pluck('responsible')->filter()->unique();
-    $responsibleUsers = \App\User::whereIn('id', $responsibleUserIds)
-        ->select('id', 'name')
-        ->get()
-        ->keyBy('id');
-
-    // Process tours once
-    $processedTours = $allTours->map(function($tour) use ($responsibleUsers) {
-        $tour->responsible_user_names = isset($responsibleUsers[$tour->responsible])
-            ? $responsibleUsers[$tour->responsible]->name
-            : '';
-        $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
-        $tour->client_name = $tour->client ? $tour->client->name : '';
-        return $tour;
-    });
-
-    // Search and status filter run over all tours, before pagination
+    // Each table is filtered and paginated in the database; only the rows shown are loaded
     $search = trim((string) request()->get('search', ''));
     $statusFilter = strtolower(trim((string) request()->get('status', '')));
-    if ($search !== '' || $statusFilter !== '') {
-        $searchLower = mb_strtolower($search);
-        $processedTours = $processedTours->filter(function ($tour) use ($searchLower, $statusFilter) {
-            $statusName = strtolower($tour->getRelationValue('status')->name ?? '');
-            if ($statusFilter !== '' && strpos($statusName, $statusFilter) === false) {
-                return false;
-            }
-            if ($searchLower === '') {
-                return true;
-            }
-            $haystack = mb_strtolower(implode(' ', [
-                $tour->id,
-                $tour->name,
-                $tour->external_name,
-                $tour->departure_date,
-                display_date($tour->departure_date, ''),
-                $tour->responsible_user_names,
-                $tour->assigned_user_names,
-                $tour->client_name,
-                $statusName,
-            ]));
-            return strpos($haystack, $searchLower) !== false;
-        })->values();
-    }
 
-    // Partition tours efficiently using collections and apply pagination
-    $tours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $processedTours->whereNotIn('status', [46, 6, 39])->forPage($toursPage, $perPage),
-        $processedTours->whereNotIn('status', [46, 6, 39])->count(),
-        $perPage,
-        $toursPage,
-        ['path' => request()->url(), 'pageName' => 'page']
-    );
+    $baseQuery = function () use ($search, $statusFilter) {
+        $query = Tour::with([
+            'users:id,name',
+            'status:id,name,color',
+            'city_begin:id,name',
+            'city_end:id,name',
+            'client:id,name'
+        ])
+        ->select('id', 'name', 'departure_date', 'external_name', 'status', 'responsible', 'client_id', 'city_begin', 'city_end')
+        ->orderBy('departure_date', 'desc');
 
-    // Requested = submitted by a client, or in the "Requested" status (46)
-    $requestedTours = $processedTours->filter(function ($tour) {
-        return !empty($tour->client_id) || (int) $tour->status === 46;
-    });
-    $clientTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $requestedTours->forPage($clientPage, $perPage),
-        $requestedTours->count(),
-        $perPage,
-        $clientPage,
-        ['path' => request()->url(), 'pageName' => 'client_page']
-    );
+        if ($statusFilter !== '') {
+            $query->whereHas('status', function ($q) use ($statusFilter) {
+                $q->where('name', 'like', '%' . addcslashes($statusFilter, '%_\\') . '%');
+            });
+        }
+
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+            $query->where(function ($q) use ($like) {
+                $q->where('tours.id', 'like', $like)
+                    ->orWhere('tours.name', 'like', $like)
+                    ->orWhere('tours.external_name', 'like', $like)
+                    ->orWhere('tours.departure_date', 'like', $like)
+                    // the list shows dates as d-m-Y
+                    ->orWhereRaw("DATE_FORMAT(tours.departure_date, '%d-%m-%Y') like ?", [$like])
+                    ->orWhereIn('tours.responsible', \App\User::where('name', 'like', $like)->select('id'))
+                    ->orWhereHas('users', function ($u) use ($like) { $u->where('name', 'like', $like); })
+                    ->orWhereHas('client', function ($c) use ($like) { $c->where('name', 'like', $like); })
+                    ->orWhereHas('status', function ($st) use ($like) { $st->where('name', 'like', $like); });
+            });
+        }
+
+        return $query;
+    };
 
     // Monthly tab: optional year/month filter on the departure date (applies to both of its tables)
     $chartYear = (int) request()->get('year');
     $chartMonth = (int) request()->get('month');
-    $inChartPeriod = function ($tour) use ($chartYear, $chartMonth) {
-        if (!$tour->departure_date) {
-            return !$chartYear && !$chartMonth;
-        }
-        $d = Carbon::parse($tour->departure_date);
-        return (!$chartYear || $d->year === $chartYear) && (!$chartMonth || $d->month === $chartMonth);
+    $inChartPeriod = function ($query) use ($chartYear, $chartMonth) {
+        if ($chartYear) $query->whereYear('departure_date', $chartYear);
+        if ($chartMonth) $query->whereMonth('departure_date', $chartMonth);
+        return $query;
     };
-    $monthlyTours = $processedTours->where('status', 4)->filter($inChartPeriod)->values();
-    $cancelledTours = $processedTours->where('status', 6)->filter($inChartPeriod)->values();
 
-    $monthlyChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $monthlyTours->forPage($monthlyPage, $perPage),
-        $monthlyTours->count(),
-        $perPage,
-        $monthlyPage,
-        ['path' => request()->url(), 'pageName' => 'monthly_page']
-    );
+    $tours = $baseQuery()->where(function ($q) {
+        $q->whereNotIn('status', [46, 6, 39])->orWhereNull('status');
+    })->paginate($perPage, ['*'], 'page', $toursPage);
 
-    $cancelledChartTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        // 6 = Cancelled (46 is "Requested")
-        $cancelledTours->forPage($cancelledPage, $perPage),
-        $cancelledTours->count(),
-        $perPage,
-        $cancelledPage,
-        ['path' => request()->url(), 'pageName' => 'cancelled_page']
-    );
+    // Requested = submitted by a client, or in the "Requested" status (46)
+    $clientTours = $baseQuery()->where(function ($q) {
+        $q->where(function ($c) { $c->whereNotNull('client_id')->where('client_id', '<>', 0); })
+            ->orWhere('status', 46);
+    })->paginate($perPage, ['*'], 'client_page', $clientPage);
 
-    $archivedTours = new \Illuminate\Pagination\LengthAwarePaginator(
-        $processedTours->whereIn('status', [6, 39])->forPage($archivedPage, $perPage),
-        $processedTours->whereIn('status', [6, 39])->count(),
-        $perPage,
-        $archivedPage,
-        ['path' => request()->url(), 'pageName' => 'archived_page']
-    );
+    $monthlyChartTours = $inChartPeriod($baseQuery()->where('status', 4))
+        ->paginate($perPage, ['*'], 'monthly_page', $monthlyPage);
+
+    // 6 = Cancelled (46 is "Requested")
+    $cancelledChartTours = $inChartPeriod($baseQuery()->where('status', 6))
+        ->paginate($perPage, ['*'], 'cancelled_page', $cancelledPage);
+
+    $archivedTours = $baseQuery()->whereIn('status', [6, 39])
+        ->paginate($perPage, ['*'], 'archived_page', $archivedPage);
+
+    // Display names for the rows on the current pages only
+    $pages = [$tours, $clientTours, $monthlyChartTours, $cancelledChartTours, $archivedTours];
+    $responsibleUsers = \App\User::whereIn('id', collect($pages)->flatMap(function ($page) {
+        return $page->getCollection()->pluck('responsible');
+    })->filter()->unique())->pluck('name', 'id');
+    foreach ($pages as $page) {
+        $page->getCollection()->each(function ($tour) use ($responsibleUsers) {
+            $tour->responsible_user_names = $responsibleUsers[$tour->responsible] ?? '';
+            $tour->assigned_user_names = $tour->users->pluck('name')->implode(' | ');
+            $tour->client_name = $tour->client ? $tour->client->name : '';
+        });
+    }
 
     // Keep search/filter/other pages in links and reopen the tab the link belongs to
     $query = request()->query();
@@ -1185,7 +1151,9 @@ public function store(StoreTourRequest $request)
     {
         try {
             if ($request->notification_click){
-                $notification = Notification::find($request->notification_click);
+                // Only the current user's own notification may be marked as read
+                $notification = Auth::user()->notifications()
+                    ->where('notifications.id', $request->notification_click)->first();
                 if ($notification) {
                     $notification->click = true;
                     $notification->save();
@@ -1798,9 +1766,16 @@ public function store(StoreTourRequest $request)
         return $pdf = $this->exportHtmlShort($tour, $data,$request);
     }
 
-    public function landingPage(Request $request, $id)
+    public function landingPageById(Request $request, $id)
     {
         $tour = Tour::findOrFail($id);
+
+        return redirect()->route('landing_page', ['token' => $tour->shareToken()] + $request->query());
+    }
+
+    public function landingPage(Request $request, $token)
+    {
+        $tour = Tour::where('share_token', $token)->firstOrFail();
         $exclude = array_filter((array) $request->input('exclude', []));
 
         // Same data source as the itinerary exports, so both always agree
@@ -1923,10 +1898,11 @@ public function store(StoreTourRequest $request)
      */
     public function update($tour, UpdateTourRequest $request)
     {
-        if($request->ajax() && $request->cityName){
-            $city = City::where('code', $request->fieldValue)->first() ?? City::create([ 'code' => $request->fieldValue, 'name' => $request->cityName, 'country' => $request->countryAlias]);
+        if($request->ajax() && $request->cityName && in_array($request->fieldName, ['city_begin', 'city_end'], true)){
+            // fieldValue (Google place_id), cityName and countryAlias are validated by UpdateTourRequest
+            $city = City::where('code', $request->fieldValue)->first() ?? City::create([ 'code' => $request->fieldValue, 'name' => trim($request->cityName), 'country' => $request->countryAlias]);
 
-            $tour_model = Tour::find($tour);
+            $tour_model = Tour::findOrFail($tour);
             $tour_model[$request->fieldName] = $city->id;
             $tour_model->save();
 			
@@ -2254,9 +2230,29 @@ public function DeleteMsg($id, Request $request, $tab = null)
  */
 public function destroy($id, $tab = null)
 {
-    try {
-        $tour = Tour::findOrfail($id);
+    $tour = Tour::find($id);
+    if (!$tour) {
+        if (request()->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Tour not found'], 404);
+        }
+        LaravelFlashSessionHelper::setFlashMessage('Tour not found or already deleted', 'error');
+        return redirect()->to('tour');
+    }
 
+    // Client invoices and supplier invoice links are not soft-deletable; deleting the tour
+    // used to remove them permanently, so a tour with invoices must be cleaned up first.
+    $invoiceCount = ClientInvoices::query()->where('tour_id', $id)->count()
+        + InvoicesTours::query()->where('invoices_tours_id', $id)->count();
+    if ($invoiceCount > 0) {
+        $message = "Tour {$tour->name} has {$invoiceCount} invoice(s) and cannot be deleted. Remove or reassign the invoices first.";
+        if (request()->ajax()) {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
+        LaravelFlashSessionHelper::setFlashMessage($message, 'error');
+        return redirect()->back();
+    }
+
+    try {
         if($tour){
             if ($tour->users) {
                 foreach ($tour->users as $user) {
@@ -2276,16 +2272,14 @@ public function destroy($id, $tab = null)
         TransferToDrivers::query()->where('tour_id', $id)->delete();
         TransferToBuses::query()->where('tour_id', $id)->delete();
         Comment::query()->where('reference_type', Comment::$services['tour'])->where('reference_id', $id)->delete();
-        Quotation::query()->where('tour_id', $id)->delete();
-        ClientInvoices::query()->where('tour_id', $id)->delete();
-        InvoicesTours::query()->where('invoices_tours_id', $id)->delete();
-        
+        Quotation::query()->where('tour_id', $id)->delete(); // soft delete
+
         LaravelFlashSessionHelper::setFlashMessage("Tour {$tour->name} deleted", 'success');
 
         if (request()->ajax()) {
             return response()->json([
                 'success' => true, 
-                'message' => trans('main.DeletedSuccessfully') ?? 'Deleted successfully'
+                'message' => "Tour {$tour->name} deleted"
             ]);
         }
 
@@ -2586,15 +2580,23 @@ public function destroy($id, $tab = null)
     }
 
     public function updateCalendarTour(Request $request, $id){
-        $start_date = $request->get('start_date');
-        $end_date = $request->get('end_date');
+        $this->validate($request, [
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
 
-        Tour::query()
-            ->where('id', $id)
-            ->update([
-                'departure_date' => $start_date,
-                'retirement_date' => $end_date,
-            ]);
+        $tour = Tour::findOrFail($id);
+        $dateRange = $this->findDateRange(['departure_date' => $request->start_date, 'retirement_date' => $request->end_date]);
+        if (!$dateRange) {
+            return response()->json(['success' => false, 'message' => trans('main.Perioddontshouldbebiggestthan')], 422);
+        }
+
+        $tour->departure_date = $request->start_date;
+        $tour->retirement_date = $request->end_date;
+        $tour->save();
+
+        // Keep tour days in step with the new dates, as the edit form does
+        $this->createUpdateTourDates($tour->id, $dateRange);
 
         return response()->json(true);
     }

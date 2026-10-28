@@ -334,7 +334,10 @@ class TaskController extends Controller
         $task->delete();
         Comment::query()->where('reference_type', Comment::$services['task'])->where('reference_id', $id)->delete();
 
-        LaravelFlashSessionHelper::setFlashMessage("Task {$task->content} deleted", 'success');
+        // AJAX callers show their own toast; a flash here would reappear on the next page load.
+        if (!request()->expectsJson()) {
+            LaravelFlashSessionHelper::setFlashMessage("Task {$task->content} deleted", 'success');
+        }
 
         // ✅ Return JSON for AJAX/Fetch requests
         return response()->json([

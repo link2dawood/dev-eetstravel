@@ -87,7 +87,8 @@ class AppController extends Controller
         // Get announcements data directly
         $announcements = \App\Announcement::leftJoin('users', 'users.id', '=', 'announcements.author')
             ->select('announcements.*', 'users.name as sender')
-            ->where('announcements.parent_id', null)->orderBy('announcements.created_at', 'desc')->limit(5)->get();
+            ->where('announcements.parent_id', null)->orderBy('announcements.created_at', 'desc')
+            ->orderBy('announcements.id', 'desc')->limit(5)->get();
 
         // ==========================================
         // == START OF FIX ==========================
@@ -328,6 +329,9 @@ class AppController extends Controller
         $tourTasks = $user->getTasksAttachedToUserForCalendar($startDate, $endDate);
 
         foreach ($tourTasks as $tourTask) {
+            if (!$tourTask->dead_line) {
+                continue;
+            }
             $endDate = Carbon::parse($tourTask->dead_line);
             $tourTasksEvents[] = [
                 'title' => $tourTask->content,
@@ -384,10 +388,12 @@ class AppController extends Controller
                     $task->description = $description;
                     $task->dead_line = Carbon::parse($date)->format('Y-m-d H:i:s');
                     $task->status = 2; // Pending status
+                    $task->assign = $user->id;
+                    $task->task_type = 1; // Personal
                     $task->save();
 
                     // Attach task to current user
-                    $task->users()->attach($user->id);
+                    $task->assigned_users()->attach($user->id);
 
                     $eventData = [
                         'id' => $task->id,
@@ -427,10 +433,12 @@ class AppController extends Controller
                     $task->description = $description;
                     $task->dead_line = Carbon::parse($date)->format('Y-m-d H:i:s');
                     $task->status = 2; // Pending status
+                    $task->assign = $user->id;
+                    $task->task_type = 1; // Personal
                     $task->save();
 
                     // Attach task to current user
-                    $task->users()->attach($user->id);
+                    $task->assigned_users()->attach($user->id);
 
                     $eventData = [
                         'id' => $task->id,

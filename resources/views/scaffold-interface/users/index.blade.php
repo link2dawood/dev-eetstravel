@@ -57,7 +57,7 @@
                                     <span class="text-secondary">{{ $user->email }}</span>
                                 </td>
                                 <td>
-                                    @if(!empty($user->roles))
+                                    @if($user->roles->isNotEmpty())
                                         <div class="badges-list">
                                             @foreach($user->roles as $role)
                                                 <span class="badge bg-blue text-blue-fg">{{ $role->name }}</span>
@@ -68,7 +68,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if(!empty($user->permissions))
+                                    @if($user->permissions->isNotEmpty())
                                         <div class="badges-list">
                                             @foreach($user->permissions as $permission)
                                                 <span class="badge bg-orange text-orange-fg">{{ $permission->alias }}</span>

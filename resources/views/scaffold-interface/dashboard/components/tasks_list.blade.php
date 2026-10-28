@@ -1654,7 +1654,7 @@
                     return;
                 }
 
-                fetch(`/task/${taskId}`, {
+                fetch(@json(route('task.destroy', ['id' => '__TASK_ID__'])).replace('__TASK_ID__', taskId), {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',

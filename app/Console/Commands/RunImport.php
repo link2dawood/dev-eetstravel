@@ -46,6 +46,11 @@ class RunImport extends Command
 
         $parseFrequency = App\Setting::where('name', 'hotel_seasons_date')->first();
 
+        if (!$parseFrequency) {
+            echo "SKIPPED: setting hotel_seasons_date is missing\r\n";
+            return false;
+        }
+
         if (Carbon::now()->format('Y-m-d H:i:00') !== $parseFrequency->value) {
             echo "FALSE" . $parseFrequency->value . "\r\n";
             return false;

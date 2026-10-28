@@ -110,7 +110,7 @@
                                                         <i class="fa fa-users text-aqua"></i>
                                                     </div>
                                                     <div class="desc_tasks_notif">
-                                                        <span>{!! $task->tourNameNotification() !!}</span>
+                                                        <span>{{ $task->tourNameNotification() }}</span>
                                                         <small>{!! $task->dead_line !!}</small>
                                                     </div>
                                                 </a>

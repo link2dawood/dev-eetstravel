@@ -34,6 +34,21 @@ class UserController extends Controller
         $this->adminHelper = $adminHelper;
         $this->middleware('preventBackHistory');
         $this->middleware('auth');
+        // update() also saves a user's own profile, so it checks users.edit itself.
+        $this->middleware('permissions.required')->except('update');
+    }
+
+    const AVATAR_RULE = 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:5120';
+
+    /**
+     * Store an uploaded avatar under a generated name and return its public path.
+     */
+    private function storeAvatar($file)
+    {
+        $filename = $file->hashName();
+        $file->move(public_path('uploads/avatars'), $filename);
+
+        return 'uploads/avatars/' . $filename;
     }
 
 
@@ -54,7 +69,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = \App\User::all();
+        $users = \App\User::with(['roles', 'permissions'])->orderBy('name')->paginate(25);
 
         return view('scaffold-interface.users.index', compact('users'));
     }
@@ -86,10 +101,7 @@ class UserController extends Controller
         $user->password = Hash::make($request->password);
 
         if($request->hasFile('avatar')){
-            $file = $request->file('avatar');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/avatars'), $filename);
-            $user->avatar = 'uploads/avatars/' . $filename;
+            $user->avatar = $this->storeAvatar($request->file('avatar'));
         }
         $user->save();
 
@@ -130,14 +142,19 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Anyone may save their own profile; editing another account needs users.edit.
+        abort_unless((int) $id === (int) Auth::id() || Auth::user()->can('users.edit'), 403);
+        $user = \App\User::findOrFail($id);
+
         $email_login = $request->get('email_login', null);
         $email_password = $request->get('email_password', null);
         $email_server = $request->get('email_server', null);
 
         $this->validate($request, [
-            'avatar'    => 'image',
-            'name' => 'required',
-            'email' => 'required|email'
+            'avatar'   => self::AVATAR_RULE,
+            'name'     => 'required|string|max:191',
+            'email'    => 'required|email|max:191|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
 
@@ -151,14 +168,20 @@ class UserController extends Controller
 
 
 
-        $user = \App\User::findOrfail($request->user_id);
-
         $user->email = $request->email;
         $user->name = $request->name;
-        $user->location = $request->location;
-        $user->education = $request->education;
-        $user->note = $request->note;
-        $user->email_server = 1;
+        // Only the profile forms send these; the admin edit form must not wipe them.
+        foreach (['location', 'education', 'note'] as $field) {
+            if ($request->has($field)) {
+                $user->$field = $request->get($field);
+            }
+        }
+        if ($request->has('email_server')) {
+            $user->email_server = (int) $email_server;
+        } elseif ($request->filled('email_login') && !$user->email_server) {
+            // Entering mailbox credentials on the profile connects the default (EETS) server.
+            $user->email_server = \App\Email::TYPE_EETS;
+        }
         if ($request->email_login) {
 	        $user->email_login = $request->email_login;
         }
@@ -169,10 +192,7 @@ class UserController extends Controller
             $user->password = Hash::make($request->password);
         }
         if($request->hasFile('avatar')){
-            $file = $request->file('avatar');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/avatars'), $filename);
-            $user->avatar = 'uploads/avatars/' . $filename;
+            $user->avatar = $this->storeAvatar($request->file('avatar'));
         }
         $user->save();
 
@@ -188,10 +208,10 @@ class UserController extends Controller
     public function validateUser(Request $request)
     {
         $this->validate($request, [
-            'avatar'   => 'image',
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required',
+            'avatar'   => self::AVATAR_RULE,
+            'name'     => 'required|string|max:191',
+            'email'    => 'required|email|max:191|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
         ]);
         
     }
@@ -203,29 +223,32 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id, DeleteModel $deleteModel)
+    public function destroy($id, Request $request)
     {
-        try {
-            // Prevent self-deletion
-            if (Auth::id() == $id) {
-                LaravelFlashSessionHelper::setFlashMessage("You cannot delete yourself", 'error');
-                return redirect('users');
+        // The users list deletes over fetch(); a redirect would be followed as DELETE /users (405).
+        $respond = function ($success, $message) use ($request) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => $success, 'message' => $message], $success ? 200 : 422);
             }
-            
-            $user = \App\User::findOrfail($id);
-            $userName = $user->name;
-            
-            // Delete the user
-            $user->delete();
-            
-            LaravelFlashSessionHelper::setFlashMessage("User {$userName} deleted successfully", 'success');
-            
+            LaravelFlashSessionHelper::setFlashMessage($message, $success ? 'success' : 'error');
             return redirect('users');
-            
+        };
+
+        if (Auth::id() == $id) {
+            return $respond(false, 'You cannot delete yourself');
+        }
+
+        try {
+            $user = \App\User::findOrFail($id);
+            $userName = $user->name;
+            $user->delete();
+
+            return $respond(true, "User {$userName} deleted successfully");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $respond(false, 'User not found');
         } catch (\Exception $e) {
             \Log::error('Error deleting user: ' . $e->getMessage());
-            LaravelFlashSessionHelper::setFlashMessage("Error deleting user: " . $e->getMessage(), 'error');
-            return redirect('users');
+            return $respond(false, 'Error deleting user');
         }
     }
 

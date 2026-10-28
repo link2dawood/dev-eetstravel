@@ -114,7 +114,7 @@ class Task extends Model
 
     public function getDeadLineAttribute($value)
     {
-        return Carbon::parse($value)->format('Y-m-d H:i');
+        return $value ? Carbon::parse($value)->format('Y-m-d H:i') : null;
     }
 
     // Removed getAssignAttribute accessor to prevent conflicts

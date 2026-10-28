@@ -258,40 +258,40 @@ Route::group(['middleware' => 'web'], function () {
 		Route::get('offer/{id}/deleteMsg','\App\Http\Controllers\OfferController@DeleteMsg')->name('offer.deleteMsg');
     Route::match(['POST', 'DELETE'], 'offer/{id}/delete','\App\Http\Controllers\OfferController@destroy')->name('offer.destroy');
 		Route::get('offer/{id}/assign_to_tour','\App\Http\Controllers\OfferController@assign_to_tour')->name('offer.assign_tour');
-		Route::post('offer/{id}/days_dropdown','\App\Http\Controllers\TourController@days_dropdown')->name('offer.days_dropdown');
-		Route::get('/monthly_chart_data', 'TourController@monthly_chart_data')->name('monthly_chart_data');
-		Route::get('update-status/{id}', '\App\Http\Controllers\TourController@updateStatus');
-		Route::get('/cancelled_chart_data', 'TourController@cancelled_chart_data')->name('cancelled_chart_data');
-		Route::get('/tour_achieve_data', 'TourController@tour_achieve_data')->name('tour_achieve_data');
+		Route::post('offer/{id}/days_dropdown', ['uses' => '\App\Http\Controllers\TourController@days_dropdown', 'permissions' => 'tour.show'])->name('offer.days_dropdown');
+		Route::get('/monthly_chart_data', ['uses' => 'TourController@monthly_chart_data', 'permissions' => 'tour.show'])->name('monthly_chart_data');
+		Route::get('update-status/{id}', ['uses' => '\App\Http\Controllers\TourController@updateStatus', 'permissions' => 'tour.edit']);
+		Route::get('/cancelled_chart_data', ['uses' => 'TourController@cancelled_chart_data', 'permissions' => 'tour.show'])->name('cancelled_chart_data');
+		Route::get('/tour_achieve_data', ['uses' => 'TourController@tour_achieve_data', 'permissions' => 'tour.show'])->name('tour_achieve_data');
 	});
 //tour Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::post('tour/save', '\App\Http\Controllers\TourController@store');
+        Route::post('tour/save', ['uses' => '\App\Http\Controllers\TourController@store', 'permissions' => 'tour.create']);
         Route::resource('tour', '\App\Http\Controllers\TourController');
-        Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
+        Route::post('tour/{id}/update', ['uses' => '\App\Http\Controllers\TourController@update', 'permissions' => 'tour.edit']);
         Route::match(['POST', 'DELETE'], 'tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
-        Route::get('tour/{id}/deleteMsg', '\App\Http\Controllers\TourController@DeleteMsg')->name('tour.deleteMsg');
-        Route::match(['POST', 'DELETE'], 'tour/{id}/delete/{tab}', '\App\Http\Controllers\TourController@destroy')->name('tour_tab.destroy');
-        Route::get('tour/{id}/deleteMsg/{tab}', '\App\Http\Controllers\TourController@DeleteMsg');
-        Route::post('tour/{id}/generatePackages', '\App\Http\Controllers\TourController@generatePackages')->name('generate_packages');
-        Route::get('/tour/{id}/api/{export}/{type?}', '\App\Http\Controllers\TourController@export')->name('tour_export');
-        Route::get('/tour/{id}/pdf_data', '\App\Http\Controllers\TourController@pdfData')->name('pdf_data');
-        Route::get('tour/api/tasks_data', '\App\Http\Controllers\TourController@tasksData')->name('tasks_data_tour');
-        Route::get('tour/{id}/clone', 'TourController@cloneTour')->name('tour_clone');
-        Route::get('/tour/{id}/export/html', 'TourController@htmlExport')->name('tour_html_export');
-        Route::get('/tour/{id}/doc/{doc_type}', 'TourController@docExport')->name('tour_doc_export');
-        Route::get('/tour/{id}/export/{pdf_type}', 'TourController@pdfExport')->name('tour_pdf_export');
+        Route::get('tour/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\TourController@DeleteMsg', 'permissions' => 'tour.destroy'])->name('tour.deleteMsg');
+        Route::match(['POST', 'DELETE'], 'tour/{id}/delete/{tab}', ['uses' => '\App\Http\Controllers\TourController@destroy', 'permissions' => 'tour.destroy'])->name('tour_tab.destroy');
+        Route::get('tour/{id}/deleteMsg/{tab}', ['uses' => '\App\Http\Controllers\TourController@DeleteMsg', 'permissions' => 'tour.destroy']);
+        Route::post('tour/{id}/generatePackages', ['uses' => '\App\Http\Controllers\TourController@generatePackages', 'permissions' => 'tour.edit'])->name('generate_packages');
+        Route::get('/tour/{id}/api/{export}/{type?}', ['uses' => '\App\Http\Controllers\TourController@export', 'permissions' => 'tour.show'])->name('tour_export');
+        Route::get('/tour/{id}/pdf_data', ['uses' => '\App\Http\Controllers\TourController@pdfData', 'permissions' => 'tour.show'])->name('pdf_data');
+        Route::get('tour/api/tasks_data', ['uses' => '\App\Http\Controllers\TourController@tasksData', 'permissions' => 'tour.show'])->name('tasks_data_tour');
+        Route::get('tour/{id}/clone', ['uses' => 'TourController@cloneTour', 'permissions' => 'tour.create'])->name('tour_clone');
+        Route::get('/tour/{id}/export/html', ['uses' => 'TourController@htmlExport', 'permissions' => 'tour.show'])->name('tour_html_export');
+        Route::get('/tour/{id}/doc/{doc_type}', ['uses' => 'TourController@docExport', 'permissions' => 'tour.show'])->name('tour_doc_export');
+        Route::get('/tour/{id}/export/{pdf_type}', ['uses' => 'TourController@pdfExport', 'permissions' => 'tour.show'])->name('tour_pdf_export');
         Route::get('/tour/api/country_list', 'TourController@countryList');
         Route::get('/tour/api/status_list', 'TourController@statusList');
-        Route::post('tour/{id}/updateCalendar', '\App\Http\Controllers\TourController@updateCalendarTour');
-        Route::post('/change_tour_price', '\App\Http\Controllers\TourController@changeTourPrice');
-        Route::post('/get_tour_days', '\App\Http\Controllers\TourController@getTourDays');
-        Route::post('/get_tour_days_id', '\App\Http\Controllers\TourController@getTourDaysId');
-        Route::get('/checkTourDayConfirmedHotel', '\App\Http\Controllers\TourController@checkTourDayConfirmedHotel');
-	    Route::get('tour/{id}/convert_to_tour', 'TourController@convertToTour')->name('tour.convert_to_tour');
-		Route::get('tour/{id}/convert_to_quotation', 'TourController@convertToQuotation')->name('tour.convertToQuotation');
-		Route::post('/update_voucherid', '\App\Http\Controllers\TourController@update_voucherid');
-        Route::post('/update_itnid', '\App\Http\Controllers\TourController@update_itnid');
+        Route::post('tour/{id}/updateCalendar', ['uses' => '\App\Http\Controllers\TourController@updateCalendarTour', 'permissions' => 'tour.edit']);
+        Route::post('/change_tour_price', ['uses' => '\App\Http\Controllers\TourController@changeTourPrice', 'permissions' => 'tour.edit']);
+        Route::post('/get_tour_days', ['uses' => '\App\Http\Controllers\TourController@getTourDays', 'permissions' => 'tour.show']);
+        Route::post('/get_tour_days_id', ['uses' => '\App\Http\Controllers\TourController@getTourDaysId', 'permissions' => 'tour.show']);
+        Route::get('/checkTourDayConfirmedHotel', ['uses' => '\App\Http\Controllers\TourController@checkTourDayConfirmedHotel', 'permissions' => 'tour.show']);
+	    Route::get('tour/{id}/convert_to_tour', ['uses' => 'TourController@convertToTour', 'permissions' => 'tour.edit'])->name('tour.convert_to_tour');
+		Route::get('tour/{id}/convert_to_quotation', ['uses' => 'TourController@convertToQuotation', 'permissions' => 'tour.edit'])->name('tour.convertToQuotation');
+		Route::post('/update_voucherid', ['uses' => '\App\Http\Controllers\TourController@update_voucherid', 'permissions' => 'tour.edit']);
+        Route::post('/update_itnid', ['uses' => '\App\Http\Controllers\TourController@update_itnid', 'permissions' => 'tour.edit']);
 		
     });
 
@@ -485,17 +485,20 @@ Route::group(['middleware'=> 'web'],function(){
         Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
         Route::post('/comment/generate-comments', 'CommentController@getComments');
     });
-Route::group(['middleware' => ['web', 'auth']], function () {
+// UserController applies permissions.required; these route names are not permissions themselves.
+Route::group(['middleware' => ['web', 'auth'], 'permissions' => 'users.destroy'], function () {
     Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
         ->name('users.deleteMsg');
+});
 
+Route::group(['middleware' => ['web', 'auth'], 'permissions' => 'users.edit'], function () {
     Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')
         ->name('user.remove_role');
     Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole')
         ->name('users.addRole');
     Route::post('users/addPermission', 'ScaffoldInterface\UserController@addPermission')
         ->name('users.addPermission');
-    Route::get('users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
+    Route::match(['POST', 'DELETE'], 'users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
         ->name('users.revokePermission');
 });
 
@@ -514,13 +517,15 @@ Route::group(['middleware' => ['web', 'auth']], function () {
     });
 
     Route::group(['middleware' => 'web'], function () {
-        Route::get('/roles/{id}/deleteMsg', 'ScaffoldInterface\RoleController@deleteMsg');
+        Route::get('/roles/{id}/deleteMsg', ['uses' => 'ScaffoldInterface\RoleController@deleteMsg', 'permissions' => 'roles.destroy']);
     });
     Route::group(['middleware' => 'web'], function () {
-        Route::get('/permissions/{id}/deleteMsg', 'ScaffoldInterface\PermissionController@deleteMsg');
+        Route::get('/permissions/{id}/deleteMsg', ['uses' => 'ScaffoldInterface\PermissionController@deleteMsg', 'permissions' => 'permissions.destroy']);
     });
-    Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission');
-    Route::get('roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission');
+    Route::group(['middleware' => 'web', 'permissions' => 'roles.edit'], function () {
+        Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission')->name('roles.addPermission');
+        Route::match(['POST', 'DELETE'], 'roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission')->name('roles.revokePermission');
+    });
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('flights', 'FlightController');
@@ -529,7 +534,7 @@ Route::group(['middleware' => ['web', 'auth']], function () {
     });
 
     Route::group(['middleware' => 'web'], function(){
-        Route::resource('settings', 'SettingController');
+        Route::resource('settings', 'SettingController')->except(['show']);
     });
 
     Route::get('/supplier_search', 'SupplierSearchController@index')->name('supplier_search');
@@ -563,25 +568,25 @@ Route::get('/home', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\A
 });
 Route::get('/home/getToursForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursForCalendar',
                                          'middleware'  => ['auth', 'permissions.required'],
-                                         'permissions' => 'dashboard.index',
+                                         'permissions' => 'dashboard.tours_calendar',
                                          'as'          => 'dashboard.getToursForCalendar'
 ]);
 
 Route::get('/home/getToursForCalendarByUser/{id}', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursForCalendar',
     'middleware'  => ['auth', 'permissions.required'],
-    'permissions' => 'dashboard.index',
+    'permissions' => 'dashboard.tours_calendar',
     'as'          => 'dashboard.getToursForCalendar'
 ]);
 
 Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursTasksForCalendar',
                                               'middleware'  => ['auth', 'permissions.required'],
-                                              'permissions' => 'dashboard.index',
+                                              'permissions' => 'dashboard.calendar',
                                               'as'          => 'dashboard.getToursTasksForCalendar'
 ]);
 
 Route::post('/calendar/quick-create', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@quickCreateCalendarEvent',
                                        'middleware'  => ['auth', 'permissions.required'],
-                                       'permissions' => 'dashboard.index',
+                                       'permissions' => 'task.create',
                                        'as'          => 'calendar.quick-create'
 ]);
 /*
@@ -599,7 +604,7 @@ Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Contro
 
 Route::post('chat/message', ['uses'        => '\App\Http\Controllers\ChatController@postMessage',
                     'middleware'  => ['auth', 'permissions.required'],
-                    'permissions' => 'chat.post',
+                    'permissions' => 'chat.main',
                     'as'          => 'chat.post'
 ]);
 
@@ -616,8 +621,9 @@ Route::group(['middleware' => 'web'], function () {
 
 });
 
-Route::group(['middleware' => 'web'], function () {
-    Route::get('/chat/{id}/renderChat', 'ChatController@renderChat')->name('chat.renderChat');
+// ChatController applies permissions.required; most chat route names are not permissions, so use chat.main.
+Route::group(['middleware' => 'web', 'permissions' => 'chat.main'], function () {
+    Route::get('/chat/{id}/renderChat','ChatController@renderChat')->name('chat.renderChat');
     Route::get('/chat/main', 'ChatController@main')->name('chat.main');
 	Route::get('/chat/{id}/deleteMsg', 'ChatController@delete')->name('chat.deleteMsg');
 	Route::match(['POST', 'DELETE'], '/chat/{id}/destroy_chat', 'ChatController@destroy')->name('chat.destroy_chat');
@@ -643,13 +649,13 @@ Route::group(['middleware' => 'web'], function () {
 });
 Route::group(['middleware' => 'web'], function () {
 	Route::resource( 'roles', '\App\Http\Controllers\ScaffoldInterface\RoleController' );
-    Route::post('/roles/store', 'ScaffoldInterface\RoleController@store');
-	Route::post('/roles/update', 'ScaffoldInterface\RoleController@update');
+    Route::post('/roles/store', ['uses' => 'ScaffoldInterface\RoleController@store', 'permissions' => 'roles.create']);
+	Route::post('/roles/update', ['uses' => 'ScaffoldInterface\RoleController@update', 'permissions' => 'roles.edit']);
 });
 Route::group(['middleware' => 'web'], function () {
 	Route::resource( 'permissions', '\App\Http\Controllers\ScaffoldInterface\PermissionController' );
-    Route::post('/permissions/store', 'ScaffoldInterface\PermissionController@store');
-    Route::post('/permissions/update', 'ScaffoldInterface\PermissionController@update');
+    Route::post('/permissions/store', ['uses' => 'ScaffoldInterface\PermissionController@store', 'permissions' => 'permissions.create']);
+    Route::post('/permissions/update', ['uses' => 'ScaffoldInterface\PermissionController@update', 'permissions' => 'permissions.edit']);
 });
 
 //===============================================================================
@@ -766,7 +772,10 @@ Route::group(['middleware' => 'web'], function () {
 	Route::resource('menu', 'MenuController');	
 });
 
-Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landing_page');
+// Public client page, addressed by an unguessable token rather than the tour id
+Route::get('/tour/landingpage/{token}', 'TourController@landingPage')->where('token', '[A-Za-z0-9]{40}')->name('landing_page');
+// Old id link: staff only, forwards to the token URL
+Route::get('/tour/{id}/landingpage', ['uses' => 'TourController@landingPageById', 'permissions' => 'tour.show'])->middleware('auth')->name('landing_page_by_id');
 
 
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');

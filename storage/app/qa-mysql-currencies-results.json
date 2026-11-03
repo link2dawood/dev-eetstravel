@@ -1,0 +1,103 @@
+{
+    "date": "2026-10-30T16:51:33+00:00",
+    "reference_columns": [
+        {
+            "name": "client_invoices",
+            "field": "currency"
+        },
+        {
+            "name": "currency_rates",
+            "field": "currency"
+        },
+        {
+            "name": "hotel_offers",
+            "field": "currency"
+        },
+        {
+            "name": "tour_packages",
+            "field": "currency"
+        }
+    ],
+    "results": [
+        {
+            "check": "Create redirects normally",
+            "status": "passed"
+        },
+        {
+            "check": "CU5 currency code stored in uppercase",
+            "status": "passed"
+        },
+        {
+            "check": "Update ignores own unique code and preserves symbol",
+            "status": "passed"
+        },
+        {
+            "check": "CU4 duplicate code rejected case-insensitively",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid code rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid symbol rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid cent rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid symbol_cent rejected",
+            "status": "passed"
+        },
+        {
+            "check": "CU1 deletion blocked by tour_packages",
+            "status": "passed"
+        },
+        {
+            "check": "Used code cannot change: tour_packages",
+            "status": "passed"
+        },
+        {
+            "check": "CU1 deletion blocked by hotel_offers",
+            "status": "passed"
+        },
+        {
+            "check": "Used code cannot change: hotel_offers",
+            "status": "passed"
+        },
+        {
+            "check": "CU1 deletion blocked by client_invoices",
+            "status": "passed"
+        },
+        {
+            "check": "Used code cannot change: client_invoices",
+            "status": "passed"
+        },
+        {
+            "check": "CU1 deletion blocked by currency_rates",
+            "status": "passed"
+        },
+        {
+            "check": "Used code cannot change: currency_rates",
+            "status": "passed"
+        },
+        {
+            "check": "Unused currency deletes with JSON success",
+            "status": "passed"
+        },
+        {
+            "check": "List pagination executes",
+            "status": "passed"
+        },
+        {
+            "check": "All currency\/reference\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

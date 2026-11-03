@@ -1,0 +1,91 @@
+{
+    "date": "2026-10-30T15:18:33+00:00",
+    "collations": [
+        {
+            "name": "client_invoices",
+            "collation": "utf8mb4_unicode_ci"
+        },
+        {
+            "name": "invoices_tours",
+            "collation": "utf8mb4_unicode_ci"
+        },
+        {
+            "name": "office_fees",
+            "collation": "utf8mb4_unicode_ci"
+        },
+        {
+            "name": "supplier_invoices",
+            "collation": "utf8mb4_unicode_ci"
+        }
+    ],
+    "results": [
+        {
+            "check": "DR11 finance tables already use utf8mb4",
+            "status": "passed"
+        },
+        {
+            "check": "Fixture tables support rollback",
+            "status": "passed"
+        },
+        {
+            "check": "DR5 create redirects normal form",
+            "status": "passed"
+        },
+        {
+            "check": "Unicode name persists unchanged",
+            "status": "passed"
+        },
+        {
+            "check": "DR7 duplicate email rejected",
+            "status": "passed"
+        },
+        {
+            "check": "DR5 update redirects and preserves own email",
+            "status": "passed"
+        },
+        {
+            "check": "DR6\/DR7 invalid transfer_id rejected by controller",
+            "status": "passed"
+        },
+        {
+            "check": "DR6\/DR7 invalid phone rejected by controller",
+            "status": "passed"
+        },
+        {
+            "check": "DR6\/DR7 invalid name rejected by controller",
+            "status": "passed"
+        },
+        {
+            "check": "DR6\/DR7 invalid name rejected by controller",
+            "status": "passed"
+        },
+        {
+            "check": "DR8 deleted company rejected",
+            "status": "passed"
+        },
+        {
+            "check": "DR1 trip_to_drivers assignment blocks deletion",
+            "status": "passed"
+        },
+        {
+            "check": "DR1 transfer_to_drivers assignment blocks deletion",
+            "status": "passed"
+        },
+        {
+            "check": "DR2 unused driver deletes without 500",
+            "status": "passed"
+        },
+        {
+            "check": "DR4 missing company gives 404: getDriverAndBusTransfer",
+            "status": "passed"
+        },
+        {
+            "check": "DR4 missing company gives 404: getDriverAndBusTransferForTable",
+            "status": "passed"
+        },
+        {
+            "check": "Fixture row counts unchanged after rollback",
+            "status": "passed"
+        }
+    ]
+}

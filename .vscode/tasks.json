@@ -1,0 +1,98 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Back up XAMPP Apache config",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"if not exist \"F:\\xamp\\apache\\conf\\httpd.conf.before-laravel-vhost-20261101-002500.bak\" copy \"F:\\xamp\\apache\\conf\\httpd.conf\" \"F:\\xamp\\apache\\conf\\httpd.conf.before-laravel-vhost-20261101-002500.bak\" && if not exist \"F:\\xamp\\apache\\conf\\extra\\httpd-vhosts.conf.before-laravel-vhost-20261101-002500.bak\" copy \"F:\\xamp\\apache\\conf\\extra\\httpd-vhosts.conf\" \"F:\\xamp\\apache\\conf\\extra\\httpd-vhosts.conf.before-laravel-vhost-20261101-002500.bak\""
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Validate XAMPP Laravel vhost",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"\"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -t && \"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -S && \"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -M"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start local Laravel Apache",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"\"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -t && \"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -k start"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run local Apache without service install",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"\"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -t && \"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" -S && start \"Laravel Apache local\" \"F:\\xamp\\apache\\bin\\httpd.exe\" -f \"F:\\xamp\\apache\\conf\\httpd.conf\" && timeout /t 3 /nobreak >nul && netstat -ano | findstr \"127.0.0.1:8000\""
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Apache foreground for Laravel validation",
+			"type": "shell",
+			"command": "F:\\xamp\\apache\\bin\\httpd.exe",
+			"args": [
+				"-f",
+				"F:\\xamp\\apache\\conf\\httpd.conf"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect port 80 ownership",
+			"type": "shell",
+			"command": "netstat.exe",
+			"args": [
+				"-ano"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Identify port 80 listener",
+			"type": "shell",
+			"command": "tasklist.exe",
+			"args": [
+				"/FI",
+				"PID eq 17184",
+				"/FO",
+				"LIST"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect Apache listener command line",
+			"type": "shell",
+			"command": "wmic.exe",
+			"args": [
+				"process",
+				"where",
+				"ProcessId=17184",
+				"get",
+				"ExecutablePath,CommandLine,ParentProcessId",
+				"/format:list"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

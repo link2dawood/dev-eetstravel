@@ -1,0 +1,69 @@
+{
+    "date": "2026-10-30T16:40:09+00:00",
+    "results": [
+        {
+            "check": "Create redirects to rate list",
+            "status": "passed"
+        },
+        {
+            "check": "Update persists Unicode name and own unique name",
+            "status": "passed"
+        },
+        {
+            "check": "RA6 duplicate name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid mark rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid rate_type rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid sort_order rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RA1\/RA2 deletion blocked by hotels",
+            "status": "passed"
+        },
+        {
+            "check": "RA1\/RA2 deletion blocked by events",
+            "status": "passed"
+        },
+        {
+            "check": "RA1\/RA2 deletion blocked by restaurants",
+            "status": "passed"
+        },
+        {
+            "check": "RA1\/RA2 deletion blocked by guides",
+            "status": "passed"
+        },
+        {
+            "check": "RA1\/RA2 deletion blocked by transfers",
+            "status": "passed"
+        },
+        {
+            "check": "Unused rate deletes successfully",
+            "status": "passed"
+        },
+        {
+            "check": "Rate list joins and pagination execute",
+            "status": "passed"
+        },
+        {
+            "check": "RA5 remaining non-null types are valid",
+            "status": "passed"
+        },
+        {
+            "check": "All rate\/supplier\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

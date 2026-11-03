@@ -1,0 +1,154 @@
+[
+    {
+        "id": 1,
+        "currency": "CZK",
+        "rate": 25.53,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 2,
+        "currency": "EUR",
+        "rate": 1,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 3,
+        "currency": "HUF",
+        "rate": 284.18,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 4,
+        "currency": "LTL",
+        "rate": 3.45,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 5,
+        "currency": "GBP",
+        "rate": 0.77,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2025-09-18 17:22:11"
+    },
+    {
+        "id": 6,
+        "currency": "BGN",
+        "rate": 1.96,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 7,
+        "currency": "JPY",
+        "rate": 103.44,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 8,
+        "currency": "ZAR",
+        "rate": 11.29,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:39",
+        "updated_at": "2017-08-25 14:26:39"
+    },
+    {
+        "id": 9,
+        "currency": "DKK",
+        "rate": 7.46,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:40",
+        "updated_at": "2017-08-25 14:26:40"
+    },
+    {
+        "id": 10,
+        "currency": "LVL",
+        "rate": 0.7,
+        "date": "2012-11-16",
+        "created_at": "2017-08-25 14:26:40",
+        "updated_at": "2017-08-25 14:26:40"
+    },
+    {
+        "id": 12,
+        "currency": "bit coin",
+        "rate": 1000,
+        "date": "2025-12-26",
+        "created_at": "2025-09-18 17:20:09",
+        "updated_at": "2025-09-18 17:21:35"
+    },
+    {
+        "id": 13,
+        "currency": "Bit coin",
+        "rate": 1000,
+        "date": "2025-09-30",
+        "created_at": "2025-09-18 17:20:58",
+        "updated_at": "2025-09-18 17:20:58"
+    },
+    {
+        "id": 14,
+        "currency": "QAUSD",
+        "rate": 999,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:00",
+        "updated_at": "2026-10-28 14:01:53"
+    },
+    {
+        "id": 15,
+        "currency": "QAZERO",
+        "rate": 0,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:08",
+        "updated_at": "2026-10-28 14:01:08"
+    },
+    {
+        "id": 17,
+        "currency": "QABIG",
+        "rate": 999999.99,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:16",
+        "updated_at": "2026-10-28 14:01:16"
+    },
+    {
+        "id": 18,
+        "currency": "QAUSD",
+        "rate": 2,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:20",
+        "updated_at": "2026-10-28 14:01:20"
+    },
+    {
+        "id": 19,
+        "currency": "QA dollar ccy",
+        "rate": 1,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:23",
+        "updated_at": "2026-10-28 14:01:23"
+    },
+    {
+        "id": 20,
+        "currency": "QAFUT",
+        "rate": 1,
+        "date": "2099-01-01",
+        "created_at": "2026-10-28 14:01:27",
+        "updated_at": "2026-10-28 14:01:27"
+    },
+    {
+        "id": 21,
+        "currency": "QA<img src=x onerror=alert('xss-ccy')>",
+        "rate": 1,
+        "date": "2026-10-28",
+        "created_at": "2026-10-28 14:01:34",
+        "updated_at": "2026-10-28 14:01:34"
+    }
+]

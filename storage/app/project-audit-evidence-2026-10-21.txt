@@ -1,0 +1,49 @@
+Laravel\Sanctum\Sanctum: MISSING
+App\Models\User: MISSING
+App\Http\Requests\Client\StoreClientRequest: MISSING
+App\Http\Requests\Client\UpdateClientRequest: MISSING
+Auth guard [sanctum] is not defined.
+MISSING ACTION api/dashboard App\Http\Controllers\Api\DashboardController@index
+MISSING ACTION api/dashboard/statistics App\Http\Controllers\Api\DashboardController@statistics
+MISSING ACTION api/dashboard/recent-activity App\Http\Controllers\Api\DashboardController@recentActivity
+MISSING ACTION api/dashboard/upcoming-deadlines App\Http\Controllers\Api\DashboardController@upcomingDeadlines
+MISSING ACTION api/dashboard/charts App\Http\Controllers\Api\DashboardController@charts
+MISSING ACTION api/dashboard/cache/clear App\Http\Controllers\Api\DashboardController@clearCache
+MIDDLEWARE api/v1/users/{userId}/emailfolders ["api"]
+MIDDLEWARE api/v1/users/{userId}/emails ["api"]
+MIDDLEWARE api/v1/users/{userId}/touremails ["api"]
+MIDDLEWARE api/v1/users/{userId}/emails/createFolder ["api"]
+MIDDLEWARE api/v1/users/{userId}/attachment ["api"]
+MIDDLEWARE api/v1/users/{userId}/emails/send ["api"]
+MIDDLEWARE api/v1/users/{userId}/email/{emailId}/delete ["api"]
+MIDDLEWARE api/v1/users/{userId}/email/{emailId}/move ["api"]
+MIDDLEWARE api/v1/users/{userId}/email/{emailId}/get ["api"]
+MISSING ACTION api/v1/dashboard/chat_groups \App\Http\Controllers\Api\DashboardController@getChatGroups
+MISSING ACTION countries \App\Http\Controllers\ClientController@getCountries
+MISSING ACTION states/{countryCode} \App\Http\Controllers\ClientController@getStates
+MISSING ACTION reporting/create \App\Http\Controllers\ReportingController@create
+MISSING ACTION reporting \App\Http\Controllers\ReportingController@store
+MISSING ACTION reporting/{reporting}/edit \App\Http\Controllers\ReportingController@edit
+MISSING ACTION reporting/{reporting} \App\Http\Controllers\ReportingController@update
+MISSING ACTION reporting/{reporting} \App\Http\Controllers\ReportingController@destroy
+MISSING ACTION reporting/{id}/update \App\Http\Controllers\ReportingController@update
+MISSING ACTION reporting/{id}/delete \App\Http\Controllers\ReportingController@destroy
+MISSING ACTION reporting/{id}/deleteMsg \App\Http\Controllers\ReportingController@DeleteMsg
+MISSING ACTION oauth \App\Http\Controllers\gCalendarController@oauth
+MISSING ACTION calendar/list \App\Http\Controllers\gCalendarController@getCalendarListJson
+MISSING ACTION api/tour_package_transfer/{id}/delete App\Http\Controllers\TourPackageController@deleteTransferTourPackage
+MISSING ACTION get_tour_days_id_hotel_service \App\Http\Controllers\TourController@getTourDaysIdHotelService
+MISSING ACTION comment/{id}/reply App\Http\Controllers\CommentController@reply
+MISSING ACTION cruises/{id}/api/attach App\Http\Controllers\CruisesController@getAttach
+MISSING ACTION flights/{id}/api/attach App\Http\Controllers\FlightController@getAttach
+MISSING ACTION announcements/{announcement}/generate App\Http\Controllers\AnnouncementController@generateAnnouncements
+MISSING ACTION chat App\Http\Controllers\ChatController@store
+MISSING ACTION chat/{chat} App\Http\Controllers\ChatController@update
+MISSING ACTION TMS-Client-tours \App\Http\Controllers\TMSClient\TourController@index
+MISSING ACTION TMS-Client-tours/{TMS_Client_tour}/edit \App\Http\Controllers\TMSClient\TourController@edit
+MISSING ACTION TMS-Client-tours/{TMS_Client_tour} \App\Http\Controllers\TMSClient\TourController@update
+MISSING ACTION TMS-Client-tours/{TMS_Client_tour} \App\Http\Controllers\TMSClient\TourController@destroy
+Client::country MISSING
+Client::city MISSING
+Client::tours MISSING
+PHP syntax files=607 errors=0

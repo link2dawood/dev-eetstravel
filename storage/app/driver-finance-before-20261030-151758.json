@@ -1,0 +1,1701 @@
+{
+    "client_invoices": [
+        {
+            "id": 1,
+            "invoice_no": "INV-652fb029a8569",
+            "date": "2023-11-01",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "6600.00"
+        },
+        {
+            "id": 2,
+            "invoice_no": "INV-65311c9d329bd",
+            "date": "2023-11-02",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 10,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "0.00"
+        },
+        {
+            "id": 3,
+            "invoice_no": "INV-65311cb00bf59",
+            "date": "2023-11-02",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 12,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "0.00"
+        },
+        {
+            "id": 4,
+            "invoice_no": "INV-65311d2cb12f8",
+            "date": "2023-11-02",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 16,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "1.00"
+        },
+        {
+            "id": 5,
+            "invoice_no": "INV-6541138936651",
+            "date": "2023-11-14",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 18,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "550.00"
+        },
+        {
+            "id": 6,
+            "invoice_no": "INV-6543061ee3fc0",
+            "date": "2023-11-16",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "1000.00"
+        },
+        {
+            "id": 7,
+            "invoice_no": "INV-654921b5c7437",
+            "date": "2023-11-20",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "2556.00"
+        },
+        {
+            "id": 8,
+            "invoice_no": "INV-654921c51c503",
+            "date": "2023-11-20",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 5,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "12.00"
+        },
+        {
+            "id": 9,
+            "invoice_no": "INV-6549e69142c9a",
+            "date": "2023-11-21",
+            "currency": "USD",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "100.00"
+        },
+        {
+            "id": 10,
+            "invoice_no": "INV-655cab634a44a",
+            "date": "2023-12-05",
+            "currency": "Euro",
+            "office_id": 1,
+            "tour_id": 20,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "698.00"
+        },
+        {
+            "id": 11,
+            "invoice_no": "INV-6565c3479959f",
+            "date": "2023-12-12",
+            "currency": "Euro",
+            "office_id": 4,
+            "tour_id": 6,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "360.00"
+        },
+        {
+            "id": 12,
+            "invoice_no": "INV-65893c927eec6",
+            "date": "2024-01-08",
+            "currency": "USD",
+            "office_id": 1,
+            "tour_id": 31,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "",
+            "amount_receiveable": "1156.00"
+        },
+        {
+            "id": 13,
+            "invoice_no": "INV-6597908feec01",
+            "date": "2024-01-19",
+            "currency": "USD",
+            "office_id": 1,
+            "tour_id": 4,
+            "client_id": 6,
+            "extra_cost": 2000,
+            "note": "test",
+            "amount_receiveable": "1300.00"
+        },
+        {
+            "id": 14,
+            "invoice_no": "INV-659e2ca35fdb4",
+            "date": "2024-01-24",
+            "currency": "USD",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": null,
+            "note": null,
+            "amount_receiveable": "3400.00"
+        },
+        {
+            "id": 15,
+            "invoice_no": "INV-65ae3e7b0a254",
+            "date": "2024-02-05",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": null,
+            "note": null,
+            "amount_receiveable": "12.00"
+        },
+        {
+            "id": 16,
+            "invoice_no": "INV-65bc9976cade9",
+            "date": "2024-02-16",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 3,
+            "client_id": 6,
+            "extra_cost": null,
+            "note": null,
+            "amount_receiveable": "100000.00"
+        },
+        {
+            "id": 17,
+            "invoice_no": "INV-690cb3fc1b613",
+            "date": "2025-11-20",
+            "currency": "EUR",
+            "office_id": 9,
+            "tour_id": 11,
+            "client_id": 13,
+            "extra_cost": 86,
+            "note": "Aspernatur explicabo",
+            "amount_receiveable": "14040.00"
+        },
+        {
+            "id": 18,
+            "invoice_no": "INV-690cb4089ae6d",
+            "date": "2025-11-20",
+            "currency": "EUR",
+            "office_id": 9,
+            "tour_id": 11,
+            "client_id": 13,
+            "extra_cost": 86,
+            "note": "Aspernatur explicabo",
+            "amount_receiveable": "14040.00"
+        },
+        {
+            "id": 19,
+            "invoice_no": "INV-6914ed84cd20e",
+            "date": "2025-11-26",
+            "currency": "CHF",
+            "office_id": 1,
+            "tour_id": 26,
+            "client_id": 11,
+            "extra_cost": 11,
+            "note": "Exercitationem odit",
+            "amount_receiveable": "36113.00"
+        },
+        {
+            "id": 20,
+            "invoice_no": "INV-691517842355b",
+            "date": "2025-11-26",
+            "currency": "USD",
+            "office_id": 1,
+            "tour_id": 40,
+            "client_id": 13,
+            "extra_cost": 96,
+            "note": "Maxime exercitatione",
+            "amount_receiveable": "6174.00"
+        },
+        {
+            "id": 21,
+            "invoice_no": "INV-69151a7ed6a1b",
+            "date": "2025-11-26",
+            "currency": "EUR",
+            "office_id": 8,
+            "tour_id": 31,
+            "client_id": 9,
+            "extra_cost": 58,
+            "note": "Blanditiis aperiam e",
+            "amount_receiveable": "11421.00"
+        },
+        {
+            "id": 26,
+            "invoice_no": "CI-TAALYI",
+            "date": "2026-06-17",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 123,
+            "client_id": 6,
+            "extra_cost": 0,
+            "note": "Test client invoice.",
+            "amount_receiveable": "18500.00"
+        },
+        {
+            "id": 27,
+            "invoice_no": "QA-SAMPLE-CLIENT-UNPAID-27",
+            "date": "2026-10-16",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 124,
+            "client_id": 21,
+            "extra_cost": null,
+            "note": "QA Sample accounting UNPAID",
+            "amount_receiveable": "240.00"
+        },
+        {
+            "id": 28,
+            "invoice_no": "QA-SAMPLE-CLIENT-PARTIAL-28",
+            "date": "2026-10-16",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 124,
+            "client_id": 21,
+            "extra_cost": null,
+            "note": "QA Sample accounting PARTIAL",
+            "amount_receiveable": "240.00"
+        },
+        {
+            "id": 29,
+            "invoice_no": "QA-SAMPLE-CLIENT-PAID-29",
+            "date": "2026-10-16",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 124,
+            "client_id": 21,
+            "extra_cost": null,
+            "note": "QA Sample accounting PAID",
+            "amount_receiveable": "240.00"
+        },
+        {
+            "id": 30,
+            "invoice_no": "INV-5bd3f74b-ac1d-43a5-bdbd-8bc61122c201",
+            "date": "2026-10-28",
+            "currency": "EUR",
+            "office_id": 1,
+            "tour_id": 136,
+            "client_id": 987995,
+            "extra_cost": 10,
+            "note": "QA Invoice valid",
+            "amount_receiveable": "250.00"
+        }
+    ],
+    "invoices_tours": [
+        {
+            "id": 2,
+            "invoices_id": 2,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 3,
+            "invoices_id": 3,
+            "invoices_tours_id": 4,
+            "package_id": 56
+        },
+        {
+            "id": 4,
+            "invoices_id": 4,
+            "invoices_tours_id": 5,
+            "package_id": 123
+        },
+        {
+            "id": 5,
+            "invoices_id": 5,
+            "invoices_tours_id": 6,
+            "package_id": 87
+        },
+        {
+            "id": 6,
+            "invoices_id": 6,
+            "invoices_tours_id": 8,
+            "package_id": 96
+        },
+        {
+            "id": 7,
+            "invoices_id": 7,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 8,
+            "invoices_id": 8,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 9,
+            "invoices_id": 9,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 10,
+            "invoices_id": 10,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 11,
+            "invoices_id": 11,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 12,
+            "invoices_id": 12,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 13,
+            "invoices_id": 13,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 14,
+            "invoices_id": 14,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 15,
+            "invoices_id": 15,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 16,
+            "invoices_id": 16,
+            "invoices_tours_id": 31,
+            "package_id": 254
+        },
+        {
+            "id": 17,
+            "invoices_id": 17,
+            "invoices_tours_id": 33,
+            "package_id": 269
+        },
+        {
+            "id": 18,
+            "invoices_id": 18,
+            "invoices_tours_id": 28,
+            "package_id": 256
+        },
+        {
+            "id": 19,
+            "invoices_id": 19,
+            "invoices_tours_id": 4,
+            "package_id": 54
+        },
+        {
+            "id": 20,
+            "invoices_id": 20,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 21,
+            "invoices_id": 21,
+            "invoices_tours_id": 5,
+            "package_id": 170
+        },
+        {
+            "id": 22,
+            "invoices_id": 22,
+            "invoices_tours_id": 7,
+            "package_id": 90
+        },
+        {
+            "id": 23,
+            "invoices_id": 23,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 24,
+            "invoices_id": 30,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 25,
+            "invoices_id": 31,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 26,
+            "invoices_id": 32,
+            "invoices_tours_id": 5,
+            "package_id": 0
+        },
+        {
+            "id": 27,
+            "invoices_id": 33,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 28,
+            "invoices_id": 39,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 29,
+            "invoices_id": 40,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 30,
+            "invoices_id": 41,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 31,
+            "invoices_id": 42,
+            "invoices_tours_id": 3,
+            "package_id": 309
+        },
+        {
+            "id": 32,
+            "invoices_id": 43,
+            "invoices_tours_id": 5,
+            "package_id": 293
+        },
+        {
+            "id": 33,
+            "invoices_id": 44,
+            "invoices_tours_id": 5,
+            "package_id": 187
+        },
+        {
+            "id": 34,
+            "invoices_id": 45,
+            "invoices_tours_id": 5,
+            "package_id": 76
+        },
+        {
+            "id": 35,
+            "invoices_id": 46,
+            "invoices_tours_id": 3,
+            "package_id": 120
+        },
+        {
+            "id": 36,
+            "invoices_id": 47,
+            "invoices_tours_id": 42,
+            "package_id": 383
+        },
+        {
+            "id": 37,
+            "invoices_id": 48,
+            "invoices_tours_id": 42,
+            "package_id": 382
+        },
+        {
+            "id": 38,
+            "invoices_id": 49,
+            "invoices_tours_id": 40,
+            "package_id": 372
+        },
+        {
+            "id": 39,
+            "invoices_id": 50,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 40,
+            "invoices_id": 50,
+            "invoices_tours_id": 5,
+            "package_id": 0
+        },
+        {
+            "id": 41,
+            "invoices_id": 50,
+            "invoices_tours_id": 6,
+            "package_id": 0
+        },
+        {
+            "id": 42,
+            "invoices_id": 50,
+            "invoices_tours_id": 9,
+            "package_id": 0
+        },
+        {
+            "id": 43,
+            "invoices_id": 50,
+            "invoices_tours_id": 10,
+            "package_id": 0
+        },
+        {
+            "id": 44,
+            "invoices_id": 50,
+            "invoices_tours_id": 13,
+            "package_id": 0
+        },
+        {
+            "id": 45,
+            "invoices_id": 50,
+            "invoices_tours_id": 14,
+            "package_id": 0
+        },
+        {
+            "id": 46,
+            "invoices_id": 50,
+            "invoices_tours_id": 15,
+            "package_id": 0
+        },
+        {
+            "id": 47,
+            "invoices_id": 50,
+            "invoices_tours_id": 19,
+            "package_id": 0
+        },
+        {
+            "id": 48,
+            "invoices_id": 50,
+            "invoices_tours_id": 26,
+            "package_id": 0
+        },
+        {
+            "id": 49,
+            "invoices_id": 50,
+            "invoices_tours_id": 28,
+            "package_id": 0
+        },
+        {
+            "id": 51,
+            "invoices_id": 50,
+            "invoices_tours_id": 35,
+            "package_id": 0
+        },
+        {
+            "id": 52,
+            "invoices_id": 50,
+            "invoices_tours_id": 36,
+            "package_id": 0
+        },
+        {
+            "id": 53,
+            "invoices_id": 50,
+            "invoices_tours_id": 39,
+            "package_id": 0
+        },
+        {
+            "id": 54,
+            "invoices_id": 50,
+            "invoices_tours_id": 43,
+            "package_id": 0
+        },
+        {
+            "id": 55,
+            "invoices_id": 50,
+            "invoices_tours_id": 44,
+            "package_id": 0
+        },
+        {
+            "id": 56,
+            "invoices_id": 50,
+            "invoices_tours_id": 45,
+            "package_id": 0
+        },
+        {
+            "id": 57,
+            "invoices_id": 50,
+            "invoices_tours_id": 63,
+            "package_id": 0
+        },
+        {
+            "id": 58,
+            "invoices_id": 51,
+            "invoices_tours_id": 5,
+            "package_id": 0
+        },
+        {
+            "id": 59,
+            "invoices_id": 51,
+            "invoices_tours_id": 6,
+            "package_id": 0
+        },
+        {
+            "id": 60,
+            "invoices_id": 51,
+            "invoices_tours_id": 9,
+            "package_id": 0
+        },
+        {
+            "id": 61,
+            "invoices_id": 51,
+            "invoices_tours_id": 10,
+            "package_id": 0
+        },
+        {
+            "id": 62,
+            "invoices_id": 51,
+            "invoices_tours_id": 11,
+            "package_id": 0
+        },
+        {
+            "id": 63,
+            "invoices_id": 51,
+            "invoices_tours_id": 14,
+            "package_id": 0
+        },
+        {
+            "id": 64,
+            "invoices_id": 51,
+            "invoices_tours_id": 20,
+            "package_id": 0
+        },
+        {
+            "id": 65,
+            "invoices_id": 51,
+            "invoices_tours_id": 23,
+            "package_id": 0
+        },
+        {
+            "id": 66,
+            "invoices_id": 51,
+            "invoices_tours_id": 24,
+            "package_id": 0
+        },
+        {
+            "id": 67,
+            "invoices_id": 51,
+            "invoices_tours_id": 25,
+            "package_id": 0
+        },
+        {
+            "id": 69,
+            "invoices_id": 51,
+            "invoices_tours_id": 31,
+            "package_id": 0
+        },
+        {
+            "id": 70,
+            "invoices_id": 51,
+            "invoices_tours_id": 32,
+            "package_id": 0
+        },
+        {
+            "id": 71,
+            "invoices_id": 51,
+            "invoices_tours_id": 34,
+            "package_id": 0
+        },
+        {
+            "id": 72,
+            "invoices_id": 51,
+            "invoices_tours_id": 35,
+            "package_id": 0
+        },
+        {
+            "id": 73,
+            "invoices_id": 51,
+            "invoices_tours_id": 38,
+            "package_id": 0
+        },
+        {
+            "id": 74,
+            "invoices_id": 51,
+            "invoices_tours_id": 40,
+            "package_id": 0
+        },
+        {
+            "id": 75,
+            "invoices_id": 51,
+            "invoices_tours_id": 41,
+            "package_id": 0
+        },
+        {
+            "id": 76,
+            "invoices_id": 51,
+            "invoices_tours_id": 42,
+            "package_id": 0
+        },
+        {
+            "id": 77,
+            "invoices_id": 51,
+            "invoices_tours_id": 43,
+            "package_id": 0
+        },
+        {
+            "id": 78,
+            "invoices_id": 51,
+            "invoices_tours_id": 44,
+            "package_id": 0
+        },
+        {
+            "id": 79,
+            "invoices_id": 51,
+            "invoices_tours_id": 45,
+            "package_id": 0
+        },
+        {
+            "id": 80,
+            "invoices_id": 51,
+            "invoices_tours_id": 63,
+            "package_id": 0
+        },
+        {
+            "id": 81,
+            "invoices_id": 51,
+            "invoices_tours_id": 64,
+            "package_id": 0
+        },
+        {
+            "id": 82,
+            "invoices_id": 51,
+            "invoices_tours_id": 69,
+            "package_id": 0
+        },
+        {
+            "id": 83,
+            "invoices_id": 52,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 84,
+            "invoices_id": 53,
+            "invoices_tours_id": 4,
+            "package_id": 312
+        },
+        {
+            "id": 85,
+            "invoices_id": 54,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 86,
+            "invoices_id": 55,
+            "invoices_tours_id": 78,
+            "package_id": 0
+        },
+        {
+            "id": 87,
+            "invoices_id": 55,
+            "invoices_tours_id": 79,
+            "package_id": 0
+        },
+        {
+            "id": 88,
+            "invoices_id": 56,
+            "invoices_tours_id": 80,
+            "package_id": 0
+        },
+        {
+            "id": 89,
+            "invoices_id": 57,
+            "invoices_tours_id": 4,
+            "package_id": 0
+        },
+        {
+            "id": 90,
+            "invoices_id": 57,
+            "invoices_tours_id": 6,
+            "package_id": 0
+        },
+        {
+            "id": 91,
+            "invoices_id": 57,
+            "invoices_tours_id": 7,
+            "package_id": 0
+        },
+        {
+            "id": 92,
+            "invoices_id": 57,
+            "invoices_tours_id": 8,
+            "package_id": 0
+        },
+        {
+            "id": 93,
+            "invoices_id": 57,
+            "invoices_tours_id": 9,
+            "package_id": 0
+        },
+        {
+            "id": 94,
+            "invoices_id": 57,
+            "invoices_tours_id": 24,
+            "package_id": 0
+        },
+        {
+            "id": 95,
+            "invoices_id": 57,
+            "invoices_tours_id": 25,
+            "package_id": 0
+        },
+        {
+            "id": 96,
+            "invoices_id": 57,
+            "invoices_tours_id": 43,
+            "package_id": 0
+        },
+        {
+            "id": 97,
+            "invoices_id": 57,
+            "invoices_tours_id": 65,
+            "package_id": 0
+        },
+        {
+            "id": 98,
+            "invoices_id": 57,
+            "invoices_tours_id": 71,
+            "package_id": 0
+        },
+        {
+            "id": 99,
+            "invoices_id": 57,
+            "invoices_tours_id": 77,
+            "package_id": 0
+        },
+        {
+            "id": 100,
+            "invoices_id": 58,
+            "invoices_tours_id": 5,
+            "package_id": 0
+        },
+        {
+            "id": 101,
+            "invoices_id": 58,
+            "invoices_tours_id": 6,
+            "package_id": 0
+        },
+        {
+            "id": 102,
+            "invoices_id": 58,
+            "invoices_tours_id": 7,
+            "package_id": 0
+        },
+        {
+            "id": 103,
+            "invoices_id": 58,
+            "invoices_tours_id": 8,
+            "package_id": 0
+        },
+        {
+            "id": 104,
+            "invoices_id": 58,
+            "invoices_tours_id": 9,
+            "package_id": 0
+        },
+        {
+            "id": 105,
+            "invoices_id": 58,
+            "invoices_tours_id": 11,
+            "package_id": 0
+        },
+        {
+            "id": 106,
+            "invoices_id": 58,
+            "invoices_tours_id": 13,
+            "package_id": 0
+        },
+        {
+            "id": 107,
+            "invoices_id": 58,
+            "invoices_tours_id": 14,
+            "package_id": 0
+        },
+        {
+            "id": 108,
+            "invoices_id": 58,
+            "invoices_tours_id": 15,
+            "package_id": 0
+        },
+        {
+            "id": 109,
+            "invoices_id": 58,
+            "invoices_tours_id": 20,
+            "package_id": 0
+        },
+        {
+            "id": 110,
+            "invoices_id": 58,
+            "invoices_tours_id": 24,
+            "package_id": 0
+        },
+        {
+            "id": 111,
+            "invoices_id": 58,
+            "invoices_tours_id": 26,
+            "package_id": 0
+        },
+        {
+            "id": 112,
+            "invoices_id": 58,
+            "invoices_tours_id": 27,
+            "package_id": 0
+        },
+        {
+            "id": 113,
+            "invoices_id": 58,
+            "invoices_tours_id": 28,
+            "package_id": 0
+        },
+        {
+            "id": 114,
+            "invoices_id": 58,
+            "invoices_tours_id": 34,
+            "package_id": 0
+        },
+        {
+            "id": 115,
+            "invoices_id": 58,
+            "invoices_tours_id": 63,
+            "package_id": 0
+        },
+        {
+            "id": 116,
+            "invoices_id": 58,
+            "invoices_tours_id": 71,
+            "package_id": 0
+        },
+        {
+            "id": 118,
+            "invoices_id": 58,
+            "invoices_tours_id": 80,
+            "package_id": 482
+        },
+        {
+            "id": 122,
+            "invoices_id": 62,
+            "invoices_tours_id": 123,
+            "package_id": 0
+        },
+        {
+            "id": 123,
+            "invoices_id": 63,
+            "invoices_tours_id": 136,
+            "package_id": 556
+        },
+        {
+            "id": 124,
+            "invoices_id": 64,
+            "invoices_tours_id": 136,
+            "package_id": 0
+        }
+    ],
+    "office_fees": [
+        {
+            "id": 1,
+            "office_name": "Europe Express Travel Service Int'l Co., Ltd",
+            "office_address": "10\/F COFCO Tower, 262 Gloucester Road,Causeway Bay,  Hong Kong",
+            "bank_name": "Mega International Commercial Bank Co., Ltd.Head office, Foreign DEPT.",
+            "account_no": "007-58-10079-1",
+            "swift_code": "ICBCTWTP007",
+            "tel": "00886 - 2 - 2711 9559",
+            "fax": "00886 - 2 - 2711 8559",
+            "status": 0
+        },
+        {
+            "id": 4,
+            "office_name": "Hsiang Wu Ges.m.b.H -Europe Express Travel Service",
+            "office_address": "Südtirolerplatz 6, A-1040 Vienna",
+            "bank_name": "Raiffeisenlandesbank NÖ-Wien",
+            "account_no": "AT043200000010355246",
+            "swift_code": "RLNWATWW",
+            "tel": "+43-1-5974918",
+            "fax": ": +43-1-597491831\/597491830",
+            "status": 1
+        },
+        {
+            "id": 8,
+            "office_name": "East-Europe Express Travel Service Kft.",
+            "office_address": "Raday utca 15 I\/14; Budapest 1092 Hungary",
+            "bank_name": "K AND H BANK ZRT.",
+            "account_no": "Euro account: HU44104040894951494950501006 , HUF account: HU98104031813180882800000000",
+            "swift_code": "OKHBHUHB",
+            "tel": "+36 1 2019416",
+            "fax": "+36 1 2019418",
+            "status": 0
+        },
+        {
+            "id": 9,
+            "office_name": "PURE TOUR (SHANGHAI) COMMERCIAL CONSULTANT CO., LTD",
+            "office_address": "ROOM117,ZONE C,BUILDING 1,NO.525 LIUYUAN ROAD,PUTUO DISTRICT,SHANGHAI,CHINA",
+            "bank_name": "SHANGHAI PUDONG DEVELOPMENT BANK",
+            "account_no": "97080155300005482",
+            "swift_code": "SPDBCNSHXXX",
+            "tel": "+86 2153968086",
+            "fax": "+86 2153968086",
+            "status": null
+        },
+        {
+            "id": 10,
+            "office_name": "HEFEI PURETOUR BUSINESS SERVICE CO.,LTD.",
+            "office_address": "ROOM2802,NO.146 CHANGJIANG ROAD,LUYANG DISTRICT,HEFEI CITY,ANHUI PROVINCE,CHINA",
+            "bank_name": "Industrial and Commercial Bank of China Wangjiang Road Branch,Hefei City,Anhui Province",
+            "account_no": "1302010519200410827",
+            "swift_code": "ICBKCNBJAHI",
+            "tel": "+86 55166169802",
+            "fax": "+86 55166169802",
+            "status": null
+        },
+        {
+            "id": 11,
+            "office_name": "Anjolie James",
+            "office_address": "Laborum Qui est of",
+            "bank_name": "Jonas Sanchez",
+            "account_no": "Ullam aut aut labori",
+            "swift_code": "Quidem dolores vel q",
+            "tel": "Et molestias sunt co",
+            "fax": "+1 (327) 499-4247",
+            "status": 0
+        },
+        {
+            "id": 12,
+            "office_name": "Anjolie James",
+            "office_address": "Laborum Qui est of",
+            "bank_name": "Jonas Sanchez",
+            "account_no": "Ullam aut aut labori",
+            "swift_code": "Quidem dolores vel q",
+            "tel": "Et molestias sunt co",
+            "fax": "+1 (327) 499-4247",
+            "status": null
+        }
+    ],
+    "supplier_invoices": [
+        {
+            "id": 1,
+            "office_id": 1,
+            "dueDate": "2023-10-25",
+            "receivedDate": "2023-10-25",
+            "invoice_no": "432543",
+            "total_amount": "123.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 2,
+            "office_id": 1,
+            "dueDate": "2023-10-26",
+            "receivedDate": "2023-10-26",
+            "invoice_no": "2147483647",
+            "total_amount": "12.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 3,
+            "office_id": 1,
+            "dueDate": "2023-10-27",
+            "receivedDate": "2023-10-27",
+            "invoice_no": "5464647",
+            "total_amount": "4500.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 4,
+            "office_id": 1,
+            "dueDate": "2023-11-13",
+            "receivedDate": "2023-11-13",
+            "invoice_no": "432543",
+            "total_amount": "2000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 5,
+            "office_id": 1,
+            "dueDate": "2023-11-14",
+            "receivedDate": "2023-11-14",
+            "invoice_no": "56783543",
+            "total_amount": "3000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 6,
+            "office_id": 1,
+            "dueDate": "2023-11-14",
+            "receivedDate": "2023-11-14",
+            "invoice_no": "432543",
+            "total_amount": "2412.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 7,
+            "office_id": 1,
+            "dueDate": "2023-11-14",
+            "receivedDate": "2023-11-14",
+            "invoice_no": "432543",
+            "total_amount": "1000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 8,
+            "office_id": 1,
+            "dueDate": "2023-11-14",
+            "receivedDate": "2023-11-14",
+            "invoice_no": "432543",
+            "total_amount": "1000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 9,
+            "office_id": 1,
+            "dueDate": "2023-11-23",
+            "receivedDate": "2023-11-23",
+            "invoice_no": "0",
+            "total_amount": "3000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 10,
+            "office_id": 1,
+            "dueDate": "2023-11-23",
+            "receivedDate": "2023-11-23",
+            "invoice_no": "1",
+            "total_amount": "5000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 11,
+            "office_id": 1,
+            "dueDate": "2023-11-24",
+            "receivedDate": "2023-11-24",
+            "invoice_no": "0",
+            "total_amount": "1500.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 12,
+            "office_id": 1,
+            "dueDate": "2023-11-24",
+            "receivedDate": "2023-11-24",
+            "invoice_no": "INV-990",
+            "total_amount": "4567.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 13,
+            "office_id": 1,
+            "dueDate": "2023-11-24",
+            "receivedDate": "2023-11-24",
+            "invoice_no": "111111432543rwefdAmeer",
+            "total_amount": "2412.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 14,
+            "office_id": 1,
+            "dueDate": "2023-11-24",
+            "receivedDate": "2023-11-24",
+            "invoice_no": "432543rwefd",
+            "total_amount": "5000.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 15,
+            "office_id": 4,
+            "dueDate": "2024-01-01",
+            "receivedDate": "2024-01-01",
+            "invoice_no": "56783543",
+            "total_amount": "1500.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 16,
+            "office_id": 1,
+            "dueDate": "2024-01-01",
+            "receivedDate": "2024-01-01",
+            "invoice_no": "546476",
+            "total_amount": "2344.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 17,
+            "office_id": 1,
+            "dueDate": "2024-01-11",
+            "receivedDate": "2024-01-11",
+            "invoice_no": "424242",
+            "total_amount": "1215.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 18,
+            "office_id": 4,
+            "dueDate": "2024-01-11",
+            "receivedDate": "2024-01-11",
+            "invoice_no": "R242424",
+            "total_amount": "249.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 19,
+            "office_id": 1,
+            "dueDate": "2024-01-11",
+            "receivedDate": "2024-01-11",
+            "invoice_no": "23423",
+            "total_amount": "13.00",
+            "extra_amount": 0,
+            "note": ""
+        },
+        {
+            "id": 20,
+            "office_id": 1,
+            "dueDate": "2024-01-17",
+            "receivedDate": "2024-01-17",
+            "invoice_no": "89789798",
+            "total_amount": "500.00",
+            "extra_amount": 20,
+            "note": null
+        },
+        {
+            "id": 21,
+            "office_id": 1,
+            "dueDate": "2024-01-17",
+            "receivedDate": "2024-01-17",
+            "invoice_no": "67578687",
+            "total_amount": "6700.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 22,
+            "office_id": 1,
+            "dueDate": "2024-01-17",
+            "receivedDate": "2024-01-17",
+            "invoice_no": "44424",
+            "total_amount": "3223.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 23,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "453454",
+            "total_amount": "500.00",
+            "extra_amount": 20,
+            "note": null
+        },
+        {
+            "id": 24,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "7767868",
+            "total_amount": "500.00",
+            "extra_amount": 5700,
+            "note": null
+        },
+        {
+            "id": 25,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "7767868",
+            "total_amount": "500.00",
+            "extra_amount": 5700,
+            "note": null
+        },
+        {
+            "id": 26,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "7767868",
+            "total_amount": "500.00",
+            "extra_amount": 5700,
+            "note": null
+        },
+        {
+            "id": 27,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "43566345",
+            "total_amount": "1500.00",
+            "extra_amount": 35,
+            "note": null
+        },
+        {
+            "id": 28,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "4646456",
+            "total_amount": "1500.00",
+            "extra_amount": 20,
+            "note": "test"
+        },
+        {
+            "id": 29,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "4646456",
+            "total_amount": "1500.00",
+            "extra_amount": 20,
+            "note": "test"
+        },
+        {
+            "id": 30,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "4646456",
+            "total_amount": "1500.00",
+            "extra_amount": 20,
+            "note": "test"
+        },
+        {
+            "id": 31,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "565456",
+            "total_amount": "500.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 32,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "446366",
+            "total_amount": "450.00",
+            "extra_amount": 20,
+            "note": null
+        },
+        {
+            "id": 33,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "54567",
+            "total_amount": "1500.00",
+            "extra_amount": 566,
+            "note": null
+        },
+        {
+            "id": 34,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "53667",
+            "total_amount": "457.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 35,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "53667",
+            "total_amount": "457.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 36,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "53667",
+            "total_amount": "457.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 37,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "53667",
+            "total_amount": "457.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 38,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "53667",
+            "total_amount": "457.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 39,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "67554567",
+            "total_amount": "30.00",
+            "extra_amount": 5700,
+            "note": null
+        },
+        {
+            "id": 40,
+            "office_id": 1,
+            "dueDate": "2024-01-18",
+            "receivedDate": "2024-01-18",
+            "invoice_no": "56765765",
+            "total_amount": "5000.00",
+            "extra_amount": 67,
+            "note": null
+        },
+        {
+            "id": 41,
+            "office_id": 1,
+            "dueDate": "2024-01-26",
+            "receivedDate": "2024-01-26",
+            "invoice_no": "456654",
+            "total_amount": "1500.00",
+            "extra_amount": 566,
+            "note": null
+        },
+        {
+            "id": 42,
+            "office_id": 1,
+            "dueDate": "2024-02-05",
+            "receivedDate": "2024-02-05",
+            "invoice_no": "e4345435",
+            "total_amount": "500.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 43,
+            "office_id": 1,
+            "dueDate": "2024-02-05",
+            "receivedDate": "2024-02-05",
+            "invoice_no": "34235t43",
+            "total_amount": "1500.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 44,
+            "office_id": 1,
+            "dueDate": "2024-02-05",
+            "receivedDate": "2024-02-05",
+            "invoice_no": "345346t",
+            "total_amount": "450.00",
+            "extra_amount": 566,
+            "note": null
+        },
+        {
+            "id": 45,
+            "office_id": 1,
+            "dueDate": "2024-02-05",
+            "receivedDate": "2024-02-05",
+            "invoice_no": "54454t",
+            "total_amount": "1000.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 46,
+            "office_id": 1,
+            "dueDate": "2024-02-09",
+            "receivedDate": "2024-02-09",
+            "invoice_no": "353535",
+            "total_amount": "4500.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 47,
+            "office_id": 1,
+            "dueDate": "2024-03-21",
+            "receivedDate": "2024-03-21",
+            "invoice_no": "3432234",
+            "total_amount": "1000.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 48,
+            "office_id": 1,
+            "dueDate": "2024-03-21",
+            "receivedDate": "2024-03-21",
+            "invoice_no": "45345",
+            "total_amount": "3000.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 49,
+            "office_id": 1,
+            "dueDate": "2024-07-05",
+            "receivedDate": "2024-07-05",
+            "invoice_no": "424242",
+            "total_amount": "1215.00",
+            "extra_amount": null,
+            "note": null
+        },
+        {
+            "id": 50,
+            "office_id": 4,
+            "dueDate": "2025-09-25",
+            "receivedDate": "2025-09-25",
+            "invoice_no": "Qui dignissimos dese",
+            "total_amount": "0.00",
+            "extra_amount": 0,
+            "note": "Porro voluptas ducim"
+        },
+        {
+            "id": 51,
+            "office_id": 9,
+            "dueDate": "2025-09-25",
+            "receivedDate": "2025-09-25",
+            "invoice_no": "Sit voluptatum aspe",
+            "total_amount": "0.00",
+            "extra_amount": 0,
+            "note": "Et non omnis cupidat"
+        },
+        {
+            "id": 52,
+            "office_id": 1,
+            "dueDate": "2025-12-15",
+            "receivedDate": "2025-12-08",
+            "invoice_no": "266554",
+            "total_amount": "1000.00",
+            "extra_amount": 0,
+            "note": "fhg"
+        },
+        {
+            "id": 53,
+            "office_id": 1,
+            "dueDate": "2025-12-23",
+            "receivedDate": "2025-12-16",
+            "invoice_no": "266554",
+            "total_amount": "1000.00",
+            "extra_amount": 2000,
+            "note": "bnjmnjm"
+        },
+        {
+            "id": 54,
+            "office_id": 1,
+            "dueDate": "2025-12-23",
+            "receivedDate": "2025-12-16",
+            "invoice_no": "266554",
+            "total_amount": "1000.00",
+            "extra_amount": 2000,
+            "note": "bnjmnjm"
+        },
+        {
+            "id": 55,
+            "office_id": 1,
+            "dueDate": "2025-12-25",
+            "receivedDate": "2025-12-18",
+            "invoice_no": "266554",
+            "total_amount": "1000.00",
+            "extra_amount": 2000,
+            "note": "asddasqweeqwe"
+        },
+        {
+            "id": 56,
+            "office_id": 1,
+            "dueDate": "2025-12-25",
+            "receivedDate": "2025-12-18",
+            "invoice_no": "266539",
+            "total_amount": "1000.00",
+            "extra_amount": 200,
+            "note": "sdfsdf"
+        },
+        {
+            "id": 57,
+            "office_id": 1,
+            "dueDate": "2026-06-05",
+            "receivedDate": "2026-05-29",
+            "invoice_no": "743",
+            "total_amount": "69.00",
+            "extra_amount": 77,
+            "note": "Fuga Sint veniam o"
+        },
+        {
+            "id": 62,
+            "office_id": 1,
+            "dueDate": "2026-07-17",
+            "receivedDate": "2026-06-17",
+            "invoice_no": "SI-7YRAHS",
+            "total_amount": "8500.00",
+            "extra_amount": 0,
+            "note": "Test supplier invoice (hotel + transfers)."
+        },
+        {
+            "id": 63,
+            "office_id": 1,
+            "dueDate": "2026-11-04",
+            "receivedDate": "2026-10-28",
+            "invoice_no": "QA-SINV-1",
+            "total_amount": "100.00",
+            "extra_amount": 20,
+            "note": "QA supplier invoice"
+        },
+        {
+            "id": 64,
+            "office_id": 1,
+            "dueDate": "2026-11-04",
+            "receivedDate": "2026-10-28",
+            "invoice_no": "QA-SINV-1",
+            "total_amount": "10.00",
+            "extra_amount": null,
+            "note": null
+        }
+    ]
+}

@@ -1,0 +1,73 @@
+{
+    "date": "2026-10-30T15:27:29+00:00",
+    "results": [
+        {
+            "check": "ST4 task completion persists on create",
+            "status": "passed"
+        },
+        {
+            "check": "ST4 task abortion persists on edit",
+            "status": "passed"
+        },
+        {
+            "check": "ST5\/ST9\/ST10 invalid type rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST5\/ST9\/ST10 invalid name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST5\/ST9\/ST10 invalid sort_order rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST5\/ST9\/ST10 invalid color rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST8 duplicate name\/type rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST4 conflicting task flags rejected",
+            "status": "passed"
+        },
+        {
+            "check": "ST3 used task status cannot change type",
+            "status": "passed"
+        },
+        {
+            "check": "Used task status deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "ST6 system status rename blocked",
+            "status": "passed"
+        },
+        {
+            "check": "ST6 system status deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "ST7 offer stored by name blocks deletion",
+            "status": "passed"
+        },
+        {
+            "check": "ST7 used offer cannot be renamed",
+            "status": "passed"
+        },
+        {
+            "check": "ST12 AJAX show resolves status URL",
+            "status": "passed"
+        },
+        {
+            "check": "Unused custom status deletes successfully",
+            "status": "passed"
+        },
+        {
+            "check": "All status\/task\/offer\/comment row values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

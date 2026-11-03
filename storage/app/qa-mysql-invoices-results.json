@@ -1,0 +1,61 @@
+{
+    "date": "2026-10-30T18:52:44+00:00",
+    "results": [
+        {
+            "check": "Extra cost is included in the available payment balance",
+            "status": "passed"
+        },
+        {
+            "check": "Supplier invoice stores supplied received and due dates and first payment",
+            "status": "passed"
+        },
+        {
+            "check": "Remaining extra-cost balance can be paid exactly",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice number duplicate in the same office is rejected",
+            "status": "passed"
+        },
+        {
+            "check": "A package belonging to another tour is rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice index is paginated and query count stays bounded",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice show resolves by invoice ID with links intact",
+            "status": "passed"
+        },
+        {
+            "check": "Missing invoice show returns 404",
+            "status": "passed"
+        },
+        {
+            "check": "Supplier package dropdown checks permission and returns 404 for unknown tour",
+            "status": "passed"
+        },
+        {
+            "check": "Supplier package dropdown escapes tour labels",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice edit changes dates while leaving payments untouched",
+            "status": "passed"
+        },
+        {
+            "check": "Invoices with payments stay protected from archive",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice archive retains header, tour links, and staff attribution",
+            "status": "passed"
+        },
+        {
+            "check": "Invoice, link, and payment rows are unchanged after rollback",
+            "status": "passed"
+        }
+    ]
+}

@@ -1,0 +1,122 @@
+{
+    "date": "2026-10-30T15:32:46+00:00",
+    "results": [
+        {
+            "check": "Create custom room type redirects",
+            "status": "passed"
+        },
+        {
+            "check": "Edit custom room type preserves image",
+            "status": "passed"
+        },
+        {
+            "check": "RT5 duplicate code rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT5 duplicate name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT6 long name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT9 decimal sort rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT2 script SVG rejected before storage",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 SIN code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 SIN deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 DOU code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 DOU deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 TRI code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 TRI deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 DFS code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 DFS deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 TWN code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 TWN deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 SUE code changes rejected",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 SUE deletion blocked",
+            "status": "passed"
+        },
+        {
+            "check": "Usage guard: hotel_room_types",
+            "status": "passed"
+        },
+        {
+            "check": "Usage guard: hotel_agreements_room_type_hotels",
+            "status": "passed"
+        },
+        {
+            "check": "Usage guard: seasons_prices_room_type_hotels",
+            "status": "passed"
+        },
+        {
+            "check": "prices_room_type_hotels live assignment fixture",
+            "status": "not exercised",
+            "reason": "No template row; covered in isolated SQLite tests"
+        },
+        {
+            "check": "Usage guard: tour_room_type_hotels",
+            "status": "passed"
+        },
+        {
+            "check": "Usage guard: offer_room_prices",
+            "status": "passed"
+        },
+        {
+            "check": "RT7 unused custom type deletes with JSON success",
+            "status": "passed"
+        },
+        {
+            "check": "RT3 existing package pricing runs",
+            "status": "passed"
+        },
+        {
+            "check": "RT2 known script asset is outside public folder",
+            "status": "passed"
+        },
+        {
+            "check": "All room\/reference\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "date": "2026-10-30T17:16:54+00:00",
+    "results": [
+        {
+            "check": "All stored mailbox passwords are encrypted and flags agree",
+            "status": "passed"
+        },
+        {
+            "check": "Runtime data is outside public directory",
+            "status": "passed"
+        },
+        {
+            "check": "Missing mailbox redirects to configure without loop",
+            "status": "passed"
+        },
+        {
+            "check": "Direct login uses installed webmail URL",
+            "status": "passed"
+        },
+        {
+            "check": "SSO creates a local one-time token without credentials in URL",
+            "status": "passed"
+        },
+        {
+            "check": "User serialization excludes mailbox password",
+            "status": "passed"
+        },
+        {
+            "check": "Missing legacy IMAP class is detected without connecting",
+            "status": "passed"
+        },
+        {
+            "check": "Saved users remain byte-for-byte unchanged",
+            "status": "passed"
+        }
+    ]
+}

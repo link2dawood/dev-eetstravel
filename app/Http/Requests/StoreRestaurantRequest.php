@@ -4,9 +4,18 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Services\ValidationService;
+use App\Http\Requests\Concerns\SupplierFieldRules;
+use Illuminate\Validation\Rule;
 
 class StoreRestaurantRequest extends FormRequest
 {
+    use SupplierFieldRules;
+
+    protected function prepareForValidation()
+    {
+        $this->normalizeCriterias();
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -25,7 +34,9 @@ class StoreRestaurantRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => array_merge(['required'], ValidationService::businessNameRules(false, 191, 2), ['unique:restaurants,name']),
+            'name' => array_merge(['required'], ValidationService::businessNameRules(false, 191, 2),
+                // Deleted restaurants do not block their name
+                [Rule::unique('restaurants', 'name')->whereNull('deleted_at')]),
             'work_email' => ValidationService::emailRules(false, 'restaurants,work_email'),
             'contact_email' => ValidationService::emailRules(false),
             'work_phone' => ValidationService::phoneRules(false),
@@ -39,8 +50,7 @@ class StoreRestaurantRequest extends FormRequest
             'comments' => 'nullable|string|max:1000',
             'int_comments' => 'nullable|string|max:1000',
             'rate' => 'nullable|exists:rates,id',
-            'criterias' => 'nullable|string',
-        ];
+        ] + $this->attachmentAndCriteriaRules('restaurant');
     }
 
     /**
@@ -50,7 +60,7 @@ class StoreRestaurantRequest extends FormRequest
      */
     public function messages()
     {
-        return ValidationService::getCommonMessages();
+        return array_merge(ValidationService::getCommonMessages(), $this->attachmentAndCriteriaMessages('restaurant'));
     }
 
     /**

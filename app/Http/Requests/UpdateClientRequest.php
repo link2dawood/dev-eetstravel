@@ -96,14 +96,10 @@ class UpdateClientRequest extends FormRequest
             'files.*' => ValidationService::fileRules(false, 5120, 'jpeg,jpg,png,gif,pdf,doc,docx'),
             'attach' => 'nullable|array',
             'attach.*' => ValidationService::fileRules(false, 5120, 'jpeg,jpg,png,gif,pdf,doc,docx'),
+            'attach_bus' => 'prohibited',
 
             // Additional fields specific to updates
-            'password' => ['bail', 'nullable', 'string', 'min:6', 'max:128', function ($attribute, $value, $fail) {
-                // The legacy password column stores ciphertext in VARCHAR(250).
-                if (strlen(\Illuminate\Support\Facades\Crypt::encryptString($value)) > 250) {
-                    $fail('The client portal password is too long. Please use a shorter password.');
-                }
-            }],
+            'password' => \App\Services\ClientPortalPassword::rules(),
         ];
     }
 

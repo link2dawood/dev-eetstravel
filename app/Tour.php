@@ -91,6 +91,23 @@ class Tour extends Model
         return $this->morphMany('App\Attachment', 'attachable');
     }
 
+    /**
+     * Unguessable token for the public landing page; created the first time it is needed.
+     */
+    public function shareToken()
+    {
+        if (!$this->share_token) {
+            do {
+                $token = \Illuminate\Support\Str::random(40);
+            } while (static::withTrashed()->where('share_token', $token)->exists());
+
+            $this->share_token = $token;
+            $this->saveQuietly();
+        }
+
+        return $this->share_token;
+    }
+
     public function status(){
         return $this->belongsTo('App\Status', 'status', 'id');
     }

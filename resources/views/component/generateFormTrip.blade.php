@@ -8,9 +8,11 @@
             <input class="form-check-input" type="radio" name="trip_mode" value="1">
             <span class="form-check-label">{!!trans('main.ForDayTrip')!!}</span>
         </label>
+        @if(Auth::user()->can('bus.destroy'))
         <button type="button" onclick="if (confirm('Delete the selected trip days?')) deleteTrip()" class="btn btn-danger ms-auto delete_trip">
             <i class="fa fa-trash me-1"></i>{!!trans('main.Deletetrip')!!}
         </button>
+        @endif
     </div>
 
     <input type='hidden' name='_token' value='{{Session::token()}}'>

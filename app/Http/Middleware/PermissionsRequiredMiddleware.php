@@ -53,6 +53,7 @@ class PermissionsRequiredMiddleware
         // Billing permissions use the legacy transactions.* names throughout PermissionHelper.
         // Resolve route aliases to those same permissions so visible actions can be opened.
         $accountingAliases = [
+            'accounting.index' => 'transactions.show',
             'accounting.create' => 'transactions.create', 'accounting.store' => 'transactions.create',
             'accounting.show' => 'transactions.show', 'accounting.edit' => 'transactions.edit',
             'accounting.update' => 'transactions.edit', 'accounts.update' => 'transactions.edit',
@@ -61,6 +62,7 @@ class PermissionsRequiredMiddleware
             'accounting_pdf_export' => 'transactions.show', 'accounting_excel_export' => 'transactions.show',
             'invoice.update' => 'invoices.edit', 'payment.store' => 'invoices.create',
             'add_payment' => 'invoices.create', 'taxes_update' => 'taxes.edit',
+            'invoices.delete_confirmation' => 'invoices.destroy', 'invoices.supplierdropdown' => 'invoices.create',
             'taxes.store' => 'taxes.create', 'office.store' => 'office.create', 'invoices.store' => 'invoices.create',
             'tour_expenses.store' => 'tour_expenses.create', 'utility_expenses.store' => 'utility_expenses.create',
             'employes-salary.store' => 'employes-salary.create', 'office_earning.store' => 'office_earning.create',

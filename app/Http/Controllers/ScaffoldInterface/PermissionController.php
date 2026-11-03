@@ -13,9 +13,16 @@ use URL;
 
 class PermissionController extends Controller
 {
+    /**
+     * Permission names are checked in code and routes as "module.action" (bus_calendar and
+     * guestList.add are also in use): letters, digits, _ and - separated by dots, no spaces.
+     */
+    const NAME_FORMAT = 'regex:/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$/';
+
     public function __construct()
     {
-        $this->middleware('auth')->only('show');
+        $this->middleware('auth');
+        $this->middleware('permissions.required');
     }
 
     public function show($id)
@@ -33,11 +40,23 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->get('q'));
+
         // Roles are shown in the delete confirmation so the impact is visible
-        $permissions = Permission::with('roles:id,name')->get();
-        return view('scaffold-interface.permissions.index', compact('permissions'));
+        $permissions = Permission::with('roles:id,name')->withCount('users')
+            ->when($search !== '', function ($query) use ($search) {
+                $like = '%' . addcslashes($search, '%_\\') . '%';
+                $query->where(function ($query) use ($like) {
+                    $query->where('name', 'like', $like)->orWhere('alias', 'like', $like);
+                });
+            })
+            ->orderBy('name')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('scaffold-interface.permissions.index', compact('permissions', 'search'));
     }
 
     /**
@@ -61,13 +80,13 @@ class PermissionController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required',
-            'alias' => 'required'
-        ]);
+            'name' => ['required', 'string', 'max:191', self::NAME_FORMAT, 'unique:permissions,name'],
+            'alias' => 'required|string|max:191'
+        ], ['name.regex' => 'Use letters, numbers, _ and - separated by dots, e.g. tour.index.']);
 
         Permission::create(['name' => $request->name, 'alias' => $request->alias]);
 
-        return redirect('permissions');
+        return redirect('permissions')->with('success', "Permission {$request->name} created successfully");
     }
 
     /**
@@ -79,9 +98,10 @@ class PermissionController extends Controller
      */
     public function edit($id)
     {
-        $permission = Permission::findOrFail($id);
+        $permission = Permission::withCount('users')->with('roles:id,name')->findOrFail($id);
+        $inUse = $permission->roles->isNotEmpty() || $permission->users_count > 0;
 
-        return view('scaffold-interface.permissions.edit', compact('permission'));
+        return view('scaffold-interface.permissions.edit', compact('permission', 'inUse'));
     }
 
     /**
@@ -91,17 +111,36 @@ class PermissionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(Request $request, $id = null)
 {
-    $this->validate($request, [
-        'name' => 'required|unique:permissions,name,' . $request->permission_id,
-        'alias' => 'required'
-    ]);
+    // The edit form posts permission_id to /permissions/update; the resource PUT route carries the id in the URL.
+    $permission = Permission::findOrFail($id ?? $request->permission_id);
+    $renaming = $request->name !== $permission->name;
 
-    $permission = Permission::findOrFail($request->permission_id);
+    $nameRules = ['required', 'string', 'max:191', 'unique:permissions,name,' . $permission->id];
+    if ($renaming) {
+        $nameRules[] = self::NAME_FORMAT;
+    }
+    $this->validate($request, [
+        'name' => $nameRules,
+        'alias' => 'required|string|max:191'
+    ], ['name.regex' => 'Use letters, numbers, _ and - separated by dots, e.g. tour.index.']);
+
+    // Code and routes check permissions by name, so renaming one that is assigned would silently revoke that access.
+    if ($renaming) {
+        $roleNames = $permission->roles()->pluck('name');
+        $userCount = $permission->users()->count();
+        if ($roleNames->isNotEmpty() || $userCount > 0) {
+            $usedBy = $roleNames->isNotEmpty() ? 'roles: ' . $roleNames->implode(', ') : $userCount . ' user(s)';
+            return back()->withInput()->withErrors(['name' => "This permission is assigned to {$usedBy}. Its name cannot be changed; edit the alias instead."]);
+        }
+    }
+
     $permission->name = $request->name;
     $permission->alias = $request->alias;
     $permission->save();
+
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     return redirect('permissions')->with('success', 'Permission updated successfully');
 }
@@ -119,7 +158,7 @@ class PermissionController extends Controller
             $permission = Permission::findOrFail($id);
 
             // A permission still in use is only removed when the user confirmed
-            // detaching it (force=1 comes from the confirmation on the index page)
+            // detaching it (the index page adds force=1 only after that confirmation)
             $roleNames = $permission->roles()->pluck('name');
             $userCount = $permission->users()->count();
 
@@ -142,7 +181,7 @@ class PermissionController extends Controller
             }
 
             return redirect('permissions')->with('success', $message);
-            
+
         } catch (\Exception $e) {
             return redirect('permissions')->with('error', 'Error deleting permission: ' . $e->getMessage());
         }
@@ -159,24 +198,24 @@ class PermissionController extends Controller
     {
         try {
             $permission = Permission::findOrFail($id);
-            
+
             $msg = Ajaxis::BtDeleting(
                 trans('main.Warning') . '!!',
                 trans('main.WouldyouliketoremoveThis') . '?',
                 '/permissions/' . $id . '/delete'
             );
-            
+
             if ($request->ajax()) {
                 return $msg;
             }
-            
+
             return redirect('permissions');
-            
+
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json(['error' => 'Permission not found'], 404);
             }
-            
+
             return redirect('permissions')->with('error', 'Permission not found');
         }
     }

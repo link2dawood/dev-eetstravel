@@ -123,7 +123,6 @@
 					</div>
 				</div>
 				{!! csrf_field() !!}
-				<input type="hidden" name="user_id" value="{{$user->id}}">
 				<input type="hidden" name="edit_profile" value="1">
 
 				<div class="form-group">
@@ -140,6 +139,10 @@
 					<label for="">{{trans('main.Password')}}</label>
 					<input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
 					<small class="form-text text-muted">Only fill this if you want to change your password</small>
+				</div>
+				<div class="form-group">
+					<label for="password_confirmation">Confirm {{ trans('main.Password') }}</label>
+					<input type="password" name="password_confirmation" id="password_confirmation" class="form-control" autocomplete="new-password">
 				</div>
 
                 <div class="form-group">
@@ -183,7 +186,7 @@
                     <div style="margin-bottom: 10px;">
                         @include('component.avatar-preview', ['avatarUser' => $user, 'avatarSize' => 150])
                     </div>
-                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*"></div>
+                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept=".jpg,.jpeg,.png,.gif,.webp"></div>
                     <small class="form-text text-muted">Upload a new avatar image (optional)</small>
                 </div>
 
@@ -271,7 +274,12 @@
 							@foreach($userPermissions as $key => $permission)
 							<tr>
 								<td>{{$permission}}</td>
-								<td><a href="{{url('users/removePermission')}}/{{$user->id}}/{{$key}}" class="trash-icon-action" title="Delete permission" aria-label="Delete permission"><span>Delete</span></a></td>
+								<td>
+									<form action="{{ route('users.revokePermission', ['user_id' => $user->id, 'key' => $key]) }}" method="POST">
+										{{ csrf_field() }}
+										<button type="submit" class="trash-icon-action" title="Delete permission" aria-label="Delete permission"><span>Delete</span></button>
+									</form>
+								</td>
 							</tr>
 							@endforeach
 						</tbody>

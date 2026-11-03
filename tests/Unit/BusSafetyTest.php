@@ -46,6 +46,16 @@ class BusSafetyTest extends TestCase
             $table->string('attach_content_type');
             $table->timestamps();
         });
+        Schema::create('buses', function (Blueprint $table) {
+            $table->increments('id');
+            $table->softDeletes();
+        });
+        Schema::create('status', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('type');
+        });
+        DB::table('buses')->insert(['id' => 43]);
+        DB::table('status')->insert(['id' => 2, 'type' => 'bus']);
     }
 
     public function test_checking_a_scheduled_bus_never_deletes_it()

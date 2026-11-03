@@ -28,25 +28,25 @@
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Name')!!} : </i></b>
                         </td>
-                        <td>{!!$criteria->name!!}</td>
+                        <td>{{ $criteria->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.ShortName')!!} : </i></b>
                         </td>
-                        <td>{!!$criteria->short_name!!}</td>
+                        <td>{{ $criteria->short_name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Icon')!!} : </i></b>
                         </td>
-                        <td>{!!$criteria->icon!!}</td>
+                        <td>{{ $criteria->icon }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.CriteriaType')!!} : </i></b>
                         </td>
-                        <td>{!!$criteria_type == null ? '' : $criteria_type->name!!}</td>
+                        <td>{{ $criteria_type->name ?? 'Unknown type' }}</td>
                     </tr>
                     </tbody>
                 </table>

@@ -47,7 +47,14 @@
 				<div class="form-group {{$errors->has('name') ? 'has-error' : ''}}">
 					<label for="name">{{trans('main.Name')}}</label>
 					<input type="text" name="name" class="form-control" placeholder="Name" 
-						value="{{ $errors != null && count($errors) > 0 ? old('name') : $permission->name }}">
+						value="{{ $inUse ? $permission->name : ($errors != null && count($errors) > 0 ? old('name') : $permission->name) }}"
+						maxlength="191" @if($inUse) readonly @endif>
+					@if($inUse)
+						<small class="form-text text-muted">
+							Assigned to {{ $permission->roles->isNotEmpty() ? 'roles: ' . $permission->roles->pluck('name')->implode(', ') : $permission->users_count . ' user(s)' }}.
+							The name is used by access checks and cannot be changed while assigned; edit the alias instead.
+						</small>
+					@endif
 					@if($errors->has('name'))
 						<span class="help-block">
 							<strong>{{$errors->first('name')}}</strong>

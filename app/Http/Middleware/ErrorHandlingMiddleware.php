@@ -52,7 +52,7 @@ class ErrorHandlingMiddleware
         $logData = [
             'request_id' => $requestId,
             'method' => $request->method(),
-            'url' => $request->fullUrl(),
+            'url' => $request->is('snappymail', 'snappymail/*') ? $request->url() : $request->fullUrl(),
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'user_id' => auth()->id(),
@@ -60,10 +60,12 @@ class ErrorHandlingMiddleware
         ];
 
         // Log request payload for POST/PUT/PATCH (excluding sensitive data)
-        if (in_array($request->method(), ['POST', 'PUT', 'PATCH'])) {
+        if (in_array($request->method(), ['POST', 'PUT', 'PATCH']) && !$request->is('snappymail', 'snappymail/*')) {
             $payload = $request->except([
                 'password',
                 'password_confirmation',
+                'email_password',
+                'email_login',
                 'token',
                 '_token',
                 'api_token',
@@ -79,7 +81,7 @@ class ErrorHandlingMiddleware
         }
 
         // Log query parameters
-        if (!empty($request->query())) {
+        if (!empty($request->query()) && !$request->is('snappymail', 'snappymail/*')) {
             $logData['query_params'] = $request->query();
         }
 
@@ -136,7 +138,7 @@ class ErrorHandlingMiddleware
             'memory_usage_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
             'user_id' => auth()->id(),
             'method' => $request->method(),
-            'url' => $request->fullUrl(),
+            'url' => $request->is('snappymail', 'snappymail/*') ? $request->url() : $request->fullUrl(),
             'ip' => $request->ip(),
         ];
 
@@ -146,10 +148,12 @@ class ErrorHandlingMiddleware
         }
 
         // Add request context for debugging
-        if (in_array($request->method(), ['POST', 'PUT', 'PATCH'])) {
+        if (in_array($request->method(), ['POST', 'PUT', 'PATCH']) && !$request->is('snappymail', 'snappymail/*')) {
             $payload = $request->except([
                 'password',
                 'password_confirmation',
+                'email_password',
+                'email_login',
                 'token',
                 '_token',
                 'api_token',

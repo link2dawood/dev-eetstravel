@@ -45,7 +45,7 @@
             margin-right: 5px; /* Spacing between icon and text */
         }
     </style>
-    <section class="content">
+<section class="content">
         <form method='POST' action='{{route('invoice.update', ['id' => $invoices->id])}}' enctype="multipart/form-data">
             <div class="box box-secondry">
                 <div class="box box-body ">
@@ -70,33 +70,28 @@
                         </div>
                         <div class="col-md-3">
                             <input type='hidden' name='_token' value='{{ Session::token() }}'>
-							<input id="invoice_id" value="{{$invoices->invoices->id}}" type="hidden">
+			<input id="invoice_id" value="{{$invoices->id}}" type="hidden">
                            
 							<div class="form-group">
                                 <label for="office_id">{{ trans('Office') }}</label>
                                 <select name="office_id" id="office_id" class="form-control" required>
 
                                     @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}" {{  $invoices->invoices->office_id ===  $office->id? 'selected' : '' }}>{{ $office->office_name }}</option>
+                                        <option value="{{ $office->id }}" {{  $invoices->office_id == $office->id? 'selected' : '' }}>{{ $office->office_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
 							 <div class="form-group">
                                 <label for="invoice_no">{!! trans('Invoice No') !!} *</label>
-								 <input id="invoice_no" class="form-control" required="" name="invoice_no" type="text" value="{{$invoices->invoices->invoice_no}}">
+								 <input id="invoice_no" class="form-control" required="" name="invoice_no" type="text" value="{{ old('invoice_no', $invoices->invoice_no) }}">
                             </div>
 
 
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="tour_id">{{ trans('main.Tour') }}</label>
-                                <select name="tours" id="tour_id" class="form-control">
-
-                                    @foreach ($tours as $tour)
-                                        <option value="{{ $tour->id }}" {{  $invoices->tours->name ===  $tour->name ? 'selected' : '' }}>{{ $tour->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label>{{ trans('main.Tour') }}</label>
+                                <div class="form-control" style="height:auto">{{ $invoices->activeTours->pluck('tours.name')->filter()->unique()->implode(', ') ?: 'No linked tour' }}</div>
                             </div>
 							
 							
@@ -110,8 +105,11 @@
                            
 							<div class="form-group" required>
                                 <label for="total_amount">{!! trans('Total Amount') !!} *</label>
-								<input id="total_amount" class="form-control" required="" name="total_amount" type="text" value="{{$invoices->invoices->total_amount}}">
+				<input id="total_amount" class="form-control" required="" name="total_amount" type="number" min="0" step="0.01" value="{{ old('total_amount', $invoices->total_amount) }}">
                             </div>
+                            <div class="form-group"><label for="extra_amount">Extra Cost</label><input id="extra_amount" class="form-control" name="extra_amount" type="number" min="0" step="0.01" value="{{ old('extra_amount', $invoices->extra_amount) }}"></div>
+                            <div class="form-group"><label for="received_date">Received Date</label><input id="received_date" class="form-control" required name="received_date" type="date" value="{{ old('received_date', \Carbon\Carbon::parse($invoices->receivedDate)->format('Y-m-d')) }}"></div>
+                            <div class="form-group"><label for="due_date">Due Date</label><input id="due_date" class="form-control" required name="due_date" type="date" value="{{ old('due_date', \Carbon\Carbon::parse($invoices->dueDate)->format('Y-m-d')) }}"></div>
                             
                         </div>
                     </div>
@@ -124,28 +122,10 @@
     
     
                     <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <h1>Payment</h1>
-                            </div>
-                            <div>Payments that you were paid 
-								to Supplier?</div>
-                        </div>
-                       
-                        
-                        <div class="margin_button">
-                            <button class="custom-button" id="add_feild_button" type='button'>
-                                <i class="fa fa-plus"></i>
-                                {!! trans('Add Payment') !!}
-                            </button>
-                        </div>
-    
-                        <div class="row">
-                         
-                                <div id="payment-inputs" class="row col-md-10">
-    
-                                </div>
-                           
+                        <div class="col-md-12">
+                            <h3>Supplier payments</h3>
+                            <p>Payments remain attached to this invoice. Use the payment form on the invoice details page to add a payment.</p>
+                            <a class="btn btn-outline-primary" href="{{ route('invoices.show', $invoices->id) }}">View invoice and payments</a>
                         </div>
     
                     </div>
@@ -164,132 +144,4 @@
             <button class='btn btn-success' type='submit'>{!! trans('main.Save') !!}</button>
         </form>
     </section>
-    <script type="text/javascript" src='{{ asset('js/rooms.js') }}'></script>
-    <script type="text/javascript" src='{{ asset('js/hide_elements.js') }}'></script>
-
-    <script type="text/javascript">
-        function readURL(input) {
-
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function(e) {
-                    $('#pic').attr('src', e.target.result);
-                    $('#file-caption-name').html(input.files[0].name);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#imgInp").change(function() {
-            readURL(this);
-        });
-
-        APP_URL = '{{ url('/supplierdropdown') }}';
-		function package_dropdown_ajax(selectedValue){
-				$.ajax({
-                            type: "GET",
-                            url: APP_URL + '/' + selectedValue,
-                            success: function(result) {
-
-                                if (result[0] === "") {
-                                    $("#service_div").show();
-                                    $("#services").hide();
-                                    $("#service_div").html(
-                                        `<h3> Please Add Service in the tour </h3>`);
-                                } else {
-                                    $("#service_div").hide();
-                                    $("#services").show();
-                                    $("#services").html(result);
-                                }
-                            },
-                            error: function(result) {
-                                console.log(result);
-                            }
-                        });
-			}
-		var selectedValue = $(tour_id).val();
-		package_dropdown_ajax(selectedValue);
-
-        $(document).ready(function() {
-			
-            
-            $("#tour_id").change(function() {
-               			var selectedValue = $(this).val();
-                		package_dropdown_ajax(selectedValue);
-                        
-                    });
-              		
-
-            function removeDropdown() {
-                // Remove the dropdown element if no selection is made
-                $('#services').next('select').remove();
-                //  $("#service_div").hide();
-            }
-        });
-
-        var array1 = [1, 2, 3, 4, 5];
-        var array2 = [5, 7, 8, 9, 10];
-
-        var allValuesNotInArray2 = true;
-
-        array1.forEach(function(value) {
-            if (array2.includes(value)) {
-                allValuesNotInArray2 = false;
-                return;
-            }
-        });
-
-        if (allValuesNotInArray2) {
-            console.log("All values of array1 are not in array2");
-        } else {
-            console.log("At least one value of array1 is present in array2");
-        }
-    </script>
-    <script>
-      let contactItemCount = 0;
-      invoice_payments();
-		function invoice_payments() {
-			let invoice_id = $("#invoice_id").val();
-            $.ajax({
-                url: '/api/getInvoicePayments/2',
-                method: 'GET',
-                data: {
-                    itemCount: contactItemCount + 1,
-					invoice_id:invoice_id,
-                }
-            }).done((res) => {
-                contactItemCount++;
-                $('#payment-inputs').append(res);
-                $('#payment-inputs').append('<input type="hidden" name="payments_loaded" value="1">');
-                $('input[name="_token"]').each(function() {
-                    // Replace the 'value' attribute with your CSRF token value
-                    $(this).val("{{ csrf_token() }}");
-                });
-            });
-        }
-      function payment_view_ajax(){
-            $.ajax({
-                url: '/api/getPaymentView',
-                method: 'GET',
-                data: {
-                    itemCount: contactItemCount + 1
-                }
-            }).done((res) => {
-                contactItemCount++;
-                $('#payment-inputs').append(res);
-                $('input[name="_token"]').each(function() {
-            // Replace the 'value' attribute with your CSRF token value
-            $(this).val("{{ csrf_token() }}");
-        });
-            });
-        }   
-      $('#add_feild_button').on('click', function() {
-        payment_view_ajax();
-        });
-        $(document).on('click', '#delete_contact_item', function() {
-            $(this).closest('.item-contact').remove();
-        });
-    </script>
 @endsection

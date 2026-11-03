@@ -109,22 +109,37 @@ class EventController extends Controller
      * @param    \Illuminate\Http\Request $request
      * @return  \Illuminate\Http\Response
      */
+    /**
+     * The validated form fields that may be saved on an event (never id or timestamps).
+     */
+    private function eventData($request)
+    {
+        return $request->only((new Event)->getFillable());
+    }
+
+    /**
+     * Replace the event's criteria with the validated ids from the request.
+     */
+    private function syncCriterias(Event $event, array $criteriaIds)
+    {
+        ServicesHasCriteria::where('service_id', $event->id)
+            ->where('service_type', ServicesHasCriteria::$serviceTypes['event'])
+            ->delete();
+        foreach (array_unique(array_map('intval', $criteriaIds)) as $criteria) {
+            $services_has_criteria = new ServicesHasCriteria();
+            $services_has_criteria->service_id = $event->id;
+            $services_has_criteria->criteria_id = $criteria;
+            $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['event'];
+            $services_has_criteria->save();
+        }
+    }
+
     public function store(StoreEventRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-        $event = $this->events->create($request->except(['attach', 'place_id', 'criterias']));
+        $event = $this->events->create($this->eventData($request));
 
-
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $event->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['event'];
-                $services_has_criteria->save();
-            }
-        }
+        $this->syncCriterias($event, (array) $request->input('criterias', []));
 
         LaravelFlashSessionHelper::setFlashMessage("Event $event->name created", 'success');
 
@@ -152,15 +167,16 @@ class EventController extends Controller
             ->select('events.*', 'rates.name as rate_name')
             ->where('events.id', $id)
             ->first();
+        // Check before using the event: a missing id is a 404, not a 500
+        if($event == null){
+            return abort(404);
+        }
         $event->getCriterias();
         $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
             ->orderBy('criterias.name','asc')
             ->select('criterias.*', 'criteria_types.name as criteria_name')
             ->where('criteria_types.service_type', '=', 'event')
             ->get();
-        if($event == null){
-            return abort(404);
-        }
         $files = $this->parseAttach($event);
 
         return view('event.show', ['event' => $event, 'title' => $title, 'files' => $files,
@@ -206,29 +222,24 @@ class EventController extends Controller
     public function update($id, UpdateEventRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-        $this->events->updateById($id, $request->except(['attach', 'place_id', 'criterias']));
-
-
-        ServicesHasCriteria::where('service_id', $id)
-            ->where('service_type', ServicesHasCriteria::$serviceTypes['event'])
-            ->delete();
+        $this->events->updateById($id, $this->eventData($request));
         $event = $this->events->getById($id);
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $event->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['event'];
-                $services_has_criteria->save();
-            }
+
+        // The edit form always marks the criteria as sent (also when every box is unticked);
+        // callers that do not send criteria leave them unchanged
+        if ($request->exists('criterias') || $request->boolean('criterias_sent')) {
+            $this->syncCriterias($event, (array) $request->input('criterias', []));
         }
 
         LaravelFlashSessionHelper::setFlashMessage("Event $event->name edited", 'success');
 
-        $this->addFile($request, $event);    
-        $data = ['route' => route('event.index')];
-        return response()->json($data);
+        $this->addFile($request, $event);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['route' => route('event.index')]);
+        }
+
+        // The edit page posts a normal form; send the browser back to the list
+        return redirect()->route('event.index');
     }
 
     /**

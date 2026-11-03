@@ -106,7 +106,7 @@ var comment = {
         const parent_name = link.attr('data-parent-name');
 
         $(document).find('#author_name').css({'display': 'table-cell'});
-        $(document).find('#name').append('@'+parent_name);
+        $(document).find('#name').text('@' + parent_name);
         $(document).find('#parent_comment').attr('value', id_comment);
         $(document).find('#content').focus();
     },

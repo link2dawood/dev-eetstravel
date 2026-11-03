@@ -419,8 +419,16 @@
                     {{-- Extra Amount --}}
                     <div class="form-group">
                         <label for="extra_amount">Extra Cost</label>
-                        <input type="number" step="0.01" name="extra_amount" id="extra_amount" class="form-control" placeholder="0.00">
+                    <input type="number" step="0.01" min="0" name="extra_amount" id="extra_amount" class="form-control" value="{{ old('extra_amount', '0.00') }}" placeholder="0.00">
                     </div>
+                <div class="form-group">
+                    <label for="received_date">Received Date</label>
+                    <input type="date" name="received_date" id="received_date" class="form-control" value="{{ old('received_date', $received_date) }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="due_date">Due Date</label>
+                    <input type="date" name="due_date" id="due_date" class="form-control" value="{{ old('due_date', $due_date) }}" required>
+                </div>
                 </div>
 
                 {{-- Tour Selection --}}
@@ -431,7 +439,7 @@
                     </label>
                     <select name="tour_id[]" id="tour_id" class="form-control select22" multiple="multiple" required>
                         @foreach ($tours as $tour)
-                            <option value="{{ $tour->id }}">{{ $tour->name }}</option>
+                            <option value="{{ $tour->id }}" @selected((string) old('tour_id.0', $tour_id) === (string) $tour->id)>{{ $tour->name }}</option>
                         @endforeach
                     </select>
                 </div>

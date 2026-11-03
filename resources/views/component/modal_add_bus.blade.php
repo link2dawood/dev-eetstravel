@@ -80,16 +80,8 @@
 
                     <input type='hidden' name='_token' value='{{Session::token()}}'>
 
-                    <div class="d-flex flex-wrap gap-4 mb-3">
-                        <label class="form-check trip_select mb-0">
-                            <input class="form-check-input" type="radio" name="form_mode" value="0" checked>
-                            <span class="form-check-label">{!!trans('main.Withouttour')!!}</span>
-                        </label>
-                        <label class="form-check tour_select mb-0">
-                            <input class="form-check-input" type="radio" name="form_mode" value="1">
-                            <span class="form-check-label">{!!trans('main.Withtour')!!}</span>
-                        </label>
-                    </div>
+                    <input type="hidden" name="form_mode" value="0">
+                    <p class="text-muted">To assign buses to a tour, open the tour page.</p>
 
                     <div class="row g-3">
                         <div class="col-12 trip_field">
@@ -244,6 +236,13 @@
                 if (select.hasClass('select2-hidden-accessible')) select.select2('destroy');
                 var options = { width: '100%', dropdownParent: modal };
                 if (this.id === 'drivers_trip') options.placeholder = 'Select drivers';
+                if (this.id === 'drivers_trip' || this.id === 'bus_trip') {
+                    var kind = this.id === 'bus_trip' ? 'bus' : 'driver';
+                    options.ajax = {
+                        url: '/api/bus_calendar/options', dataType: 'json', delay: 250,
+                        data: function (params) { return { kind: kind, q: params.term || '', page: params.page || 1 }; }
+                    };
+                }
                 if (this.id === 'drivers_tour') { options.placeholder = 'Select a transfer first'; options.disabled = !$('#transfer_tour').val(); }
                 select.select2(options);
             });

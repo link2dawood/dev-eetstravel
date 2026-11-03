@@ -15,6 +15,7 @@ use Swift_Mailer;
 use Swift_Message;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class EmailsController{
 
     public $server;
@@ -33,24 +34,76 @@ class EmailsController{
         $user = User::findOrFail($userId);
 		
         try{
-      
-                $this ->server = new ImapClient(
-                    env( 'IMAP_HOST', 'eetstravel.com' ),
-                    config('imap.accounts.default.username'), config('imap.accounts.default.password'),
-                    ImapClient::ENCRYPT_SSL
-                );
-           
+            if (!function_exists('imap_open')) {
+                throw new \RuntimeException('PHP IMAP extension is unavailable');
+            }
+
+            if (function_exists('imap_timeout')) {
+                imap_timeout(IMAP_OPENTIMEOUT, 10);
+                imap_timeout(IMAP_READTIMEOUT, 20);
+                imap_timeout(IMAP_WRITETIMEOUT, 20);
+            }
+            if (function_exists('imap_errors')) {
+                imap_errors();
+            }
+            if (function_exists('imap_alerts')) {
+                imap_alerts();
+            }
+
+            $this->server = new ImapClient(
+                env('IMAP_HOST', 'eetstravel.com'),
+                $user->email_login,
+                app(\App\Services\MailboxCredentials::class)->password($user),
+                ImapClient::ENCRYPT_SSL
+            );
 
             return $this->server->isConnected();
 
 
         } catch(\Throwable $e){
+            Log::warning('Mailbox connection failed', [
+                'user_id' => $user->id,
+                'cause' => $this->mailboxFailureCause($e),
+                'exception_type' => get_class($e),
+            ]);
+
             // a clear JSON error instead of a 500 (e.g. wrong login, server down, PHP imap extension missing)
             throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
                 'error' => true,
-                'message' => 'The mailbox could not be reached: ' . $e->getMessage(),
+                'message' => 'The mailbox could not be reached. Check your mailbox configuration.',
             ], 503));
         }
+    }
+
+    private function mailboxFailureCause(\Throwable $exception): string
+    {
+        if (!function_exists('imap_open')) {
+            return 'imap_extension_unavailable';
+        }
+        if ($exception instanceof \RuntimeException) {
+            return 'stored_credentials_unavailable';
+        }
+        if ($exception instanceof AuthenticationFailedException) {
+            return 'imap_authentication_rejected';
+        }
+        if (!$exception instanceof \App\Http\Imap\ImapClientException) {
+            return 'application_error';
+        }
+
+        $errors = function_exists('imap_errors') ? imap_errors() : false;
+        $diagnostic = strtolower(implode(' ', is_array($errors) ? $errors : []));
+
+        if (preg_match('/authentication failed|login failed|invalid credentials|password incorrect|invalid login/', $diagnostic)) {
+            return 'imap_authentication_rejected';
+        }
+        if (preg_match('/timed? ?out|timeout/', $diagnostic)) {
+            return 'imap_timeout';
+        }
+        if (preg_match('/connection refused|failed to connect|could not connect|network is unreachable|no route to host|unable to connect/', $diagnostic)) {
+            return 'imap_transport_failure';
+        }
+
+        return 'imap_connection_failed';
     }
 
     public function getFolderList($userId){

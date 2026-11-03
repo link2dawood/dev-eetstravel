@@ -12,6 +12,9 @@ class VerifyCsrfToken extends BaseVerifier
      * @var array
      */
     protected $except = [
+        // SnappyMail validates its own action tokens; the gateway still requires auth/email.main.
+        'snappymail',
+        'snappymail/*',
         //
     ];
 }

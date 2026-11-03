@@ -102,7 +102,7 @@
                         <select name="tour_id" id="tour_id" class="form-select" required>
                             <option value="" disabled selected>Choose tour...</option>
                             @foreach ($tours as $tour)
-                                <option value="{{ $tour->id }}" {{ old('tour_id') == $tour->id ? 'selected' : '' }}>{{ $tour->name }}</option>
+                                <option value="{{ $tour->id }}" {{ old('tour_id', $selectedTourId ?? null) == $tour->id ? 'selected' : '' }}>{{ $tour->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -113,7 +113,7 @@
                         <select name="client_id" id="client_id" class="form-select" required>
                             <option value="" disabled selected>Choose client...</option>
                             @foreach ($clients as $client)
-                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                <option value="{{ $client->id }}" {{ old('client_id', $selectedClientId ?? null) == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
                             @endforeach
                         </select>
                     </div>

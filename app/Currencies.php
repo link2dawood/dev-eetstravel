@@ -28,4 +28,15 @@ use Illuminate\Database\Eloquent\Model;
 class Currencies extends Model
 {
     protected $table = 'currencies';
+
+    public function isInUse(): bool
+    {
+        foreach (['tour_packages', 'hotel_offers'] as $table) {
+            if (\Illuminate\Support\Facades\DB::table($table)->where('currency', $this->id)->exists()) return true;
+        }
+        foreach (['client_invoices', 'currency_rates'] as $table) {
+            if (\Illuminate\Support\Facades\DB::table($table)->whereRaw('UPPER(currency) = ?', [strtoupper($this->code)])->exists()) return true;
+        }
+        return false;
+    }
 }

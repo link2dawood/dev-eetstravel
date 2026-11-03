@@ -142,6 +142,7 @@ function handlePagination() {
 
     $('.table tbody').each(function() {
         const tbody = $(this);
+        if (tbody.closest('table').attr('data-server-paginated') === 'true') return;
         const rows = tbody.find('tr');
 
         if (rows.length > itemsPerPage) {

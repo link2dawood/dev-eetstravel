@@ -43,6 +43,8 @@
                         </td>
                         <td>{{ $bus->transfer ? $bus->transfer->name : '—' }}</td>
                     </tr>
+                    <tr><td>Capacity</td><td>{{ $bus->capacity ?? '-' }}</td></tr>
+                    <tr><td>Comments</td><td style="white-space: pre-wrap">{{ $bus->comments ?: '-' }}</td></tr>
                     </tbody>
                 </table>
                 <div class="clearfix"></div>

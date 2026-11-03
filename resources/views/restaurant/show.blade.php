@@ -38,26 +38,26 @@
                                 <td>
                                     <b><i>{{trans('main.Name')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->name!!}</td>
+                                <td class="info_td_show">{{ $restaurant->name }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.AddressFirst')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->address_first!!}</td>
+                                <td class="info_td_show">{{ $restaurant->address_first }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.AddressSecond')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->address_second!!}</td>
+                                <td class="info_td_show">{{ $restaurant->address_second }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.Country')}} : </i></b>
                                 </td>
 								@if(!empty($restaurant->country))
-								<td class="info_td_show">{!! \App\Helper\CitiesHelper::getCountryById($restaurant->country)['name']!!}</td>
+								<td class="info_td_show">{{ \App\Helper\CitiesHelper::getCountryById($restaurant->country)['name'] }}</td>
 								@else
 								<td class="info_td_show"></td>
 								@endif
@@ -69,9 +69,9 @@
                                 </td>
 								@if(!empty($restaurant->city))
 									@if(is_numeric($restaurant->city))
-									<td class="info_td_show">{!! \App\Helper\CitiesHelper::getCityById($restaurant->city)['name']!!}</td>
+									<td class="info_td_show">{{ \App\Helper\CitiesHelper::getCityById($restaurant->city)['name'] }}</td>
 									@else
-									<td class="info_td_show">{!! $restaurant->city!!}</td>
+									<td class="info_td_show">{{ $restaurant->city }}</td>
 
 									@endif
 								@else
@@ -83,25 +83,25 @@
                                 <td>
                                     <b><i>{{trans('main.Code')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->code!!}</td>
+                                <td class="info_td_show">{{ $restaurant->code }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.WorkPhone')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->work_phone!!}</td>
+                                <td class="info_td_show">{{ $restaurant->work_phone }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.WorkFax')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->work_fax!!}</td>
+                                <td class="info_td_show">{{ $restaurant->work_fax }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.WorkEmail')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->work_email!!}</td>
+                                <td class="info_td_show">{{ $restaurant->work_email }}</td>
                             </tr>
                             </tbody>
                         </table>
@@ -111,31 +111,31 @@
                                 <td>
                                     <b><i>{{trans('main.ContactName')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->contact_name!!}</td>
+                                <td class="info_td_show">{{ $restaurant->contact_name }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.ContactName')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->contact_phone!!}</td>
+                                <td class="info_td_show">{{ $restaurant->contact_phone }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.ContactEmail')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->contact_email!!}</td>
+                                <td class="info_td_show">{{ $restaurant->contact_email }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.Comments')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->comments!!}</td>
+                                <td class="info_td_show">{!! nl2br(e($restaurant->comments)) !!}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.IntComments')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->int_comments!!}</td>
+                                <td class="info_td_show">{!! nl2br(e($restaurant->int_comments)) !!}</td>
                             </tr>
                             <tr>
                                 <td>
@@ -144,7 +144,7 @@
                                 @forelse($criterias as $criteria)
                                     @forelse($restaurant->criterias as $item)
                                         @if($criteria->id == $item->criteria_id)
-                                            <td class="info_td_show criteria_block" style="display: block">{!!$criteria->name!!}</td>
+                                            <td class="info_td_show criteria_block" style="display: block">{{ $criteria->name }}</td>
                                         @endif
                                     @empty
                                         <td class="info_td_show"></td>
@@ -157,13 +157,13 @@
                                 <td>
                                     <b><i>{{trans('main.Rate')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->rate_name!!}</td>
+                                <td class="info_td_show">{{ $restaurant->rate_name }}</td>
                             </tr>
                             <tr>
                                 <td>
                                     <b><i>{{trans('main.Website')}} : </i></b>
                                 </td>
-                                <td class="info_td_show">{!!$restaurant->website!!}</td>
+                                <td class="info_td_show">{{ $restaurant->website }}</td>
                             </tr>
                             </tbody>
                         </table>

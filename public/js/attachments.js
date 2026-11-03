@@ -35,8 +35,14 @@ $(document).ready(function () {
             }
 
             if (window.location.href.indexOf("edit") > 0){
-                self.closest('.file-caption-main').find('.file-caption-name').html(that.files[0].name);
-                $('.pic').attr('src', uploadedFile.url);
+                // .text(): a file name is data, never markup
+                self.closest('.file-caption-main').find('.file-caption-name').text(that.files[0].name);
+                // Only the picture this input belongs to; fall back to the page's image only when it has exactly one
+                var pic = self.closest('.card, .thumbnail, .box, .form-group').find('.pic');
+                if (!pic.length && $('.pic').length === 1) {
+                    pic = $('.pic');
+                }
+                pic.first().attr('src', uploadedFile.url);
             } else{
                 // Images page: show the new picture in this category's card (create the <img> if it had none)
                 var card = self.closest('.card, .thumbnail');

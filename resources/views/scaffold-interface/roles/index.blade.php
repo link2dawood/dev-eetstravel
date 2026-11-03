@@ -38,7 +38,7 @@
 									<span class="badge bg-blue-lt">{{ $role->name }}</span>
 								</td>
 								<td>
-									@if(!empty($role->permissions))
+									@if($role->permissions->isNotEmpty())
 										<div class="badges-list">
 											@foreach($role->permissions as $permission)
 												<span class="badge bg-orange text-orange-fg">{{ $permission->alias }}</span>
@@ -50,7 +50,7 @@
 								</td>
 								<td>
 									<div class="btn-list flex-nowrap table-actions-inline">
-<a href="{{url('/roles')}}/{{$role->id}}/edit" class="btn btn-icon btn-ghost-warning" title="Edit">
+<a href="{{url('/roles')}}/{{$role->id}}/edit" class="btn btn-icon btn-primary" title="Edit" aria-label="Edit">
 											<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 												<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 												<path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -58,10 +58,11 @@
 												<path d="M16 5l3 3" />
 											</svg>
 										</a>
+@unless(\App\Http\Controllers\ScaffoldInterface\RoleController::isProtected($role))
 <form action="{{ route('roles.destroy', $role->id) }}" method="POST" style="display: inline-block;">
 											@csrf
 											@method('DELETE')
-											<button type="submit" class="btn btn-icon btn-ghost-danger js-confirm-delete-form" title="Delete" data-confirm-message="Are you sure you want to delete this role?">
+											<button type="submit" class="btn btn-icon btn-danger js-confirm-delete-form" title="Delete" aria-label="Delete" data-confirm-message="{{ $role->users_count ? $role->users_count . ' user(s) will lose this role. ' : '' }}Are you sure you want to delete this role?">
 												<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 													<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 													<path d="M4 7l16 0" />
@@ -72,6 +73,7 @@
 												</svg>
 											</button>
 										</form>
+@endunless
 									</div>
 								</td>
 							</tr>

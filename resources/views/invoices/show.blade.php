@@ -66,14 +66,18 @@
                             <td>
                                 <b><i>{!!trans('Office Name')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$office->office_name}}</td>
+			<td class="info_td_show">{{$office->office_name ?? ''}}</td>
                         </tr>
                         <tr>
                             <td>
                                 <b><i>{!!trans('Total Price')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$invoices->total_amount}}</td>
+                            <td class="info_td_show">{{ number_format((float) $invoices->total_amount + (float) $invoices->extra_amount, 2) }}</td>
                         </tr>
+						<tr>
+							<td><b><i>Extra Cost : </i></b></td>
+							<td class="info_td_show">{{ number_format((float) $invoices->extra_amount, 2) }}</td>
+						</tr>
 							 <tr>
                             <td>
                                 <b><i>{!!trans('Status')!!} : </i></b>
@@ -90,13 +94,13 @@
                             <td>
                                 <b><i>{!!trans('Tour')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$invoice_tour->tours->name??""}}</td>
+			<td class="info_td_show">{{$invoices->activeTours->pluck('tours.name')->filter()->unique()->implode(', ')}}</td>
                         </tr>
 							 <tr>
                             <td>
                                 <b><i>{!!trans('Service')!!} : </i></b>
                             </td>
-                            <td class="info_td_show">{{$invoice_tour->package->name??""}}</td>
+			<td class="info_td_show">{{$invoices->activeTours->map(function ($link) { return $link->package->name ?? 'Extra Cost'; })->unique()->implode(', ')}}</td>
                         </tr>
                        
                         </tbody>

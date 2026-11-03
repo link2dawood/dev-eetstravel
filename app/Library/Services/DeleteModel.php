@@ -24,9 +24,11 @@ class DeleteModel
         $flip_servicesTypes = array_flip($this->servicesTypes);
         switch ($modelName){
             case "Rate":    
-                $count = $model->hotels->count();
-                if ($count > 0){
-                    $ret = 'The  '. $model->name . ' is used by hotels!';
+                // Include archived suppliers: historical references must remain valid too.
+                foreach (['hotels', 'events', 'restaurants', 'guides', 'transfers'] as $table) {
+                    if (\Illuminate\Support\Facades\DB::table($table)->where('rate', $model->id)->exists()) {
+                        return $model->name . ' cannot be deleted: it is used by ' . $table . '.';
+                    }
                 }
                 break;
 
@@ -35,7 +37,7 @@ class DeleteModel
                 $count = $tp->count();
 
                 if ($count > 0){
-                    $ret = "Delete ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
 
@@ -43,7 +45,7 @@ class DeleteModel
                 $tp = \App\TourPackage::where('type', $flip_servicesTypes[strtolower($modelName)])->where('reference', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
 
@@ -51,7 +53,7 @@ class DeleteModel
                 $tp = \App\TourPackage::where('type', $flip_servicesTypes[strtolower($modelName)])->where('reference', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
 
@@ -59,7 +61,7 @@ class DeleteModel
                 $tp = \App\TourPackage::where('type', $flip_servicesTypes[strtolower($modelName)])->where('reference', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
                 
@@ -67,15 +69,19 @@ class DeleteModel
                 $tp = \App\TourPackage::where('type', $flip_servicesTypes[strtolower($modelName)])->where('reference', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete  ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
 
             case "Transfer":
+                if (\App\Bus::where('transfer_id', $model->id)->exists()
+                    || \App\Driver::where('transfer_id', $model->id)->exists()) {
+                    return $model->name . ' cannot be deleted: it has active buses or drivers.';
+                }
                 $tp = \App\TourPackage::where('type', $flip_servicesTypes[strtolower($modelName)])->where('reference', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete  ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " tour service(s).";
                 }
                 break;
 
@@ -84,7 +90,7 @@ class DeleteModel
                 $trip_drivers = TripToDrivers::query()->where('driver_id', $model->id)->get();
                 $count = $transfer_drivers->count() + $trip_drivers->count();
                 if($count > 0){
-                    $ret = "Delete  ". $model->name . "! It used in " .$count. " bus days!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " bus day(s).";
                 }
                 break;
 
@@ -92,7 +98,7 @@ class DeleteModel
                 $tp = \App\ServicesHasCriteria::where('criteria_id', $model->id)->get();
                 $count = $tp->count();
                 if ($count > 0){
-                    $ret = "Delete  ". $model->name . "! It used in " .$count. " tours!";
+                    $ret = $model->name . " cannot be deleted: it is used in " . $count . " supplier(s).";
                 }
                 break;
 
@@ -101,7 +107,7 @@ class DeleteModel
                 $tourCount = count($model->getToursAttachedToUser());
                 
                 if ($tourCount + $taskCount > 0){
-                    $ret = "Delete User ". $model->name . "! It used in " .$tourCount. " tours and in " .$taskCount. " tasks!";
+                    $ret = "User " . $model->name . " cannot be deleted: it is used in " . $tourCount . " tour(s) and " . $taskCount . " task(s).";
                 }
                 break;
                 
@@ -116,10 +122,8 @@ class DeleteModel
             default:
                 return NULL;
         }
-		
-		if ($ret !== NULL) {
-        $model->delete();
-    	}
+        // Only report: the caller deletes when there is no message. (This used to delete
+        // exactly the records that are still in use.)
         return $ret;
     }
 }

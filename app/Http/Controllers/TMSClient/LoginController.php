@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Tour;
 use App\Client;
 use Session;
-use Illuminate\Support\Facades\Crypt;
 
 class LoginController extends Controller
 {
@@ -58,42 +57,18 @@ class LoginController extends Controller
     }      */
 public function Clientauth(Request $request)
 {
-	
-    try {
-        $contact_email = $request->input('contact_email');
-        $password = Crypt::encryptString($request->input('password'));
-
-        $password = Crypt::decryptString($password );
-		
-		$client = Client::where("contact_email", $contact_email)->first();
-	
-		$client_password = "";
-		
-		if($client){
-			$client_password = Crypt::decryptString($client->password );
-		}
-       // $client = DB::select("SELECT * FROM clients WHERE contact_email = ? AND password = ?`", [$contact_email, $password]);
-     	
-        if ($client and $password == $client_password) {
-            $request->session()->put('CLIENT_LOGIN', true);
-            $request->session()->put('CLIENT_ID', $client->id);
-            
-            return redirect()->route('TMS-Client.home')->with([
-                'message' => 'You are logged in successfully',
-                'alert-type' => 'success'
-            ]);
-        } else {
-            return redirect('TMS-Client/login')->with('error', 'Invalid email or password.');
-        }
-    } catch (\Exception $e) {
-        dd($e->getMessage());
-    }
+    $data = $request->validate(['contact_email' => 'required|string|email|max:191', 'password' => 'required|string|max:4096']);
+    $client = Client::where('contact_email', strtolower(trim($data['contact_email'])))->first();
+    try { $valid = $client && $client->password && \Illuminate\Support\Facades\Hash::check($data['password'], $client->password); }
+    catch (\Throwable $e) { $valid = false; }
+    if (!$valid) return redirect('TMS-Client/login')->with('error', 'Invalid email or password.');
+    $request->session()->regenerate();
+    $request->session()->put('CLIENT_LOGIN', true);
+    $request->session()->put('CLIENT_ID', $client->id);
+    return redirect()->route('TMS-Client.home')->with('message', 'You are logged in successfully');
 }
 
-
-
-
-    public function home()
+public function home()
 		
     {
 	

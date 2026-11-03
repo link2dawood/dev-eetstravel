@@ -114,7 +114,7 @@
                                         </span>
                                     </div>
                                     <div class="col text-truncate">
-                                        <div class="d-block text-body">{!! $task->tourNameNotification() !!}</div>
+                                        <div class="d-block text-body">{{ $task->tourNameNotification() }}</div>
                                         <div class="text-muted mt-1">
                                             <small>{!! $task->dead_line !!}</small>
                                         </div>

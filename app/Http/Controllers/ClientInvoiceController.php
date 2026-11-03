@@ -42,41 +42,33 @@ use Illuminate\Support\Facades\Schema;
 
 class ClientInvoiceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'permissions.required', 'preventBackHistory']);
+    }
 
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clientInvoices = ClientInvoices::with(['client'])->orderBy('date', 'desc')->get();
-
-        $permission_edit = PermissionHelper::$relationsPermissionEdit['App\ClientInvoices'] ?? 'accounting.edit';
-        $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\ClientInvoices'] ?? 'accounting.destroy';
-        $permission_show = PermissionHelper::$relationsPermissionShow['App\ClientInvoices'] ?? 'accounting.show';
-
-        $perm = [];
-        $perm['show'] = Auth::user()->can($permission_show);
-        $perm['edit'] = Auth::user()->can($permission_edit);
-        $perm['destroy'] = Auth::user()->can($permission_destroy);
-        $perm['clone'] = Auth::user()->can('accounting.create') ?? false;
-
-        // Process each invoice to add computed fields
-        $accountingData = $clientInvoices->map(function ($invoice) use ($perm) {
-            // Tour name
-            $tour = Tour::find($invoice->tour_id);
-            $invoice->tourName = $tour->name ?? '';
-
-            // Client name
-            $client = Client::find($invoice->client_id);
-            $invoice->clientName = $client->name ?? '';
-
-            // Status calculation
-            $transaction = Transaction::where("invoice_id", $invoice->id)->where("pay_to", "Client");
-            $sum_amount = $transaction->sum("amount");
+        $search = trim((string)$request->input('search'));
+        $accountingData = ClientInvoices::with(['client', 'tour'])->withSum('payments as paid', 'amount')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('invoice_no', 'like', "%$search%")
+                        ->orWhereHas('client', fn($client) => $client->where('name', 'like', "%$search%"))
+                        ->orWhereHas('tour', fn($tour) => $tour->where('name', 'like', "%$search%"));
+                });
+            })->orderByDesc('date')->orderByDesc('id')->paginate(25)->withQueryString();
+        $accountingData->getCollection()->transform(function ($invoice) {
+            $invoice->tourName = $invoice->tour->name ?? '';
+            $invoice->clientName = $invoice->client->name ?? '';
+            $sum_amount = $invoice->paid ?? 0;
             $amount = $invoice->amount_receiveable ?? 0;
-            $remaining_amount = $amount - $sum_amount;
+            $remaining_amount = round($amount - $sum_amount, 2);
 
             if ($sum_amount == $amount) {
                 $result = "Paid";
@@ -123,23 +115,14 @@ class ClientInvoiceController extends Controller
 
     public function serviceTransactionCreate($tourId, Request $request)
     {
-        $transactions = ClientInvoices::find($tourId);
-        $tour = Tour::find($transactions->tour_id);
-    $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
-        $tourName = $tour->name;
-        $clients = Client::all();
-        $hotels = Hotel::all();
-        $events = Event::all();
-        $buses = Bus::all();
-        $restaurants = Restaurant::all();
-
-        $options = array("Event", "Restaurant", "Bus");
-        return view('accounting.service_transaction.create', compact('offices', 'tourName', 'clients', 'hotels', 'options', 'events', 'buses', 'restaurants'));
+        return $this->create($request, $tourId);
     }
     public function create(Request $request, $tour_id = null)
     {
 
-        $tour = Tour::all()->first();
+        $tour = $tour_id ? Tour::findOrFail($tour_id) : Tour::query()->first();
+        $selectedTourId = $tour_id;
+        $selectedClientId = $tour_id ? $tour->client_id : null;
         $quotation = $tour ? Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first() : null;
 
     $offices = Schema::hasTable((new Offices)->getTable()) ? Offices::all() : collect();
@@ -153,15 +136,16 @@ class ClientInvoiceController extends Controller
         $options = array("Event", "Restaurant", "Bus");
 		$taxes = Tax::all();
 		$count =1;
-        return view('accounting.create', compact('offices', 'tours', 'clients', 'hotels', 'options', 'events', 'buses', 'restaurants', 'quotation','taxes','count'));
+        return view('accounting.create', compact('offices', 'tours', 'clients', 'hotels', 'options', 'events', 'buses', 'restaurants', 'quotation','taxes','count', 'selectedTourId', 'selectedClientId'));
     }
     public function show($id, Request $request)
     {
 
         $title = 'Show - Transactions';
+        ClientInvoices::findOrFail($id);
 
         if ($request->ajax()) {
-            return URL::to('clients/' . $id);
+            return route('accounting.show', $id);
         }
 
         $transactions = ClientInvoices::findOrFail($id);
@@ -236,7 +220,7 @@ class ClientInvoiceController extends Controller
                 $invoice->date = Carbon::today()->format('Y-m-d');
             }
             $invoice->save();
-            DB::table('invoice_items')->where('invoice_id', $invoice->id)->delete();
+            DB::table('invoice_items')->where('invoice_id', $invoice->id)->whereNull('deleted_at')->delete();
             foreach ($items as $item) DB::table('invoice_items')->insert($item + ['invoice_id' => $invoice->id]);
             if ($id && $replacePayments) Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->delete();
             InvoicePayments::save($payments, $invoice->id, 'Client');
@@ -258,7 +242,8 @@ class ClientInvoiceController extends Controller
     }
     public function DeleteMsg($id, Request $request)
     {
-        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/accounting/' . $id . '/delete');
+        ClientInvoices::findOrFail($id);
+        $msg = Ajaxis::BtDeleting('Archive invoice', 'Archive this invoice? Its financial records will be preserved.', '/accounting/' . $id . '/delete');
 
         if ($request->ajax()) {
             return $msg;
@@ -271,10 +256,11 @@ class ClientInvoiceController extends Controller
             if (Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['invoice' => 'An invoice with payments cannot be deleted.']);
             }
-            DB::table('invoice_items')->where('invoice_id', $id)->delete();
+            DB::table('invoice_items')->where('invoice_id', $id)->whereNull('deleted_at')->update(['deleted_at' => now()]);
+            $invoice->deleted_by = Auth::id(); $invoice->save();
             $invoice->delete();
         });
-        return request()->ajax() ? URL::to('accounting') : redirect()->route('accounting.index');
+        return request()->expectsJson() ? response()->json(['route' => route('accounting.index'), 'message' => 'Invoice archived; financial records preserved.']) : redirect()->route('accounting.index');
     }
     public function supplierdropdown($id, Request $request)
     {
@@ -372,12 +358,13 @@ class ClientInvoiceController extends Controller
         return [
             'invoice' => $invoice, 'office' => Offices::findOrFail($invoice->office_id),
             'client' => Client::findOrFail($invoice->client_id), 'tour' => Tour::findOrFail($invoice->tour_id),
-            'items' => DB::table('invoice_items')->where('invoice_id', $id)->get(),
+            'items' => DB::table('invoice_items')->where('invoice_id', $id)->whereNull('deleted_at')->get(),
             'payments' => Transaction::where('invoice_id', $id)->where('pay_to', 'Client')->orderBy('date')->get(),
         ];
     }
     public function getItemInvoiceView(Request $request)
     {
+        $this->requireAnyPermission(['transactions.create', 'transactions.edit']);
         $count = $request->get('itemCount');
 		$taxes = Tax::all();
         $view = View::make('component.invoice_item_form', compact('count','taxes'));
@@ -386,10 +373,12 @@ class ClientInvoiceController extends Controller
     }
 	public function getInvoiceItem(Request $request)
     {
+        $this->requireAnyPermission(['transactions.show', 'transactions.edit']);
 		$count = $request->get('itemCount');
         $invoice_id = $request->get('invoice_id');
+        ClientInvoices::findOrFail($invoice_id);
 		$taxes = Tax::all();
-		$invoice_items = DB::table('invoice_items')->where('invoice_id', $invoice_id)->get();
+		$invoice_items = DB::table('invoice_items')->where('invoice_id', $invoice_id)->whereNull('deleted_at')->get();
 		
         $view = View::make('component.invoice_items', compact('count','taxes','invoice_items'));
 
@@ -397,7 +386,7 @@ class ClientInvoiceController extends Controller
     }
     public function getTourquotation($tour_id)
     {
-        $tour = Tour::find($tour_id);
+        $tour = Tour::findOrFail($tour_id);
         $quotation = $tour ? Quotation::where("tour_id", $tour->id)->where("is_confirm", "1")->first() : null;
         if (!empty($quotation)) {
             $input =$quotation->id;
@@ -405,6 +394,14 @@ class ClientInvoiceController extends Controller
             $input ="";
         }
         return $input;
+    }
+    private function requireAnyPermission(array $permissions)
+    {
+        foreach ($permissions as $permission) {
+            try { if (Auth::user() && Auth::user()->hasPermissionTo($permission)) return; }
+            catch (\Throwable $e) { /* Missing permissions do not grant access. */ }
+        }
+        abort(403);
     }
     public function excelExport(Request $request, $id, string $export = "xlsx")
     {
@@ -447,6 +444,7 @@ class ClientInvoiceController extends Controller
     }
 
     public function getPaymentView(Request $request){
+        $this->requireAnyPermission(['transactions.create', 'transactions.edit', 'invoices.create', 'invoices.edit']);
         $count = $request->get('itemCount');
         $view = View::make('component.payment_form', compact('count'));
 
@@ -454,8 +452,10 @@ class ClientInvoiceController extends Controller
     }
 	public function getInvoicePayments($pay_to,Request $request)
     {
+        $this->requireAnyPermission($pay_to == 2 ? ['invoices.show', 'invoices.edit'] : ['transactions.show', 'transactions.edit']);
 		$count = $request->get('itemCount');
         $invoice_id = $request->get('invoice_id');
+        if ($pay_to == 2) Invoices::findOrFail($invoice_id); else ClientInvoices::findOrFail($invoice_id);
 		
 		if($pay_to == 2){
         $payments = Transaction::where("invoice_id", $invoice_id)->where("pay_to", "Supplier")->get();

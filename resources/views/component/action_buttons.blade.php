@@ -289,10 +289,15 @@
         'clients' => 'POST',
         'office' => 'POST',
         'invoices' => 'POST',
-        'taxes' => 'POST',
+        'taxes' => 'GET', // its delete route is the deleteMsg confirmation page
         'accounting' => 'POST',
     ];
     $delete_method = $deleteMethodOverrides[$prefix] ?? 'POST';
+    if ($prefix === 'comment') {
+        $ownsComment = (int)$entity->author_id === (int)Auth::id() || Auth::user()->hasRole('admin');
+        $canEdit = $canEdit && $ownsComment;
+        $canDelete = $canDelete && $ownsComment;
+    }
 @endphp
 
 <div class="btn-list flex-nowrap">
@@ -318,6 +323,9 @@
            data-delete-url="{{ $delete_route }}"
            data-delete-method="{{ $delete_method }}"
            data-entity-name="{{ $entity->content ?? $entity->name ?? 'item' }}"
+           @if($prefix === 'room_types') data-delete-message="Permanently delete this room type? This cannot be undone." @endif
+           @if($prefix === 'comment') data-delete-message="Archive this comment? Replies will be preserved." @endif
+           @if($prefix === 'accounting') data-delete-message="Archive this invoice? Its financial records will be preserved." @endif
            onclick="confirmDelete(this); return false;"
            title="{{ trans('main.Delete') ?? 'Delete' }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -363,7 +371,8 @@ function actionButtonConfirm(message) {
 }
 
 function submitDeleteRequest(deleteUrl, deleteMethod, button) {
-    if (deleteMethod === 'POST') {
+    // GET targets are confirmation pages (e.g. taxes deleteMsg); delete routes themselves only accept POST/DELETE
+    if (deleteMethod === 'GET') {
         window.location.href = deleteUrl;
         return;
     }
@@ -390,9 +399,14 @@ function submitDeleteRequest(deleteUrl, deleteMethod, button) {
         credentials: 'same-origin'
     })
         .then(function(response) {
-            return response.json().catch(function() {
-                return { success: response.ok, message: response.ok ? 'Deleted successfully' : 'Error deleting item' };
-            }).then(function(data) {
+            const isJson = (response.headers.get('content-type') || '').indexOf('application/json') !== -1;
+            if (!isJson) {
+                // Controllers that redirect report the outcome as a flash message; reload to show it
+                if (!response.ok) throw new Error('Error deleting item');
+                window.location.reload();
+                return new Promise(function() {});
+            }
+            return response.json().then(function(data) {
                 if (!response.ok || data.success === false) {
                     throw new Error(data.message || 'Error deleting item');
                 }
@@ -424,7 +438,7 @@ function confirmDelete(element) {
     const entityName = element.dataset.entityName || 'this item';
     const deleteMethod = (element.dataset.deleteMethod || 'POST').toUpperCase();
 
-    actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
+    actionButtonConfirm(element.dataset.deleteMessage || `Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
         if (!confirmed) return;
         submitDeleteRequest(deleteUrl, deleteMethod, element);
     });
@@ -442,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const deleteMethod = (deleteBtn.dataset.deleteMethod || 'POST').toUpperCase();
         const entityName = deleteBtn.dataset.entityName || 'this item';
 
-        actionButtonConfirm(`Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
+        actionButtonConfirm(deleteBtn.dataset.deleteMessage || `Are you sure you want to delete "${entityName}"?`).then(function(confirmed) {
             if (!confirmed) return;
             submitDeleteRequest(deleteUrl, deleteMethod, deleteBtn);
         });

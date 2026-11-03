@@ -495,7 +495,7 @@
                         </ul>
 
                         <form id="commentForm" method="POST" class="form-light"
-                            action='{{ route('add_comment', [$tour_package->id]) }}' id="tour_package_add_form">
+                            action='{{ route('add_comment', [\Illuminate\Support\Facades\Crypt::encryptString($tour_package->id)]) }}' id="tour_package_add_form">
                             <input type='hidden' name='_token' value='{{ Session::token() }}'>
                             <div class="input-wrapper">
                                 <textarea name="comment" id="" rows="4" class="form-control" placeholder="Write you comment"></textarea>
@@ -834,7 +834,7 @@
     function loadOffers() {
         var tbody = document.getElementById('offers-tbody');
         if (!tbody) return;
-        $.getJSON(@json(route('offers_data', [$tour_package->id, 1]))).done(function (response) {
+        $.getJSON(@json(route('offers_data', [\Illuminate\Support\Facades\Crypt::encryptString($tour_package->id), 1]))).done(function (response) {
             tbody.innerHTML = '';
             var rows = response.data || [];
             if (!rows.length) {

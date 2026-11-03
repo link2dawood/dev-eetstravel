@@ -28,25 +28,25 @@
                         <td class="show_width_td">
                             <b><i>Name : </i></b>
                         </td>
-                        <td>{!!$driver->name!!}</td>
+                        <td>{{ $driver->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>Phone : </i></b>
                         </td>
-                        <td>{!!$driver->phone!!}</td>
+                        <td>{{ $driver->phone }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>Email : </i></b>
                         </td>
-                        <td>{!!$driver->email!!}</td>
+                        <td>{{ $driver->email }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>Bus Company : </i></b>
                         </td>
-                        <td>{!!@$driver->transfer->name!!}</td>
+                        <td>{{ $driver->transfer->name ?? '—' }}</td>
                     </tr>
                     </tbody>
                 </table>

@@ -50,7 +50,7 @@
                             </div>
 							<div class="form-group mb-3">
                                 <label >{{trans('Image')}}</label>
-                                <input type="file" name="image" value="{{ old('name') }}" class="form-control" accept=".svg,.png,.jpg,.jpeg,.gif,.webp" required>
+                                <input type="file" name="image" class="form-control" accept=".png,.jpg,.jpeg,.gif,.webp">
                             </div>
                         </div>
                     </div>

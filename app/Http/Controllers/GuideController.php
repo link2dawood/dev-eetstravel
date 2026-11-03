@@ -105,22 +105,38 @@ class GuideController extends Controller
      * @param    \Illuminate\Http\Request $request
      * @return  \Illuminate\Http\Response
      */
+    /**
+     * The validated form fields that may be saved on a guide (never id or timestamps).
+     */
+    private function guideData($request)
+    {
+        return $request->only((new Guide)->getFillable());
+    }
+
+    /**
+     * Replace the guide's criteria with the validated ids from the request.
+     */
+    private function syncCriterias(Guide $guide, array $criteriaIds)
+    {
+        ServicesHasCriteria::where('service_id', $guide->id)
+            ->where('service_type', ServicesHasCriteria::$serviceTypes['guide'])
+            ->delete();
+        foreach (array_unique(array_map('intval', $criteriaIds)) as $criteria) {
+            $services_has_criteria = new ServicesHasCriteria();
+            $services_has_criteria->service_id = $guide->id;
+            $services_has_criteria->criteria_id = $criteria;
+            $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['guide'];
+            $services_has_criteria->save();
+        }
+    }
+
     public function store(StoreGuideRequest $request)
     {
-
         $request = CitiesHelper::setCityGeneral($request);
-        $guide = $this->guide->create($request->except('attach', 'place_id', 'criterias'));
+        $guide = $this->guide->create($this->guideData($request));
 
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $guide->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['guide'];
-                $services_has_criteria->save();
-            }
-        }
+        $this->syncCriterias($guide, (array) $request->input('criterias', []));
+
         LaravelFlashSessionHelper::setFlashMessage("Guide $guide->name created", 'success');
 
         $this->addFile($request, $guide);
@@ -146,10 +162,11 @@ class GuideController extends Controller
             ->select('guides.*', 'rates.name as rate_name')
             ->where('guides.id', $id)
             ->first();
-        $guide->getCriterias();
+        // Check before using the guide: a missing id is a 404, not a 500
         if($guide == null){
             return abort(404);
         }
+        $guide->getCriterias();
         $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
             ->orderBy('criterias.name','asc')
             ->select('criterias.*', 'criteria_types.name as criteria_name')
@@ -200,21 +217,13 @@ class GuideController extends Controller
     public function update($id, UpdateGuideRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-        $this->guide->updateById($id, $request->except('attach', 'place_id', 'criterias'));
-        ServicesHasCriteria::where('service_id', $id)
-            ->where('service_type', ServicesHasCriteria::$serviceTypes['guide'])
-            ->delete();
+        $this->guide->updateById($id, $this->guideData($request));
         $guide = $this->guide->getById($id);
 
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $guide->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['guide'];
-                $services_has_criteria->save();
-            }
+        // The edit form always marks the criteria as sent (also when every box is unticked);
+        // callers that do not send criteria leave them unchanged
+        if ($request->exists('criterias') || $request->boolean('criterias_sent')) {
+            $this->syncCriterias($guide, (array) $request->input('criterias', []));
         }
 
         LaravelFlashSessionHelper::setFlashMessage("Guide $guide->name edited", 'success');

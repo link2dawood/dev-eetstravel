@@ -1,0 +1,43 @@
+.tms-spinner {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    margin-right: 0.45em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: -0.1em;
+    animation: tms-spin 0.7s linear infinite;
+}
+
+.tms-skeleton {
+    display: block;
+    min-height: 0.9rem;
+    border-radius: 0.35rem;
+    background: linear-gradient(90deg, #edf1f5 25%, #f7f9fb 50%, #edf1f5 75%);
+    background-size: 200% 100%;
+    animation: tms-shimmer 1.5s ease-in-out infinite;
+}
+
+.tms-skeleton-row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 1fr) minmax(10rem, 2fr) 4rem;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+}
+
+@keyframes tms-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes tms-shimmer {
+    to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tms-spinner,
+    .tms-skeleton {
+        animation: none;
+    }
+}

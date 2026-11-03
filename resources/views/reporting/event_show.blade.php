@@ -143,7 +143,7 @@
                             @forelse($criterias as $criteria)
                                 @forelse($event->criterias as $item)
                                     @if($criteria->id == $item->criteria_id)
-                                        <td style="display: block" class="info_td_show criteria_block">{!!$criteria->name!!}</td>
+                                        <td style="display: block" class="info_td_show criteria_block">{{ $criteria->name }}</td>
                                     @endif
                                 @empty
                                     <td class="info_td_show"></td>

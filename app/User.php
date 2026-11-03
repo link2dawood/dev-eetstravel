@@ -92,6 +92,19 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
+    public function setEmailPasswordAttribute($value)
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['email_password'] = null;
+            $this->attributes['email_password_encrypted'] = false;
+            return;
+        }
+        try { \Illuminate\Support\Facades\Crypt::decryptString($value); $encrypted = $value; }
+        catch (\Throwable $e) { $encrypted = \Illuminate\Support\Facades\Crypt::encryptString($value); }
+        $this->attributes['email_password'] = $encrypted;
+        $this->attributes['email_password_encrypted'] = true;
+    }
+
     /**
      * Get the avatar URL attribute.
      * Replaces the old Stapler avatar functionality.

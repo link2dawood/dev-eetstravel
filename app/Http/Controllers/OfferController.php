@@ -71,123 +71,404 @@ class OfferController extends Controller
 		$packages = $this->offerableHotelPackages();
 		return view('offers.select_create_package', compact('packages'));
 	}
-	public function cancellation_policies(){
+	public function cancellation_policies(Request $request){
 		$room_types = RoomTypes::all();
-		$currentDate = Carbon::now(); // Get the current date and time
-		$oneWeekLater = $currentDate->copy()->addWeek(); // Add one week to the current date
-		$tours = Tour::where('status', '<>', 46)
-			->where('retirement_date', '>=', $oneWeekLater)
-			->get();
+		$search = trim((string) $request->get('q'));
+		$today = Carbon::today()->toDateString();
 
-		// Fetch the cancellation policies data directly
-		$offers = OfferCancellationPolicies::with('hotelOffer')->get();
+		$query = OfferCancellationPolicies::query()
+			->select('offer_cancellation_policies.*')
+			// Only policies whose offer and (not deleted) hotel package still exist
+			->join('hotel_offers', 'hotel_offers.id', '=', 'offer_cancellation_policies.offer_id')
+			->join('tour_packages', function ($join) {
+				$join->on('tour_packages.id', '=', 'hotel_offers.package_id')->whereNull('tour_packages.deleted_at');
+			})
+			// The policy in force is the one on the package's latest offer (an offer can have several tiers)
+			->whereIn('hotel_offers.id', function ($q) {
+				$q->from('hotel_offers')->selectRaw('max(id)')->groupBy('package_id');
+			})
+			// Upcoming or ongoing stays only
+			->where(function ($q) use ($today) {
+				$q->whereDate('tour_packages.time_to', '>=', $today)
+					->orWhere(function ($q) use ($today) {
+						$q->whereNull('tour_packages.time_to')->whereDate('tour_packages.time_from', '>=', $today);
+					});
+			})
+			->when($search !== '', function ($q) use ($search) {
+				$like = '%' . addcslashes($search, '%_\\') . '%';
+				$tourIds = Tour::withTrashed()->where('name', 'like', $like)->select('id');
+				$q->where(function ($q) use ($like, $search, $tourIds) {
+					$q->where('tour_packages.name', 'like', $like)
+						->orWhereIn('hotel_offers.tour_id', $tourIds)
+						->orWhereIn('tour_packages.tour_id', $tourIds);
+					if (ctype_digit($search)) {
+						$q->orWhere('offer_cancellation_policies.id', (int) $search);
+					}
+				});
+			})
+			->orderBy('tour_packages.time_from')
+			->orderBy('tour_packages.id')
+			->orderByDesc('offer_cancellation_policies.cancellation_days')
+			->with(['hotelOffer.package.tourDays:id,tour', 'hotelOffer.offer_room_prices']);
 
-		// Process the data to match what was in the DataTables response
-		$processedOffers = [];
-        foreach($offers as $offer) {
-            $package = TourPackage::find($offer->hotelOffer->package_id ?? null);
-            $tour = Tour::find($offer->hotelOffer->tour_id ?? null);
-			$city = null;
-
-			if($package && $package->service()) {
-				$city = City::find($package->service()->city ?? null);
-			}
-
-			$stay_date = "";
-			if($package && $package->time_from) {
-				$stay_date = Carbon::parse($package->time_from)->toDateString();
-			}
-
-            $processedOffers[] = (object)[
-				'id' => $offer->id,
-				'hotel_name' => $package->name ?? '',
-				'city_name' => $city->name ?? '',
-				'status' => $offer->hotelOffer->status ?? '',
-				'stay_date' => $stay_date,
-				'offer_date' => $offer->hotelOffer->created_at ?? '',
-				'option_date' => $offer->hotelOffer->option_date ?? '',
-				'tour_name' => $tour->name ?? '',
-				'cancel_policy' => $offer->cancellation_days.' days before arrival: '.$offer->cancellation_percentage.$offer->cancellation_type.' can be cancelled free of charge.',
-				'SIN' => '', // Room type data - would need more processing
-				'DOU' => '',
-				'TRI' => '',
-                'tour' => $tour,
-			];
+		if ($request->get('export') === 'csv') {
+			return $this->cancellationPoliciesCsv($this->policyRows($query->get()));
 		}
 
-		return view("offers.cancellation_policies", compact('room_types','tours','processedOffers'));
+		$policies = $query->paginate(25)->withQueryString();
+		$processedOffers = $this->policyRows($policies->getCollection());
+
+		return view("offers.cancellation_policies", compact('room_types', 'processedOffers', 'policies', 'search'));
 	}
-	public function current_offers(){
-		$room_types = RoomTypes::all();
-		 $currentDate = Carbon::now(); // Get the current date and time
-		$oneWeekLater = $currentDate->copy()->addWeek(); // Add one week to the current date
-		$tours = Tour::with(['status', 'city_begin', 'city_end'])
-			->where('status', '<>', 46)
-			->where('retirement_date', '>=', $oneWeekLater)
-			->get();
-		return view("offers.current_offers",compact('room_types','tours'));
+
+	/**
+	 * Display rows for cancellation policies; hotels, cities, tours and currencies are loaded once.
+	 */
+	private function policyRows($policies)
+	{
+		$packages = $policies->map(function ($p) { return $p->hotelOffer->package; });
+		$hotels = Hotel::whereIn('id', $packages->pluck('reference')->filter()->unique())->pluck('city', 'id');
+		$cities = City::whereIn('id', $hotels->filter()->unique())->pluck('name', 'id');
+
+		// Tour: the offer's own tour, else the package's first tour day, else the package's tour_id
+		$tourIdFor = function ($policy) {
+			$offer = $policy->hotelOffer;
+			$day = $offer->package->tourDays->first();
+			return $offer->tour_id ?: (($day ? $day->tour : null) ?: $offer->package->tour_id);
+		};
+		$tours = Tour::withTrashed()->whereIn('id', $policies->map($tourIdFor)->filter()->unique())->get(['id', 'name', 'deleted_at'])->keyBy('id');
+		$currencies = Currencies::whereIn('id', $policies->pluck('hotelOffer.currency')->filter()->unique())->pluck('code', 'id');
+		$roomTypeIds = RoomTypes::whereIn('code', ['SIN', 'DOU', 'TRI'])->pluck('id', 'code');
+
+		return $policies->map(function ($policy) use ($hotels, $cities, $tours, $currencies, $roomTypeIds, $tourIdFor) {
+			$offer = $policy->hotelOffer;
+			$package = $offer->package;
+			$tourId = $tourIdFor($policy);
+			$tour = $tourId ? $tours->get($tourId) : null;
+			$currency = $currencies->get($offer->currency);
+
+			// Room price on this offer for a room type, e.g. "120 EUR"
+			$price = function ($code) use ($offer, $roomTypeIds, $currency) {
+				$typeId = $roomTypeIds->get($code);
+				$prices = $typeId ? $offer->offer_room_prices->where('room_type_id', $typeId) : collect();
+				return $prices->isEmpty() ? null : trim($prices->sum('price') . ' ' . $currency);
+			};
+
+			return (object)[
+				'id' => $policy->id,
+				'package_id' => $package->id,
+				'hotel_name' => $package->name,
+				'city_name' => $cities->get($hotels->get($package->reference)),
+				'status' => $offer->status,
+				'stay_date' => $package->time_from ? Carbon::parse($package->time_from)->toDateString() : null,
+				'stay_end' => $package->time_to ? Carbon::parse($package->time_to)->toDateString() : null,
+				'offer_date' => $offer->created_at ? Carbon::parse($offer->created_at)->toDateString() : null,
+				'option_date' => $offer->option_date ? Carbon::parse($offer->option_date)->toDateString() : null,
+				'tour_name' => $tour ? $tour->name . ($tour->trashed() ? ' (deleted)' : '') : null,
+				'cancel_policy' => self::cancellationPolicyText($policy, $currency),
+				'SIN' => $price('SIN'),
+				'DOU' => $price('DOU'),
+				'TRI' => $price('TRI'),
+			];
+		});
 	}
-	public function past_offers(){
-    $room_types = RoomTypes::all();
-    $currentDate = Carbon::now();
-    $oneWeekLater = $currentDate->copy()->addWeek();
 
-    // Change get() to paginate(10)
-    $tours = Tour::with(['status', 'city_begin', 'city_end'])
-        ->where('status', '=', 46)
-        ->orWhere('retirement_date', '<', $oneWeekLater)
-        ->orderBy('id', 'desc') // It is good practice to order paginated results
-        ->paginate(10);
+	private function cancellationPoliciesCsv($rows)
+	{
+		$cell = function ($value) {
+			$value = (string) $value;
+			// Keep spreadsheet apps from treating text as a formula
+			return preg_match('/^[=+\-@]/', $value) ? "'" . $value : $value;
+		};
 
-    return view("offers.past_offers",compact('room_types','tours'));
-}
-	public function current_bookings(){
+		return response()->streamDownload(function () use ($rows, $cell) {
+			$out = fopen('php://output', 'w');
+			fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows accents correctly
+			fputcsv($out, ['ID', 'Policy', 'Hotel Name', 'City', 'Status', 'Check-in', 'Check-out', 'SIN', 'DOU', 'TRI', 'Offer Date', 'Option Date', 'Tour Name']);
+			foreach ($rows as $row) {
+				fputcsv($out, array_map($cell, [$row->id, $row->cancel_policy, $row->hotel_name, $row->city_name, $row->status,
+					$row->stay_date, $row->stay_end, $row->SIN, $row->DOU, $row->TRI, $row->offer_date, $row->option_date, $row->tour_name]));
+			}
+			fclose($out);
+		}, 'cancellation_policies_' . Carbon::now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+	}
+	/** Requested (46) is not an offer yet; Cancelled (6) and Finished (58) are no longer current */
+	const NOT_CURRENT_OFFER_STATUSES = [6, 46, 58];
+	/** Closed offers belong in past offers whatever their dates */
+	const CLOSED_OFFER_STATUSES = [6, 58];
+
+	/**
+	 * Current and past offers are complementary: a tour is past once it has ended or is closed,
+	 * and current while it has not ended (or has no dates yet) and is still an open offer.
+	 * Only Requested tours that have not ended are in neither; they are listed under Tour > Requested.
+	 */
+	private function currentOffersScope($query)
+	{
+		$today = Carbon::today();
+
+		return $query
+			->where(function ($q) use ($today) {
+				$q->whereDate('retirement_date', '>=', $today)->orWhereNull('retirement_date');
+			})
+			// SQL "status <> x" is never true for NULL, so tours without a status need orWhereNull
+			->where(function ($q) {
+				$q->whereNotIn('status', self::NOT_CURRENT_OFFER_STATUSES)->orWhereNull('status');
+			});
+	}
+
+	private function pastOffersScope($query)
+	{
+		return $query->where(function ($q) {
+			$q->whereDate('retirement_date', '<', Carbon::today())
+				->orWhereIn('status', self::CLOSED_OFFER_STATUSES);
+		});
+	}
+
+	public function current_offers(Request $request){
+		return $this->offersListing($request, 'current', 'departure_date', 'asc');
+	}
+
+	public function past_offers(Request $request){
+		// Most recently finished first
+		return $this->offersListing($request, 'past', 'retirement_date', 'desc');
+	}
+
+	/**
+	 * Shared listing for current/past offers: search, sort and CSV export run on the server,
+	 * so they cover every matching offer rather than the visible page.
+	 */
+	private function offersListing(Request $request, $list, $defaultSort, $defaultDir)
+	{
 		$room_types = RoomTypes::all();
 
-		// Fetch the data directly instead of using DataTables
-		$desiredStatuses = [23];
-		$tour_packages = TourPackage::whereIn('status', $desiredStatuses)->get();
+		$search = trim((string) $request->get('q'));
+		$sortable = ['id', 'name', 'departure_date', 'retirement_date'];
+		$sort = in_array($request->get('sort'), $sortable, true) ? $request->get('sort') : $defaultSort;
+		$dir = in_array($request->get('dir'), ['asc', 'desc'], true) ? $request->get('dir') : $defaultDir;
 
-		// Process the data
-		$processedBookings = [];
-		foreach($tour_packages as $package) {
-			$city = null;
-			if($package->service()) {
-				$city = City::find($package->service()->city ?? null);
+		$query = Tour::with(['status']);
+		$query = $list === 'past' ? $this->pastOffersScope($query) : $this->currentOffersScope($query);
+		$query->when($search !== '', function ($q) use ($search) {
+				$like = '%' . addcslashes($search, '%_\\') . '%';
+				$q->where(function ($q) use ($like, $search) {
+					$q->where('name', 'like', $like)->orWhere('external_name', 'like', $like);
+					if (ctype_digit($search)) {
+						$q->orWhere('id', (int) $search);
+					}
+				});
+			})
+			->orderBy($sort, $dir)
+			->orderBy('id', $dir);
+
+		// Export every matching offer, not just the visible page, and without the action buttons
+		if ($request->get('export') === 'csv') {
+			$tours = $query->get();
+			return $this->offersCsv($tours, $this->offerCityNames($tours), "{$list}_offers");
+		}
+
+		$tours = $query->paginate(25)->withQueryString();
+		$cityNames = $this->offerCityNames($tours->getCollection());
+
+		return view("offers.{$list}_offers", compact('room_types', 'tours', 'search', 'sort', 'dir', 'cityNames'));
+	}
+
+	/**
+	 * Start-city name per tour id. Tour::$city_begin is an accessor that returns the name with two
+	 * queries per call, so the raw column (a city id, or a plain name on some older tours) is read here.
+	 */
+	private function offerCityNames($tours)
+	{
+		$raw = $tours->mapWithKeys(function ($tour) {
+			return [$tour->id => $tour->getRawOriginal('city_begin')];
+		});
+		$names = City::whereIn('id', $raw->filter(function ($v) { return is_numeric($v); })->unique())->pluck('name', 'id');
+
+		return $raw->map(function ($value) use ($names) {
+			if ($value === null || $value === '') return null;
+			return is_numeric($value) ? $names->get($value) : $value;
+		});
+	}
+
+	private function offersCsv($tours, $cityNames, $filePrefix)
+	{
+		$cell = function ($value) {
+			$value = (string) $value;
+			// Keep spreadsheet apps from treating text as a formula
+			return preg_match('/^[=+\-@]/', $value) ? "'" . $value : $value;
+		};
+		$date = function ($value, $format = 'Y-m-d') {
+			return $value ? Carbon::parse($value)->format($format) : '';
+		};
+
+		return response()->streamDownload(function () use ($tours, $cityNames, $cell, $date) {
+			$out = fopen('php://output', 'w');
+			fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows accents correctly
+			fputcsv($out, ['ID', 'Tour Name', 'City', 'Status', 'Departure Date', 'Return Date', 'PAX', 'Created At']);
+			foreach ($tours as $tour) {
+				fputcsv($out, array_map($cell, [
+					$tour->id,
+					$tour->name,
+					$cityNames->get($tour->id),
+					optional($tour->getRelationValue('status'))->name,
+					$date($tour->departure_date),
+					$date($tour->retirement_date),
+					$tour->pax,
+					$date($tour->created_at, 'Y-m-d H:i'),
+				]));
 			}
+			fclose($out);
+		}, $filePrefix . '_' . Carbon::now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+	}
+	/** Hotel packages in this status are confirmed bookings */
+	const BOOKING_CONFIRMED_STATUS = 23;
 
-			$stay_date = "";
-			if($package->time_from) {
-				$stay_date = Carbon::parse($package->time_from)->toDateString();
-			}
+	public function current_bookings(Request $request){
+		$room_types = RoomTypes::all();
+		$search = trim((string) $request->get('q'));
+		$today = Carbon::today();
 
-			$latestOffer = $package->latestHotelOffer;
-			$cancelPolicy = 'N/A';
-			$paymentPolicy = 'N/A';
+		$query = TourPackage::with(['status', 'tourDays:id,tour', 'latestHotelOffer.cancellation_policiy', 'latestHotelOffer.payment_policiy'])
+			->where('status', self::BOOKING_CONFIRMED_STATUS)
+			// Current = the stay has not ended yet (check-out today or later)
+			->where(function ($q) use ($today) {
+				$q->whereDate('time_to', '>=', $today)
+					->orWhere(function ($q) use ($today) {
+						$q->whereNull('time_to')->whereDate('time_from', '>=', $today);
+					});
+			})
+			->when($search !== '', function ($q) use ($search) {
+				$like = '%' . addcslashes($search, '%_\\') . '%';
+				$tourIds = Tour::withTrashed()->where('name', 'like', $like)->select('id');
+				$q->where(function ($q) use ($like, $search, $tourIds) {
+					$q->where('name', 'like', $like)
+						->orWhereIn('tour_id', $tourIds)
+						->orWhereHas('tourDays', function ($d) use ($tourIds) { $d->whereIn('tour', $tourIds); });
+					if (ctype_digit($search)) {
+						$q->orWhere('id', (int) $search);
+					}
+				});
+			})
+			->orderBy('time_from')
+			->orderBy('id');
 
-			if ($latestOffer && $latestOffer->cancellation_policiy) {
-				$policy = $latestOffer->cancellation_policiy;
-				$cancelPolicy = trim(($policy->cancellation_days ?? '0') . ' days before arrival: ' . ($policy->cancellation_percentage ?? '0') . ($policy->cancellation_type ?? '') . ' can be cancelled free of charge.');
-			}
+		// Export every matching booking, without the action buttons
+		if ($request->get('export') === 'csv') {
+			return $this->currentBookingsCsv($this->bookingRows($query->get()));
+		}
 
-			if ($latestOffer && $latestOffer->payment_policiy) {
-				$policy = $latestOffer->payment_policiy;
-				$paymentPolicy = trim(($policy->deposit_percentage ?? '0') . ($policy->deposit_type ?? '') . ' deposit due ' . ($policy->deposit_days ?? '0') . ' days before arrival.');
-			}
-            $processedBookings[] = (object)[
+		$packages = $query->paginate(25)->withQueryString();
+		$processedBookings = $this->bookingRows($packages->getCollection());
+
+		return view("offers.current_bookings", compact('room_types', 'processedBookings', 'packages', 'search'));
+	}
+
+	/**
+	 * Display rows for confirmed hotel packages, with hotels, cities, tours and currencies loaded once.
+	 */
+	private function bookingRows($packages)
+	{
+		$hotels = Hotel::whereIn('id', $packages->pluck('reference')->filter()->unique())->pluck('city', 'id');
+		$cities = City::whereIn('id', $hotels->filter()->unique())->pluck('name', 'id');
+
+		// The tour comes from the first tour day, falling back to the package's own tour_id
+		$tourIdFor = function ($package) {
+			$day = $package->tourDays->first();
+			return ($day ? $day->tour : null) ?: $package->tour_id;
+		};
+		$tours = Tour::withTrashed()->whereIn('id', $packages->map($tourIdFor)->filter()->unique())->get(['id', 'name', 'deleted_at'])->keyBy('id');
+		$currencies = Currencies::whereIn('id', $packages->map(function ($p) {
+			return optional($p->latestHotelOffer)->currency;
+		})->filter()->unique())->pluck('code', 'id');
+
+		return $packages->map(function ($package) use ($hotels, $cities, $tours, $currencies, $tourIdFor) {
+			$tourId = $tourIdFor($package);
+			$tour = $tourId ? $tours->get($tourId) : null;
+			$tourName = $tour ? ($tour->trashed() ? "Deleted tour #{$tour->id}" : $tour->name) : null;
+
+			$offer = $package->latestHotelOffer;
+			$currency = $offer ? $currencies->get($offer->currency) : null;
+
+			return (object)[
 				'id' => $package->id,
-				'hotel_name' => $package->name ?? '',
-				'city_name' => $city->name ?? '',
-				'stay_date' => $stay_date,
-				'tour_name' => $package->getTour()->name ?? '',
-				'status_name' => $package->getStatusName() ?? '',
-				'cancel_policy' => $cancelPolicy,
-				'payment_policy' => $paymentPolicy,
-                'model' => $package,
+				'hotel_name' => $package->name,
+				'city_name' => $cities->get($hotels->get($package->reference)),
+				'stay_date' => $package->time_from ? Carbon::parse($package->time_from)->toDateString() : null,
+				'stay_end' => $package->time_to ? Carbon::parse($package->time_to)->toDateString() : null,
+				'tour_name' => $tourName,
+				'status_name' => optional($package->getRelationValue('status'))->name,
+				'cancel_policy' => $offer ? self::cancellationPolicyText($offer->cancellation_policiy, $currency) : null,
+				'payment_policy' => $offer ? self::paymentPolicyText($offer->payment_policiy, $currency) : null,
+				'model' => $package,
 			];
+		});
+	}
+
+	/** "50%" for percentages, "200 EUR" for fixed amounts; unknown units are left off */
+	private static function policyAmount($value, $type, $currency)
+	{
+		$type = strtolower(trim((string) $type));
+		if (in_array($type, ['percentage', '%'], true)) {
+			return $value . '%';
+		}
+		if (in_array($type, ['fixed', 'amount'], true)) {
+			return trim($value . ' ' . $currency);
+		}
+		return (string) $value;
+	}
+
+	/** "until 3 days before arrival" / "until the day of arrival" */
+	private static function beforeArrival($days)
+	{
+		$days = (int) $days;
+		if ($days <= 0) {
+			return 'the day of arrival';
 		}
 
-		return view("offers.current_bookings", compact('room_types', 'processedBookings'));
+		return $days . ' ' . ($days === 1 ? 'day' : 'days') . ' before arrival';
+	}
+
+	/** A policy with no amount is no policy: shown as N/A rather than "0 ... 0" */
+	public static function cancellationPolicyText($policy, $currency = null)
+	{
+		if (!$policy || !(float) $policy->cancellation_percentage) {
+			return null;
+		}
+		$amount = self::policyAmount($policy->cancellation_percentage, $policy->cancellation_type, $currency);
+
+		return 'Until ' . self::beforeArrival($policy->cancellation_days) . ", {$amount} can be cancelled free of charge.";
+	}
+
+	public static function paymentPolicyText($policy, $currency = null)
+	{
+		if (!$policy || !(float) $policy->deposit_percentage) {
+			return null;
+		}
+		$amount = self::policyAmount($policy->deposit_percentage, $policy->deposit_type, $currency);
+		$days = (int) $policy->deposit_days;
+
+		return $days > 0
+			? "{$amount} deposit due " . self::beforeArrival($days) . '.'
+			: "{$amount} deposit due on arrival.";
+	}
+
+	private function currentBookingsCsv($rows)
+	{
+		$cell = function ($value) {
+			$value = (string) $value;
+			// Keep spreadsheet apps from treating text as a formula
+			return preg_match('/^[=+\-@]/', $value) ? "'" . $value : $value;
+		};
+
+		return response()->streamDownload(function () use ($rows, $cell) {
+			$out = fopen('php://output', 'w');
+			fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows accents correctly
+			fputcsv($out, ['ID', 'Tour', 'Hotel Name', 'City', 'Status', 'Check-in', 'Check-out', 'Cancellation Policy', 'Payment Policy']);
+			foreach ($rows as $row) {
+				fputcsv($out, array_map($cell, [$row->id, $row->tour_name, $row->hotel_name, $row->city_name, $row->status_name,
+					$row->stay_date, $row->stay_end, $row->cancel_policy, $row->payment_policy]));
+			}
+			fclose($out);
+		}, 'current_bookings_' . Carbon::now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
 	}
 	public function hotel_offers($id, Request $request){
         $title = 'Show - our Package';

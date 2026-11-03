@@ -28,6 +28,8 @@ class CurrencyRate extends Model
     /** decimal(18,6) without the trailing zeros: 25.530000 -> 25.53 */
     public function getRateAttribute($value)
     {
-        return $value === null ? null : rtrim(rtrim(number_format((float) $value, 6, '.', ''), '0'), '.');
+        if ($value === null) return null;
+        $value = (string) $value;
+        return strpos($value, '.') === false ? $value : rtrim(rtrim($value, '0'), '.');
     }
 }

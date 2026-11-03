@@ -30,6 +30,7 @@
 					<table id="settings-table" class="table table-striped table-bordered table-hover bootstrap-table">
 					<thead>
 						<tr>
+							<th>{!!trans('main.Name')!!}</th>
 							<th>{!!trans('main.Description')!!}</th>
 							<th>{!!trans('main.Value')!!}</th>
 							<th style="width: 140px">{!!trans('main.Actions')!!}</th>
@@ -38,11 +39,17 @@
 					<tbody>
 						@forelse($settings as $setting)
 						<tr>
+							<td>
+								<code>{{ $setting->name }}</code>
+								@if($setting->isSystem())
+									<span class="badge bg-secondary ms-1" title="Used by scheduled jobs; cannot be deleted">system</span>
+								@endif
+							</td>
 							<td>{{@$setting->description}}</td>
 							<td>{{@$setting->value}}</td>
 							<td>
 								<div class="btn-list flex-nowrap">
-<a href="{{ route('settings.edit', ['setting' => $setting->id]) }}" class="btn btn-icon btn-ghost-warning" title="Edit">
+<a href="{{ route('settings.edit', ['setting' => $setting->id]) }}" class="btn btn-icon btn-primary" title="Edit" aria-label="Edit">
 										<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 											<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
 											<path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
@@ -50,9 +57,10 @@
 											<path d="M16 5l3 3" />
 										</svg>
 									</a>
+@unless($setting->isSystem())
 <a href="{{ route('settings.destroy', $setting->id) }}"
-									   class="btn btn-icon btn-ghost-danger"
-									   title="Delete"
+									   class="btn btn-icon btn-danger"
+									   title="Delete" aria-label="Delete"
 									   onclick="event.preventDefault(); confirmDelete('{{ route('settings.destroy', $setting->id) }}', '{{ $setting->id }}');">
 										<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
 											<path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -67,12 +75,13 @@
 										@csrf
 										@method('DELETE')
 									</form>
+@endunless
 								</div>
 							</td>
 						</tr>
 						@empty
 						<tr>
-							<td colspan="3" class="text-center text-secondary py-4">
+							<td colspan="4" class="text-center text-secondary py-4">
 								No settings found
 							</td>
 						</tr>

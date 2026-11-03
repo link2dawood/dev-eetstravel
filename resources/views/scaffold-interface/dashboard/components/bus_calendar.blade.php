@@ -7,7 +7,11 @@
                 <div class="text-muted small">Click a bar to edit a day, or an empty cell to add a trip on that day.</div>
             </div>
             <div class="ms-auto d-flex gap-2 position-relative">
-                @if(\App\Helper\PermissionHelper::checkPermission('tour_package.create'))
+                <label class="d-flex align-items-center gap-2 mb-0">Month
+                    <input type="month" id="bus-calendar-month" class="form-control" value="{{ date('Y-m') }}" aria-label="Schedule month">
+                </label>
+                {{-- Same permissions the bus day routes check --}}
+                @if(\App\Helper\PermissionHelper::checkPermission('bus.create'))
                 <button type="button" class="btn btn-primary" onclick="openBusTripForm()"><i class="fa fa-plus me-1"></i>Add trip</button>
                 @endif
                 <button type="button" id="filter" class="btn btn-outline-secondary" title="Filter buses" aria-label="Filter buses"><i class="fa fa-filter me-1" aria-hidden="true"></i>Buses</button>
@@ -27,8 +31,8 @@
             </div>
         </div>
     </div>
-    <span id="trip_edit_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.edit') }}"></span>
-    <span id="trip_create_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('tour_package.create') }}"></span>
+    <span id="trip_edit_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('bus.edit') }}"></span>
+    <span id="trip_create_permission" data-info="{{ \App\Helper\PermissionHelper::checkPermission('bus.create') }}"></span>
 </div>
 <style>
     .bus-panel {

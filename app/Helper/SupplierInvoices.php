@@ -20,14 +20,17 @@ class SupplierInvoices
             ->leftJoin('office_fees as o', 'o.id', '=', 'si.office_id')
             ->where('tp.type', $serviceType)
             ->where('tp.reference', $serviceId)
+            ->whereNull('si.deleted_at')
+            ->whereNull('it.deleted_at')
             ->whereNull('tp.deleted_at')
             ->select(
                 'si.id',
-                'it.id as link_id',
+                'si.id as link_id',
                 'si.invoice_no',
                 'si.dueDate as due_date',
                 'si.receivedDate as received_date',
                 'si.total_amount',
+                'si.extra_amount',
                 't.name as tour_name',
                 'tp.name as service_name',
                 'o.office_name'
@@ -46,7 +49,7 @@ class SupplierInvoices
 
         return $invoices->map(function ($invoice) use ($paid) {
             $sum = (float) ($paid[$invoice->id] ?? 0);
-            $total = (float) $invoice->total_amount;
+            $total = (float) $invoice->total_amount + (float) $invoice->extra_amount;
             $invoice->paid_amount = $sum;
             $invoice->status = $sum >= $total && $total > 0 ? 'paid' : ($sum > 0 ? 'partial' : 'open');
             $invoice->status_label = $invoice->status === 'paid' ? 'Paid' : 'You owe ' . number_format($total - $sum, 2);

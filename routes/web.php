@@ -49,9 +49,10 @@ Route::group(['middleware' => 'perm'], function () {
 //event Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('event', '\App\Http\Controllers\EventController');
-        Route::post('event/{id}/update', '\App\Http\Controllers\EventController@update');
+        // EventController applies permissions.required; unnamed routes name their permission explicitly
+        Route::post('event/{id}/update', ['uses' => '\App\Http\Controllers\EventController@update', 'permissions' => 'event.edit']);
         Route::match(['POST', 'DELETE'], 'event/{id}/delete', '\App\Http\Controllers\EventController@destroy')->name('event.destroy');
-        Route::get('event/{id}/deleteMsg', '\App\Http\Controllers\EventController@DeleteMsg');
+        Route::get('event/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\EventController@DeleteMsg', 'permissions' => 'event.destroy']);
     });
 
 //gCalendar Routes
@@ -62,26 +63,29 @@ Route::group(['middleware' => 'web'], function () {
 //guide Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('guide', '\App\Http\Controllers\GuideController');
-        Route::post('guide/{id}/update', '\App\Http\Controllers\GuideController@update');
+        // GuideController applies permissions.required; unnamed routes name their permission explicitly
+        Route::post('guide/{id}/update', ['uses' => '\App\Http\Controllers\GuideController@update', 'permissions' => 'guide.edit']);
         Route::match(['POST', 'DELETE'], 'guide/{id}/delete', '\App\Http\Controllers\GuideController@destroy')->name('guide.destroy');
-        Route::get('guide/{id}/deleteMsg', '\App\Http\Controllers\GuideController@DeleteMsg');
+        Route::get('guide/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\GuideController@DeleteMsg', 'permissions' => 'guide.destroy']);
     });
 
 //restaurant Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('restaurant', '\App\Http\Controllers\RestaurantController');
-        Route::post('restaurant/{id}/update', '\App\Http\Controllers\RestaurantController@update');
+        // RestaurantController applies permissions.required; unnamed routes name their permission explicitly
+        Route::post('restaurant/{id}/update', ['uses' => '\App\Http\Controllers\RestaurantController@update', 'permissions' => 'restaurant.edit']);
         Route::match(['POST', 'DELETE'], 'restaurant/{id}/delete', '\App\Http\Controllers\RestaurantController@destroy')->name('restaurant.destroy');
-        Route::get('restaurant/{id}/deleteMsg', '\App\Http\Controllers\RestaurantController@DeleteMsg');
+        Route::get('restaurant/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\RestaurantController@DeleteMsg', 'permissions' => 'restaurant.destroy']);
     });
 
 //client of the agency
 Route::group(['middleware' => 'web'], function () {
-    Route::resource('clients', '\App\Http\Controllers\ClientController');
-    Route::post('clients/{id}/update', '\App\Http\Controllers\ClientController@update');
+    Route::resource('clients', '\App\Http\Controllers\ClientController')->except('destroy');
+    Route::delete('clients/{client}', ['uses' => '\App\Http\Controllers\ClientController@destroy', 'permissions' => 'client.destroy'])->name('clients.destroy');
+    Route::post('clients/{id}/update', ['uses' => '\App\Http\Controllers\ClientController@update', 'permissions' => 'clients.edit']);
     Route::match(['POST', 'DELETE'], 'clients/{id}/delete', '\App\Http\Controllers\ClientController@destroy')->name('client.destroy');
-    Route::get('clients/{id}/deleteMsg', '\App\Http\Controllers\ClientController@DeleteMsg');
-	Route::get('api/getClientContacts', '\App\Http\Controllers\ClientController@getClientContacts');
+    Route::get('clients/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\ClientController@DeleteMsg', 'permissions' => 'client.destroy']);
+	Route::get('api/getClientContacts', ['uses' => '\App\Http\Controllers\ClientController@getClientContacts', 'permissions' => 'clients.show'])->name('clients.contacts');
 	
 	Route::get('/countries','\App\Http\Controllers\ClientController@getCountries');
 Route::get('/states/{countryCode}','\App\Http\Controllers\ClientController@getStates');
@@ -92,8 +96,8 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('invoices', '\App\Http\Controllers\InvoicesController');
    	Route::post('invoices/{id}/update', '\App\Http\Controllers\InvoicesController@update')->name('invoice.update');
     Route::match(['POST', 'DELETE'], 'invoices/{id}/delete', '\App\Http\Controllers\InvoicesController@destroy')->name('invoices.destroy');
-    Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg');
-	Route::get('supplierdropdown/{id}', 'InvoicesController@supplierDropdown');
+    Route::get('invoices/{id}/deleteMsg', '\App\Http\Controllers\InvoicesController@DeleteMsg')->name('invoices.delete_confirmation')->middleware('permissions.required');
+	Route::get('supplierdropdown/{id}', 'InvoicesController@supplierDropdown')->name('invoices.supplierdropdown')->middleware('permissions.required');
 	Route::get('add_payment/{id}', '\App\Http\Controllers\InvoicesController@add_payment')->name('add_payment');
 	Route::post('payment_store/{id}', '\App\Http\Controllers\InvoicesController@payment_store')->name('payment.store');
 	
@@ -106,13 +110,13 @@ Route::group(['middleware' => 'web'], function () {
    	Route::resource('accounting', '\App\Http\Controllers\ClientInvoiceController');
    	Route::post('accounting/{id}/update', '\App\Http\Controllers\ClientInvoiceController@update')->name('accounts.update');
     Route::match(['POST', 'DELETE'], 'accounting/{id}/delete', '\App\Http\Controllers\ClientInvoiceController@destroy')->name('accounts.destroy');
-    Route::get('accounting/{id}/deleteMsg', '\App\Http\Controllers\ClientInvoiceController@DeleteMsg');
-	Route::get('accountingServiceTransaction/create/{tour_id}', 'ClientInvoiceController@serviceTransactionCreate')->name('service_transaction_create');
+    Route::get('accounting/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\ClientInvoiceController@DeleteMsg', 'permissions' => 'transactions.destroy']);
+	Route::get('accountingServiceTransaction/create/{tour_id}', ['uses' => 'ClientInvoiceController@serviceTransactionCreate', 'permissions' => 'transactions.create'])->name('service_transaction_create');
 	Route::get('/accounting/{id}/export/{pdf_type}', 'ClientInvoiceController@pdfExport')->name('accounting_pdf_export');
 	Route::get('/accounting/{id}/excel', 'ClientInvoiceController@excelExport')->name('accounting_excel_export');
 	Route::get('api/getItemInvoiceView', '\App\Http\Controllers\ClientInvoiceController@getItemInvoiceView');
 	Route::get('api/getInvoiceItem', '\App\Http\Controllers\ClientInvoiceController@getInvoiceItem');
-	Route::get('accounting/api/getTourquotation/{id}', '\App\Http\Controllers\ClientInvoiceController@getTourquotation');
+	Route::get('accounting/api/getTourquotation/{id}', ['uses' => '\App\Http\Controllers\ClientInvoiceController@getTourquotation', 'permissions' => 'transactions.create'])->name('accounting.quotation');
 	Route::get('api/getInvoicePayments/{id}', '\App\Http\Controllers\ClientInvoiceController@getInvoicePayments');
 	Route::get('api/getPaymentView', '\App\Http\Controllers\ClientInvoiceController@getPaymentView');
 	Route::get('addInvoicePayment/{id}', '\App\Http\Controllers\ClientInvoiceController@add_payment')->name('add__invoice_payment');
@@ -120,7 +124,7 @@ Route::group(['middleware' => 'web'], function () {
 });
 	
 //Reporting of TMS
-Route::group(['middleware' => 'web'], function () {
+Route::group(['middleware' => 'web', 'permissions' => 'reporting.index'], function () {
     Route::resource('reporting', '\App\Http\Controllers\ReportingController')->only(['index', 'show']);
 	Route::get('/reporting_supplier_show', 'ReportingController@show')->name('reporting_supplier_show');
 	Route::get('reporting/hotel/{id}/show', '\App\Http\Controllers\ReportingController@hotel_show')->name('reporting.hotel.show');
@@ -210,9 +214,9 @@ Route::group(['middleware' => 'web'], function () {
 //transfer Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('transfer', '\App\Http\Controllers\TransferController');
-        Route::post('transfer/{id}/update', '\App\Http\Controllers\TransferController@update');
+        Route::post('transfer/{id}/update', ['uses' => '\App\Http\Controllers\TransferController@update', 'permissions' => 'transfer.edit']);
         Route::match(['POST', 'DELETE'], 'transfer/{id}/delete', '\App\Http\Controllers\TransferController@destroy')->name('transfer.destroy');
-        Route::get('transfer/{id}/deleteMsg', '\App\Http\Controllers\TransferController@DeleteMsg');
+        Route::get('transfer/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\TransferController@DeleteMsg', 'permissions' => 'transfer.destroy']);
     });
 
 //tour_package Routes
@@ -246,52 +250,54 @@ Route::group(['middleware' => 'web'], function () {
 
     });
 	Route::group(['middleware' => 'web'], function () {
-		Route::get('/current_offers', 'OfferController@current_offers')->name('current_offers.index');
+		// Same permission that shows the Offers menu
+		Route::get('/current_offers', ['uses' => 'OfferController@current_offers', 'permissions' => 'quotation.index'])->name('current_offers.index');
 		Route::get('/offers/create', 'OfferController@select_create_package')->name('offers.select_create_package');
-		Route::get('/past_offers', 'OfferController@past_offers')->name('past_offers.index');
-		Route::get('/current_bookings', 'OfferController@current_bookings')->name('current_bookings.index');
-		Route::get('/cancellation_policies', 'OfferController@cancellation_policies')->name('cancellation_policies.index');
-		Route::get('/tour_package/hotel_offers/{id}', 'OfferController@hotel_offers')->name('offers');
+		Route::get('/past_offers', ['uses' => 'OfferController@past_offers', 'permissions' => 'quotation.index'])->name('past_offers.index');
+		Route::get('/current_bookings', ['uses' => 'OfferController@current_bookings', 'permissions' => 'quotation.index'])->name('current_bookings.index');
+		Route::get('/cancellation_policies', ['uses' => 'OfferController@cancellation_policies', 'permissions' => 'quotation.index'])->name('cancellation_policies.index');
+		// Viewing a package's hotel offers; the route name "offers" is not a permission
+		Route::get('/tour_package/hotel_offers/{id}', ['uses' => 'OfferController@hotel_offers', 'permissions' => 'quotation.index'])->name('offers');
 		Route::get('/tour_package/hotel_offers/{id}/create', 'OfferController@create')->name('offers.create')
 			;
 		Route::get('/tour_package/hotel_offers/{id}/emails', 'OfferController@offer_emails')->name('offers.emails');
 		Route::get('offer/{id}/deleteMsg','\App\Http\Controllers\OfferController@DeleteMsg')->name('offer.deleteMsg');
     Route::match(['POST', 'DELETE'], 'offer/{id}/delete','\App\Http\Controllers\OfferController@destroy')->name('offer.destroy');
 		Route::get('offer/{id}/assign_to_tour','\App\Http\Controllers\OfferController@assign_to_tour')->name('offer.assign_tour');
-		Route::post('offer/{id}/days_dropdown','\App\Http\Controllers\TourController@days_dropdown')->name('offer.days_dropdown');
-		Route::get('/monthly_chart_data', 'TourController@monthly_chart_data')->name('monthly_chart_data');
-		Route::get('update-status/{id}', '\App\Http\Controllers\TourController@updateStatus');
-		Route::get('/cancelled_chart_data', 'TourController@cancelled_chart_data')->name('cancelled_chart_data');
-		Route::get('/tour_achieve_data', 'TourController@tour_achieve_data')->name('tour_achieve_data');
+		Route::post('offer/{id}/days_dropdown', ['uses' => '\App\Http\Controllers\TourController@days_dropdown', 'permissions' => 'tour.show'])->name('offer.days_dropdown');
+		Route::get('/monthly_chart_data', ['uses' => 'TourController@monthly_chart_data', 'permissions' => 'tour.show'])->name('monthly_chart_data');
+		Route::get('update-status/{id}', ['uses' => '\App\Http\Controllers\TourController@updateStatus', 'permissions' => 'tour.edit']);
+		Route::get('/cancelled_chart_data', ['uses' => 'TourController@cancelled_chart_data', 'permissions' => 'tour.show'])->name('cancelled_chart_data');
+		Route::get('/tour_achieve_data', ['uses' => 'TourController@tour_achieve_data', 'permissions' => 'tour.show'])->name('tour_achieve_data');
 	});
 //tour Routes
     Route::group(['middleware' => 'web'], function () {
-        Route::post('tour/save', '\App\Http\Controllers\TourController@store');
+        Route::post('tour/save', ['uses' => '\App\Http\Controllers\TourController@store', 'permissions' => 'tour.create']);
         Route::resource('tour', '\App\Http\Controllers\TourController');
-        Route::post('tour/{id}/update', '\App\Http\Controllers\TourController@update');
+        Route::post('tour/{id}/update', ['uses' => '\App\Http\Controllers\TourController@update', 'permissions' => 'tour.edit']);
         Route::match(['POST', 'DELETE'], 'tour/{id}/delete', '\App\Http\Controllers\TourController@destroy')->name('tour.destroy');
-        Route::get('tour/{id}/deleteMsg', '\App\Http\Controllers\TourController@DeleteMsg')->name('tour.deleteMsg');
-        Route::match(['POST', 'DELETE'], 'tour/{id}/delete/{tab}', '\App\Http\Controllers\TourController@destroy')->name('tour_tab.destroy');
-        Route::get('tour/{id}/deleteMsg/{tab}', '\App\Http\Controllers\TourController@DeleteMsg');
-        Route::post('tour/{id}/generatePackages', '\App\Http\Controllers\TourController@generatePackages')->name('generate_packages');
-        Route::get('/tour/{id}/api/{export}/{type?}', '\App\Http\Controllers\TourController@export')->name('tour_export');
-        Route::get('/tour/{id}/pdf_data', '\App\Http\Controllers\TourController@pdfData')->name('pdf_data');
-        Route::get('tour/api/tasks_data', '\App\Http\Controllers\TourController@tasksData')->name('tasks_data_tour');
-        Route::get('tour/{id}/clone', 'TourController@cloneTour')->name('tour_clone');
-        Route::get('/tour/{id}/export/html', 'TourController@htmlExport')->name('tour_html_export');
-        Route::get('/tour/{id}/doc/{doc_type}', 'TourController@docExport')->name('tour_doc_export');
-        Route::get('/tour/{id}/export/{pdf_type}', 'TourController@pdfExport')->name('tour_pdf_export');
+        Route::get('tour/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\TourController@DeleteMsg', 'permissions' => 'tour.destroy'])->name('tour.deleteMsg');
+        Route::match(['POST', 'DELETE'], 'tour/{id}/delete/{tab}', ['uses' => '\App\Http\Controllers\TourController@destroy', 'permissions' => 'tour.destroy'])->name('tour_tab.destroy');
+        Route::get('tour/{id}/deleteMsg/{tab}', ['uses' => '\App\Http\Controllers\TourController@DeleteMsg', 'permissions' => 'tour.destroy']);
+        Route::post('tour/{id}/generatePackages', ['uses' => '\App\Http\Controllers\TourController@generatePackages', 'permissions' => 'tour.edit'])->name('generate_packages');
+        Route::get('/tour/{id}/api/{export}/{type?}', ['uses' => '\App\Http\Controllers\TourController@export', 'permissions' => 'tour.show'])->name('tour_export');
+        Route::get('/tour/{id}/pdf_data', ['uses' => '\App\Http\Controllers\TourController@pdfData', 'permissions' => 'tour.show'])->name('pdf_data');
+        Route::get('tour/api/tasks_data', ['uses' => '\App\Http\Controllers\TourController@tasksData', 'permissions' => 'tour.show'])->name('tasks_data_tour');
+        Route::get('tour/{id}/clone', ['uses' => 'TourController@cloneTour', 'permissions' => 'tour.create'])->name('tour_clone');
+        Route::get('/tour/{id}/export/html', ['uses' => 'TourController@htmlExport', 'permissions' => 'tour.show'])->name('tour_html_export');
+        Route::get('/tour/{id}/doc/{doc_type}', ['uses' => 'TourController@docExport', 'permissions' => 'tour.show'])->name('tour_doc_export');
+        Route::get('/tour/{id}/export/{pdf_type}', ['uses' => 'TourController@pdfExport', 'permissions' => 'tour.show'])->name('tour_pdf_export');
         Route::get('/tour/api/country_list', 'TourController@countryList');
         Route::get('/tour/api/status_list', 'TourController@statusList');
-        Route::post('tour/{id}/updateCalendar', '\App\Http\Controllers\TourController@updateCalendarTour');
-        Route::post('/change_tour_price', '\App\Http\Controllers\TourController@changeTourPrice');
-        Route::post('/get_tour_days', '\App\Http\Controllers\TourController@getTourDays');
-        Route::post('/get_tour_days_id', '\App\Http\Controllers\TourController@getTourDaysId');
-        Route::get('/checkTourDayConfirmedHotel', '\App\Http\Controllers\TourController@checkTourDayConfirmedHotel');
-	    Route::get('tour/{id}/convert_to_tour', 'TourController@convertToTour')->name('tour.convert_to_tour');
-		Route::get('tour/{id}/convert_to_quotation', 'TourController@convertToQuotation')->name('tour.convertToQuotation');
-		Route::post('/update_voucherid', '\App\Http\Controllers\TourController@update_voucherid');
-        Route::post('/update_itnid', '\App\Http\Controllers\TourController@update_itnid');
+        Route::post('tour/{id}/updateCalendar', ['uses' => '\App\Http\Controllers\TourController@updateCalendarTour', 'permissions' => 'tour.edit']);
+        Route::post('/change_tour_price', ['uses' => '\App\Http\Controllers\TourController@changeTourPrice', 'permissions' => 'tour.edit']);
+        Route::post('/get_tour_days', ['uses' => '\App\Http\Controllers\TourController@getTourDays', 'permissions' => 'tour.show']);
+        Route::post('/get_tour_days_id', ['uses' => '\App\Http\Controllers\TourController@getTourDaysId', 'permissions' => 'tour.show']);
+        Route::get('/checkTourDayConfirmedHotel', ['uses' => '\App\Http\Controllers\TourController@checkTourDayConfirmedHotel', 'permissions' => 'tour.show']);
+	    Route::get('tour/{id}/convert_to_tour', ['uses' => 'TourController@convertToTour', 'permissions' => 'tour.edit'])->name('tour.convert_to_tour');
+		Route::get('tour/{id}/convert_to_quotation', ['uses' => 'TourController@convertToQuotation', 'permissions' => 'tour.edit'])->name('tour.convertToQuotation');
+		Route::post('/update_voucherid', ['uses' => '\App\Http\Controllers\TourController@update_voucherid', 'permissions' => 'tour.edit']);
+        Route::post('/update_itnid', ['uses' => '\App\Http\Controllers\TourController@update_itnid', 'permissions' => 'tour.edit']);
 		
     });
 
@@ -302,7 +308,7 @@ Route::group(['middleware' => 'web'], function () {
 Route::group(['middleware'=> 'web'],function(){
 
     // Keep your non-task routes
-    Route::get('/task/getTasksBlock', '\App\Http\Controllers\ScaffoldInterface\AppController@getTasksBlock');
+    Route::get('/task/getTasksBlock', ['uses' => '\App\Http\Controllers\ScaffoldInterface\AppController@getTasksBlock', 'permissions' => 'dashboard.tasks']);
     Route::get('/getallhollydaycalendars', '\App\Http\Controllers\ScaffoldInterface\AppController@getAllHollydayCalendars');
     Route::post('/checkHollydayCalendarById/{id}', '\App\Http\Controllers\ScaffoldInterface\AppController@checkHollydayCalendarById');
 
@@ -323,13 +329,14 @@ Route::group(['middleware'=> 'web'],function(){
     Route::post('task/{id}/update','\App\Http\Controllers\TaskController@update')->name('task.update'); 
 
     // Your other custom task routes
-    Route::post('task/{id}/update-field','\App\Http\Controllers\TaskController@updateField');
+    // TaskController applies permissions.required; these routes name their permission explicitly
+    Route::post('task/{id}/update-field', ['uses' => '\App\Http\Controllers\TaskController@updateField', 'permissions' => 'task.edit']);
     Route::match(['POST', 'DELETE'], 'task/{id}/delete','\App\Http\Controllers\TaskController@destroy')->name('task.destroy');
-    Route::get('task/{id}/deleteMsg','\App\Http\Controllers\TaskController@DeleteMsg')->name('task.deleteMsg');
-    Route::match(['POST', 'DELETE'], 'task/{id}/delete/{tab}','\App\Http\Controllers\TaskController@destroy')->name('task_tab.destroy');
-    Route::get('task/{id}/deleteMsg/{tab}','\App\Http\Controllers\TaskController@DeleteMsg');
-    Route::post('task/{id}/updateCalendar', '\App\Http\Controllers\TaskController@updateCalendarTask');
-    Route::get('/task/statuses/list', 'TaskController@statusesList');
+    Route::get('task/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\TaskController@DeleteMsg', 'permissions' => 'task.destroy'])->name('task.deleteMsg');
+    Route::match(['POST', 'DELETE'], 'task/{id}/delete/{tab}', ['uses' => '\App\Http\Controllers\TaskController@destroy', 'permissions' => 'task.destroy'])->name('task_tab.destroy');
+    Route::get('task/{id}/deleteMsg/{tab}', ['uses' => '\App\Http\Controllers\TaskController@DeleteMsg', 'permissions' => 'task.destroy']);
+    Route::post('task/{id}/updateCalendar', ['uses' => '\App\Http\Controllers\TaskController@updateCalendarTask', 'permissions' => 'task.edit']);
+    Route::get('/task/statuses/list', ['uses' => 'TaskController@statusesList', 'permissions' => 'task.show']);
     
     // -----------------------------------------------------------------
     // END OF TASK ROUTES
@@ -341,9 +348,9 @@ Route::group(['middleware'=> 'web'],function(){
 //status Routes
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('status','\App\Http\Controllers\StatusController');
-        Route::post('status/{id}/update','\App\Http\Controllers\StatusController@update');
+        Route::post('status/{id}/update', ['uses' => '\App\Http\Controllers\StatusController@update', 'permissions' => 'status.edit']);
         Route::match(['POST', 'DELETE'], 'status/{id}/delete','\App\Http\Controllers\StatusController@destroy')->name('status.destroy');
-        Route::get('status/{id}/deleteMsg','\App\Http\Controllers\StatusController@DeleteMsg');
+        Route::get('status/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\StatusController@DeleteMsg', 'permissions' => 'status.destroy']);
     });
     
 //holiday Routes
@@ -357,9 +364,9 @@ Route::group(['middleware'=> 'web'],function(){
 //Room Types Routes
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('room_types','\App\Http\Controllers\RoomTypesController');
-    Route::post('room_types/{id}/update','\App\Http\Controllers\RoomTypesController@update');
+    Route::post('room_types/{id}/update', ['uses' => '\App\Http\Controllers\RoomTypesController@update', 'permissions' => 'room_types.edit']);
     Route::match(['POST', 'DELETE'], 'room_types/{id}/delete','\App\Http\Controllers\RoomTypesController@destroy')->name('room_types.destroy');
-    Route::get('room_types/{id}/deleteMsg','\App\Http\Controllers\RoomTypesController@DeleteMsg');
+    Route::get('room_types/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\RoomTypesController@DeleteMsg', 'permissions' => 'room_types.destroy']);
 });
 
     //Email Temlates
@@ -402,25 +409,26 @@ Route::group(['middleware'=> 'web'],function(){
 // Buses Routes
     Route::group(['middleware'=> 'web'],function(){
         Route::get('bus/calendar','\App\Http\Controllers\BusController@calendar')->name('bus_calendar');
+        Route::get('api/bus_calendar/options', ['uses' => '\App\Http\Controllers\BusController@calendarOptions', 'permissions' => 'bus.create']);
         Route::resource('bus','\App\Http\Controllers\BusController');
-        Route::post('bus/{id}/update','\App\Http\Controllers\BusController@update');
+        Route::post('bus/{id}/update', ['uses' => '\App\Http\Controllers\BusController@update', 'permissions' => 'bus.edit']);
         Route::match(['POST', 'DELETE'], 'bus/{id}/delete','\App\Http\Controllers\BusController@destroy')->name('bus.destroy');
-        Route::get('bus/{id}/deleteMsg','\App\Http\Controllers\BusController@DeleteMsg');
-        Route::get('/driver_bus_transfer/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransfer');
-        Route::get('/driver_bus_transfer/table/api/{id}', '\App\Http\Controllers\BusController@getDriverAndBusTransferForTable');
-        Route::post('/bus_day/update', '\App\Http\Controllers\BusController@updateBusDay');
-        Route::post('/bus_day/update/tour', '\App\Http\Controllers\BusController@updateBusDayTour');
-        Route::post('/bus_day/delete', '\App\Http\Controllers\BusController@deleteBusDay');
+        Route::get('bus/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\BusController@DeleteMsg', 'permissions' => 'bus.destroy']);
+        Route::get('/driver_bus_transfer/api/{id}', ['uses' => '\App\Http\Controllers\BusController@getDriverAndBusTransfer', 'permissions' => 'transfer.show']);
+        Route::get('/driver_bus_transfer/table/api/{id}', ['uses' => '\App\Http\Controllers\BusController@getDriverAndBusTransferForTable', 'permissions' => 'transfer.show']);
+        Route::post('/bus_day/update', ['uses' => '\App\Http\Controllers\BusController@updateBusDay', 'permissions' => 'bus.edit']);
+        Route::post('/bus_day/update/tour', ['uses' => '\App\Http\Controllers\BusController@updateBusDayTour', 'permissions' => 'bus.edit']);
+        Route::post('/bus_day/delete', ['uses' => '\App\Http\Controllers\BusController@deleteBusDay', 'permissions' => 'bus.destroy']);
     });
 
     // Bus Day Api
     Route::group(['middleware'=> 'web'],function(){
-        Route::get('api/bus_days','\App\Http\Controllers\BusController@getApiBusDays');
-        Route::post('api/add_day','\App\Http\Controllers\BusController@addApiBusDays');
-        Route::get('api/get_buses_transfer/{id}','\App\Http\Controllers\BusController@getBusesTransfer');
-        Route::get('api/get_drivers_transfer/{id}','\App\Http\Controllers\BusController@getDriversTransfer');
-        Route::get('api/generate_form_trip','\App\Http\Controllers\BusController@generateFormTrip');
-        Route::get('api/generate_form_tour','\App\Http\Controllers\BusController@generateFormTour');
+        Route::get('api/bus_days', ['uses' => '\App\Http\Controllers\BusController@getApiBusDays', 'permissions' => 'bus_calendar']);
+        Route::post('api/add_day', ['uses' => '\App\Http\Controllers\BusController@addApiBusDays', 'permissions' => 'bus.create']);
+        Route::get('api/get_buses_transfer/{id}', ['uses' => '\App\Http\Controllers\BusController@getBusesTransfer', 'permissions' => 'transfer.show']);
+        Route::get('api/get_drivers_transfer/{id}', ['uses' => '\App\Http\Controllers\BusController@getDriversTransfer', 'permissions' => 'transfer.show']);
+        Route::get('api/generate_form_trip', ['uses' => '\App\Http\Controllers\BusController@generateFormTrip', 'permissions' => 'bus_calendar']);
+        Route::get('api/generate_form_tour', ['uses' => '\App\Http\Controllers\BusController@generateFormTour', 'permissions' => 'bus_calendar']);
     });
 
 
@@ -429,18 +437,18 @@ Route::group(['middleware'=> 'web'],function(){
 //Rates Routes
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('rate','\App\Http\Controllers\RateController');
-        Route::post('rate/{id}/update','\App\Http\Controllers\RateController@update');
+        Route::post('rate/{id}/update', ['uses' => '\App\Http\Controllers\RateController@update', 'permissions' => 'rate.edit']);
         Route::match(['POST', 'DELETE'], 'rate/{id}/delete','\App\Http\Controllers\RateController@destroy')->name('rate.destroy');
-        Route::get('rate/{id}/deleteMsg','\App\Http\Controllers\RateController@DeleteMsg');
+        Route::get('rate/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\RateController@DeleteMsg', 'permissions' => 'rate.destroy']);
     });
 
 
 //Currency Rates Routes
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('currency_rate','\App\Http\Controllers\CurrencyRateController');
-    Route::post('currency_rate/{id}/update','\App\Http\Controllers\CurrencyRateController@update');
+    Route::post('currency_rate/{id}/update', ['uses' => '\App\Http\Controllers\CurrencyRateController@update', 'permissions' => 'currency_rate.edit']);
     Route::match(['POST', 'DELETE'], 'currency_rate/{id}/delete','\App\Http\Controllers\CurrencyRateController@destroy')->name('currency_rate.destroy');
-    Route::get('currency_rate/{id}/deleteMsg','\App\Http\Controllers\CurrencyRateController@DeleteMsg');
+    Route::get('currency_rate/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\CurrencyRateController@DeleteMsg', 'permissions' => 'currency_rate.destroy']);
 });
 
 // Notifications
@@ -465,37 +473,40 @@ Route::group(['middleware'=> 'web'],function(){
 //Currencies Routes
     Route::group(['middleware'=> 'web'],function(){
         Route::resource('currencies','\App\Http\Controllers\CurrenciesController');
-        Route::post('currencies/{id}/update','\App\Http\Controllers\CurrenciesController@update');
+        Route::post('currencies/{id}/update', ['uses' => '\App\Http\Controllers\CurrenciesController@update', 'permissions' => 'currencies.edit']);
         Route::match(['POST', 'DELETE'], 'currencies/{id}/delete','\App\Http\Controllers\CurrenciesController@destroy')->name('currencies.destroy');
-        Route::get('currencies/{id}/deleteMsg','\App\Http\Controllers\CurrenciesController@DeleteMsg');
+        Route::get('currencies/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\CurrenciesController@DeleteMsg', 'permissions' => 'currencies.destroy']);
     });
 
 //Criteria Routes
 Route::group(['middleware'=> 'web'],function(){
     Route::resource('criteria','\App\Http\Controllers\CriteriaController');
-    Route::post('criteria/{id}/update','\App\Http\Controllers\CriteriaController@update');
+    Route::post('criteria/{id}/update', ['uses' => '\App\Http\Controllers\CriteriaController@update', 'permissions' => 'criteria.edit']);
     Route::match(['POST', 'DELETE'], 'criteria/{id}/delete','\App\Http\Controllers\CriteriaController@destroy')->name('criteria.destroy');
-    Route::get('criteria/{id}/deleteMsg','\App\Http\Controllers\CriteriaController@DeleteMsg');
+    Route::get('criteria/{id}/deleteMsg', ['uses' => '\App\Http\Controllers\CriteriaController@DeleteMsg', 'permissions' => 'criteria.destroy']);
 });
 
 //Comments Routes
     Route::group(['middleware' => 'web'], function () {
         Route::resource('comment', 'CommentController')->except(['create']); // comments are added on a record, not on a page of their own
         Route::match(['POST', 'DELETE'], '/comment/{id}/delete', 'CommentController@destroy')->name('comment.destroy');
-        Route::get('/comment/{id}/delete_msg', 'CommentController@deleteMsg');
-        Route::post('/comment/generate-comments', 'CommentController@getComments');
+        Route::get('/comment/{id}/delete_msg', ['uses' => 'CommentController@deleteMsg', 'permissions' => 'comment.destroy'])->name('comment.delete_confirmation');
+        Route::post('/comment/generate-comments', ['uses' => 'CommentController@getComments', 'permissions' => 'comment.show'])->name('comment.thread');
     });
-Route::group(['middleware' => ['web', 'auth']], function () {
+// UserController applies permissions.required; these route names are not permissions themselves.
+Route::group(['middleware' => ['web', 'auth'], 'permissions' => 'users.destroy'], function () {
     Route::get('users/{id}/deleteMsg', 'ScaffoldInterface\UserController@deleteMsg')
         ->name('users.deleteMsg');
+});
 
+Route::group(['middleware' => ['web', 'auth'], 'permissions' => 'users.edit'], function () {
     Route::post('users/removeRole', 'ScaffoldInterface\UserController@revokeRole')
         ->name('user.remove_role');
     Route::post('users/addRole', 'ScaffoldInterface\UserController@addRole')
         ->name('users.addRole');
     Route::post('users/addPermission', 'ScaffoldInterface\UserController@addPermission')
         ->name('users.addPermission');
-    Route::get('users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
+    Route::match(['POST', 'DELETE'], 'users/removePermission/{user_id}/{key}', 'ScaffoldInterface\UserController@revokePermission')
         ->name('users.revokePermission');
 });
 
@@ -509,18 +520,22 @@ Route::group(['middleware' => ['web', 'auth']], function () {
     
     Route::group(['middleware' => 'web'], function () {
         Route::get('/images/index', 'AttachmentController@index')->name('images.index');
-        Route::post('/images/savefile', 'AttachmentController@saveFile')->name('images.savefile');
+        // Also used by the tour edit page for the landing image; category images additionally
+        // need images.index (checked in AttachmentController@saveFile)
+        Route::post('/images/savefile', ['uses' => 'AttachmentController@saveFile', 'permissions' => 'tour.edit'])->name('images.savefile');
 //        Route::get('/cruises/{id}/delete_msg', 'CruisesController@deleteMsg');
     });
 
     Route::group(['middleware' => 'web'], function () {
-        Route::get('/roles/{id}/deleteMsg', 'ScaffoldInterface\RoleController@deleteMsg');
+        Route::get('/roles/{id}/deleteMsg', ['uses' => 'ScaffoldInterface\RoleController@deleteMsg', 'permissions' => 'roles.destroy']);
     });
     Route::group(['middleware' => 'web'], function () {
-        Route::get('/permissions/{id}/deleteMsg', 'ScaffoldInterface\PermissionController@deleteMsg');
+        Route::get('/permissions/{id}/deleteMsg', ['uses' => 'ScaffoldInterface\PermissionController@deleteMsg', 'permissions' => 'permissions.destroy']);
     });
-    Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission');
-    Route::get('roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission');
+    Route::group(['middleware' => 'web', 'permissions' => 'roles.edit'], function () {
+        Route::post('roles/addPermission', '\App\Http\Controllers\ScaffoldInterface\RoleController@addPermission')->name('roles.addPermission');
+        Route::match(['POST', 'DELETE'], 'roles/removePermission/{permission}/{role_id}', '\App\Http\Controllers\ScaffoldInterface\RoleController@revokePermission')->name('roles.revokePermission');
+    });
 
     Route::group(['middleware' => 'web'], function () {
         Route::resource('flights', 'FlightController');
@@ -529,15 +544,16 @@ Route::group(['middleware' => ['web', 'auth']], function () {
     });
 
     Route::group(['middleware' => 'web'], function(){
-        Route::resource('settings', 'SettingController');
+        Route::resource('settings', 'SettingController')->except(['show']);
     });
 
     Route::get('/supplier_search', 'SupplierSearchController@index')->name('supplier_search');
-    Route::get('/supplier_show', 'SupplierSearchController@show')->name('supplier_show');
-    Route::get('/table_service_list', 'SupplierSearchController@generateTableServiceList');
-    Route::get('/supplier_criteria', 'SupplierSearchController@getCriterias')->name('criterias_for_search');
+    // Route names are not permissions here: the search endpoints share the page's permission
+    Route::get('/supplier_show', ['uses' => 'SupplierSearchController@show', 'permissions' => 'supplier_search'])->name('supplier_show');
+    Route::get('/table_service_list', ['uses' => 'SupplierSearchController@generateTableServiceList', 'permissions' => 'tour_package.edit']);
+    Route::get('/supplier_criteria', ['uses' => 'SupplierSearchController@getCriterias', 'permissions' => 'supplier_search'])->name('criterias_for_search');
     Route::group(['middleware' => 'web', 'prefix' => 'activities'], function(){
-        Route::get('/', 'ActivitiesController@index')->name('activities_index');
+        Route::get('/', ['uses' => 'ActivitiesController@index', 'permissions' => 'activities.index'])->name('activities_index');
     });
     Route::get('/file/{id}/download', 'FileController@download')->name('file.download');
     Route::post('/file/{id}/delete', 'FileController@delete')->name('file_delete');
@@ -563,25 +579,25 @@ Route::get('/home', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\A
 });
 Route::get('/home/getToursForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursForCalendar',
                                          'middleware'  => ['auth', 'permissions.required'],
-                                         'permissions' => 'dashboard.index',
+                                         'permissions' => 'dashboard.tours_calendar',
                                          'as'          => 'dashboard.getToursForCalendar'
 ]);
 
 Route::get('/home/getToursForCalendarByUser/{id}', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursForCalendar',
     'middleware'  => ['auth', 'permissions.required'],
-    'permissions' => 'dashboard.index',
+    'permissions' => 'dashboard.tours_calendar',
     'as'          => 'dashboard.getToursForCalendar'
 ]);
 
 Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@getToursTasksForCalendar',
                                               'middleware'  => ['auth', 'permissions.required'],
-                                              'permissions' => 'dashboard.index',
+                                              'permissions' => 'dashboard.calendar',
                                               'as'          => 'dashboard.getToursTasksForCalendar'
 ]);
 
 Route::post('/calendar/quick-create', ['uses'        => '\App\Http\Controllers\ScaffoldInterface\AppController@quickCreateCalendarEvent',
                                        'middleware'  => ['auth', 'permissions.required'],
-                                       'permissions' => 'dashboard.index',
+                                       'permissions' => 'task.create',
                                        'as'          => 'calendar.quick-create'
 ]);
 /*
@@ -599,7 +615,7 @@ Route::get('/home/getToursTasksForCalendar', ['uses'        => '\App\Http\Contro
 
 Route::post('chat/message', ['uses'        => '\App\Http\Controllers\ChatController@postMessage',
                     'middleware'  => ['auth', 'permissions.required'],
-                    'permissions' => 'chat.post',
+                    'permissions' => 'chat.main',
                     'as'          => 'chat.post'
 ]);
 
@@ -616,8 +632,9 @@ Route::group(['middleware' => 'web'], function () {
 
 });
 
-Route::group(['middleware' => 'web'], function () {
-    Route::get('/chat/{id}/renderChat', 'ChatController@renderChat')->name('chat.renderChat');
+// ChatController applies permissions.required; most chat route names are not permissions, so use chat.main.
+Route::group(['middleware' => 'web', 'permissions' => 'chat.main'], function () {
+    Route::get('/chat/{id}/renderChat','ChatController@renderChat')->name('chat.renderChat');
     Route::get('/chat/main', 'ChatController@main')->name('chat.main');
 	Route::get('/chat/{id}/deleteMsg', 'ChatController@delete')->name('chat.deleteMsg');
 	Route::match(['POST', 'DELETE'], '/chat/{id}/destroy_chat', 'ChatController@destroy')->name('chat.destroy_chat');
@@ -643,13 +660,13 @@ Route::group(['middleware' => 'web'], function () {
 });
 Route::group(['middleware' => 'web'], function () {
 	Route::resource( 'roles', '\App\Http\Controllers\ScaffoldInterface\RoleController' );
-    Route::post('/roles/store', 'ScaffoldInterface\RoleController@store');
-	Route::post('/roles/update', 'ScaffoldInterface\RoleController@update');
+    Route::post('/roles/store', ['uses' => 'ScaffoldInterface\RoleController@store', 'permissions' => 'roles.create']);
+	Route::post('/roles/update', ['uses' => 'ScaffoldInterface\RoleController@update', 'permissions' => 'roles.edit']);
 });
 Route::group(['middleware' => 'web'], function () {
 	Route::resource( 'permissions', '\App\Http\Controllers\ScaffoldInterface\PermissionController' );
-    Route::post('/permissions/store', 'ScaffoldInterface\PermissionController@store');
-    Route::post('/permissions/update', 'ScaffoldInterface\PermissionController@update');
+    Route::post('/permissions/store', ['uses' => 'ScaffoldInterface\PermissionController@store', 'permissions' => 'permissions.create']);
+    Route::post('/permissions/update', ['uses' => 'ScaffoldInterface\PermissionController@update', 'permissions' => 'permissions.edit']);
 });
 
 //===============================================================================
@@ -688,7 +705,7 @@ Route::group(['middleware' => 'web'], function () {
 
 	Route::get('email/deleteMsg/{id}/{currentFolder?}', 'EmailController@emailDeleteMsg')->name('email.deleteMsg')
         ->where('currentFolder', '.*');
-	Route::get('email/remove/{id}/{currentFolder?}', 'EmailController@removeEmail')->name('email.remove')
+	Route::post('email/remove/{id}/{currentFolder?}', 'EmailController@removeEmail')->name('email.remove')
         ->where('currentFolder', '.*');
 	Route::get('email/attachment/{folderName}/{id}/{attachmentName}', 'EmailController@attachment')->name('email.attachment')
         ->where('folderName', '.*');
@@ -701,6 +718,7 @@ Route::group(['middleware' => 'web'], function () {
 
 //SnappyMail Routes (Webmail Integration)
 Route::group(['middleware' => ['auth', 'web']], function () {
+    Route::any('/snappymail/{path?}', 'SnappyMailController@gateway')->where('path', '.*')->name('snappymail.gateway');
     // SSO Login to SnappyMail
     Route::get('/email/webmail', 'SnappyMailController@sso')->name('snappymail.sso');
 
@@ -722,7 +740,7 @@ Route::group(['middleware' => ['auth', 'web']], function () {
 Route::group(['middleware' => 'web'], function () {
 	Route::resource('driver', '\App\Http\Controllers\DriverController');
     Route::match(['POST', 'DELETE'], '/driver/{id}/delete', 'DriverController@destroy')->name('driver.destroy');
-    Route::get('/driver/{id}/delete_msg', 'DriverController@deleteMsg');
+    Route::get('/driver/{id}/delete_msg', ['uses' => 'DriverController@deleteMsg', 'permissions' => 'driver.destroy']);
 });
 
 Route::group(['middleware' => 'web'], function () {
@@ -766,7 +784,10 @@ Route::group(['middleware' => 'web'], function () {
 	Route::resource('menu', 'MenuController');	
 });
 
-Route::get('/tour/{id}/landingpage', 'TourController@landingPage')->name('landing_page');
+// Public client page, addressed by an unguessable token rather than the tour id
+Route::get('/tour/landingpage/{token}', 'TourController@landingPage')->where('token', '[A-Za-z0-9]{40}')->name('landing_page');
+// Old id link: staff only, forwards to the token URL
+Route::get('/tour/{id}/landingpage', ['uses' => 'TourController@landingPageById', 'permissions' => 'tour.show'])->middleware('auth')->name('landing_page_by_id');
 
 
 Route::get('getemailbyId/{id}/{mailtype}', 'EmailController@getEmailById')->name('getemailbyId');
@@ -785,7 +806,7 @@ Route::post('tour_package/{id}/addemails', '\App\Http\Controllers\BookingRequest
 
 
 Route::get('TMS-Client/login', '\App\Http\Controllers\TMSClient\LoginController@index')->name('TMS-Client.login');
-Route::post('TMS-Client/login', '\App\Http\Controllers\TMSClient\LoginController@Clientauth')->name('client.login');
+Route::post('TMS-Client/login', '\App\Http\Controllers\TMSClient\LoginController@Clientauth')->middleware('throttle:5,1')->name('client.login');
 
 Route::group(['middleware' => 'clientauth'], function () {
 Route::get('TMS-Client/logout', '\App\Http\Controllers\TMSClient\LoginController@signout')->name('client.logout');

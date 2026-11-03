@@ -1645,7 +1645,7 @@ data-retirement_date="{{$tour->retirement_date}}">{!!trans('main.AddService')!!}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="open-landing" onclick='export_to("{{ route('landing_page', ['id' => $tour->id]) }}");'>
+                <button type="button" class="btn btn-primary" id="open-landing" onclick='export_to("{{ route('landing_page', ['token' => $tour->shareToken()]) }}");'>
                     Agree
                 </button>
             </div>
@@ -2175,7 +2175,7 @@ function showLandingPageModal() {
         var modal = new bootstrap.Modal(document.getElementById('landingpage_modal'));
         modal.show();
     } else {
-        window.open("{{ route('landing_page', ['id' => $tour->id]) }}", '_blank');
+        window.open("{{ route('landing_page', ['token' => $tour->shareToken()]) }}", '_blank');
     }
 }
 

@@ -53,26 +53,17 @@ class SettingController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|unique:settings',
-            'description' => 'required',
-            'value' => 'required']);
+            'name' => ['required', 'string', 'max:191', 'regex:/^[a-z0-9_]+$/', 'unique:settings,name'],
+            'description' => 'required|string|max:1000',
+            'value' => Setting::valueRules($request->get('name'))],
+            ['name.regex' => 'Use lowercase letters, numbers and _ only, e.g. tour_service_notification.']);
 
-        Setting::create($request->all());
+        // Only the form fields; id and timestamps must not come from the request.
+        Setting::create($request->only(['name', 'description', 'value']));
 
         LaravelFlashSessionHelper::setFlashMessage("Setting {$request->description} created", 'success');
 
         return redirect(route('settings.index'));
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
     }
 
     /**
@@ -83,10 +74,7 @@ class SettingController extends Controller
      */
     public function edit($id)
     {
-        $setting = Setting::query()->where('id', $id)->first();
-        if(!$setting){
-            return abort(404);
-        }
+        $setting = Setting::findOrFail($id);
 
         return view('settings.edit', compact('setting'));
     }
@@ -100,17 +88,18 @@ class SettingController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'desc' => 'required',
-            'value' => 'required'
-        ]);
+        $setting = Setting::findOrFail($id);
 
-        $setting = $this->settings->getById($id);
+        $this->validate($request, [
+            'desc' => 'required|string|max:1000',
+            'value' => Setting::valueRules($setting->name)
+        ], [], ['desc' => 'description']);
+
         $setting->description = $request->get('desc');
         $setting->value = $request->get('value');
         $setting->save();
 
-        LaravelFlashSessionHelper::setFlashMessage("Setting {$setting->desc} edited", 'success');
+        LaravelFlashSessionHelper::setFlashMessage("Setting {$setting->description} edited", 'success');
 
         return redirect(route('settings.index'));
     }
@@ -123,8 +112,17 @@ class SettingController extends Controller
      */
     public function destroy($id)
     {
-        $setting = Setting::query()->where('id', $id)->first();
+        $setting = Setting::findOrFail($id);
+
+        if ($setting->isSystem()) {
+            LaravelFlashSessionHelper::setFlashMessage("Setting {$setting->name} is used by scheduled jobs and cannot be deleted", 'error');
+            return redirect(route('settings.index'));
+        }
+
         $setting->delete();
+
+        LaravelFlashSessionHelper::setFlashMessage("Setting {$setting->description} deleted", 'success');
+
         return redirect(route('settings.index'));
     }
     /**

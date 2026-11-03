@@ -144,7 +144,7 @@
                                         @forelse($hotel->criterias as $item)
                                             @if ($criteria->id == $item->criteria_id)
                                                 <td class="info_td_show criteria_block" style="width:100%">
-                                                    {!! $criteria->name !!}</td>
+                                                    {{ $criteria->name }}</td>
                                                 <?php
                                                 $empty = 1;
                                                 ?>

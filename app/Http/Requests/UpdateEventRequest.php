@@ -4,9 +4,17 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Services\ValidationService;
+use App\Http\Requests\Concerns\SupplierFieldRules;
 
 class UpdateEventRequest extends FormRequest
 {
+    use SupplierFieldRules;
+
+    protected function prepareForValidation()
+    {
+        $this->normalizeCriterias();
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -41,8 +49,7 @@ class UpdateEventRequest extends FormRequest
             'comments' => 'nullable|string|max:1000',
             'int_comments' => 'nullable|string|max:1000',
             'rate' => 'nullable|exists:rates,id',
-            'criterias' => 'nullable|string',
-        ];
+        ] + $this->attachmentAndCriteriaRules('event');
     }
 
     /**
@@ -52,7 +59,7 @@ class UpdateEventRequest extends FormRequest
      */
     public function messages()
     {
-        return ValidationService::getCommonMessages();
+        return array_merge(ValidationService::getCommonMessages(), $this->attachmentAndCriteriaMessages('event'));
     }
 
     /**

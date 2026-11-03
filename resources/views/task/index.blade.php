@@ -1236,6 +1236,12 @@
         function confirmDelete(event, url) {
             event.preventDefault();
             event.stopPropagation();
+            var deleteButton = event.currentTarget;
+
+            if (deleteButton.getAttribute('data-confirming') === 'true') {
+                return;
+            }
+            deleteButton.setAttribute('data-confirming', 'true');
 
             var confirmDeleteTask = typeof window.appConfirm === 'function'
                 ? window.appConfirm('Are you sure you want to delete this task?', {
@@ -1246,7 +1252,12 @@
                 : Promise.resolve(true);
 
             confirmDeleteTask.then(function(confirmed) {
+                deleteButton.removeAttribute('data-confirming');
                 if (!confirmed) {
+                    return;
+                }
+
+                if (!window.jQuery || !window.jQuery.tmsLoading || !window.jQuery.tmsLoading.start(deleteButton, 'Deleting...')) {
                     return;
                 }
 
@@ -1257,22 +1268,25 @@
                         'Content-Type': 'application/json',
                     },
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (typeof window.appToast === 'function') {
-                            window.appToast('Task deleted successfully', 'success', 'Success');
-                        }
-                        setTimeout(function() {
-                            location.reload();
-                        }, 700);
-                    } else {
-                        if (typeof window.appToast === 'function') {
-                            window.appToast('Error deleting task', 'error', 'Error');
-                        }
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Task deletion request failed.');
                     }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error('Task deletion was not successful.');
+                    }
+                    if (typeof window.appToast === 'function') {
+                        window.appToast('Task deleted successfully', 'success', 'Success');
+                    }
+                    setTimeout(function() {
+                        location.reload();
+                    }, 700);
                 })
                 .catch(error => {
+                    window.jQuery.tmsLoading.stop(deleteButton);
                     console.error('Error:', error);
                     if (typeof window.appToast === 'function') {
                         window.appToast('Error deleting task', 'error', 'Error');

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -7,155 +6,48 @@ use App\Services\ValidationService;
 
 class StoreClientRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        return true;
-    }
+    public function authorize() { return true; }
 
-    /**
-     * Prepare the data for validation.
-     */
     protected function prepareForValidation()
     {
-        // Clean and format input data
-        $this->merge([
-            'name' => trim($this->name ?? ''),
-            'country' => trim($this->country ?? ''),
-            'city' => trim($this->city ?? ''),
-            'address' => trim($this->address ?? ''),
-            'work_phone' => trim($this->work_phone ?? ''),
-            'contact_phone' => trim($this->contact_phone ?? ''),
-            'work_email' => strtolower(trim($this->work_email ?? '')),
-            'contact_email' => strtolower(trim($this->contact_email ?? '')),
-            'work_fax' => trim($this->work_fax ?? ''),
-        ]);
+        $clean = [];
+        foreach (['name', 'country', 'city', 'address', 'work_phone', 'contact_phone', 'work_email', 'contact_email', 'work_fax'] as $field) {
+            if (!$this->exists($field)) continue;
+            $value = $this->input($field);
+            if (is_string($value)) {
+                $value = trim($value);
+                if (in_array($field, ['work_email', 'contact_email'], true)) $value = strtolower($value);
+            }
+            $clean[$field] = $value;
+        }
+        $this->merge($clean);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
-        return [
-            // Basic Information
-            'name' => [
-                'required',
-                'string',
-                'max:191',
-                'min:2',
-                'regex:/^[\pL\pN\s\-\.\'&,()\/]+$/u' // company names: letters, digits, & , . ' - ( ) /
-            ],
-
-            // Location Information
-            'country' => [
-                'required',
-                'string',
-                'max:191',
-                'min:2',
-                'regex:/^[a-zA-Z\s\-]+$/' // Allow letters, spaces, hyphens
-            ],
+        $rules = ValidationService::clientBusinessRules();
+        $rules['address'] = ValidationService::addressRules(true, 191, 5);
+        foreach (['work_phone', 'contact_phone'] as $field) $rules[$field][] = 'regex:/[0-9]/';
+        foreach ($rules as &$fieldRules) array_unshift($fieldRules, 'bail');
+        unset($fieldRules);
+        return $rules + [
+            'country' => ['bail', 'required', 'string', 'min:2', 'max:191', 'regex:/^[a-zA-Z\s-]+$/'],
             'city' => ValidationService::cityRules(true),
-            'address' => [
-                'required',
-                'string',
-                'max:500',
-                'min:5'
-            ],
-
-            // Contact Information
-            'work_phone' => [
-                'required',
-                'string',
-                'max:20',
-                'regex:/^[\+]?[0-9\s\-\(\)]+$/' // Phone format
-            ],
-            'contact_phone' => [
-                'nullable',
-                'string',
-                'max:20',
-                'regex:/^[\+]?[0-9\s\-\(\)]+$/' // Phone format
-            ],
-            'work_email' => [
-                'required',
-                'email',
-                'max:191',
-                'unique:clients,work_email'
-            ],
-            'contact_email' => [
-                'nullable',
-                'email',
-                'max:191',
-                'unique:clients,contact_email'
-            ],
-            'work_fax' => [
-                'nullable',
-                'string',
-                'max:20',
-                'regex:/^[\+]?[0-9\s\-\(\)]+$/' // Fax format similar to phone
-            ],
-
-            // File Uploads
-            'files' => 'nullable|array',
-            'files.*' => [
-                'file',
-                'max:5120', // 5MB max
-                'mimes:jpeg,jpg,png,gif,pdf,doc,docx'
-            ]
+            'account_no' => 'nullable|string|max:250',
+            'company_address' => 'nullable|string|max:250',
+            'invoice_address' => 'nullable|string|max:250',
+            'work_fax' => array_merge(ValidationService::phoneRules(false), ['regex:/[0-9]/']),
+            'files' => 'nullable|array|max:10',
+            'files.*' => ValidationService::fileRules(false, 5120, 'jpeg,jpg,png,gif,pdf,doc,docx'),
+            'attach' => 'nullable|array|max:10',
+            'attach.*' => ValidationService::fileRules(false, 5120, 'jpeg,jpg,png,gif,pdf,doc,docx'),
+            'attach_bus' => 'prohibited',
+            'password' => \App\Services\ClientPortalPassword::rules(),
         ];
     }
 
-    /**
-     * Get custom error messages for validation rules.
-     *
-     * @return array
-     */
     public function messages()
     {
-        return [
-            'name.required' => 'Client name is required.',
-            'name.regex' => 'Client name can only contain letters, digits, spaces and & , . \' - ( ) /.',
-            'name.min' => 'Client name must be at least 2 characters.',
-            'country.required' => 'Country is required.',
-            'country.regex' => 'Country name can only contain letters, spaces, and hyphens.',
-            'city.required' => 'City is required.',
-            'city.regex' => 'City name can only contain letters, spaces, hyphens, and dots.',
-            'address.required' => 'Address is required.',
-            'address.min' => 'Address must be at least 5 characters.',
-            'work_phone.required' => 'Work phone number is required.',
-            'work_phone.regex' => 'Please enter a valid work phone number.',
-            'contact_phone.regex' => 'Please enter a valid contact phone number.',
-            'work_email.required' => 'Work email address is required.',
-            'work_email.email' => 'Please enter a valid work email address.',
-            'work_email.unique' => 'This work email address is already registered.',
-            'contact_email.email' => 'Please enter a valid contact email address.',
-            'contact_email.unique' => 'This contact email address is already registered.',
-            'work_fax.regex' => 'Please enter a valid fax number.',
-            'files.*.max' => 'Each file must not exceed 5MB.',
-            'files.*.mimes' => 'Files must be of type: JPEG, JPG, PNG, GIF, PDF, DOC, DOCX.'
-        ];
-    }
-
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array
-     */
-    public function attributes()
-    {
-        return [
-            'name' => 'client name',
-            'work_phone' => 'work phone',
-            'contact_phone' => 'contact phone',
-            'work_email' => 'work email',
-            'contact_email' => 'contact email',
-            'work_fax' => 'fax number'
-        ];
+        return ValidationService::getCommonMessages() + ['work_email.unique' => 'This work email address is already registered.'];
     }
 }

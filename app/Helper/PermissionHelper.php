@@ -215,7 +215,7 @@ trait PermissionHelper
         Menu::class => 'menu.index',
         Announcement::class => 'announcements.index',
         Holidaycalendarday::class => 'holiday.index',
-		ClientInvoices::class => 'transactions.index',
+		ClientInvoices::class => 'transactions.show',
 		Invoices::class => 'invoices.index',
 		Offices::class => 'office.index',
     ];
@@ -281,7 +281,15 @@ trait PermissionHelper
     }
 
 
+    /** Per-request cache: list pages call getActionPermission once per row */
+    private static $actionPermissionCache = [];
+
     public static function getActionPermission($class,$userId){
+        $cacheKey = $class . '|' . $userId;
+        if (isset(self::$actionPermissionCache[$cacheKey])) {
+            return self::$actionPermissionCache[$cacheKey];
+        }
+
         $permission_index = PermissionHelper::$relationsPermissionIndex[$class];
         $permission_show = PermissionHelper::$relationsPermissionShow[$class];
         $permission_create = PermissionHelper::$relationsPermissionCreate[$class];
@@ -295,6 +303,6 @@ trait PermissionHelper
         $action['edit'] = $user->can($permission_edit);
         $action['destroy'] = $user->can($permission_destroy);
 
-        return $action;
+        return self::$actionPermissionCache[$cacheKey] = $action;
     }
 }

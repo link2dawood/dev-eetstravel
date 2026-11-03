@@ -21,9 +21,11 @@ namespace App;
  */
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoices extends Model
 {
+    use SoftDeletes;
     
     public $timestamps = false;
     protected $table ="supplier_invoices" ;
@@ -32,10 +34,25 @@ class Invoices extends Model
 		{
 			return $this->hasMany(InvoicesTours::class, 'invoices_id','id');
 		}
+
+    public function activeTours()
+    {
+        return $this->hasMany(InvoicesTours::class, 'invoices_id', 'id');
+    }
 	
     public function files()
     {
         return $this->hasMany('App\File');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'invoice_id', 'id');
+    }
+
+    public function office()
+    {
+        return $this->belongsTo(Offices::class, 'office_id');
     }
 	public function getTotalAmountForMonth($month, $year)
     {
@@ -45,23 +62,8 @@ class Invoices extends Model
     }
 	public function status($invoices_tour)
     {
-		
-        $invoices = Invoices::find($invoices_tour->invoices_id);
-        $transaction = Transaction::where("invoice_id",$invoices->id)->where("pay_to","Supplier");
-		
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoices->total_amount ;
-                $remaining_amount =  $amount - $sum_amount;
-                if($sum_amount == $amount){
-                    $result = "Paid";
-                }
-                elseif($sum_amount == 0){
-                    $result = "You Owe ".$amount;
-                }
-                else{
-                    $result = "You Owe ".$remaining_amount;
-                }
-               
-                return $result;
+		$paid = (float) $this->transactions()->where('pay_to', 'Supplier')->sum('amount');
+		$balance = (float) $this->total_amount + (float) $this->extra_amount - $paid;
+		return $balance <= 0 ? 'Paid' : 'You Owe ' . number_format($balance, 2);
     }
 }

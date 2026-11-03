@@ -41,6 +41,7 @@ class Handler extends ExceptionHandler
         'current_password',
         'password',
         'password_confirmation',
+        'email_password',
         'token',
         '_token',
         'api_token',

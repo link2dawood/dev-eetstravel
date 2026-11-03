@@ -132,8 +132,8 @@ class ClientContactUpdateTest extends TestCase
             'punctuation contact name' => [['contacts' => [['contact_full_name' => '---']]], 'contacts.0.contact_full_name'],
             'punctuation contact phone' => [['contacts' => [['contact_full_name' => 'Valid Name', 'contact_work_phone' => '---']]], 'contacts.0.contact_work_phone'],
             'array fax' => [['work_fax' => ['bad']], 'work_fax'],
-            'password exceeding encrypted storage' => [['password' => str_repeat('x', 32)], 'password'],
-            'unicode password exceeding encrypted storage' => [['password' => str_repeat('é', 16)], 'password'],
+            'password exceeding hash input limit' => [['password' => str_repeat('x', 129)], 'password'],
+            'unicode password exceeding hash input limit' => [['password' => str_repeat('é', 129)], 'password'],
         ];
     }
 
@@ -235,11 +235,11 @@ class ClientContactUpdateTest extends TestCase
 
     public function test_password_at_storage_boundary_is_saved_without_truncation()
     {
-        $password = str_repeat('x', 31);
+        $password = str_repeat('x', 128);
         (new ClientController(new EloquentClientRepository()))->update(9, $this->request(['password' => $password]));
         $encrypted = Client::findOrFail(9)->password;
         $this->assertLessThanOrEqual(250, strlen($encrypted));
-        $this->assertSame($password, \Illuminate\Support\Facades\Crypt::decryptString($encrypted));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check($password, $encrypted));
         $this->assertSame(1, DB::table('client_contacts')->where('client_id', 9)->count());
     }
 }

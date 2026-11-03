@@ -4,6 +4,8 @@
 
 <IfModule mod_rewrite.c>
 	RewriteEngine On
+    RewriteRule ^(?:data|_data_)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?!index\.php$).*\.php(?:/|$) - [F,L,NC]
 	# Redirect cPanel
 	RewriteRule cpsess.* https://%{HTTP_HOST}/ [L,R=301]
 

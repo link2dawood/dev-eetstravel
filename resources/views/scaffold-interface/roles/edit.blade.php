@@ -68,7 +68,10 @@
 				<input type="hidden" name = "role_id" value = "{{$role->id}}">
 				<div class="form-group">
 				<label for="">Role</label>
-					<input type="text" name = "name" class = "form-control" placeholder = "Name" value = "{{$role->name}}">
+					<input type="text" name = "name" class = "form-control" placeholder = "Name" value = "{{ old('name', $role->name) }}" maxlength="191" @if($isProtected) readonly @endif>
+					@if($isProtected)
+						<small class="form-text text-muted">This role is used by the application and cannot be renamed.</small>
+					@endif
 				</div>
                 <div class="manage-form-actions-bottom">
                     <a href="{{ \App\Helper\AdminHelper::getBackButton(route('roles.index')) }}" class="btn btn-secondary">
@@ -112,7 +115,12 @@
                         @foreach($rolePermissions as $key => $permission)
                             <tr>
                                 <td>{{$permission}}</td>
-                                <td><a href="{{url('roles/removePermission')}}/{{$key}}/{{$role->id}}" class = "btn btn-danger btn-sm"><i class="fa fa-trash-o" aria-hidden="true"></i></a></td>
+                                <td>
+                                    <form action="{{ route('roles.revokePermission', ['permission' => $key, 'role_id' => $role->id]) }}" method="POST" class="d-inline">
+                                        {{ csrf_field() }}
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Remove permission" aria-label="Remove permission"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+                                    </form>
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>

@@ -117,7 +117,7 @@
         }
         // Build POST data and make AJAX request
         var data = {chat_text: messageText, user:userId};
-        $.post('/chat/message', data).success(sendMessageSuccess);
+        $.post('/chat/message', data).done(sendMessageSuccess);
 
         // Ensure the normal browser event doesn't take place
         return false;

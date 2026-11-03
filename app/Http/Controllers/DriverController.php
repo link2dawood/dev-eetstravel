@@ -14,8 +14,9 @@ use Illuminate\Http\Request;
 use URL;
 use Illuminate\Support\Facades\Session;
 use App\Library\Services\DeleteModel;
-use App\Comment;
 use DB;
+use App\Services\ValidationService;
+use Illuminate\Validation\Rule;
 
 class DriverController extends Controller
 {
@@ -86,11 +87,7 @@ class DriverController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'phone' => 'nullable',
-            'email' => 'nullable|email'
-        ]);
+        $this->validate($request, $this->validationRules());
 
         $driver = DB::transaction(function () use ($request) {
             $driver = $this->driverRepository->create($this->driverData($request));
@@ -100,7 +97,7 @@ class DriverController extends Controller
 
         $data = ['route' => route('driver.index')];
         LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name created", 'success');
-        return response()->json($data);
+        return $request->expectsJson() ? response()->json($data) : redirect()->route('driver.index');
     }
 
     /**
@@ -167,13 +164,23 @@ class DriverController extends Controller
         return $data;
     }
 
+    public function validationRules($id = null)
+    {
+        return [
+            'name' => ValidationService::nameRules(),
+            'phone' => ValidationService::phoneRules(false),
+            'email' => array_merge(ValidationService::emailRules(false), [Rule::unique('drivers', 'email')->ignore($id)]),
+            'transfer_id' => ['nullable', 'integer', Rule::exists('transfers', 'id')->whereNull('deleted_at')],
+            'attach' => 'nullable|array',
+            'attach.*' => 'file|max:10240|mimes:jpeg,jpg,png,gif,pdf,doc,docx,xls,xlsx',
+            'attach_bus' => 'prohibited',
+        ];
+    }
+
     public function update(Request $request, $id)
     {
-        $this->validate($request, [
-            'name' => 'required',
-            'phone' => 'nullable',
-            'email' => 'nullable|email'
-        ]);
+        $this->driverRepository->byId($id);
+        $this->validate($request, $this->validationRules($id));
 
         $driver = DB::transaction(function () use ($request, $id) {
             $this->driverRepository->updateById($id, $this->driverData($request));
@@ -184,11 +191,12 @@ class DriverController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name edited", 'success');
         $data = ['route' => route('driver.index')];
-        return response()->json($data);
+        return $request->expectsJson() ? response()->json($data) : redirect()->route('driver.index');
     }
 
     public function deleteMsg($id, Request $request)
     {
+        $this->driverRepository->byId($id);
         $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/driver/' . $id . '/delete');
 
         if ($request->ajax()) {
@@ -204,24 +212,30 @@ class DriverController extends Controller
      */
     public function destroy($id, DeleteModel $deleteModel)
     {
-        $driver = $this->driverRepository->byId($id);
-        $message = $deleteModel->check($driver, 'Driver');
+        $message = DB::transaction(function () use ($id, $deleteModel) {
+            $driver = Driver::query()->lockForUpdate()->findOrFail($id);
+            $message = $deleteModel->check($driver, 'Driver');
+            if ($message) return $message;
+            // Drivers have no comment reference type. Do not delete unrelated comments.
+            $this->removeFile($driver);
+            $this->driverRepository->deleteById($id);
+            LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name deleted", 'success');
+            return null;
+        });
         if ($message){
             Session::flash('message', $message);
-        } else {
-            LaravelFlashSessionHelper::setFlashMessage("Driver $driver->name deleted", 'success');
-            $this->driverRepository->deleteById($id);
-            $this->removeFile($driver);
-            Comment::query()->where('reference_type', Comment::$services['driver'])->where('reference_id', $id)->delete();
+            if (request()->expectsJson()) return response()->json(['success' => false, 'message' => $message], 422);
         }
 
-        return URL::to('driver');
+        return request()->expectsJson()
+            ? response()->json(['route' => route('driver.index')])
+            : redirect()->route('driver.index');
     }
 
     public function getButton($id, $driver)
 	{
-		$url = array('show'       => route('driver.show', ['id' => $id]),
-		             'edit'       => route('driver.edit', ['id' => $id]),
+		$url = array('show'       => route('driver.show', ['driver' => $id]),
+		             'edit'       => route('driver.edit', ['driver' => $id]),
 		             'delete_msg' => "/driver/{$id}/delete_msg");
 
 		return DatatablesHelperController::getActionButton($url, false, $driver);

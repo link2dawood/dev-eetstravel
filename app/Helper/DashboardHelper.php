@@ -12,14 +12,34 @@ class DashboardHelper
     public static function getTasks()
     {
         $user = Auth::user();
-        $tasks = $user->getTasksAttachedToUser();
-        $dt = new \DateTime();
-        $dead = $dt->format('Y-m-d H:i:s');
-        foreach ($tasks as $i => $task){
-            if($task->dead_line < $dead || $task->status == 7 || $task->status == 8){
-                unset($tasks[$i]);
-            }
+        $now = now()->toDateTimeString();
+        $activeTasks = function ($query) use ($now) {
+            $query->where('tasks.dead_line', '>=', $now)
+                ->where(function ($query) {
+                    $query->whereNull('tasks.status')
+                        ->orWhereNotIn('tasks.status', [7, 8]);
+                });
+        };
+
+        $tasks = $user->tasks()
+            ->where($activeTasks)
+            ->get()
+            ->keyBy('id');
+
+        $assignedTasks = Task::query()
+            ->where('assign', $user->id)
+            ->where($activeTasks)
+            ->orderBy('priority', 'DESC')
+            ->orderBy('dead_line', 'ASC')
+            ->get();
+
+        foreach ($assignedTasks as $task) {
+            $tasks->put($task->id, $task);
         }
+        $tasks = array_values($tasks->all());
+
+        // The header shows each task's tour name; load those tours in one query
+        \App\Task::preloadNotificationTours($tasks);
 
         return $tasks;
     }
@@ -30,13 +50,11 @@ class DashboardHelper
         $user_login = $user->email_login;
         $email_server = $user->email_server;
 
-        $messages = Email::query()
+        return Email::query()
             ->where('user_login', $user_login)
             ->where('email_server', $email_server)
             ->where('is_seen', false)
-            ->get();
-
-        return $messages->isNotEmpty() ? $messages->count() : 0;
+            ->count();
     }
 
     public static function isTabActive($route)

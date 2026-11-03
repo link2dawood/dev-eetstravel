@@ -68,7 +68,7 @@ class ClientSampleData extends Command
                     'contact_phone' => $contacts[0][1],
                     'work_email' => 'groups@' . $domain,
                     'contact_email' => $contacts[0][3] . '@' . $domain,
-                    'password' => Crypt::encryptString('QaSample2026'),
+                    'password' => \Illuminate\Support\Facades\Hash::make('QaSample2026'),
                     'work_fax' => $phone . '9',
                     'department' => 'Group Travel',
                     'created_at' => $now, 'updated_at' => $now,

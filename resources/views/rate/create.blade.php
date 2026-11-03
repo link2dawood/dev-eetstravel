@@ -46,6 +46,7 @@
                             <div class="form-group mb-3">
                                 <label for="rate_type">{{trans('main.Ratetype')}}</label>
                                 <select name="rate_type" id="rate_type" class="form-control">
+                                    <option value="">Choose a rate type</option>
                                     @foreach($rate_types as $rate_type)
                                         <option {{ old('rate_type') == $rate_type->id ? 'selected' : '' }} value="{{ $rate_type->id }}">{{ $rate_type->name }}</option>
                                     @endforeach

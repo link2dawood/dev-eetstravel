@@ -28,25 +28,25 @@
                         <td class="show_width_td">
                             <b><i>{{trans('main.Name')}} : </i></b>
                         </td>
-                        <td>{!!$rate->name!!}</td>
+                        <td>{{ $rate->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{{trans('main.Mark')}} : </i></b>
                         </td>
-                        <td>{!!$rate->mark!!}</td>
+                        <td>{{ $rate->mark }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{{trans('main.Ratetype')}}: </i></b>
                         </td>
-                        <td>{{ $rate_type == null ? '' : $rate_type->name }}</td>
+                        <td>{{ $rate_type->name ?? 'Unclassified' }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{{trans('main.Sortorder')}} : </i></b>
                         </td>
-                        <td>{!!$rate->sort_order!!}</td>
+                        <td>{{ $rate->sort_order }}</td>
                     </tr>
                     </tbody>
                 </table>

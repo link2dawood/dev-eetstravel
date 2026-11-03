@@ -14,6 +14,7 @@ use URL;
 use Yajra\Datatables\Datatables;
 use Illuminate\Support\Facades\Session;
 use App\Library\Services\DeleteModel;
+use Illuminate\Support\Facades\DB;
 
 
 class RateController extends Controller
@@ -24,8 +25,8 @@ class RateController extends Controller
 
     public function getButton($id, $rate)
     {
-        $url = array('show'       => route('rate.show', ['id' => $id]),
-            'edit'       => route('rate.edit', ['id' => $id]),
+        $url = array('show'       => route('rate.show', ['rate' => $id]),
+            'edit'       => route('rate.edit', ['rate' => $id]),
             'delete_msg' => "/rate/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $rate);
@@ -104,6 +105,7 @@ class RateController extends Controller
     public function show($id, Request $request)
     {
         $title = 'Show - Rate';
+        Rate::findOrFail($id);
 
         if ($request->ajax()) {
             return URL::to('rate/' . $id);
@@ -127,6 +129,7 @@ class RateController extends Controller
     public function edit($id, Request $request)
     {
         $title = 'Edit - Rate';
+        Rate::findOrFail($id);
         if ($request->ajax()) {
             return URL::to('rate/' . $id . '/edit');
         }
@@ -145,9 +148,8 @@ class RateController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validateRate($request);
-
         $rate = Rate::findOrfail($id);
+        $this->validateRate($request, $rate);
         $rate->name = $request->get('name');
         $rate->mark = $request->get('mark');
         $rate->rate_type = $request->get('rate_type');
@@ -162,6 +164,7 @@ class RateController extends Controller
 
     public function DeleteMsg($id, Request $request)
     {
+        Rate::findOrFail($id);
 //        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/rate/' . $id . '/delete');
         $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/rate/' . $id . '/delete');
 
@@ -178,27 +181,28 @@ class RateController extends Controller
      */
     public function destroy($id, DeleteModel $deleteModel)
     {
-        $rate = Rate::findOrfail($id);
-        $message = $deleteModel->check($rate, 'Rate');
-        if ($message){
-            Session::flash('message', $message);
-        } else {
+        return DB::transaction(function () use ($id, $deleteModel) {
+            $rate = Rate::query()->lockForUpdate()->findOrFail($id);
+            $message = $deleteModel->check($rate, 'Rate');
+            if ($message) {
+                if (request()->expectsJson()) return response()->json(['success' => false, 'message' => $message], 422);
+                LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+                return redirect('rate');
+            }
             $rate->delete();
             Comment::query()->where('reference_type', Comment::$services['rate'])->where('reference_id', $id)->delete();
             LaravelFlashSessionHelper::setFlashMessage("Rate $rate->name deleted", 'success');
-        }
-
-
-        return request()->ajax() ? URL::to('rate') : redirect('rate');
+            return request()->expectsJson() ? response()->json(['route' => route('rate.index')]) : redirect('rate');
+        });
     }
 
-    public function validateRate($request){
+    public function validateRate($request, Rate $rate = null){
 
         $this->validate($request, [
-            'name'    => 'required',
-            'mark'    => 'required',
-            'rate_type' => 'required',
-            'sort_order'  => 'required|numeric'
+            'name' => array_merge(\App\Services\ValidationService::nameRules(), [\Illuminate\Validation\Rule::unique('rates', 'name')->ignore($rate ? $rate->id : null)]),
+            'mark' => \App\Services\ValidationService::nameRules(true, 191, 1),
+            'rate_type' => 'required|integer|exists:rate_types,id',
+            'sort_order' => 'required|integer|min:0|max:2147483647',
         ]);
     }
 }

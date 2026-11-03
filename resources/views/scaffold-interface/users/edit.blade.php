@@ -156,7 +156,6 @@
 					</div>
 				</div>
 				{!! csrf_field() !!}
-				<input type="hidden" name = "user_id" value = "{{$user->id}}">
 				<div class="form-group">
 					<label for="">{{trans('main.Email')}}</label>
 					<input type="text" name = "email" value = "{{ $errors != null && count($errors) > 0 ? old('email') : $user->email }}" class = "form-control">
@@ -167,12 +166,16 @@
 				</div>
 				<div class="form-group">
 					<label for="">{{trans('main.Password')}}</label>
-					<input type="password" name = "password" class = "form-control" placeholder = "password">
+					<input type="password" name = "password" class = "form-control" placeholder = "Leave blank to keep current password" autocomplete="new-password">
+				</div>
+				<div class="form-group">
+					<label for="">Confirm {{trans('main.Password')}}</label>
+					<input type="password" name = "password_confirmation" class = "form-control" placeholder = "Repeat new password" autocomplete="new-password">
 				</div>
                 <div class="form-group">
                     <label for="avatar">Avatar</label>
                     <div class="mb-2">@include('component.avatar-preview', ['avatarUser' => $user, 'avatarSize' => 100])</div>
-                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept="image/*"></div>
+                    <div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept=".jpg,.jpeg,.png,.gif,.webp"></div>
                     <small class="form-text text-muted">Upload a new avatar image (optional)</small>
                 </div>
 				<div class="user-edit-actions-bottom">
@@ -261,7 +264,12 @@
 							@foreach($userPermissions as $key => $permission)
 							<tr>
 								<td>{{$permission}}</td>
-								<td><a href="{{url('users/removePermission')}}/{{$user->id}}/{{$key}}" class="trash-icon-action" title="Delete permission" aria-label="Delete permission"><span>Delete</span></a></td>
+								<td>
+									<form action="{{ route('users.revokePermission', ['user_id' => $user->id, 'key' => $key]) }}" method="POST">
+										{{ csrf_field() }}
+										<button type="submit" class="trash-icon-action" title="Delete permission" aria-label="Delete permission"><span>Delete</span></button>
+									</form>
+								</td>
 							</tr>
 							@endforeach
 						</tbody>

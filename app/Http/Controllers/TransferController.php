@@ -110,25 +110,26 @@ class TransferController extends Controller
     {
 
         $request = CitiesHelper::setCityGeneral($request);
-        $transfer = $this->transfers->create($request->except('attach', 'place_id', 'criterias'));
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $transfer->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['transfer'];
-                $services_has_criteria->save();
+        $transfer = \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $transfer = $this->transfers->create($request->only((new Transfer)->getFillable()));
+            if(!empty($request->criterias)){
+                $criterias = array_unique((array) $request->criterias);
+                foreach ($criterias as $criteria){
+                    $services_has_criteria = new ServicesHasCriteria();
+                    $services_has_criteria->service_id = $transfer->id;
+                    $services_has_criteria->criteria_id = $criteria;
+                    $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['transfer'];
+                    $services_has_criteria->save();
+                }
             }
-        }
-
+            $this->addFile($request, $transfer);
+            return $transfer;
+        });
 
         LaravelFlashSessionHelper::setFlashMessage("Bus Company $transfer->name created", 'success');
 
-        $this->addFile($request, $transfer);
         $data = ['route' => route('transfer.index')];
-		return redirect()->route('transfer.index');
-        return response()->json($data);
+        return $request->expectsJson() ? response()->json($data) : redirect()->route('transfer.index');
     }
 
     /**
@@ -143,6 +144,7 @@ class TransferController extends Controller
         $title = 'Show - Bus Company';
 
         if ($request->ajax()) {
+            Transfer::findOrFail($id);
             return URL::to('transfer/' . $id);
         }
 
@@ -150,10 +152,10 @@ class TransferController extends Controller
             ->select('transfers.*', 'rates.name as rate_name')
             ->where('transfers.id', $id)
             ->first();
-        $transfer->getCriterias();
         if($transfer == null){
             return abort(404);
         }
+        $transfer->getCriterias();
         $criterias = Criteria::leftJoin('criteria_types', 'criterias.criteria_type', '=', 'criteria_types.id')
             ->orderBy('criterias.name','asc')
             ->select('criterias.*', 'criteria_types.name as criteria_name')
@@ -182,6 +184,7 @@ class TransferController extends Controller
     {
         $title = 'Edit - Bus Company';
         if ($request->ajax()) {
+            Transfer::findOrFail($id);
             return URL::to('transfer/' . $id . '/edit');
         }
 
@@ -210,25 +213,28 @@ class TransferController extends Controller
     public function update($id, UpdateTransferRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-        $this->transfers->updateById($id, $request->except('attach', 'place_id', 'criterias'));
-        ServicesHasCriteria::where('service_id', $id)
-            ->where('service_type', ServicesHasCriteria::$serviceTypes['transfer'])
-            ->delete();
-        $transfer = $this->transfers->getById($id);
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $transfer->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['transfer'];
-                $services_has_criteria->save();
+        $transfer = \Illuminate\Support\Facades\DB::transaction(function () use ($id, $request) {
+            $this->transfers->updateById($id, $request->only((new Transfer)->getFillable()));
+            ServicesHasCriteria::where('service_id', $id)
+                ->where('service_type', ServicesHasCriteria::$serviceTypes['transfer'])
+                ->delete();
+            $transfer = $this->transfers->getById($id);
+            if(!empty($request->criterias)){
+                $criterias = array_unique((array) $request->criterias);
+                foreach ($criterias as $criteria){
+                    $services_has_criteria = new ServicesHasCriteria();
+                    $services_has_criteria->service_id = $transfer->id;
+                    $services_has_criteria->criteria_id = $criteria;
+                    $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['transfer'];
+                    $services_has_criteria->save();
+                }
             }
-        }
+            $this->addFile($request, $transfer);
+            return $transfer;
+        });
 
         LaravelFlashSessionHelper::setFlashMessage("Bus Company $transfer->name edited", 'success');
 
-        $this->addFile($request, $transfer);
         $data = ['route' => route('transfer.index')];
         // The edit form posts normally; AJAX callers still get the JSON route
         if ($request->ajax() || $request->wantsJson()) {
@@ -277,6 +283,8 @@ class TransferController extends Controller
         }
 
 
-        return URL::to('transfer');
+        return request()->expectsJson()
+            ? response()->json(['success' => !$message, 'message' => $message ?: "Bus Company $transfer->name deleted", 'route' => route('transfer.index')], $message ? 422 : 200)
+            : redirect()->route('transfer.index');
     }
 }

@@ -37,19 +37,19 @@
                             <div class="col-lg-6 mt-3">
                                 <div class="form-group mb-3">
                                     <label for="name">Name</label>
-                                    <input id="name" type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->name}}" name="name" class="form-control">
+                                    <input id="name" type="text" value="{{ old('name', $driver->name) }}" name="name" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="phone">Phone</label>
-                                    <input id="phone" type="text" name="phone" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->phone}}" class="form-control">
+                                    <input id="phone" type="text" name="phone" value="{{ old('phone', $driver->phone) }}" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="email">Email</label>
-                                    <input id="email" type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $driver->email}}" name="email" class="form-control">
+                                    <input id="email" type="text" value="{{ old('email', $driver->email) }}" name="email" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="transfer_id">Bus Company</label>
-                                    {!! Form::select('transfer_id', $transfers, $errors != null && count($errors) > 0 ? '' : $driver->transfer_id, ['class' => 'form-control', 'id' => 'transfer_id']) !!}
+                                    {!! Form::select('transfer_id', $transfers, old('transfer_id', $driver->transfer_id), ['class' => 'form-control', 'id' => 'transfer_id', 'placeholder' => 'No bus company']) !!}
                                 </div>
 
                                 <div class="form-group mb-3">

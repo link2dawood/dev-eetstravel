@@ -29,6 +29,7 @@ use App\Notification;
 use Yajra\Datatables\Datatables;
 use App\Helper\ExportTrait;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use App\Helper\HelperTrait;
 use App\Helper\LaravelFlashSessionHelper;
 use App\Helper\PermissionHelper;
@@ -59,11 +60,8 @@ class  InvoicesController extends Controller
      * @param  $id Invoices id
      * @return mixed
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all invoices tours data (same as the AJAX data method)
-        $invoices_tours = InvoicesTours::all();
-
         $permission_destroy = PermissionHelper::$relationsPermissionDestroy['App\Invoices'];
         $permission_edit = PermissionHelper::$relationsPermissionEdit['App\Invoices'];
         $permission_show = PermissionHelper::$relationsPermissionShow['App\Invoices'];
@@ -74,59 +72,25 @@ class  InvoicesController extends Controller
         $perm['destroy'] = Auth::user()->can($permission_destroy);
         $perm['clone'] = Auth::user()->can('accounting.create');
 
-        // Add computed columns to each invoice tour
-        $invoicesData = $invoices_tours->map(function ($invoices_tours) use ($perm) {
-            $invoices = Invoices::find($invoices_tours->invoices_id);
-
-            // Office Name
-            $office_name = "";
-            if (!empty($invoices)) {
-                $office = Offices::find($invoices->office_id);
-                $office_name = $office->office_name ?? "";
-            }
-            $invoices_tours->officeName = $office_name;
-
-            // Invoice data
-            if (!empty($invoices)) {
-                $invoices_tours->invoice_no = $invoices->invoice_no;
-                $invoices_tours->dueDate = $invoices->dueDate;
-                $invoices_tours->receivedDate = $invoices->receivedDate;
-                $invoices_tours->total_amount = $invoices->total_amount;
-                $invoices_tours->extra_amount = $invoices->extra_amount;
-            }
-
-            // Tour name
-            $tour = Tour::find($invoices_tours->invoices_tours_id);
-            $invoices_tours->tour = $tour->name ?? "";
-
-            // Package name
-            $tour_package = TourPackage::find($invoices_tours->package_id);
-            $package_name = "Extra Cost";
-            if (!empty($tour_package)) {
-                $package_name = $tour_package->name;
-            }
-            $invoices_tours->package = $package_name;
-
-            // Status calculation
-            if (!empty($invoices)) {
-                $transaction = Transaction::where("invoice_id", $invoices->id)->where("pay_to", "Supplier");
-                $sum_amount = $transaction->sum("amount");
-                $amount = $invoices->total_amount;
-                $remaining_amount = $amount - $sum_amount;
-
-                if ($sum_amount == $amount) {
-                    $result = "Paid";
-                } elseif ($sum_amount == 0) {
-                    $result = "You Owe " . $amount;
-                } else {
-                    $result = "You Owe " . $remaining_amount;
-                }
-                $invoices_tours->status = $result;
-            }
-
-            // Action buttons will be generated in the view using the action_buttons component
-
-            return $invoices_tours;
+        $query = Invoices::query()->with(['activeTours.tours', 'activeTours.package', 'office'])
+            ->withSum(['transactions as paid_amount' => function ($q) { $q->where('pay_to', 'Supplier'); }], 'amount');
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_no', 'like', '%' . $search . '%')
+                    ->orWhereHas('activeTours.tours', function ($t) use ($search) { $t->where('name', 'like', '%' . $search . '%'); })
+                    ->orWhereHas('activeTours.package', function ($p) use ($search) { $p->where('name', 'like', '%' . $search . '%'); });
+            });
+        }
+        $invoicesData = $query->orderByDesc('id')->paginate(25)->withQueryString();
+        $invoicesData->getCollection()->transform(function ($invoice) {
+            $invoice->tour = $invoice->activeTours->pluck('tours.name')->filter()->unique()->implode(', ');
+            $invoice->package = $invoice->activeTours->map(function ($link) { return $link->package->name ?? 'Extra Cost'; })->unique()->implode(', ');
+            $invoice->officeName = $invoice->office->office_name ?? '';
+            $paid = (float) $invoice->paid_amount;
+            $balance = (float) $invoice->total_amount + (float) $invoice->extra_amount - $paid;
+            $invoice->status = $balance <= 0 ? 'Paid' : 'You Owe ' . number_format($balance, 2);
+            return $invoice;
         });
 
         return view('invoices.index', compact('invoicesData'));
@@ -162,15 +126,17 @@ class  InvoicesController extends Controller
         $tours = Tour::all();
         $clients = Client::all();
         $tour_id = $request->input('tour_id', null);
+        $received_date = Carbon::today()->toDateString();
+        $due_date = Carbon::today()->addWeek()->toDateString();
        
-        return view('invoices.create', compact('offices', 'tours', 'clients', 'tour_id'));
+        return view('invoices.create', compact('offices', 'tours', 'clients', 'tour_id', 'received_date', 'due_date'));
     }
     public function store(Request $request)
     {
         $this->validateInvoice($request);
 
         $rows = InvoicePayments::rows($request);
-        InvoicePayments::ensureWithinBalance($rows, $request->total_amount);
+        InvoicePayments::ensureWithinBalance($rows, $request->total_amount, 0, $request->input('extra_amount', 0));
         $currentDate = Carbon::now();
 
         // Validate payment amounts
@@ -184,7 +150,7 @@ class  InvoicesController extends Controller
                 $payment_amount += $paidamount;
             }
 
-            if ($request->total_amount < $payment_amount) {
+            if ((float) $request->total_amount + (float) $request->input('extra_amount', 0) < $payment_amount) {
                 LaravelFlashSessionHelper::setFlashMessage("Payments Cannot be Greater than Total Amount", 'error');
                 return redirect()->back()->withInput();
             }
@@ -192,11 +158,13 @@ class  InvoicesController extends Controller
 
         try {
             DB::beginTransaction();
+            Offices::whereKey($request->office_id)->lockForUpdate()->firstOrFail();
+            $this->ensureInvoiceNumberAvailable($request->invoice_no, (int) $request->office_id);
             // Create Invoice
             $invoice = new Invoices();
             $invoice->office_id = $request->office_id;
-            $invoice->dueDate = $currentDate->copy()->addWeek();
-            $invoice->receivedDate = $currentDate;
+            $invoice->dueDate = $request->input('due_date', $currentDate->copy()->addWeek()->toDateString());
+            $invoice->receivedDate = $request->input('received_date', $currentDate->toDateString());
             $invoice->invoice_no = $request->invoice_no;
             $invoice->total_amount = $request->total_amount;
             $invoice->extra_amount = $request->extra_amount;
@@ -276,19 +244,35 @@ class  InvoicesController extends Controller
         $this->validate($request, [
             'office_id' => 'required|integer|exists:office_fees,id',
             'tour_id'     => 'required|array|min:1',
-            'tour_id.*'   => 'required|exists:tours,id',
-            'invoice_no' => 'required|string|max:191',
+            'tour_id.*'   => 'required|integer|distinct|exists:tours,id',
+            'invoice_no' => ['required', 'string', 'max:191', Rule::unique('supplier_invoices', 'invoice_no')->where('office_id', $request->input('office_id'))],
             'total_amount' => 'required|numeric|min:0|max:999999999.99',
-            'extra_amount' => 'nullable|numeric|min:0',
+            'extra_amount' => 'nullable|numeric|min:0|max:999999999.99',
+            'received_date' => 'required|date_format:Y-m-d',
+            'due_date' => 'required|date_format:Y-m-d|after_or_equal:received_date',
             'note' => 'nullable|string|max:400',
-
         ]);
+        foreach ($request->input('tour_id', []) as $tourId) {
+            $key = 'package_id' . $tourId;
+            $packageIds = $request->input($key, []);
+            $request->validate([$key => 'nullable|array', $key . '.*' => ['required', 'integer', 'distinct', Rule::exists('tour_packages', 'id')->whereNull('deleted_at')]]);
+            if (TourPackage::whereIn('id', $packageIds)->where('tour_id', '!=', $tourId)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([$key => 'Each service must belong to its selected tour.']);
+            }
+        }
+    }
+
+    private function ensureInvoiceNumberAvailable(string $invoiceNumber, int $officeId, ?int $ignoreId = null): void
+    {
+        $query = Invoices::where('office_id', $officeId)->where('invoice_no', $invoiceNumber);
+        if ($ignoreId !== null) $query->where('id', '!=', $ignoreId);
+        if ($query->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['invoice_no' => 'This invoice number is already in use for the selected office.']);
+        }
     }
     public function edit($id, Request $request)
     {
-        $invoices = InvoicesTours::findOrFail($id);
-		//$invoices = Invoices::findOrFail($id);
-		
+        $invoices = Invoices::with(['activeTours.tours', 'activeTours.package'])->findOrFail($id);
         $offices = Offices::all();
         $tours = Tour::all();
         $clients = Client::all();
@@ -298,23 +282,30 @@ class  InvoicesController extends Controller
     }
     public function update($id, Request $request)
     {
+        $currentInvoice = Invoices::findOrFail($id);
+        $invoiceNumberRules = ['required', 'string', 'max:191'];
+        if ($request->input('invoice_no') !== $currentInvoice->invoice_no) {
+            $invoiceNumberRules[] = Rule::unique('supplier_invoices', 'invoice_no')->where('office_id', $request->input('office_id'));
+        }
         $request->validate([
             'office_id' => 'required|integer|exists:office_fees,id',
-            'tours' => 'required|integer|exists:tours,id',
-            'invoice_no' => 'required|string|max:191',
+            'invoice_no' => $invoiceNumberRules,
             'total_amount' => 'required|numeric|min:0|max:999999999.99',
+            'extra_amount' => 'nullable|numeric|min:0|max:999999999.99',
+            'received_date' => 'required|date_format:Y-m-d',
+            'due_date' => 'required|date_format:Y-m-d|after_or_equal:received_date',
         ]);
-        $rows = InvoicePayments::rows($request);
-        DB::transaction(function () use ($id, $request, $rows) {
-            $link = InvoicesTours::findOrFail($id);
-            $invoice = Invoices::whereKey($link->invoices_id)->lockForUpdate()->firstOrFail();
-            $replace = $request->boolean('payments_loaded');
-            $paid = $replace ? 0 : Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->sum('amount');
-            InvoicePayments::ensureWithinBalance($rows, $request->total_amount, $paid);
-            $link->update(['invoices_tours_id' => $request->tours]);
-            $invoice->update($request->only(['office_id', 'invoice_no', 'total_amount']));
-            if ($replace) Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->delete();
-            InvoicePayments::save($rows, $invoice->id, 'Supplier');
+        DB::transaction(function () use ($id, $request) {
+            $invoice = Invoices::whereKey($id)->lockForUpdate()->firstOrFail();
+            Offices::whereKey($request->office_id)->lockForUpdate()->firstOrFail();
+            if ($invoice->invoice_no !== $request->invoice_no || (int) $invoice->office_id !== (int) $request->office_id) {
+                $this->ensureInvoiceNumberAvailable($request->invoice_no, (int) $request->office_id, $invoice->id);
+            }
+            $paid = Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->sum('amount');
+            InvoicePayments::ensureWithinBalance([], $request->total_amount, $paid, $request->input('extra_amount', 0));
+            $invoice->update(['office_id' => $request->office_id, 'invoice_no' => $request->invoice_no,
+                'total_amount' => $request->total_amount, 'extra_amount' => $request->input('extra_amount', 0),
+                'receivedDate' => $request->received_date, 'dueDate' => $request->due_date]);
         });
         return redirect()->route('invoices.show', $id);
     }
@@ -327,16 +318,9 @@ class  InvoicesController extends Controller
             return URL::to('invoices/' . $id);
         }
 
-        // {id} is the invoice-tour link id (InvoicesTours), as used by the list buttons
-        $invoice_tour= InvoicesTours::findOrFail($id);
-		 $invoices = Invoices::find($invoice_tour->invoices_id);
-        $office = Offices::find($invoices->office_id);
-
-
-
-        if ($invoices == null) {
-            return abort(404);
-        }
+        $invoices = Invoices::with(['activeTours.tours', 'activeTours.package', 'transactions' => function ($q) { $q->where('pay_to', 'Supplier'); }])->findOrFail($id);
+        $invoice_tour = $invoices->activeTours->first();
+        $office = $invoices->office;
 
         $files = $this->parseAttach($invoices);
 
@@ -348,7 +332,7 @@ class  InvoicesController extends Controller
     public function DeleteMsg($id, Request $request)
     {
 
-        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/invoices/' . $id . '/delete');
+        $msg = Ajaxis::BtDeleting('Warning!!', 'Archive this supplier invoice and its tour links? Financial history will be retained.', '/invoices/' . $id . '/delete');
         if ($request->ajax()) {
             return $msg;
         }
@@ -356,18 +340,20 @@ class  InvoicesController extends Controller
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            $link = InvoicesTours::findOrFail($id);
-            $invoice = Invoices::whereKey($link->invoices_id)->lockForUpdate()->firstOrFail();
+            $invoice = Invoices::whereKey($id)->lockForUpdate()->firstOrFail();
             if (Transaction::where('invoice_id', $invoice->id)->where('pay_to', 'Supplier')->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['invoice' => 'An invoice with payments cannot be deleted.']);
-            $link->delete();
-            if (!InvoicesTours::where('invoices_id', $invoice->id)->exists()) $invoice->delete();
+            InvoicesTours::where('invoices_id', $invoice->id)->delete();
+            $invoice->deleted_by = Auth::id();
+            $invoice->save();
+            $invoice->delete();
         });
         return request()->ajax() ? URL::to('invoices') : redirect()->route('invoices.index');
     }
 	
 	public function supplierdropdown($id, Request $request)
     {
-        $tour = Tour::find($id);
+        abort_unless(Auth::user() && Auth::user()->can('invoices.create'), 403);
+        $tour = Tour::findOrFail($id);
 
 		$multiple = "";
 		$att_name = "";
@@ -379,7 +365,7 @@ class  InvoicesController extends Controller
 		}
         $tourDates = $this->prepareTourPackages($tour, $request)['tourDates'];
 	
-        $package_name = '<lable for= "service" id = "lable-service' . $tour->id . '">' . $tour->name . '</label>
+        $package_name = '<label for="service" id="lable-service' . (int) $tour->id . '">' . e($tour->name) . '</label>
     <select id="service' . $tour->id . '"  name="package_id' . $att_name . '" class="form-control tour_select"'.$multiple.'required>
 	<option id="only_extra_cost">Extra Cost</option>';
         $n = 0;
@@ -403,8 +389,7 @@ class  InvoicesController extends Controller
                         
 
                         $listIdServices[] = ['id_service' => $package->reference, 'type_service' => $package->type];
-                        $package_name .= "</br><option value = " . $package->id . ">" . $currentDate
-                            . " : " . $package->name . "</option>";
+                        $package_name .= "<option value=\"" . (int) $package->id . "\">" . e($currentDate . ' : ' . $package->name) . "</option>";
 
 
                     }
@@ -452,10 +437,9 @@ class  InvoicesController extends Controller
         DB::transaction(function () use ($id, $rows) {
             $invoice = Invoices::whereKey($id)->lockForUpdate()->firstOrFail();
             $paid = Transaction::where('invoice_id', $id)->where('pay_to', 'Supplier')->sum('amount');
-            InvoicePayments::ensureWithinBalance($rows, $invoice->total_amount, $paid);
+            InvoicePayments::ensureWithinBalance($rows, $invoice->total_amount, $paid, $invoice->extra_amount);
             InvoicePayments::save($rows, $id, 'Supplier');
         });
-        $link = InvoicesTours::where('invoices_id', $id)->first();
-        return $link ? redirect()->route('invoices.show', $link->id) : redirect()->route('invoices.index');
+        return redirect()->route('invoices.show', $id);
     }
 }

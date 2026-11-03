@@ -71,7 +71,7 @@
     </section>
 @section('post_styles')
     <link href="{{URL::asset('css/jquery-jvectormap-2.0.3.css')}}" rel="stylesheet"/>
-    <link href="{{URL::asset('css/calendar-enhancements.css')}}" rel="stylesheet"/>
+    <link href="{{URL::asset('css/calendar-enhancements.css')}}?v={{ filemtime(public_path('css/calendar-enhancements.css')) }}" rel="stylesheet"/>
     <style>
         .page-body .box-tools .btn-box-tool {
             display: none !important;

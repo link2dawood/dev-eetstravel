@@ -24,29 +24,29 @@
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Name')!!} : </i></b>
                         </td>
-                        <td>{!!$status->name!!}</td>
+                        <td>{{ $status->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Type')!!} : </i></b>
                         </td>
-                        <td>{!!!empty($status_type->name ) ? $status_type->name : ''!!}</td>
+                        <td>{{ $status_type->name ?? 'Unknown type' }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Sortorder')!!} : </i></b>
                         </td>
-                        <td>{!!$status->sort_order!!}</td>
+                        <td>{{ $status->sort_order }}</td>
                     </tr>
-                   {{-- <tr>
+                    <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Color')!!} : </i></b>
                         </td>
                         <td>
                             <span style="background-color: {{ $status->color }}" class="square_color"></span>
-                            <span class="text_color">{!!$status->color!!}</span>
+                            <span class="text_color">{{ $status->color }}</span>
                         </td>
-                    </tr>--}}
+                    </tr>
                     </tbody>
                 </table>
             </div>

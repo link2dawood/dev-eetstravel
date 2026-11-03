@@ -5,10 +5,11 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Carbon\Carbon;
 use App\Http\Requests\Concerns\ResolvesCityIds;
+use App\Http\Requests\Concerns\TourFieldRules;
 
 class StoreTourRequest extends FormRequest
 {
-    use ResolvesCityIds;
+    use ResolvesCityIds, TourFieldRules;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -54,7 +55,7 @@ class StoreTourRequest extends FormRequest
                 'string',
                 'max:191',
                 'min:3',
-                'regex:/^[a-zA-Z0-9\s\-#]+$/' // Allow letters, numbers, spaces, hyphens, hash
+                'regex:' . self::$nameRegex
             ],
             'external_name' => [
                 'nullable',
@@ -71,8 +72,8 @@ class StoreTourRequest extends FormRequest
                 'required',
                 'date',
                 'after_or_equal:' . $minDate,
+                // Order against the return date is checked (with its own message) on retirement_date
                 'before_or_equal:' . $maxDate,
-                'before_or_equal:retirement_date'
             ],
             'retirement_date' => [
                 'required',
@@ -173,7 +174,7 @@ class StoreTourRequest extends FormRequest
             ]);
         }
 
-        return $rules;
+        return array_merge($rules, $this->childAndRoomRules());
     }
 
     /**
@@ -185,7 +186,7 @@ class StoreTourRequest extends FormRequest
     {
         return [
             'name.required' => 'Tour name is required.',
-            'name.regex' => 'Tour name can only contain letters, numbers, spaces, hyphens, and hash symbols.',
+            'name.regex' => self::$nameRegexMessage,
             'external_name.unique' => 'This external name is already taken.',
             'external_name.regex' => 'External name must be URL-friendly (letters, numbers, hyphens, underscores only).',
             'departure_date.required' => 'Departure date is required.',

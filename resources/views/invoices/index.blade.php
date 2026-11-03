@@ -25,16 +25,15 @@
             <br>
 
             <div class="mb-3">
-                <div class="row">
+                <form method="GET" action="{{ route('invoices.index') }}" class="row">
                     <div class="col-md-6">
-                        <input aria-label="Search invoices..." type="text" id="invoices-search" class="form-control" placeholder="Search invoices..." onkeyup="filterTable('inovices-table', this.value)">
+                        <input aria-label="Search invoices..." name="search" type="search" value="{{ request('search') }}" class="form-control" placeholder="Search invoices...">
                     </div>
                     <div class="col-md-6 text-right">
-                        <button class="btn btn-success btn-sm" onclick="exportTableToCSV('inovices-table', 'supplier_invoices_export.csv')">
-                            <i class="fa fa-download"></i> Export CSV
-                        </button>
+                        <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                        <a class="btn btn-success btn-sm" href="{{ route('invoices.index') }}"><i class="fa fa-undo"></i> Reset</a>
                     </div>
-                </div>
+                </form>
             </div>
 
 			<div class="table-responsive">
@@ -48,7 +47,7 @@
 							<th>Tour <i class="fa fa-sort"></i></th>
 							<th>Service <i class="fa fa-sort"></i></th>
 							<th>Office Name <i class="fa fa-sort"></i></th>
-							<th>Total Price <i class="fa fa-sort"></i></th>
+							<th>Payable Total <i class="fa fa-sort"></i></th>
 							<th>Status <i class="fa fa-sort"></i></th>
 							<th class="actions-button">Actions</th>
 						</tr>
@@ -63,7 +62,7 @@
 							<td>{{ $invoice->tour }}</td>
 							<td>{{ $invoice->package }}</td>
 							<td>{{ $invoice->officeName }}</td>
-							<td>{{ $invoice->total_amount }}</td>
+							<td>{{ number_format((float) $invoice->total_amount + (float) $invoice->extra_amount, 2) }}</td>
 							<td>{{ $invoice->status }}</td>
 							<td>
 								<div class="btn-list flex-nowrap">
@@ -81,6 +80,7 @@
 					@endforelse
 					</tbody>
             	</table>
+                <div class="mt-3">{{ $invoicesData->links() }}</div>
 			</div>
         </div>
     </div>

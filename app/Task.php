@@ -18,6 +18,47 @@ class Task extends Model
         '2' => 'In general'
     ];
 
+    const TYPE_PERSONAL = 1;
+
+    /**
+     * Personal tasks are private to their creator and assignees; admins see every task.
+     */
+    public function scopeVisibleTo($query, $user)
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('tasks.task_type', '<>', self::TYPE_PERSONAL)
+                ->orWhere('tasks.assign', $user->id)
+                ->orWhereHas('assigned_users', function ($u) use ($user) {
+                    $u->where('users.id', $user->id);
+                });
+        });
+    }
+
+    public function isVisibleTo($user)
+    {
+        return (int) $this->task_type !== self::TYPE_PERSONAL
+            || $user->hasRole('admin')
+            || (int) $this->assign === (int) $user->id
+            || $this->assigned_users()->where('users.id', $user->id)->exists();
+    }
+
+    /**
+     * Tasks on a user's own to-do list: assigned to them, or created by them.
+     */
+    public function scopeForUser($query, $user)
+    {
+        return $query->where(function ($q) use ($user) {
+            $q->where('tasks.assign', $user->id)
+                ->orWhereHas('assigned_users', function ($u) use ($user) {
+                    $u->where('users.id', $user->id);
+                });
+        });
+    }
+
     public static $statusColors = [
         '1' => '#f39c12',
         '2' => '#45a163',
@@ -83,12 +124,35 @@ class Task extends Model
 
     public function tourName()
     {
-
-        if ($this->tour){
-            $tour = Tour::find($this->tour);
-            if ($tour) return $tour->name;
-        }else{
+        $tourId = $this->getAttribute('tour');
+        if (!$tourId) {
             return null;
+        }
+
+        $tour = $this->relationLoaded('tour')
+            ? $this->getRelation('tour')
+            : Tour::find($tourId);
+
+        return $tour ? $tour->name : null;
+    }
+
+    /** @var array<int, Tour|null> Tours preloaded by preloadNotificationTours(), keyed by id */
+    private static $notificationTours = [];
+
+    /**
+     * Load the tours of many tasks in one query before tourNameNotification() runs per task.
+     */
+    public static function preloadNotificationTours($tasks)
+    {
+        $ids = collect($tasks)->pluck('tour')->filter()->unique()->reject(function ($id) {
+            return array_key_exists($id, self::$notificationTours);
+        });
+        if ($ids->isEmpty()) {
+            return;
+        }
+        $tours = Tour::whereIn('id', $ids)->get()->keyBy('id');
+        foreach ($ids as $id) {
+            self::$notificationTours[$id] = $tours->get($id); // null = deleted tour
         }
     }
 
@@ -96,7 +160,8 @@ class Task extends Model
     {
         if ($this->tour){
             // Use eager loaded relationship to avoid N+1 queries
-            $tour = $this->relationLoaded('tour') ? $this->tour : Tour::find($this->tour);
+            $tour = $this->relationLoaded('tour') ? $this->tour
+                : (array_key_exists($this->tour, self::$notificationTours) ? self::$notificationTours[$this->tour] : Tour::find($this->tour));
             if ($tour){
                 return "Task {$this->content} for tour " . $tour->name;
             }else{
@@ -114,7 +179,7 @@ class Task extends Model
 
     public function getDeadLineAttribute($value)
     {
-        return Carbon::parse($value)->format('Y-m-d H:i');
+        return $value ? Carbon::parse($value)->format('Y-m-d H:i') : null;
     }
 
     // Removed getAssignAttribute accessor to prevent conflicts

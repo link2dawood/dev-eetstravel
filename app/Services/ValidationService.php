@@ -13,6 +13,9 @@ use App\Rules\ValidTourDateRange;
  */
 class ValidationService
 {
+    /** Free text without markup brackets or control characters (tab allowed) */
+    const SAFE_TEXT_REGEX = '/^[^<>\x00-\x08\x0A-\x1F\x7F]+$/u';
+
     /**
      * Common validation rules for names and titles
      */
@@ -26,6 +29,7 @@ class ValidationService
             $required ? 'required' : 'nullable',
             'max:191',
             function ($attribute, $value, $fail) {
+                if (!is_string($value) && !is_int($value)) { $fail('Choose a valid city.'); return; }
                 if ($value === null || $value === '') {
                     return;
                 }
@@ -48,7 +52,9 @@ class ValidationService
             'string',
             'max:' . $maxLength,
             'min:' . $minLength,
-            'regex:/^[a-zA-Z\s\-\.\']+$/' // Letters, spaces, hyphens, dots, apostrophes
+            // Any language (José Núñez, d'Orsay); output is escaped, so only markup brackets
+            // and control characters (tab allowed) are refused
+            'regex:' . self::SAFE_TEXT_REGEX,
         ];
 
         if ($required) {
@@ -69,7 +75,8 @@ class ValidationService
             'string',
             'max:' . $maxLength,
             'min:' . $minLength,
-            'regex:/^[a-zA-Z0-9\s\-\.\&\(\)]+$/' // Letters, numbers, spaces, common business symbols
+            // Real venue names use accents, apostrophes, slashes, brackets...; see nameRules()
+            'regex:' . self::SAFE_TEXT_REGEX,
         ];
 
         if ($required) {
@@ -270,6 +277,8 @@ class ValidationService
             'file' => 'The :attribute must be a file.',
             'mimes' => 'The :attribute must be a file of type: :values.',
             'regex' => 'The :attribute format is invalid.',
+            'name.regex' => 'The name may not contain < > or control characters.',
+            'contact_name.regex' => 'The contact name may not contain < > or control characters.',
             'exists' => 'The selected :attribute is invalid.'
         ];
     }
@@ -330,7 +339,7 @@ class ValidationService
         return [
             // the form field is "name" (it used to ask for first_name, so updates always failed);
             // clients are often companies, so digits and & , ( ) / are allowed
-            'name' => ['required', 'string', 'max:191', 'min:2', 'regex:/^[\pL\pN\s\-\.\'&,()\/]+$/u'],
+            'name' => array_merge(self::businessNameRules(), ['regex:/[\pL\pN]/u']),
             'work_email' => self::emailRules(true, $emailUnique),
             'contact_email' => self::emailRules(false, $contactEmailUnique),
             'work_phone' => self::phoneRules(true),

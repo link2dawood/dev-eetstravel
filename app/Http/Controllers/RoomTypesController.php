@@ -21,8 +21,8 @@ class RoomTypesController extends Controller
 
     public function getButton($id, $room_types)
     {
-        $url = array('show'       => route('room_types.show', ['id' => $id]),
-            'edit'       => route('room_types.edit', ['id' => $id]),
+        $url = array('show'       => route('room_types.show', ['room_type' => $id]),
+            'edit'       => route('room_types.edit', ['room_type' => $id]),
             'delete_msg' => "/room_types/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $room_types);
@@ -102,6 +102,7 @@ class RoomTypesController extends Controller
     public function show($id, Request $request)
     {
         $title = 'Show - Room Types';
+        RoomTypes::findOrFail($id);
 
         if ($request->ajax()) {
             return URL::to('room_types/' . $id);
@@ -123,6 +124,7 @@ class RoomTypesController extends Controller
     public function edit($id, Request $request)
     {
         $title = 'Edit - Room Types';
+        RoomTypes::findOrFail($id);
         if ($request->ajax()) {
             return URL::to('room_types/' . $id . '/edit');
         }
@@ -140,17 +142,13 @@ class RoomTypesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validateRoomTypes($request);
-
         $room_types = RoomTypes::findOrfail($id);
+        $this->validateRoomTypes($request, $room_types);
 		
 		// keep the current image unless a new one is uploaded (it used to be wiped on every save)
 		if ($request->hasFile('image')) {
-			$oldImagePath = $room_types->img ? public_path('assets/img/svg/' . basename($room_types->img)) : null;
 			$room_types->img = $this->storeImage($request->file('image'));
-			if ($oldImagePath && is_file($oldImagePath)) {
-				@unlink($oldImagePath);
-			}
+            // Retain the old asset: failed saves and historical references must not lose it.
 		}
 
         $room_types->name = $request->get('name');
@@ -166,8 +164,9 @@ class RoomTypesController extends Controller
 
     public function DeleteMsg($id, Request $request)
     {
+        RoomTypes::findOrFail($id);
 //        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/room_types/' . $id . '/delete');
-        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/room_types/' . $id . '/delete');
+        $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!', 'Permanently delete this room type? This cannot be undone.', '/room_types/' . $id . '/delete');
 
         if ($request->ajax()) {
             return $msg;
@@ -182,49 +181,55 @@ class RoomTypesController extends Controller
      */
     public function destroy($id)
     {
-        $roomType = RoomTypes::findOrfail($id);
-
-        // Deleting used to remove the room type from every booked hotel room as well;
-        // refuse while hotels, agreements, seasons, offers or tours still use it.
-        $references = ['hotel_room_types', 'hotel_agreements_room_type_hotels', 'seasons_prices_room_type_hotels',
-            'prices_room_type_hotels', 'tour_room_type_hotels', 'offer_room_prices'];
-        foreach ($references as $table) {
-            if (Schema::hasTable($table) && DB::table($table)->where('room_type_id', $id)->exists()) {
-                $message = "Room Type {$roomType->name} is used by hotels, seasons, offers or tours and cannot be deleted";
-                if (request()->ajax()) {
-                    return response()->json(['error' => true, 'message' => $message]);
+        return DB::transaction(function () use ($id) {
+            $roomType = RoomTypes::query()->lockForUpdate()->findOrFail($id);
+            if ($roomType->isSystem()) return $this->blockedDelete('System room types cannot be deleted.');
+            // Refuse while hotels, agreements, seasons, offers or tours still use it.
+            $references = ['hotel_room_types', 'hotel_agreements_room_type_hotels', 'seasons_prices_room_type_hotels',
+                'prices_room_type_hotels', 'tour_room_type_hotels', 'offer_room_prices'];
+            foreach ($references as $table) {
+                if (Schema::hasTable($table) && DB::table($table)->where('room_type_id', $id)->exists()) {
+                    $message = "Room Type {$roomType->name} is used by hotels, seasons, offers or tours and cannot be deleted";
+                    return $this->blockedDelete($message);
                 }
-                LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
-                return redirect('room_types');
             }
-        }
-
-        $roomType->delete();
-        Comment::query()->where('reference_type', Comment::$services['room_types'])->where('reference_id', $id)->delete();
-        if ($roomType->img && is_file(public_path('assets/img/svg/' . basename($roomType->img)))) {
-            @unlink(public_path('assets/img/svg/' . basename($roomType->img)));
-        }
-
-        LaravelFlashSessionHelper::setFlashMessage("Room Type $roomType->name deleted", 'success');
-
-        return request()->ajax() ? URL::to('room_types') : redirect('room_types');
+            $roomType->delete();
+            Comment::query()->where('reference_type', Comment::$services['room_types'])->where('reference_id', $id)->delete();
+            // Keep image assets so transaction rollback and historical links remain safe.
+            LaravelFlashSessionHelper::setFlashMessage("Room Type $roomType->name deleted", 'success');
+            return request()->expectsJson() ? response()->json(['route' => route('room_types.index')]) : redirect('room_types');
+        });
     }
 
-    public function validateRoomTypes($request){
+    private function blockedDelete($message)
+    {
+        if (request()->expectsJson()) return response()->json(['success' => false, 'message' => $message], 422);
+        LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+        return redirect('room_types');
+    }
+
+    public function validateRoomTypes($request, RoomTypes $roomType = null){
 
         $this->validate($request, [
-            'name'    => 'required',
-            'code' => 'required',
-            'sort_order'  => 'required|numeric',
+            'name' => array_merge(\App\Services\ValidationService::nameRules(), [\Illuminate\Validation\Rule::unique('room_types', 'name')->ignore($roomType ? $roomType->id : null)]),
+            'code' => ['required', 'string', 'max:10', 'regex:/^[A-Z0-9_-]+$/', \Illuminate\Validation\Rule::unique('room_types', 'code')->ignore($roomType ? $roomType->id : null)],
+            'sort_order' => 'required|integer|min:0|max:2147483647',
             // stored in the public assets folder, so images only
-            'image' => 'nullable|file|mimes:svg,png,jpg,jpeg,gif,webp|max:2048',
+            'image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif,webp', 'max:2048', function ($attribute, $value, $fail) {
+                if (!($value instanceof \Illuminate\Http\UploadedFile) || !@getimagesize($value->getPathname())) {
+                    $fail('Choose a PNG, JPEG, GIF or WebP raster image. SVG images are not allowed.');
+                }
+            }],
         ]);
+        if ($roomType && $roomType->isSystem() && $roomType->code !== $request->code) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['code' => 'System room type codes cannot be changed.']);
+        }
     }
 
     /** Saves an uploaded room type icon; the extension comes from the content, not the client's name. */
     private function storeImage($file)
     {
-        $extension = $file->guessExtension() === 'svg' || $file->getMimeType() === 'image/svg+xml' ? 'svg' : ($file->guessExtension() ?: 'png');
+        $extension = $file->guessExtension();
         $fileName = time() . '_' . uniqid() . '.' . $extension;
         $file->move(public_path('assets/img/svg'), $fileName);
 

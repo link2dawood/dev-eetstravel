@@ -44,7 +44,6 @@
 				<div class="row">
 					<div class="col-md-12">
 						{!! csrf_field() !!}
-						<input type="hidden" name = "user_id">
 						<div class="form-group">
 							<label for="">{{trans('main.Email')}}</label>
 							<input type="text" name = "email" value="{{ old('email') }}" class = "form-control" placeholder = "Email">
@@ -55,11 +54,15 @@
 						</div>
 						<div class="form-group">
 							<label for="">{{trans('main.Password')}}</label>
-							<input type="password" name = "password" class = "form-control" placeholder = "Password">
+							<input type="password" name = "password" class = "form-control" placeholder = "At least 8 characters" autocomplete="new-password">
+						</div>
+						<div class="form-group">
+							<label for="">Confirm {{trans('main.Password')}}</label>
+							<input type="password" name = "password_confirmation" class = "form-control" placeholder = "Repeat password" autocomplete="new-password">
 						</div>
 						<div class="form-group">
 							<label for="avatar">Avatar</label>
-							<div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" ></div>
+							<div class="avatar-upload-field"><input id="avatar" name="avatar" type="file" class="file" data-show-upload="false" accept=".jpg,.jpeg,.png,.gif,.webp"></div>
 						</div>
 						<div class="manage-form-actions-bottom">
 							<a href="{{ url('users') }}" class="btn btn-secondary">

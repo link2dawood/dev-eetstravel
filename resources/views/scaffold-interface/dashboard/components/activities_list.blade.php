@@ -32,7 +32,7 @@
                             <tbody>
                             <tr v-for="log in logs" v-on:click.passive="showActivity(log)">
                                 <td> @{{log['created_at']}}</td>
-                                <td>@{{log['causer']['name']}}</td>
+                                <td>@{{log.causer ? log.causer.name : 'System / deleted user'}}</td>
                                 <td>
                                     @{{log['description']}}
                                 </td>

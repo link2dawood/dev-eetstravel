@@ -1,222 +1,115 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
-use App\User;
+use App\Services\MailboxCredentials;
+use App\Services\MailboxVerifier;
 
 class SnappyMailController extends Controller
 {
-    /**
-     * Constructor
-     */
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('preventBackHistory');
+        $this->middleware(['auth', \App\Http\Middleware\EmailAccess::class, 'preventBackHistory']);
     }
 
-    /**
-     * SSO Login to SnappyMail
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function sso(Request $request)
+    private function feature($name)
     {
-        $user = Auth::user();
-
-        // Check if user has email credentials configured
-        if (!$user || !$user->email_login) {
-            return redirect()->back()->with('error', 'Email credentials not configured. Please contact administrator.');
-        }
-
-        try {
-            // SnappyMail's own single sign-on: the credentials are stored in SnappyMail's
-            // cache and only a one-time hash goes in the URL. (The old code put the
-            // mailbox password, base64-encoded, in the URL in a format SnappyMail does not read.)
-            $_ENV['SNAPPYMAIL_INCLUDE_AS_API'] = true;
-            require_once public_path('snappymail/index.php');
-            $ssoHash = \RainLoop\Api::CreateUserSsoHash((string) $user->email_login, (string) $this->getEmailPassword($user));
-            if (!$ssoHash) {
-                throw new \Exception('SnappyMail could not create a sign-in token');
-            }
-
-            // Log SSO attempt
-            Log::info('SnappyMail SSO attempt', [
-                'user_id' => $user->id,
-                'email' => $user->email_login
-            ]);
-
-            // away(): keep the trailing slash, SnappyMail's relative redirects need it
-            $base = $this->webmailUrl();
-            return redirect()->away((strpos($base, 'http') === 0 ? $base : url($base)) . '/?Sso&hash=' . $ssoHash);
-
-        } catch (\Exception $e) {
-            Log::error('SnappyMail SSO error', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()->with('error', 'Failed to connect to webmail. Please try again.');
-        }
+        abort_unless(config('snappymail.features.' . $name, true), 403);
+        abort_if(config('snappymail.security.require_https') && !request()->secure(), 403);
     }
 
-    /**
-     * Generate SSO hash for SnappyMail authentication
-     *
-     * @param User $user
-     * @return string
-     */
-    /** SnappyMail's address: SNAPPYMAIL_URL, or /snappymail when that path does not exist here. */
-    private function webmailUrl()
+    private function webmailUrl(): string
     {
-        $url = rtrim((string) config('snappymail.url', '/snappymail'), '/');
-        if (strpos($url, 'http') !== 0 && !is_dir(public_path(ltrim($url, '/'))) && is_dir(public_path('snappymail'))) {
-            $url = '/snappymail';
-        }
-
+        $url = rtrim((string)config('snappymail.url', '/snappymail'), '/');
+        // Repair the historical /mail default on this bundled installation.
+        if ($url === '/mail' && !is_dir(public_path('mail'))) $url = '/snappymail';
         return $url;
     }
 
-    private function generateSSOHash(User $user)
+    private function loadApi()
     {
-        $ssoKey = config('snappymail.sso_key');
-
-        if (empty($ssoKey)) {
-            throw new \Exception('SnappyMail SSO key not configured');
-        }
-
-        // Prepare SSO data
-        $ssoData = [
-            'Email' => $user->email_login,
-            'Password' => $this->getEmailPassword($user),
-            'Time' => time(),
-            'Name' => $user->name ?? $user->email_login,
-        ];
-
-        // Create SSO hash using HMAC SHA-256
-        $dataString = json_encode($ssoData);
-        $hash = hash_hmac('sha256', $dataString, $ssoKey);
-
-        // Return base64 encoded data with hash
-        return base64_encode(json_encode([
-            'data' => $ssoData,
-            'hash' => $hash
-        ]));
+        if (!defined('APP_DATA_FOLDER_PATH')) define('APP_DATA_FOLDER_PATH', rtrim(config('snappymail.data_path'), '/\\') . DIRECTORY_SEPARATOR);
+        $_ENV['SNAPPYMAIL_INCLUDE_AS_API'] = true;
+        $root = dirname(config('snappymail.path')) . DIRECTORY_SEPARATOR;
+        if (!defined('APP_VERSION')) define('APP_VERSION', config('snappymail.version'));
+        if (!defined('APP_INDEX_ROOT_PATH')) define('APP_INDEX_ROOT_PATH', $root);
+        try { require_once $root . 'snappymail/v/' . APP_VERSION . '/include.php'; }
+        finally { unset($_ENV['SNAPPYMAIL_INCLUDE_AS_API']); }
     }
 
-    /**
-     * Get email password for user (decrypt if encrypted)
-     *
-     * @param User $user
-     * @return string
-     */
-    private function getEmailPassword(User $user)
+    public function sso(Request $request)
     {
-        // If password is encrypted in database
-        if ($user->email_password_encrypted ?? false) {
-            try {
-                return Crypt::decryptString($user->email_password);
-            } catch (\Exception $e) {
-                Log::error('Failed to decrypt email password', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage()
-                ]);
-                throw new \Exception('Email password decryption failed');
-            }
+        $this->feature('sso_enabled');
+        $user = Auth::user();
+        if (!$user->email_login || !$user->email_password) return redirect()->route('snappymail.configure')->with('error', 'Configure your mailbox to open webmail.');
+        try {
+            $password = app(MailboxCredentials::class)->password($user);
+            $this->loadApi();
+            $hash = \RainLoop\Api::CreateUserSsoHash((string)$user->email_login, $password);
+            if (!$hash) throw new \RuntimeException('Sign-in token unavailable');
+            if (config('snappymail.logging.enabled')) Log::info('Webmail sign-in token created', ['user_id' => $user->id]);
+            return redirect()->away(url($this->webmailUrl()) . '/?Sso&hash=' . rawurlencode($hash));
+        } catch (\Throwable $e) {
+            if (config('snappymail.logging.enabled')) Log::warning('Webmail sign-in unavailable', ['user_id' => $user->id]);
+            return redirect()->route('snappymail.configure')->with('error', 'Webmail sign-in failed. Check your mailbox configuration.');
         }
-
-        // Return plain password (if stored in env or config)
-        return $user->email_password ?? env('IMAP_PASSWORD', '');
     }
 
-    /**
-     * Direct link to SnappyMail (without SSO)
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function direct()
     {
-        $snappymailUrl = config('snappymail.url', '/mail');
-        return redirect($snappymailUrl);
+        $this->feature('direct_login');
+        return redirect()->away(url($this->webmailUrl()) . '/');
     }
 
-    /**
-     * Admin panel access (requires admin role)
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function admin()
     {
-        // Check if user is admin
-        if (!Auth::user()->hasRole('admin')) {
-            return redirect()->back()->with('error', 'Admin access required');
-        }
-
-        $adminUrl = config('snappymail.admin_url', '/mail/?admin');
-        return redirect($adminUrl);
+        $this->feature('admin_access');
+        abort_unless(Auth::user()->hasRole('admin'), 403);
+        return redirect()->away(url($this->webmailUrl()) . '/?admin');
     }
 
-    /**
-     * Configure email settings for current user
-     *
-     * @return \Illuminate\View\View
-     */
     public function configure()
     {
-        $user = Auth::user();
-
-        return view('snappymail.configure', [
-            'user' => $user,
-            'imapHost' => env('IMAP_HOST', ''),
-            'imapPort' => env('IMAP_PORT', 993),
-            'imapEncryption' => env('IMAP_ENCRYPTION', 'ssl'),
-        ]);
+        $this->feature('user_config');
+        return view('snappymail.configure', ['user' => Auth::user()]);
     }
 
-    /**
-     * Save email configuration for user
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function saveConfiguration(Request $request)
     {
-        $request->validate([
-            'email_login' => 'required|email',
-            'email_password' => 'required|min:6',
-        ]);
-
+        $this->feature('user_config');
+        $data = $request->validate(['email_login' => 'required|string|email|max:191', 'email_password' => 'required|string|min:6|max:1024']);
+        try { $verified = app(MailboxVerifier::class)->verify($data['email_login'], $data['email_password']); }
+        catch (\Throwable $e) { $verified = false; }
+        if (!$verified) throw \Illuminate\Validation\ValidationException::withMessages(['email_login' => 'Mailbox sign-in could not be verified. Check the address and password or try again later.']);
         $user = Auth::user();
-
-        // Encrypt password before storing
-        $user->email_login = $request->email_login;
-        $user->email_password = Crypt::encryptString($request->email_password);
-        $user->email_password_encrypted = true;
+        $user->email_login = $data['email_login'];
+        $user->email_password = $data['email_password'];
         $user->save();
-
-        return redirect()->route('snappymail.sso')
-            ->with('success', 'Email configuration saved successfully');
+        return redirect()->route('snappymail.configure')->with('success', 'Mailbox verified and configuration saved. Open webmail when ready.');
     }
 
-    /**
-     * Check SnappyMail status
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function status()
     {
-        $snappymailPath = public_path('snappymail/index.php');
-        $isInstalled = file_exists($snappymailPath);
+        abort_unless(Auth::user()->hasRole('admin'), 403);
+        return response()->json(['installed' => is_file(config('snappymail.path')), 'url' => url($this->webmailUrl()) . '/', 'sso_enabled' => (bool)config('snappymail.features.sso_enabled')]);
+    }
 
-        return response()->json([
-            'installed' => $isInstalled,
-            'url' => config('snappymail.url', '/mail'),
-            'sso_configured' => !empty(config('snappymail.sso_key')),
-        ]);
+    public function gateway(Request $request, $path = '')
+    {
+        abort_unless(config('snappymail.features.sso_enabled') || config('snappymail.features.direct_login'), 403);
+        abort_if(config('snappymail.security.require_https') && !$request->secure(), 403);
+        abort_if(preg_match('~(?:^|/)(?:data|_data_)(?:/|$)~i', $path), 404);
+        abort_unless(in_array(trim($path, '/'), ['', 'index.php'], true), 404);
+        if (preg_match('~(?:^|[&/])admin(?:[&/=]|$)~i', urldecode($request->server('QUERY_STRING', '')))) {
+            abort_unless(Auth::user()->hasRole('admin') && config('snappymail.features.admin_access'), 403);
+        }
+        $this->loadApi();
+        // Enforce this inside the engine too, including custom admin keys/hosts and AJAX.
+        \RainLoop\Api::Config()->Set('security', 'allow_admin_panel', Auth::user()->hasRole('admin') && config('snappymail.features.admin_access'));
+        ob_start();
+        \RainLoop\Service::Handle();
+        return response(ob_get_clean());
     }
 }

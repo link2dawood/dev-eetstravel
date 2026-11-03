@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientInvoices extends Model
 {
+    use \Illuminate\Database\Eloquent\SoftDeletes;
     
     public $timestamps = false;
     protected $table ="client_invoices" ;
@@ -32,6 +33,8 @@ class ClientInvoices extends Model
 	public function client(){
     	return $this->hasOne(Client::class,'id','client_id');
 	}
+    public function tour() { return $this->belongsTo(Tour::class, 'tour_id'); }
+    public function payments() { return $this->hasMany(Transaction::class, 'invoice_id')->where('pay_to', 'Client'); }
 	public function status($transactions){
     	 $transaction = Transaction::where("invoice_id",$transactions->id)->where("pay_to","Client");
                 $sum_amount = $transaction->sum("amount");

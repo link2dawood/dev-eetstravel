@@ -60,6 +60,21 @@ class EmailController extends Controller {
 
         $this->middleware('preventBackHistory');
         $this->middleware('auth');
+        $this->middleware(\App\Http\Middleware\EmailAccess::class);
+        $this->middleware(function ($request, $next) {
+            if (!$request->user()->email_login || !$request->user()->email_password) {
+                return $request->expectsJson()
+                    ? response()->json(['message' => 'Configure your mailbox before opening email.'], 422)
+                    : redirect()->route('snappymail.configure')->with('error', 'Configure your mailbox before opening email.');
+            }
+            $legacy = ['removeEmail', 'attachment', 'attachmentList', 'another', 'moveEmail', 'addFolder', 'send'];
+            if (in_array($request->route()->getActionMethod(), $legacy, true) && !class_exists(Server::class)) {
+                return $request->expectsJson()
+                    ? response()->json(['message' => 'Legacy IMAP is unavailable. Use webmail.'], 503)
+                    : redirect()->route('snappymail.sso')->with('error', 'Legacy IMAP is unavailable. Use webmail.');
+            }
+            return $next($request);
+        });
       //  $this->middleware('VueParse');
 
 		$this->emailRepository = $emailRepository;
@@ -102,6 +117,7 @@ class EmailController extends Controller {
 	}
 
 	public function setClient() {
+        if (!class_exists(Server::class)) return false;
 		$emailServer = Auth::user()->email_server;
 		try {
 			
@@ -114,10 +130,10 @@ class EmailController extends Controller {
             
 
 			$this->client = $server->authenticate(
-				config('imap.accounts.default.username'),
-				config('imap.accounts.default.password')
+                Auth::user()->email_login,
+                app(\App\Services\MailboxCredentials::class)->password(Auth::user())
 			);
-		} catch (AuthenticationFailedException $e) {
+		} catch (\Throwable $e) {
 			return false;
 		}
 
@@ -223,6 +239,7 @@ class EmailController extends Controller {
     }
 
     public function readAll(){
+        if (!Auth::user()->email_login) return redirect()->route('snappymail.configure')->with('error', 'Configure your mailbox before opening email.');
 	    Email::query()
             ->where('is_seen', '!=', true)
             ->where( 'user_login', Auth::user()->email_login )
@@ -363,11 +380,11 @@ class EmailController extends Controller {
         return response()->json($data);
 	}
 
-	public function composeEmailTemplate( \Request $request ) {
-		return view( 'email.mail_template' );
+	public function composeEmailTemplate( Request $request ) {
+		return view( 'email.mail_template', ['content' => ''] );
 	}
 
-	public function emailDeleteMsg( $id, $currentFolder = self::INBOX_FOLDER, Request $request ) {
+	public function emailDeleteMsg(Request $request, $id, $currentFolder = self::INBOX_FOLDER) {
 		$msg = Ajaxis::BtDeleting( 'Warning!!', 'Would you like to remove this email?', route( 'email.remove', [ 'id'            => $id,
 		                                                                                                         'currentFolder' => $currentFolder
 		], false ) );
@@ -461,6 +478,7 @@ class EmailController extends Controller {
 	}
 
 	public function getComposeForm( Request $request ) {
+        $mail = null;
 		$replyMessageId = $request->get( 'reply_message' );
 		$replyFolder    = $request->get( 'reply_folder' );
 		$replyTo        = $request->get( 'reply_to' );
@@ -487,7 +505,7 @@ class EmailController extends Controller {
 		$messageFolder = $request->get( 'message_folder' );
 
 		return view( 'email.move_to_form', [
-			'folders'       => $this->folders,
+			'folders'       => $this->folders ?? [],
 			'messageId'     => $messageId,
 			'messageFolder' => $messageFolder
 		] );
@@ -537,20 +555,7 @@ class EmailController extends Controller {
 		}
 	}
 
-	public function another( Request $request ) {
-		$server = new Server(
-			"partner.outlook.cn",
-			993,
-			'/imap/ssl/validate-cert'
-		);
-		$client = $server->authenticate(
-			"sarah@eets.cn",
-			"Qx901102"
-		);
-		dd( $client->getMailboxes() );
-
-		return '';
-	}
+    public function another(Request $request) { return redirect()->route('snappymail.sso'); }
 	public function getEmailById($id,$mailtype){
 	try{
 		$email = Email::find($id);

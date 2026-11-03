@@ -22,18 +22,21 @@
 					<div class="row">
 						<div class="col-md-12">
 							<div class="margin_button">
-								<a href="{!! route('settings.index') !!}">
-									<button class='btn btn-primary back_btn' type="button">{!!trans('main.Back')!!}</button>
+								<a href="{!! route('settings.index') !!}" class="btn btn-primary back_btn">
+									<i class="ti ti-arrow-left me-1"></i>{!!trans('main.Back')!!}
 								</a>
-								<button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
 							</div>
 						</div>
 					</div>
 					{{csrf_field()}}
 					{{method_field('PUT')}}
 					<div class="form-group">
+						<label>{!!trans('main.Name')!!}</label>
+						<input type="text" value="{{ $setting->name }}" class="form-control" readonly>
+					</div>
+					<div class="form-group">
 						<label >{!!trans('main.Description')!!}</label>
-						<input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $setting->description}}{{ old('desc') }}" name="desc" class="form-control">
+						<input type="text" value="{{ old('desc', $setting->description) }}" name="desc" class="form-control" maxlength="1000" required>
 					</div>
 					<div class="form-group">
 						<label >{!!trans('main.Value')!!}</label>
@@ -41,7 +44,7 @@
                             <div class="input-group date">
 
                                 <div class='input-group date' id='datetimepicker2'>
-                                    <input type='text' id="value" name="value"  value="{{ $errors != null && count($errors) > 0 ? '' : $setting->value}}{{ old('value') }}" class="form-control" />
+                                    <input type='text' id="value" name="value"  value="{{ old('value', $setting->value) }}" class="form-control" />
                                     <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
 
@@ -59,15 +62,19 @@
                                 });
                             </script>
 						@elseif (preg_match('/text/', $setting->name))
-							<input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $setting->value}}{{ old('value') }}" name="value" class="form-control">
+							<input type="text" value="{{ old('value', $setting->value) }}" name="value" class="form-control">
 						@else
-						<input type="number" min="0" value="{{ $errors != null && count($errors) > 0 ? '' : $setting->value}}{{ old('value') }}" name="value" class="form-control">
+						<input type="number" min="0" max="3650" step="1" required value="{{ old('value', $setting->value) }}" name="value" class="form-control">
                         @endif
 					</div>
-					<button class='btn btn-success' type='submit'>{!!trans('main.Save')!!}</button>
-					<a href="{{\App\Helper\AdminHelper::getBackButton(route('settings.index'))}}">
-						<button class='btn btn-warning' type='button'>{!!trans('main.Cancel')!!}</button>
-					</a>
+					<div class="mt-3">
+						<a href="{{\App\Helper\AdminHelper::getBackButton(route('settings.index'))}}" class="btn btn-secondary">
+							<i class="ti ti-x me-1"></i>{!!trans('main.Cancel')!!}
+						</a>
+						<button class='btn btn-success' type='submit'>
+							<i class="ti ti-device-floppy me-1"></i>{!!trans('main.Save')!!}
+						</button>
+					</div>
 				</form>
 			</div>
 			</div>

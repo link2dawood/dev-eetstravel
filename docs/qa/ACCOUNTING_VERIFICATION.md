@@ -1,5 +1,7 @@
 # Accounting verification
 
+Follow-up, 2026-10-30: the `/accounting` findings AC1–AC5 are resolved in [the main QA report](../../QA-home-dashboard-2026-10-27.md). Unpaid client invoices/items now archive with staff/date metadata; paid invoices remain protected. The list uses server search, 25-row pagination and at most four data queries. Service creation and quotation helpers use existing billing permissions, with correct tour context. Both the archive migration and previously pending extra-cost decimal migration were applied locally with existing values preserved. Latest verification: 238 regression tests/1,267 assertions across related modules, 13 MySQL checks and the shared JavaScript checks. MySQL fixtures were rolled back. The earlier browser results below are historical; a new full browser walkthrough was not performed.
+
 Scope: Billing/client invoices, supplier invoices and payments, transaction ledger, offices, tour expenses, utilities, salaries, earnings, balances, interoffice invoices, taxes, supplier reports, and accounting data shown on tours.
 
 ## Changes

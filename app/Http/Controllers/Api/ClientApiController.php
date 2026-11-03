@@ -108,7 +108,14 @@ class ClientApiController extends Controller
     public function destroy(Client $client): JsonResponse
     {
         try {
-            $client->delete();
+            $deleted = \Illuminate\Support\Facades\DB::transaction(function () use ($client) {
+                $locked = Client::query()->lockForUpdate()->findOrFail($client->id);
+                if ($locked->isInUse()) return false;
+                $locked->delete();
+                \App\Comment::where('reference_type', \App\Comment::$services['client'])->where('reference_id', $locked->id)->delete();
+                return true;
+            });
+            if (!$deleted) return response()->json(['success' => false, 'message' => 'This client is used by tours or invoices and cannot be deleted.'], 422);
             $this->cacheService->flushTags(['clients']);
 
             return response()->json([

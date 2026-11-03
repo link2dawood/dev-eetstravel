@@ -7,12 +7,19 @@ use App\Helper\LaravelFlashSessionHelper;
 use App\Helper\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use URL;
 
 class RoleController extends Controller
 {
+    /**
+     * Roles the application checks by name (hasRole('admin') etc.); renaming or
+     * deleting them would silently switch that behaviour off.
+     */
+    const PROTECTED_ROLES = ['admin', 'user'];
+
     /**
      * Display a listing of the resource.
      *
@@ -23,6 +30,12 @@ class RoleController extends Controller
     {
         $this->middleware('preventBackHistory');
         $this->middleware('auth');
+        $this->middleware('permissions.required');
+    }
+
+    public static function isProtected(Role $role)
+    {
+        return in_array(strtolower($role->name), self::PROTECTED_ROLES, true);
     }
 
     public function show($id)
@@ -37,7 +50,7 @@ class RoleController extends Controller
 
     public function index()
     {
-        $roles = Role::all();
+        $roles = Role::with('permissions')->withCount('users')->orderBy('name')->get();
 
         return view('scaffold-interface.roles.index', compact('roles'));
     }
@@ -62,7 +75,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required'
+            'name' => 'required|string|max:191|unique:roles,name'
         ]);
 
         Role::create(['name' => $request->name]);
@@ -86,8 +99,9 @@ class RoleController extends Controller
         $rolePermissions = $role->permissions->pluck('alias', 'name');
         $permissions = Permission::all()->pluck('alias', 'name');
         $permissions = $permissions->diff($rolePermissions);
+        $isProtected = self::isProtected($role);
 
-        return view('scaffold-interface.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('scaffold-interface.roles.edit', compact('role', 'permissions', 'rolePermissions', 'isProtected'));
     }
 
     /**
@@ -97,12 +111,18 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(Request $request, $id = null)
     {
+        // The edit form posts role_id to /roles/update; the resource PUT route carries the id in the URL.
+        $role = Role::findOrFail($id ?? $request->role_id);
+
         $this->validate($request, [
-            'name' => 'required'
+            'name' => 'required|string|max:191|unique:roles,name,' . $role->id
         ]);
-        $role = Role::findOrFail($request->role_id);
+
+        if (self::isProtected($role) && $request->name !== $role->name) {
+            return back()->withInput()->withErrors(['name' => "The {$role->name} role is used by the application and cannot be renamed."]);
+        }
 
         $role->name = $request->name;
 
@@ -122,11 +142,17 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::withCount('users')->findOrFail($id);
+
+        if (self::isProtected($role)) {
+            LaravelFlashSessionHelper::setFlashMessage("The {$role->name} role is used by the application and cannot be deleted", 'error');
+            return redirect('roles');
+        }
 
         $role->delete();
 
-        LaravelFlashSessionHelper::setFlashMessage("Role {$role->name} deleted", 'success');
+        $affected = $role->users_count ? " and removed from {$role->users_count} user(s)" : '';
+        LaravelFlashSessionHelper::setFlashMessage("Role {$role->name} deleted{$affected}", 'success');
 
       return redirect('roles');
     }
@@ -141,15 +167,22 @@ class RoleController extends Controller
      */
     public function addPermission(Request $request)
     {
+        $this->validate($request, [
+            'role_id'           => 'required|integer|exists:roles,id',
+            'permission_name'   => 'required|array|min:1',
+            'permission_name.*' => 'string|exists:permissions,name',
+        ]);
 
-        $role = Role::findorfail($request->role_id);
-        if ($request->permission_name) {
-            foreach ($request->permission_name as $item){
-                $role->givePermissionTo($item);
-            }
-        }
+        $role = Role::findOrFail($request->role_id);
 
-        return redirect('roles/'.$request->role_id.'/edit');
+        // One call inside a transaction, so either every selected permission is added or none is.
+        DB::transaction(function () use ($role, $request) {
+            $role->givePermissionTo($request->permission_name);
+        });
+
+        LaravelFlashSessionHelper::setFlashMessage('Permissions added to role ' . $role->name, 'success');
+
+        return redirect('roles/'.$role->id.'/edit');
     }
 
     /**
@@ -163,22 +196,29 @@ class RoleController extends Controller
     {
         $role = Role::findorfail($role_id);
 
+        if (!Permission::where('name', $permission)->exists()) {
+            return redirect('roles/'.$role_id.'/edit')->withErrors(['permission' => "There is no permission named {$permission}."]);
+        }
+
         $role->revokePermissionTo($permission);
+
+        LaravelFlashSessionHelper::setFlashMessage("Permission {$permission} removed from role {$role->name}", 'success');
 
         return redirect('roles/'.$role_id.'/edit');
     }
 
     public function deleteMsg($id, Request $request){
-//        $msg = Ajaxis::BtDeleting('Warning!!','Would you like to remove This?','/roles/'. $id . '/delete');
-        $msg = Ajaxis::BtDeleting( trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?','/roles/'. $id . '/delete');
+        $role = Role::withCount('users')->findOrFail($id);
 
-        if($request->ajax())
-        {
-            return $msg;
+        if (self::isProtected($role)) {
+            return Ajaxis::MtWarning(trans('main.Warning').'!', "The {$role->name} role is used by the application and cannot be deleted.");
         }
+
+        $question = trans('main.WouldyouliketoremoveThis').'?';
+        if ($role->users_count) {
+            $question = "{$role->users_count} user(s) will lose this role. " . $question;
+        }
+
+        return Ajaxis::BtDeleting(trans('main.Warning').'!!', $question, '/roles/'. $id . '/delete');
     }
-	
-	
-	
-	
 }

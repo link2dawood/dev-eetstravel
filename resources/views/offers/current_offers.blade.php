@@ -2,19 +2,73 @@
 @section('title','Current Offers')
 @section('content')
 @include('layouts.title', ['title' => 'Current Offers', 'sub_title' => 'Offer List', 'breadcrumbs' => [['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')], ['title' => 'Current Offers', 'icon' => null, 'route' => null]]])
+@php
+    // Column header that toggles server-side sorting over all offers, not just this page
+    $sortLink = function ($column, $label) use ($sort, $dir) {
+        $nextDir = ($sort === $column && $dir === 'asc') ? 'desc' : 'asc';
+        $icon = $sort === $column ? ($dir === 'asc' ? 'ti-sort-ascending' : 'ti-sort-descending') : 'ti-arrows-sort';
+        $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $nextDir, 'page' => null]);
+        return '<a href="' . e($url) . '" class="text-reset text-decoration-none">' . e($label) . ' <i class="ti ' . $icon . '"></i></a>';
+    };
+@endphp
 <section class="content offer-page"><div class="box box-primary"><div class="box-body">
-    <div class="row align-items-center mb-3 toolbar-row"><div class="col-md-6"><input type="text" class="form-control" placeholder="Search current offers..." oninput="offerFilterTable('current-offers-table', this.value)"></div><div class="col-md-6 text-md-end"><button type="button" class="btn btn-success btn-sm" onclick="offerExportTable('current-offers-table', 'current_offers_export.csv')"><i class="ti ti-download"></i> Export CSV</button></div></div>
-    @php
-        $hasRows = $tours->count() > 0;
-        $sampleRows = collect([(object)['id' => 'S-101', 'name' => 'Sample Rome Spring Offer', 'city_name' => 'Rome', 'status_name' => 'Offered with Option', 'status_color' => '#066fd1', 'departure_date' => now()->addDays(14), 'retirement_date' => now()->addDays(20), 'pax' => 24, 'created_at' => now()]]);
-        $rows = $hasRows ? $tours : $sampleRows;
-    @endphp
-    <div class="table-responsive"><table id="current-offers-table" class="table table-striped table-bordered table-hover"><thead><tr><th onclick="offerSortTable('current-offers-table',0)">ID <i class="ti ti-arrows-sort"></i></th><th onclick="offerSortTable('current-offers-table',1)">Tour Name <i class="ti ti-arrows-sort"></i></th><th>City</th><th>Status</th><th>Departure Date</th><th>Return Date</th><th>PAX</th><th>Created At</th><th>Actions</th></tr></thead><tbody>
-    @foreach($rows as $tour)
-        @php $cityName = $hasRows ? optional($tour->city_begin)->name : $tour->city_name; $statusName = $hasRows ? $tour->getStatusName() : $tour->status_name; $statusColor = $hasRows ? $tour->getStatusColor() : $tour->status_color; @endphp
-        <tr class="{{ $hasRows ? '' : 'sample-row' }}"><td>{{ $tour->id }} @unless($hasRows)<span class="badge bg-secondary sample-badge">Sample</span>@endunless</td><td data-delete-label>{{ $tour->name }}</td><td>{{ $cityName ?: '—' }}</td><td><span class="badge" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">{{ $statusName ?: '—' }}</span></td><td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '—' }}</td><td>{{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '—' }}</td><td>{{ $tour->pax ?? '—' }}</td><td>{{ $tour->created_at ? \Carbon\Carbon::parse($tour->created_at)->format('Y-m-d H:i') : '—' }}</td><td class="actions-cell">@if($hasRows) @include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour']) @else <span class="text-muted small">Sample only</span> @endif</td></tr>
-    @endforeach
+    <div class="row align-items-center mb-3 toolbar-row">
+        <div class="col-md-6">
+            <form method="GET" action="{{ route('current_offers.index') }}" class="d-flex gap-2">
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="dir" value="{{ $dir }}">
+                <input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Search by tour name, external name or ID" aria-label="Search current offers">
+                <button type="submit" class="btn btn-primary">Search</button>
+                @if($search !== '')
+                    <a href="{{ route('current_offers.index') }}" class="btn btn-secondary">Clear</a>
+                @endif
+            </form>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{{ request()->fullUrlWithQuery(['export' => 'csv', 'page' => null]) }}" class="btn btn-success btn-sm"><i class="ti ti-download"></i> Export CSV</a>
+        </div>
+    </div>
+    <p class="text-secondary small mb-2">Open offers whose tour has not ended yet (or has no dates). Cancelled, finished and requested tours are not listed.</p>
+    <div class="table-responsive"><table id="current-offers-table" class="table table-striped table-bordered table-hover"><thead><tr>
+        <th>{!! $sortLink('id', 'ID') !!}</th>
+        <th>{!! $sortLink('name', 'Tour Name') !!}</th>
+        <th>City</th>
+        <th>Status</th>
+        <th>{!! $sortLink('departure_date', 'Departure Date') !!}</th>
+        <th>{!! $sortLink('retirement_date', 'Return Date') !!}</th>
+        <th>PAX</th>
+        <th>Created At</th>
+        <th>Actions</th>
+    </tr></thead><tbody>
+    @forelse($tours as $tour)
+        @php
+            $status = $tour->getRelationValue('status'); // eager-loaded; the column shares the name
+            $statusName = $status->name ?? null;
+            // The color goes into a style attribute; accept only hex colors
+            $statusColor = preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) ($status->color ?? '')) ? $status->color : '#6c757d';
+        @endphp
+        <tr>
+            <td>{{ $tour->id }}</td>
+            <td data-delete-label>{{ $tour->name }}</td>
+            <td>{{ $cityNames->get($tour->id) ?: '-' }}</td>
+            <td><span class="badge" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">{{ $statusName ?: '-' }}</span></td>
+            <td>{{ $tour->departure_date ? \Carbon\Carbon::parse($tour->departure_date)->format('Y-m-d') : '-' }}</td>
+            <td>{{ $tour->retirement_date ? \Carbon\Carbon::parse($tour->retirement_date)->format('Y-m-d') : '-' }}</td>
+            <td>{{ $tour->pax ?? '-' }}</td>
+            <td>{{ $tour->created_at ? \Carbon\Carbon::parse($tour->created_at)->format('Y-m-d H:i') : '-' }}</td>
+            <td class="actions-cell">@include('component.action_buttons', ['item' => $tour, 'routePrefix' => 'tour'])</td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="9" class="text-center text-secondary py-4">
+                {{ $search !== '' ? 'No current offers match your search.' : 'No current offers.' }}
+            </td>
+        </tr>
+    @endforelse
     </tbody></table></div>
+    @if($tours->hasPages())
+        <div class="mt-3">{{ $tours->links() }}</div>
+    @endif
 </div></div></section>
 @include('component.delete_modal_simple')
 @endsection
@@ -23,45 +77,8 @@
     .offer-page .toolbar-row { gap: .75rem; }
     .offer-page .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .offer-page table { background: #fff; min-width: 980px; }
-    .offer-page th { white-space: nowrap; cursor: pointer; }
+    .offer-page th { white-space: nowrap; }
     .offer-page td { vertical-align: middle; }
-    .offer-page .policy-text { max-width: 260px; white-space: normal; line-height: 1.35; }
     .offer-page .actions-cell .btn-list { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: .35rem; }
-    .offer-page .sample-row { background: #f8fafc; }
-    .offer-page .sample-badge { font-size: .7rem; }
 </style>
-@endpush
-@push('scripts')
-<script>
-(function () {
-    function getCellText(row, index) { const cell = row.children[index]; return cell ? cell.innerText.trim().toLowerCase() : ''; }
-    window.offerFilterTable = function(tableId, value) {
-        const table = document.getElementById(tableId); if (!table) return;
-        const query = (value || '').toLowerCase().trim();
-        table.querySelectorAll('tbody tr').forEach(function(row) { row.style.display = !query || row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
-    };
-    window.offerSortTable = function(tableId, columnIndex) {
-        const table = document.getElementById(tableId); if (!table) return;
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        const direction = table.dataset.sortColumn == columnIndex && table.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
-        table.dataset.sortColumn = columnIndex; table.dataset.sortDirection = direction;
-        rows.sort(function(a, b) {
-            const left = getCellText(a, columnIndex); const right = getCellText(b, columnIndex);
-            const leftNumber = parseFloat(left.replace(/[^0-9.-]/g, '')); const rightNumber = parseFloat(right.replace(/[^0-9.-]/g, ''));
-            if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber)) return direction === 'asc' ? leftNumber - rightNumber : rightNumber - leftNumber;
-            return direction === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
-        });
-        rows.forEach(function(row) { tbody.appendChild(row); });
-    };
-    window.offerExportTable = function(tableId, filename) {
-        const table = document.getElementById(tableId); if (!table) return;
-        const rows = Array.from(table.querySelectorAll('tr')).filter(function(row) { return row.style.display !== 'none'; });
-        const csv = rows.map(function(row) { return Array.from(row.querySelectorAll('th,td')).map(function(cell) { return '"' + cell.innerText.replace(/"/g, '""').trim() + '"'; }).join(','); }).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename || 'offers_export.csv';
-        document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
-    };
-})();
-</script>
 @endpush

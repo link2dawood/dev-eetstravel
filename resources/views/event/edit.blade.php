@@ -23,6 +23,18 @@
 
     <form method="POST" action="{{ route('event.update', $event->id) }}" enctype="multipart/form-data">
         @csrf
+        {{-- Marks criteria as sent, so unticking every box clears them --}}
+        <input type="hidden" name="criterias_sent" value="1">
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-title">The event was not saved</h4>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         @method('PUT')
         <div class="row">
             <div class="col-lg-8">
@@ -104,7 +116,7 @@
                                     @foreach($criterias as $criteria)
                                         <div class="col-md-6 mb-2">
                                             <label class="form-check">
-                                                <input type="checkbox" class="form-check-input" value="{{ $criteria->id }}" name="criterias" @foreach($event->criterias as $item){{ $criteria->id == $item->criteria_id ? 'checked' : '' }}@endforeach>
+                                                <input type="checkbox" class="form-check-input" value="{{ $criteria->id }}" name="criterias[]" @foreach($event->criterias as $item){{ $criteria->id == $item->criteria_id ? 'checked' : '' }}@endforeach>
                                                 <span class="form-check-label">{{ $criteria->name }}</span>
                                             </label>
                                         </div>

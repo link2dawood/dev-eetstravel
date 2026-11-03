@@ -36,17 +36,17 @@
                             <div class="col-lg-6 mt-3">
                                 <div class="form-group mb-3">
                                     <label >{{trans('main.Name')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->name}}{{ old('name') }}" name="name" class="form-control">
+                                    <input type="text" value="{{ old('name', $room_types->name) }}" name="name" class="form-control">
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label>{{trans('main.Code')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->code}}{{ old('code') }}" name="code" class="form-control">
+                                    <input type="text" value="{{ old('code', $room_types->code) }}" name="code" class="form-control" {{ $room_types->isSystem() ? 'readonly' : '' }}>
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label>{{trans('main.Sortorder')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $room_types->sort_order}}{{ old('sort_order') }}" name="sort_order" class="form-control">
+                                    <input type="text" value="{{ old('sort_order', $room_types->sort_order) }}" name="sort_order" class="form-control">
                                 </div>
 								<div class="form-group mb-3">
                                 <label >{{trans('Image')}}</label>
@@ -56,7 +56,7 @@
                                     <span class="text-muted small">Current image. Choose a file only to replace it.</span>
                                 </div>
                                 @endif
-                                <input type="file" name="image" class="form-control" accept=".svg,.png,.jpg,.jpeg,.gif,.webp">
+                                <input type="file" name="image" class="form-control" accept=".png,.jpg,.jpeg,.gif,.webp">
                             </div>
                             </div>
                             <div class="col-md-8">

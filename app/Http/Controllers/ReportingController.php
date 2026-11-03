@@ -28,8 +28,23 @@ class ReportingController extends Controller
 {
     use FileTrait;
     use HelperTrait;
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permissions.required');
+    }
+
+    private function namePattern($value)
+    {
+        return '%' . strtr($value ?? '', ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+    }
+
     public function index(Request $request)
     {
+        $request->validate([
+            'service' => 'nullable|string|in:Event,Hotel,Restaurant,Guide',
+            'q' => 'nullable|string|max:255',
+        ]);
         $options = ['Event', 'Hotel', 'Restaurant', 'Guide'];
         $union = null;
         foreach ($options as $type) {
@@ -37,7 +52,7 @@ class ReportingController extends Controller
             $class = 'App\\' . $type;
             $table = (new $class)->getTable();
             $query = $class::query()->select('id', 'name')->selectRaw('? as supplier_type', [$type]);
-            if ($request->filled('q')) $query->where('name', 'like', '%' . $request->input('q') . '%');
+            if ($request->filled('q')) $query->whereRaw("name LIKE ? ESCAPE '!'", [$this->namePattern($request->input('q'))]);
             $union = $union ? $union->unionAll($query->toBase()) : $query->toBase();
         }
         $servicesData = DB::query()->fromSub($union, 'suppliers')->orderBy('name')->orderBy('supplier_type')->orderBy('id')->paginate(50)->withQueryString();
@@ -63,6 +78,11 @@ class ReportingController extends Controller
 
     public function show(Request $request)
     {
+        $request->validate([
+            'service' => 'required|string|in:Service,All,Hotel,Event,Guide,Restaurant',
+            'searchname' => 'nullable|string|max:255',
+            'search.value' => 'nullable|string|max:255',
+        ]);
 
         $cityCode       = $request->city_code;
         $countryAlias   = $request->countryalias;
@@ -93,7 +113,7 @@ class ReportingController extends Controller
                         "cities.name as city",
                         'countries.name as country'
                     )
-                        ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                        ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
                         ->where('cities.code', $cityCode)
                         ->get();
                 } else {
@@ -104,14 +124,14 @@ class ReportingController extends Controller
                             'countries.name as country'
                         )
                         ->where('countries.alias', 'like', '%' . $countryAlias . '%')
-                        ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                        ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
                         ->get() :
                         $model = $query_builder->select(
                             "{$table_name}.*",
                             "cities.name as city",
                             'countries.name as country'
                         )
-                        ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                        ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
                         ->get();
                 }
 
@@ -183,7 +203,7 @@ class ReportingController extends Controller
                     'countries.name as country'
                 )
                     ->where('cities.code', $cityCode)
-                    ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                    ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
                     ->get();
             } else {
                 if ($searchName) {
@@ -194,7 +214,7 @@ class ReportingController extends Controller
                             'countries.name as country'
                         )
                         ->where('countries.alias', 'like', '%' . $countryAlias . '%')
-                        ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                        ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
 
                         ->get() :
                         $model = $query_builder->select(
@@ -202,7 +222,7 @@ class ReportingController extends Controller
                             "cities.name as city",
                             'countries.name as country'
                         )
-                        ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
+                        ->whereRaw("{$table_name}.name LIKE ? ESCAPE '!'", [$this->namePattern($searchName)])
                         ->get();
                 } else {
                     $countryAlias ?
@@ -284,21 +304,13 @@ class ReportingController extends Controller
     }
 	
 	
-public function getTotalAmountForDateRange($accountId, $month, $year)
-{
-    $totalAmount = Transaction::where('account_id', $accountId)
-        ->whereMonth('date', $month)->whereYear('date', $year)->sum('amount');
-
-    return $totalAmount;
-}
-
     private function supplierReport($supplier, int $type)
     {
         $invoices = \App\Helper\SupplierInvoices::forService($type, $supplier->id);
         $months = [];
         for ($offset = 4; $offset >= 0; $offset--) {
             $date = now()->startOfMonth()->subMonths($offset);
-            $months[$date->format('F Y')] = $invoices->filter(fn ($invoice) => $invoice->received_date && \Carbon\Carbon::parse($invoice->received_date)->format('Y-m') === $date->format('Y-m'))->sum('total_amount');
+            $months[$date->format('F Y')] = $invoices->filter(fn ($invoice) => $invoice->received_date && \Carbon\Carbon::parse($invoice->received_date)->format('Y-m') === $date->format('Y-m'))->sum(fn ($invoice) => $invoice->total_amount + $invoice->extra_amount);
         }
         return view('reporting.supplier_show', compact('supplier', 'invoices', 'months'));
     }

@@ -34,150 +34,156 @@ class SupplierSearchController extends Controller
         $criterias = Criteria::all(); 
     	return view('supplier_search.index', ['options' => $this->services, 'criterias' => $criterias]);
     }
+    /** Services the search page offers; "All"/"Service" search every one except bus companies */
+    const SEARCH_SERVICES = ['Hotel', 'Event', 'Guide', 'Restaurant', 'Transfer', 'Flight', 'Cruises'];
+
+    /** The only columns the result tables show; nothing else (emails, passwords...) leaves the server */
+    const RESULT_COLUMNS = ['id', 'name', 'nameService', 'address_first', 'country', 'city', 'work_phone', 'contact_name'];
+
+    /** "%" and "_" are LIKE wildcards; search for them literally */
+    private static function likeValue($value)
+    {
+        return '%' . addcslashes((string) $value, '%_\\') . '%';
+    }
+
+    /**
+     * One supplier type as a query with the shared result columns, filtered in SQL.
+     */
+    private function supplierQuery($service, array $filters)
+    {
+        $class = 'App\\' . $service;
+        $model = new $class;
+        $table = $model->getTable();
+        $from = in_array($service, ['Flight', 'Cruises'], true) ? '_from' : '';
+        $label = $service === 'Transfer' ? 'Bus Company' : $service;
+
+        $query = DB::table($table)
+            ->leftJoin('countries', 'countries.alias', '=', "{$table}.country{$from}")
+            ->leftJoin('cities', 'cities.id', '=', "{$table}.city{$from}")
+            ->select([
+                // Explicit aliases: ORDER BY uses them, and cities/countries also have id/name columns
+                DB::raw(DB::getPdo()->quote($service) . ' as service_type'),
+                "{$table}.id as id",
+                "{$table}.name as name",
+                DB::raw("CONCAT(COALESCE({$table}.name, ''), ' (', " . DB::getPdo()->quote($label) . ", ')') as nameService"),
+                "{$table}.address_first as address_first",
+                'countries.name as country',
+                'cities.name as city',
+                "{$table}.work_phone as work_phone",
+                "{$table}.contact_name as contact_name",
+            ]);
+
+        if (method_exists($model, 'getDeletedAtColumn')) {
+            $query->whereNull("{$table}.deleted_at");
+        }
+        if ($filters['name'] !== '') {
+            $query->where("{$table}.name", 'like', self::likeValue($filters['name']));
+        }
+        if ($filters['cityCode']) {
+            $query->where('cities.code', $filters['cityCode']);
+        } elseif ($filters['cityName'] !== '') {
+            // Many suppliers' city ids do not point at their real city, so the address counts too
+            $like = self::likeValue($filters['cityName']);
+            $query->where(function ($q) use ($like, $table) {
+                $q->where('cities.name', 'like', $like)->orWhere("{$table}.address_first", 'like', $like);
+            });
+        }
+        if ($filters['countryAlias']) {
+            $query->where('countries.alias', 'like', self::likeValue($filters['countryAlias']));
+        }
+        if ($filters['criterias']) {
+            $typeKey = $service === 'Cruises' ? 'cruise' : strtolower($service);
+            $query->whereIn("{$table}.id", function ($q) use ($filters, $typeKey) {
+                $q->from('services_has_criterias')->select('service_id')
+                    ->whereIn('criteria_id', $filters['criterias'])
+                    ->where('service_type', ServicesHasCriteria::$serviceTypes[$typeKey]);
+            });
+        }
+        if ($filters['rate']) {
+            $query->where("{$table}.rate", $filters['rate']);
+        }
+
+        return $query;
+    }
+
     /**
      * get data to display
-     * @param  Request $request 
+     * @param  Request $request
      * @return mixed
      */
     public function show(Request $request)
     {
-        abort_unless(in_array($request->service, ['Service', 'All', 'Hotel', 'Event', 'Guide', 'Restaurant', 'Transfer', 'Flight', 'Cruises'], true), 422, 'Select a valid supplier service.');
-        $cityCode       = $request->city_code;
-        $countryAlias   = $request->countryalias;
-        $searchName     = $request->searchname;
-        $criterias      = $request->criterias;
-        $rates          = $request->rates;
+        abort_unless(in_array($request->service, array_merge(['Service', 'All'], self::SEARCH_SERVICES), true), 422, 'Select a valid supplier service.');
 
-        if ($request->input('search.value')) $searchName = $request->input('search.value');
+        $filters = [
+            'name' => trim((string) ($request->input('search.value') ?: $request->searchname)),
+            'cityCode' => $request->city_code,
+            'cityName' => trim((string) $request->input('city_name')),
+            'countryAlias' => $request->countryalias,
+            'criterias' => array_values(array_filter((array) $request->criterias, 'is_numeric')),
+            'rate' => $request->rates,
+        ];
 
-        if ($request->service === 'Service' || $request->service === 'All') {
-            // Root fix: Use only valid services (existing model classes)
-            $namespace = $this->getCollection($criterias, $rates, $cityCode, $searchName, $countryAlias);
-            // Ensure we always have an array
-            if (empty($namespace) || !is_array($namespace)) {
-                $namespace = [];
-            }
-        }
-        else {
-            $serv_find = [];
-            $namespace = 'App\\' . $request->service;
-            if (!isset($criterias) && !isset($rates)){
-                $model_test = $namespace;
-                $table_name = $this->getTableName($model_test);
-                $query_builder = $request->service == 'Cruises' || $request->service == 'Flight' ?
-                    $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country_from")
-                        ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city_from") :
+        $services = in_array($request->service, ['Service', 'All'], true)
+            ? array_values(array_diff(self::SEARCH_SERVICES, ['Transfer', 'Flight', 'Cruises']))
+            : [$request->service];
 
-                    $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country")
-                        ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city");
-			
-                    if($cityCode){
-						
-                                $model = $query_builder->select(
-                                       "{$table_name}.*",
-                                       "cities.name as city",
-                                       'countries.name as country')
-                                       ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
-                                       ->where('cities.code', $cityCode)
-                                       ->get();
-                    } else{
-                        $countryAlias ?
-                                $model = $query_builder->select(
-                                      "{$table_name}.*",
-                                      "cities.name as city",
-                                      'countries.name as country')
-                                      ->where('countries.alias', 'like', '%' . $countryAlias . '%')
-                                      ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
-                                      ->get() :
-                                $model = $query_builder->select( "{$table_name}.*",
-    "cities.name as city",
-    'countries.name as country')
-                                      ->where("{$table_name}.name", 'like', '%' . $searchName . '%')
-                                      ->get();
-
-						
-                    }
-
-                array_push($serv_find, $model);
-            }
-
-            if (isset($criterias) && !isset($rates)){
-                // $namespace = $this->findByCriterias($criterias, $namespace, $request->service);
-                array_push($serv_find, $this->findByCriterias(@$criterias, @$namespace, @$request->service, @$cityCode, @$searchName, @$countryAlias));
-            }
-
-
-            if ($rates && !$criterias) array_push($serv_find, $this->findByRate($rates, $namespace, $cityCode, $searchName, $countryAlias));
-
-            if($rates && $criterias) array_push($serv_find, $this->findByCriterias($criterias, $namespace, $request->service, $rates, $cityCode, $searchName, $countryAlias));
-            $collection = collect($serv_find)->collapse()->all();
-            foreach ($collection as $item) {
-                $tmp = $request->service;
-                if($tmp === 'Transfer') $tmp = 'Bus Company' ;
-                $item['nameService'] = "{$item->name}"." ({$tmp})";
-            }
-            $namespace = $collection;
-        }
-        ini_set('memory_limit', '800M');
-        set_time_limit(0);
-        
-        // Root fix: Normalize data structure - ensure we have a valid array
-        if (empty($namespace)) {
-            $services = [];
-        } elseif (!is_array($namespace) && !($namespace instanceof \Illuminate\Support\Collection)) {
-            $services = [$namespace];
-        } else {
-            // Dedupe by type + id (unique() without a key compares every pair of models)
-            $services = collect($namespace)->unique(function ($model) {
-                return get_class($model) . ':' . $model->id;
-            })->all();
-        }
-        
-        // Ensure we have a valid array for DataTables
-        if (!is_array($services)) {
-            $services = [];
-        }
-
-        // City typed as text (no autocomplete code): match the city name or the address,
-        // since many suppliers' city ids do not point at their real city
-        $cityName = trim((string) $request->input('city_name'));
-        if ($cityName !== '' && !$cityCode) {
-            $services = array_values(array_filter($services, function ($model) use ($cityName) {
-                return stripos((string) $model->city, $cityName) !== false
-                    || stripos((string) $model->address_first, $cityName) !== false;
-            }));
-        }
+        $parts = array_map(function ($service) use ($filters) {
+            return $this->supplierQuery($service, $filters);
+        }, $services);
 
         $can = \Auth::user()->can('tour_package.create') ? 1 : 0;
         $actionColumn = $request->actionColumn === 'add-service-column' ? 'add-service-column' : 'action';
 
-        return $this->dataTableResponse($request, $services, function ($model) use ($actionColumn, $can) {
-            return [$actionColumn => $actionColumn === 'action' ? $this->dataId($model, $can) : $this->serviceButton($model)];
+        return $this->dataTableResponse($request, $parts, function ($row) use ($actionColumn, $can) {
+            return [$actionColumn => $actionColumn === 'action'
+                ? $this->dataIdFor($row->service_type, $row->id, $row->name, $can)
+                : $this->serviceButtonFor($row->service_type, $row->id, $row->name)];
         });
     }
 
     /**
-     * DataTables server-side JSON (draw / recordsTotal / recordsFiltered / data) for an
-     * in-memory list of models, with paging and single-column sorting.
+     * DataTables server-side JSON (draw / recordsTotal / recordsFiltered / data) for one query per
+     * supplier type, paged and sorted in SQL. Text columns are HTML-escaped: the tables insert them as HTML.
      */
-    private function dataTableResponse(Request $request, $items, callable $extraColumns)
+    private function dataTableResponse(Request $request, array $parts, callable $extraColumns)
     {
-        $models = collect($items)->values();
+        // Per-type counts are cheap; counting the UNION would build the whole result first
+        $total = array_sum(array_map(function ($part) {
+            return (clone $part)->count();
+        }, $parts));
 
         $order = $request->input('order.0');
         $columnKey = $order ? $request->input('columns.' . (int) $order['column'] . '.data') : null;
-        if ($columnKey && is_string($columnKey) && !in_array($columnKey, ['action', 'add-service-column', 'action-change-service'], true)) {
-            $models = $models->sortBy(function ($model) use ($columnKey) {
-                return mb_strtolower((string) $model->getAttribute($columnKey));
-            }, SORT_NATURAL, ($order['dir'] ?? 'asc') === 'desc')->values();
-        }
+        $sortable = ['nameService' => 'name', 'name' => 'name', 'address_first' => 'address_first', 'country' => 'country',
+            'city' => 'city', 'work_phone' => 'work_phone', 'contact_name' => 'contact_name'];
+        $sort = $sortable[$columnKey] ?? 'name';
+        $dir = ($order['dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
 
-        $total = $models->count();
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', -1);
-        // Only the visible page is serialized
-        $page = ($length > 0 ? $models->slice($start, $length) : $models)->map(function ($model) use ($extraColumns) {
-            return array_merge($model->toArray(), $extraColumns($model));
+        $length = $length > 0 ? min($length, 500) : null;
+
+        // Top-N per type: the first start+length rows overall must be among each type's first start+length
+        $union = null;
+        foreach ($parts as $part) {
+            $part = clone $part;
+            if ($length) {
+                $part->orderBy($sort, $dir)->orderBy('service_type')->orderBy('id')->limit($start + $length);
+            }
+            $union = $union ? $union->unionAll($part) : $part;
+        }
+        $query = DB::query()->fromSub($union, 'suppliers')->orderBy($sort, $dir)->orderBy('service_type')->orderBy('id');
+        if ($length) {
+            $query->offset($start)->limit($length);
+        }
+
+        $page = $query->get()->map(function ($row) use ($extraColumns) {
+            $data = [];
+            foreach (self::RESULT_COLUMNS as $column) {
+                $data[$column] = $column === 'id' ? $row->id : e((string) ($row->$column ?? ''));
+            }
+            return array_merge($data, $extraColumns($row));
         })->values();
 
         return response()->json([
@@ -189,37 +195,55 @@ class SupplierSearchController extends Controller
     }
 
     public function generateTableServiceList(Request $request){
-        $service_id = $request->service_id;
+        $types = $this->tour_package->servicesTypes;
+        $this->validate($request, [
+            'service_type_id' => ['required', 'integer', \Illuminate\Validation\Rule::in(array_keys($types))],
+            'service_id' => 'nullable|integer',
+        ]);
 
-        $serviceName = ucfirst($this->tour_package->servicesTypes[$request->service_type_id]);
+        $serviceName = ucfirst($types[$request->service_type_id]);
         $serviceName = $serviceName === 'Cruise' ? 'Cruises' : $serviceName;
-        $namespace = 'App\\' . $serviceName;
-        $model_test = $namespace::first();
-        $table_name = $this->getTableName($model_test);
-        $query_builder = $serviceName == 'Cruises' || $serviceName == 'Flight' ?
+        abort_unless(in_array($serviceName, self::SEARCH_SERVICES, true), 422, 'This service type has no supplier list.');
 
-            $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country_from")
-                ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city_from") :
+        $empty = ['name' => '', 'cityCode' => null, 'cityName' => '', 'countryAlias' => null, 'criterias' => [], 'rate' => null];
+        $class = 'App\\' . $serviceName;
+        $query = $this->supplierQuery($serviceName, $empty)
+            ->where((new $class)->getTable() . '.id', '!=', (int) $request->service_id);
 
-            $namespace::leftJoin('countries', 'countries.alias', '=', "{$table_name}.country")
-                ->leftJoin('cities', 'cities.id', '=', "{$table_name}.city");
-
-        $model = $query_builder->select(
-            "{$table_name}.*",
-            "cities.name as city",
-            'countries.name as country')
-            ->where("{$table_name}.id", '!=', $service_id)
-            ->get();
-
-
-        $services = collect($model)->unique('id')->all();
-
-        return $this->dataTableResponse($request, $services, function ($model) {
-            $type = strtolower(class_basename(get_class($model)));
-            $name = e($model->name);
+        return $this->dataTableResponse($request, [$query], function ($row) {
+            $type = strtolower($row->service_type);
+            $name = e($row->name);
             $pre_loader = $type == 'transfer' ? '' : 'pre-loader-func';
-            return ['action-change-service' => "<button class='btn btn-success change-service-button $pre_loader' data-service_type='{$type}' data-service_id='{$model->id}' data-service_name=\"{$name}\">Change</button>"];
+            return ['action-change-service' => "<button class='btn btn-success change-service-button $pre_loader' data-service_type='{$type}' data-service_id='{$row->id}' data-service_name=\"{$name}\">Change</button>"];
         });
+    }
+
+    /** "Add" button for a search row (type is the model class basename, e.g. "Hotel") */
+    public function serviceButtonFor($serviceType, $id, $name)
+    {
+        $type = strtolower($serviceType);
+        $name = e($name);
+        $id = (int) $id;
+        $pre_loader = $type == 'hotel' || $type == 'transfer' ? '' : 'pre-loader-func';
+        return "<button class='btn btn-success add-service-button $pre_loader' data-link=".route('tour_package.store')." data-service_type='{$type}' data-service_id='{$id}' data-service_name=\"{$name}\">Add</button>";
+    }
+
+    /** View (and, with permission, "Tour") buttons for a search row */
+    public function dataIdFor($serviceType, $id, $name, $can)
+    {
+        $id = (int) $id;
+        $low = strtolower($serviceType);
+        if ($low == 'flight') $low .= 's';
+        $link = route("{$low}.show", $id);
+        $name = e($name);
+        $type = e($serviceType);
+        // The row opens the supplier; the eye button is a visible, keyboard-reachable way to do the same
+        $btn = "<a class='btn btn-warning btn-sm btn-icon show-button' href='{$link}' data-link='{$link}' title='View'><i class='ti ti-eye'></i></a>";
+        if ($can){
+            $btn = "<button class='btn btn-success tourAdd' hidden data-id=$id data-type=$type data-service_name=\"{$name}\">Tour</button>" . $btn;
+        }
+
+        return $btn;
     }
 
     /**
@@ -336,8 +360,8 @@ class SupplierSearchController extends Controller
             $criterias = Criteria::all();
         } else {
             if (strtolower($request->serviceType) == 'cruises') $request->serviceType = 'cruise';
-            $criteria_type = CriteriaType::where('name', strtolower($request->serviceType))->first();
-            $criterias = Criteria::where('criteria_type', $criteria_type->id)->get();
+            $criteria_type = CriteriaType::where('name', strtolower((string) $request->serviceType))->first();
+            $criterias = $criteria_type ? Criteria::where('criteria_type', $criteria_type->id)->get() : collect();
         }
         $rates = (strtolower($request->serviceType) == 'hotel') ? Rate::all() : null;
         return view('component.criterias', ['criterias' => $criterias, 'rates' => $rates]);
@@ -438,26 +462,11 @@ class SupplierSearchController extends Controller
 
     public function serviceButton($model)
     {
-        $type = strtolower(class_basename(get_class($model)));
-        $name = e($model->name);
-        $pre_loader = $type == 'hotel' || $type == 'transfer' ? '' : 'pre-loader-func';
-        return "<button class='btn btn-success add-service-button $pre_loader' data-link=".route('tour_package.store')." data-service_type='{$type}' data-service_id='{$model->id}' data-service_name=\"{$name}\">Add</button>";
+        return $this->serviceButtonFor(class_basename(get_class($model)), $model->id, $model->name);
     }
 
     public function dataId($model, $can)
     {
-        $type = class_basename(get_class($model));
-        $id = $model->id;
-        $low = strtolower($type);
-        if (strtolower($type) == 'flight') $low .= 's';
-        $link = route("{$low}.show", $model->id);
-        $name = e($model->name);
-        // The row opens the supplier; the eye button is a visible, keyboard-reachable way to do the same
-        $btn = "<a class='btn btn-warning btn-sm btn-icon show-button' href='{$link}' data-link='{$link}' title='View'><i class='ti ti-eye'></i></a>";
-        if ($can){
-            $btn = "<button class='btn btn-success tourAdd' hidden data-id=$id data-type=$type data-service_name=\"{$name}\">Tour</button>" . $btn;
-        }
-
-        return $btn;
+        return $this->dataIdFor(class_basename(get_class($model)), $model->id, $model->name, $can);
     }
 }

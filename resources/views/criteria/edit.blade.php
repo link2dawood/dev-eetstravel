@@ -20,7 +20,8 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!! url("criteria")!!}/{!!$criteria->id!!}/update'>
+                <form method="POST" action="{{ route('criteria.update', ['criterion' => $criteria->id]) }}">
+                    @method('PUT')
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -36,15 +37,15 @@
                                 <input type='hidden' name='_token' value='{{Session::token()}}'>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Name')!!}</label>
-                                    <input type="text" name="name" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->name}}{{ old('name') }}" class="form-control" required>
+                                    <input type="text" name="name" value="{{ old('name', $criteria->name) }}" class="form-control" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.ShortName')!!}</label>
-                                    <input type="text" name="short_name" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->short_name}}{{ old('short_name') }}" class="form-control" required>
+                                    <input type="text" name="short_name" value="{{ old('short_name', $criteria->short_name) }}" class="form-control" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Icon')!!}</label>
-                                    <input type="text" name="icon" value="{{ $errors != null && count($errors) > 0 ? '' : $criteria->icon}}{{ old('icon') }}" class="form-control">
+                                    <input type="text" name="icon" value="{{ old('icon', $criteria->icon) }}" class="form-control" maxlength="100" pattern="[a-zA-Z0-9-]+">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="criteria_type">{!!trans('main.Criteriatype')!!}</label>

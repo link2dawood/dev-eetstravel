@@ -26,8 +26,11 @@ $tours = Tour::query()->orderBy('name')->get(['id', 'name']);
                 <div class="text-muted small" v-else>Loading folders...</div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-link link-secondary me-auto" @click="CloseMoveToModal">Cancel</button>
-                <button type="button" class="btn btn-primary" @click="moveToFolder"><i class="fa fa-folder-open me-1"></i>Move</button>
+                <button type="button" class="btn btn-link link-secondary me-auto" @click="CloseMoveToModal" :disabled="movingEmail">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="moveToFolder" :disabled="movingEmail">
+                    <span v-if="movingEmail" class="tms-spinner" aria-hidden="true"></span>
+                    <i v-else class="fa fa-folder-open me-1" aria-hidden="true"></i> @{{ movingEmail ? 'Moving...' : 'Move' }}
+                </button>
             </div>
         </div>
     </div>

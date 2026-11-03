@@ -1,104 +1,42 @@
 @extends('scaffold-interface.layouts.tabler-app')
 @section('title', 'Criteria')
 @section('content')
-    @include('layouts.title',
-           ['title' => 'Criteria', 'sub_title' => 'Criteria List',
-           'breadcrumbs' => [
-           ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
-           ['title' => 'Criteria', 'icon' => null, 'route' => null]]])
+    @include('layouts.title', ['title' => 'Criteria', 'sub_title' => 'Criteria List', 'breadcrumbs' => [
+        ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
+        ['title' => 'Criteria', 'icon' => null, 'route' => null]]])
     <section class="content">
         <div class="box box-primary">
             <div class="box-body">
-                @if (Session::has('message'))
-                    <div class="alert alert-danger"><center>{{ Session::get('message') }}</center></div>
-                @endif
-                    <div class="d-flex justify-content-end mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                    <form method="GET" action="{{ route('criteria.index') }}" class="d-flex gap-2">
+                        <input type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Name, short name or type" aria-label="Search criteria">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        @if(request('search'))<a href="{{ route('criteria.index') }}" class="btn btn-outline-secondary">Clear</a>@endif
+                    </form>
                     {!! \App\Helper\PermissionHelper::getCreateButton(route('criteria.create'), \App\Criteria::class) !!}
                 </div>
-                <table id="criteria-table" class="table table-striped table-bordered table-hover" style='background:#fff; width: 98%; table-layout: fixed'>
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>{!!trans('main.Name')!!}</th>
-                        <th>{!!trans('main.ShortName')!!}</th>
-                        <th>{!!trans('main.Icon')!!}</th>
-                        <th>{!!trans('main.CriteriaType')!!}</th>
-                        <th class="actions-button" style="width: 140px!important">{!!trans('main.Actions')!!}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($criteriaData as $criteria)
-                        <tr>
-                            <td>{{ $criteria->id }}</td>
-                            <td>{{ $criteria->name }}</td>
-                            <td>{{ $criteria->short_name }}</td>
-                            <td>{!! $criteria->formatted_icon !!}</td>
-                            <td>{{ $criteria->criteria_type }}</td>
-                            <td>{!! $criteria->action_buttons !!}</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th class="not"></th>
-                        <th>{!!trans('main.Name')!!}</th>
-                        <th>{!!trans('main.ShortName')!!}</th>
-                        <th>{!!trans('main.Icon')!!}</th>
-                        <th>{!!trans('main.CriteriaType')!!}</th>
-                        <th class="not"></th>
-                    </tr>
-                    </tfoot>
-                </table>
+                <div class="table-responsive">
+                    <table id="criteria-table" class="table table-striped table-bordered">
+                        <thead><tr>
+                            <th>ID</th><th>{{ trans('main.Name') }}</th><th>{{ trans('main.ShortName') }}</th>
+                            <th>{{ trans('main.Icon') }}</th><th>{{ trans('main.CriteriaType') }}</th><th>{{ trans('main.Actions') }}</th>
+                        </tr></thead>
+                        <tbody>
+                            @forelse($criteriaData as $criteria)
+                                <tr>
+                                    <td>{{ $criteria->id }}</td><td>{{ $criteria->name }}</td><td>{{ $criteria->short_name }}</td>
+                                    <td><i class="fa fa-{{ $criteria->icon }}" aria-hidden="true"></i> {{ $criteria->icon }}</td>
+                                    <td>{{ $criteria->criteria_type ?? 'Unknown type' }}</td>
+                                    <td>@include('component.action_buttons', ['item' => $criteria, 'routePrefix' => 'criteria'])</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="text-center">No criteria found.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                {{ $criteriaData->links() }}
             </div>
         </div>
-
     </section>
 @endsection
-
-@section('post_styles')
-    {{-- DataTables is loaded on demand by window.loadDataTables --}}
-    @include('component.datatables_cdn')
-@endsection
-
-@push('scripts')
-
-<script>
-    $(document).ready(function() {
-        (window.loadDataTables ? window.loadDataTables() : Promise.resolve()).then(initCriteriaTable).catch(function () {
-            // Without DataTables the server-rendered table still works, just without search/paging
-        });
-    });
-
-    function initCriteriaTable() {
-        let table = $('#criteria-table').DataTable({
-            dom: 	"<'row'<'col-sm-6'l><'col-sm-6'f>>" +
-            "<'row'<'col-sm-12'tr>>" +
-            "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-            pageLength: 50,
-            columnDefs: [
-                { targets: [5], orderable: false } // Actions column not sortable
-            ]
-        });
-
-        $('#criteria-table tfoot th').each( function () {
-            let column = this;
-            if (column.className !== 'not') {
-                let title = $(this).text();
-                $(this).html('<input type="text" class="form-control" placeholder="Search ' + title + '" />');
-            }
-        });
-
-        table.columns().every( function () {
-            let that = this;
-
-            $('input', this.footer()).on('keyup change', function() {
-                if(that.search() !== this.value) {
-                    that.search(this.value).draw();
-                }
-            });
-        });
-
-        $('#criteria-table tfoot th').appendTo('#criteria-table thead');
-    }
-</script>
-@endpush

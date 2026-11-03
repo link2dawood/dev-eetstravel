@@ -127,7 +127,12 @@ class HotelController extends Controller
 
         $request = CitiesHelper::setCityGeneral($request);
         /*this criterias*/
-        $hotel = $this->hotel->create($request->except('attach', 'place_id', 'criterias', 'prices_room_type'));
+        $hotel = $this->hotel->create($request->except('attach', 'place_id', 'criterias', 'prices_room_type', 'password'));
+        // Supplier portal password: hashed, and only when one is entered
+        if ($request->filled('password')) {
+            $hotel->password = \Illuminate\Support\Facades\Hash::make($request->input('password'));
+            $hotel->save();
+        }
         /*this*/
         if(!empty($request->criterias)){
             $criterias = explode(',', $request->criterias);
@@ -323,11 +328,10 @@ class HotelController extends Controller
 
         $request = CitiesHelper::setCityGeneral($request);
         
-        /*this*/
-       $request->password =  Crypt::encryptString($request->password); 
+        // The supplier portal password is set separately below, hashed, and only when one is entered
         $this->hotel->updateById($id, $request->except(
             'attach', 'place_id', 'criterias',
-            'prices_room_type', 'contacts'
+            'prices_room_type', 'contacts', 'password'
         ));
 
 
@@ -404,7 +408,10 @@ class HotelController extends Controller
                 }
             }
         }
-		$hotel->password  = $request->password ;
+		// Empty means "keep the current password"; it must never be stored as an (encrypted) empty string
+		if ($request->filled('password')) {
+			$hotel->password = \Illuminate\Support\Facades\Hash::make($request->input('password'));
+		}
         $hotel->status = $status;
         $hotel->save();
 

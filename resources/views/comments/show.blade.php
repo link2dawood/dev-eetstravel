@@ -22,9 +22,11 @@
                             <a href="javascript:history.back()">
                                 <button class='btn btn-primary'>{!!trans('main.Back')!!}</button>
                             </a>
+                            @if(app(\App\Services\CommentAccess::class)->allowed('comment.edit') && ((int)$comment->author_id === (int)Auth::id() || Auth::user()->hasRole('admin')))
                             <a href="{!! route('comment.edit', $comment->id) !!}">
                                 <button class='btn btn-warning'>{!!trans('main.Edit')!!}</button>
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>

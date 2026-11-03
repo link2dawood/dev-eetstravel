@@ -159,7 +159,7 @@
                                     <i class="ti ti-user-circle icon me-2"></i>{{ trans('main.Guides') }}
                                 </a>
                                 @endif
-                                @if(Auth::user()->can('cruises.index'))
+                                @if(Auth::user()->can('images.index'))
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('images.index', $route) !!}" href="{{route('images.index')}}">
                                     <i class="ti ti-photo icon me-2"></i>{{trans('main.Images')}}
                                 </a>
@@ -235,7 +235,7 @@
                                 @endif
                                 @if(Auth::user()->can('currency_rate.index'))
                                 <a class="dropdown-item {!! \App\Helper\DashboardHelper::isMenuActive('currency_rate.index', $route) !!}" href="{{ route('currency_rate.index') }}">
-                                    <i class="ti ti-currency-dollar icon me-2"></i>{{ trans('main.CurrencyRate') }}
+                                    <i class="ti ti-currency-dollar icon me-2"></i>Reference exchange rates
                                 </a>
                                 @endif
                                 @if(Auth::user()->can('currencies.index'))
@@ -314,7 +314,7 @@
                     <div class="dropdown-menu {{(\App\Helper\DashboardHelper::isMenuTreeViewActive(['accounting.index', 'office.index', 'invoices.index', 'taxes.index', 'reporting.index', 'transaction.index'], $route)) ? 'show' : ''}}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
-                                @if(Auth::user()->can('accounting.index'))
+                                @if(Auth::user()->can('transactions.show'))
                                 <a class="dropdown-item {{ \App\Helper\DashboardHelper::isMenuActive('accounting.index', $route) }}" href="{{ route('accounting.index') }}" @if(\App\Helper\DashboardHelper::isMenuActive('accounting.index', $route)) aria-current="true" @endif>
                                     <i class="ti ti-coin icon me-2"></i>{{trans('Billing')}}
                                 </a>

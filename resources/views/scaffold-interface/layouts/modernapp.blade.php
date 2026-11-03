@@ -25,6 +25,7 @@
     <!-- Theme style -->
     <link rel="stylesheet" href="{{asset('css/adminlte-app.css')}}">
     <link rel="stylesheet" href="{{asset('css/style.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/ui-feedback.css') }}?v={{ filemtime(public_path('css/ui-feedback.css')) }}">
 
     @yield('colorpicker-css')
 
@@ -107,7 +108,7 @@
                             <ul class="dropdown-menu">
                                 <ul class="list_notification_email">
                                     <li class="footer">
-                                        <a href="snappymail.eu">{{ trans('main.Viewall') }}</a>
+                                        <a href="{{ route('snappymail.sso') }}">{{ trans('main.Viewall') }}</a>
                                     </li>
                                     <li class="footer">
                                         <a class="{{ !$messages ? 'disabled-link' : '' }}" href="{{route('email.readAll')}}">{{ trans('main.Readall') }}</a>
@@ -224,6 +225,7 @@
 
     <script type="text/javascript" src="{{asset('js/tables.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/helper.js')}}"></script>
+    <script type="text/javascript" src="{{ asset('js/ui-feedback.js') }}?v={{ filemtime(public_path('js/ui-feedback.js')) }}"></script>
     <script type="text/javascript" src="{{asset('js/onclick-events.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/notifications.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/ckeditor/ckeditor.js')}}"></script>

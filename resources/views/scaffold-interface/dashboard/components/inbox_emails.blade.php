@@ -40,21 +40,30 @@
                                 <line x1="21" y1="21" x2="15" y2="15" />
                             </svg>
                         </span>
-                        <input aria-label="Search emails..." type="text" id="search" name="search" class="form-control" v-model="search" @keyup.enter="fetchData(true)" placeholder="Search emails...">
-                        <button type="button" class="btn btn-primary" @click="fetchData(true)">
-                            {{ trans('main.Search') }}
+                        <input aria-label="Search emails..." type="text" id="search" name="search" class="form-control" v-model="search" @keyup.enter="fetchData(true)" :disabled="loading" placeholder="Search emails...">
+                        <button type="button" class="btn btn-primary" @click="fetchData(true)" :disabled="loading">
+                            <span v-if="loading" class="tms-spinner" aria-hidden="true"></span>
+                            <span>{{ trans('main.Search') }}</span>
                         </button>
-                        <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null">
+                        <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null" :disabled="loading">
                             Clear
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <div v-if="loading">
-                        <div style="height: 300px;">
-                            <div class="loader"></div>
+                    <div v-if="loading" class="inbox-loading" role="status" aria-live="polite">
+                        <span class="visually-hidden">Loading emails</span>
+                        <div v-for="row in 5" :key="row" class="tms-skeleton-row">
+                            <span class="tms-skeleton inbox-skeleton-short"></span>
+                            <span class="tms-skeleton"></span>
+                            <span class="tms-skeleton inbox-skeleton-date"></span>
                         </div>
+                    </div>
+
+                    <div v-else-if="mailError" class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
+                        <span>@{{mailError}}</span>
+                        <button type="button" class="btn btn-outline-warning btn-sm" @click="fetchData(true)">Retry</button>
                     </div>
 
                     <div v-else>
@@ -316,6 +325,19 @@
     .empty-state {
         padding: 3rem 0;
     }
+
+    .dashboard-inbox .inbox-loading {
+        min-height: 300px;
+        padding: 0.5rem 0;
+    }
+
+    .dashboard-inbox .inbox-skeleton-short {
+        width: 65%;
+    }
+
+    .dashboard-inbox .inbox-skeleton-date {
+        width: 100%;
+    }
     
 </style>
 
@@ -331,6 +353,8 @@
                 folderSend:'INBOX',
                 currentMail:null,
                 loading: true,
+                mailError: null,
+                mailRequestId: 0,
                 loadingFolders:false,
                 folders:null,
                 search:null,
@@ -433,36 +457,54 @@
                 },
 
                 fetchData(get = false, folder=false) {
-                    var self = this;
+                    var requestId = ++this.mailRequestId;
                     var userId = $('meta[name="user-id"]').attr('content');
+                    var targetFolder = folder || this.currentFolder;
+                    var requestSearch = this.search;
+                    var cacheKey = `emails[${targetFolder}]`;
                     this.mails=[];
                     this.loading = true;
+                    this.mailError = null;
 
-                    let emails = JSON.parse(localStorage.getItem(`emails[${this.currentFolder}]`));
-                    if(emails && !get ){
+                    let emails = null;
+                    try {
+                        emails = JSON.parse(localStorage.getItem(cacheKey));
+                    } catch (error) {
+                        console.warn('Unable to read cached dashboard emails.', error);
+                    }
+
+                    if(emails && !get && !requestSearch ){
                         this.mails = emails.emails;
                         this.loading = false;
                         this.page = emails.page;
                         this.count = emails.count;
                         this.perpage = emails.perpage;
-                    }else{
+                    } else {
                         axios.post(`/api/v1/users/${userId}/emails`,{
-                            search: this.search,
-                            folder: (folder)?folder:this.currentFolder,
+                            search: requestSearch,
+                            folder: targetFolder,
                         })
                         .then((result)=>{
+                            if (requestId !== this.mailRequestId) {
+                                return;
+                            }
                             this.loading = false;
                             this.mails = result.data.emails;
-                            localStorage.setItem(`emails[${(folder)?folder:this.currentFolder}]`,JSON.stringify(result.data));
+                            if (!requestSearch) {
+                                try {
+                                    localStorage.setItem(cacheKey, JSON.stringify(result.data));
+                                } catch (error) {
+                                    console.warn('Unable to cache dashboard emails.', error);
+                                }
+                            }
                         }).catch((err)=>{
-                            $.toast({
-                                heading: 'Warning',
-                                text: "Subject is empty",
-                                icon: 'danger',
-                                loader: true,
-                                hideAfter : 1500,
-                                position: 'top-right',
-                            });
+                            if (requestId !== this.mailRequestId) {
+                                return;
+                            }
+                            this.loading = false;
+                            this.mailError = err.response && err.response.status === 503
+                                ? 'The mailbox service is temporarily unavailable. Please try again.'
+                                : 'Unable to load emails. Check your connection and try again.';
                         });
                     }
                 },
@@ -608,7 +650,18 @@
                                 this.loadingFolders = false;
                                 this.folders = res.data.folders;
                                 localStorage.setItem('folders',JSON.stringify(res.data.folders));
-                            });
+                                })
+                                .catch(()=>{
+                                    this.loadingFolders = false;
+                                    $.toast({
+                                        heading: 'Error',
+                                        text: 'Unable to load email folders. Please try again.',
+                                        icon: 'error',
+                                        loader: true,
+                                        hideAfter: 3000,
+                                        position: 'top-right',
+                                    });
+                                });
                     }
                 },
 

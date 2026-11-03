@@ -1,0 +1,57 @@
+{
+    "date": "2026-10-30T18:14:00+00:00",
+    "results": [
+        {
+            "check": "Existing billing permissions cover all invoice actions",
+            "status": "passed"
+        },
+        {
+            "check": "Validated invoice creation succeeds",
+            "status": "passed"
+        },
+        {
+            "check": "VAT and extra-cost cents are recalculated and stored",
+            "status": "passed"
+        },
+        {
+            "check": "Local payment row saves against the correct invoice",
+            "status": "passed"
+        },
+        {
+            "check": "Paid invoice remains protected against archive",
+            "status": "passed"
+        },
+        {
+            "check": "AC4 paginated data uses at most four queries and correct balance",
+            "status": "passed"
+        },
+        {
+            "check": "AC2 service form uses its tour argument",
+            "status": "passed"
+        },
+        {
+            "check": "AC5 unknown quotation parent gives not-found",
+            "status": "passed"
+        },
+        {
+            "check": "AC1 archive preserves header and staff audit metadata",
+            "status": "passed"
+        },
+        {
+            "check": "AC1 archive preserves all original item values",
+            "status": "passed"
+        },
+        {
+            "check": "Archived invoice items cannot be read through helper",
+            "status": "passed"
+        },
+        {
+            "check": "Archived invoice disappears from active search",
+            "status": "passed"
+        },
+        {
+            "check": "All invoice\/item\/payment\/user values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

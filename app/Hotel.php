@@ -97,6 +97,9 @@ class Hotel extends Model
 
     protected $guarded = [];
 
+    /** The supplier portal password must never be serialized into JSON/arrays */
+    protected $hidden = ['password'];
+
     /**
      * event.
      *

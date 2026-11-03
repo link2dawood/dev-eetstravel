@@ -29,8 +29,8 @@ class StatusController extends Controller
 
     public function getButton($id, $status)
     {
-        $url = array('show'       => route('status.show', ['id' => $id]),
-            'edit'       => route('status.edit', ['id' => $id]),
+        $url = array('show'       => route('status.show', ['status' => $id]),
+            'edit'       => route('status.edit', ['status' => $id]),
             'delete_msg' => "/status/{$id}/deleteMsg");
 
         return DatatablesHelperController::getActionButton($url, false, $status);
@@ -94,6 +94,8 @@ class StatusController extends Controller
         $status->sort_order = $request->get('sort_order');
         $status->color = $request->get('color', null);
         $status->status = $request->get('status', 0);
+        $status->is_completed = $request->type === 'task' && $request->boolean('is_completed');
+        $status->is_aborted = $request->type === 'task' && $request->boolean('is_aborted');
         $status->save();
 
         LaravelFlashSessionHelper::setFlashMessage("Status $status->name created", 'success');
@@ -111,8 +113,9 @@ class StatusController extends Controller
     {
         $title = 'Show - status';
 
+        $status = Status::findOrFail($id);
         if ($request->ajax()) {
-            return URL::to('task/' . $id);
+            return route('status.show', ['status' => $id]);
         }
 
         $status = Status::findOrfail($id);
@@ -133,6 +136,7 @@ class StatusController extends Controller
     public function edit($id, Request $request)
     {
         $title = 'Edit - status';
+        Status::findOrFail($id);
         if ($request->ajax()) {
             return URL::to('status/' . $id . '/edit');
         }
@@ -151,17 +155,19 @@ class StatusController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validateStatus($request);
-
-        $task = Status::findOrfail($id);
-        $task->name = $request->get('name');
-        $task->type = $request->get('type');
-        $task->sort_order = $request->get('sort_order');
-        $task->color = $request->get('color', null);
-        $task->status = $request->get('status', 0);
-        $task->save();
-
-        LaravelFlashSessionHelper::setFlashMessage("Status $task->name edited", 'success');
+        DB::transaction(function () use ($request, $id) {
+            $status = Status::query()->lockForUpdate()->findOrFail($id);
+            $this->validateStatus($request, $status);
+            $status->name = $request->get('name');
+            $status->type = $request->get('type');
+            $status->sort_order = $request->get('sort_order');
+            $status->color = $request->get('color', null);
+            $status->status = $request->get('status', $status->status);
+            $status->is_completed = $request->type === 'task' && $request->boolean('is_completed');
+            $status->is_aborted = $request->type === 'task' && $request->boolean('is_aborted');
+            $status->save();
+            LaravelFlashSessionHelper::setFlashMessage("Status $status->name edited", 'success');
+        });
 
         return redirect(URL::to('status'));
     }
@@ -169,6 +175,7 @@ class StatusController extends Controller
 
     public function DeleteMsg($id, Request $request)
     {
+        Status::findOrFail($id);
 //        $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/status/' . $id . '/delete');
         $msg = Ajaxis::BtDeleting(trans('main.Warning').'!!',trans('main.WouldyouliketoremoveThis').'?', '/status/' . $id . '/delete');
 
@@ -185,48 +192,51 @@ class StatusController extends Controller
      */
     public function destroy($id)
     {
-        $status = Status::findOrFail($id);
-
-        // where each status type is stored (bus statuses live on bus days, offer statuses on hotel offers)
-        $usage = [
-            'tour' => [['tours', 'status']],
-            'task' => [['tasks', 'status']],
-            'hotel' => [['tour_packages', 'status']],
-            'service_in_tour' => [['tour_packages', 'status']],
-            'bus' => [['bus_days', 'status_id'], ['tour_packages', 'status']],
-            'offer' => [['hotel_offers', 'tms_status']],
-        ];
-
-        $used = false;
-        foreach ($usage[$status->type] ?? [] as [$table, $column]) {
-            if (DB::table($table)->where($column, $id)->exists()) {
-                $used = true;
-                break;
+        return DB::transaction(function () use ($id) {
+            $status = Status::query()->lockForUpdate()->findOrFail($id);
+            if ($status->isSystem() || $status->isInUse()) {
+                $message = "Status {$status->name} is protected or in use and cannot be deleted";
+                if (request()->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+                return redirect('status');
             }
-        }
-
-        if ($used) {
-            $message = "Status {$status->name} is in use and cannot be deleted";
-            if (request()->ajax()) {
-                return response()->json(['error' => true, 'message' => $message]);
-            }
-            LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
-            return redirect('status');
-        }
-
-        LaravelFlashSessionHelper::setFlashMessage("Status $status->name deleted", 'success');
-        $status->delete();
-        Comment::query()->where('reference_type', Comment::$services['status'])->where('reference_id', $id)->delete();
-
-        return request()->ajax() ? URL::to('status') : redirect('status');
+            $status->delete();
+            Comment::query()->where('reference_type', Comment::$services['status'])->where('reference_id', $id)->delete();
+            LaravelFlashSessionHelper::setFlashMessage("Status $status->name deleted", 'success');
+            return request()->expectsJson() ? response()->json(['route' => route('status.index')]) : redirect('status');
+        });
     }
 
-    public function validateStatus($request){
-
+    public function validateStatus($request, Status $status = null){
+        if ($status) {
+            // Older callers omit these fields; only explicit form values change behavior.
+            foreach (['is_completed', 'is_aborted'] as $flag) {
+                if (!$request->exists($flag)) $request->merge([$flag => $request->type === 'task' ? (int) $status->$flag : 0]);
+            }
+        }
         $this->validate($request, [
-            'name'    => 'required',
-            'type' => 'required',
-            'sort_order'  => 'required|numeric'
+            'name' => array_merge(\App\Services\ValidationService::nameRules(), [\Illuminate\Validation\Rule::unique('status', 'name')->where('type', $request->input('type'))->ignore($status ? $status->id : null)]),
+            'type' => 'required|string|exists:status_types,type',
+            'sort_order' => 'required|integer|min:0|max:2147483647',
+            'color' => ['nullable', 'string', 'regex:/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'],
+            'status' => 'sometimes|boolean',
+            'is_completed' => 'sometimes|boolean',
+            'is_aborted' => 'sometimes|boolean',
         ]);
+        $errors = [];
+        if ($request->boolean('is_completed') && $request->boolean('is_aborted')) $errors['is_aborted'] = 'A task status cannot be both completed and aborted.';
+        if ($request->type !== 'task' && ($request->boolean('is_completed') || $request->boolean('is_aborted'))) $errors['type'] = 'Completion and abortion apply only to task statuses.';
+        if ($status) {
+            if ($request->type !== $status->type && ($status->isSystem() || $status->isInUse())) $errors['type'] = 'A protected or used status cannot change type.';
+            if ($request->name !== $status->name && ($status->isSystem() || ($status->type === 'offer' && $status->isInUse()))) $errors['name'] = 'A system status or used offer status cannot be renamed.';
+            if ($status->isSystem()) {
+                foreach (['is_completed', 'is_aborted'] as $flag) {
+                    if ($request->boolean($flag) !== (bool) $status->$flag) $errors[$flag] = 'System status behavior cannot be changed.';
+                }
+            }
+        }
+        if ($errors) throw \Illuminate\Validation\ValidationException::withMessages($errors);
     }
 }

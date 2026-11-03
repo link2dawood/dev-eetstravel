@@ -48,6 +48,14 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="bus-capacity">Capacity</label>
+                                    <input type="number" id="bus-capacity" name="capacity" min="1" max="500" value="{{ old('capacity') }}" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bus-comments">Comments</label>
+                                    <textarea id="bus-comments" name="comments" maxlength="1000" class="form-control">{{ old('comments') }}</textarea>
+                                </div>
+                                <div class="form-group">
                                     <label>Files</label>
                                     @component('component.file_upload_field')@endcomponent
                                 </div>

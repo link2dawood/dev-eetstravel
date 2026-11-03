@@ -117,7 +117,7 @@ class AppController extends Controller
 
         // Get tasks data - split by status flags
         $todoTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
                         ->where('is_aborted', false);
@@ -128,7 +128,7 @@ class AppController extends Controller
             ->withQueryString();
 
         $completedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', true);
             })
@@ -138,7 +138,7 @@ class AppController extends Controller
             ->withQueryString();
 
         $abortedTasks = \App\Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_aborted', true);
             })
@@ -537,7 +537,7 @@ class AppController extends Controller
 
         // To-Do Tasks (not completed and not aborted)
         $todoTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
                         ->where('is_aborted', false);
@@ -548,7 +548,7 @@ class AppController extends Controller
 
         // Completed Tasks
         $completedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', true);
             })
@@ -558,7 +558,7 @@ class AppController extends Controller
 
         // Aborted Tasks
         $abortedTasks = task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
-            ->where('assign', $user->id)
+            ->forUser($user) // assigned to the user, or created by them
             ->whereHas('status', function ($query) {
                 $query->where('is_aborted', true);
             })

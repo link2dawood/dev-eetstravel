@@ -129,15 +129,9 @@ class MigrateToSnappyMail extends Command
             try {
                 // Check if user has email credentials
                 if (empty($user->email_login)) {
-                    // Try to use system IMAP credentials
-                    if (env('IMAP_USERNAME')) {
-                        $user->email_login = $user->email ?? env('IMAP_USERNAME');
-                        $user->email_password = env('IMAP_PASSWORD');
-                    } else {
-                        $skipped++;
-                        $bar->advance();
-                        continue;
-                    }
+                    $skipped++;
+                    $bar->advance();
+                    continue;
                 }
 
                 if (!$dryRun) {

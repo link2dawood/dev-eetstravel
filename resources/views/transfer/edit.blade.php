@@ -2,6 +2,11 @@
 @section('title', 'Edit Bus Company')
 
 @section('content')
+@if ($errors->any())
+<div class="alert alert-danger" role="alert"><ul class="mb-0">
+@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+</ul></div>
+@endif
 <div class="container-xl">
     {{-- Page Header --}}
     <div class="page-header d-print-none">
@@ -228,10 +233,8 @@
                                                 <input type="checkbox" 
                                                        class="form-check-input" 
                                                        value="{{ $criteria->id }}" 
-                                                       name="criterias"
-                                                       @foreach($transfer->criterias as $item)
-                                                           {{ $criteria->id == $item->criteria_id ? 'checked' : '' }}
-                                                       @endforeach>
+                                                       name="criterias[]"
+                                                       {{ in_array($criteria->id, (array) old('criterias', $errors->any() ? [] : $transfer->criterias->pluck('criteria_id')->all())) ? 'checked' : '' }}>
                                                 <span class="form-check-label">{{ $criteria->name }}</span>
                                             </label>
                                         </div>

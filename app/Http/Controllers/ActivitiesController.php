@@ -2,36 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Helper\ActivityDescription;
+use App\Services\ActivityAccess;
 use Illuminate\Http\Request;
-use Spatie\Activitylog\Models\Activity;
-use Yajra\Datatables\Datatables;
 
 class ActivitiesController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permissions.required');
+    }
 
-    public function index(){
-    	$logs = Activity::all();
-
-        // Get all activities data (same as the AJAX data method)
-        $activitiesData = Activity::distinct()
-            ->leftJoin('users', 'users.id', '=', 'activity_log.causer_id')
-            ->select('activity_log.description', 'activity_log.properties', 'activity_log.created_at', 'users.name as causer')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Add action and link columns to each activity
-        $activitiesData->each(function ($activity) {
-            $activity->action = $activity->getExtraProperty('action');
-            $activity->formatted_description = \App\Helper\ActivityDescription::plainText($activity->description);
-
-            $link = $activity->getExtraProperty('link');
-            if ($link) {
-                $activity->link_button = "<a class='btn btn-sm btn-warning' href='$link' title='View'><svg xmlns='http://www.w3.org/2000/svg' class='icon' width='24' height='24' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor' fill='none' stroke-linecap='round' stroke-linejoin='round'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg></a>";
-            } else {
-                $activity->link_button = '';
-            }
+    public function index(Request $request)
+    {
+        $filters = $request->validate([
+            'q' => 'nullable|string|max:255',
+            'user' => 'nullable|integer|min:1',
+            'module' => 'nullable|string|max:255',
+            'from' => 'nullable|date_format:Y-m-d',
+            'to' => 'nullable|date_format:Y-m-d' . ($request->filled('from') ? '|after_or_equal:from' : ''),
+            'per_page' => 'nullable|integer|in:10,25,50,100',
+        ]);
+        $query = ActivityAccess::query($request->user())
+            ->leftJoin('users', function ($join) {
+                $join->on('users.id', '=', 'activity_log.causer_id')
+                    ->where('activity_log.causer_type', '=', \App\User::class);
+            })
+            ->select('activity_log.*', 'users.name as causer');
+        if (!empty($filters['user'])) $query->where('activity_log.causer_id', $filters['user'])->where('activity_log.causer_type', \App\User::class);
+        if (!empty($filters['module'])) $query->where('activity_log.log_name', $filters['module']);
+        if (!empty($filters['from'])) $query->where('activity_log.created_at', '>=', $filters['from'] . ' 00:00:00');
+        if (!empty($filters['to'])) $query->where('activity_log.created_at', '<', \Carbon\Carbon::parse($filters['to'])->addDay()->format('Y-m-d'));
+        if (isset($filters['q']) && $filters['q'] !== '') {
+            $pattern = '%' . strtr($filters['q'], ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+            $query->where(function ($query) use ($pattern) {
+                $query->whereRaw("activity_log.description LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereRaw("users.name LIKE ? ESCAPE '!'", [$pattern]);
+            });
+        }
+        $activitiesData = $query->orderByDesc('activity_log.created_at')->orderByDesc('activity_log.id')
+            ->paginate($filters['per_page'] ?? 50)->withQueryString();
+        $activitiesData->getCollection()->each(function ($activity) {
+            $activity->formatted_description = ActivityDescription::plainText($activity->description);
+            $activity->safe_link = ActivityAccess::link($activity->getExtraProperty('link'));
         });
-
-    	return view('activities.index', ['logs' => $logs, 'activitiesData' => $activitiesData]);
+        return view('activities.index', compact('activitiesData'));
     }
 }

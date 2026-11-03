@@ -56,10 +56,11 @@
                                 <input type="text" value="{{ old('sort_order') }}" name="sort_order" class="form-control" required oninvalid="this.setCustomValidity('Field required for filling')" onchange="this.setCustomValidity('')">
                             </div>
 
+                            @include('status.task_flags')
                             <div class="form-group mb-3 color_view" style="display: none">
                                 <label>{!!trans('main.Color')!!}</label>
                                 <div id="cp2" class="input-group colorpicker-component">
-                                    <input type="text" value="{{ old('color') }}" name="color" class="form-control">
+                                    <input type="text" value="{{ old('color') }}" name="color" class="form-control" placeholder="#336699">
                                     <span class="input-group-addon"><i></i></span>
                                 </div>
                             </div>

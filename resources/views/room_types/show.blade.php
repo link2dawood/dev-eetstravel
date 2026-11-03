@@ -28,19 +28,19 @@
                         <td class="show_width_td">
                             <b><i>{{trans('main.Name')}} : </i></b>
                         </td>
-                        <td>{!!$room_types->name!!}</td>
+                        <td>{{ $room_types->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{{trans('main.Code')}} : </i></b>
                         </td>
-                        <td>{!!$room_types->code!!}</td>
+                        <td>{{ $room_types->code }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{{trans('main.Sortorder')}} : </i></b>
                         </td>
-                        <td>{!!$room_types->sort_order!!}</td>
+                        <td>{{ $room_types->sort_order }}</td>
                     </tr>
                     </tbody>
                 </table>

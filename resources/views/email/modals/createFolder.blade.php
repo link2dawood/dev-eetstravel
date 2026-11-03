@@ -14,7 +14,10 @@
             <!-- /.box-body -->
             <div class="box-footer">
                 <div class="pull-right">
-                    <button type="submit" class="btn btn-primary" @click="createFolder"><i class="fa fa-envelope-o"></i> Add folder</button>
+                    <button type="button" class="btn btn-primary" @click="createFolder" :disabled="creatingFolder">
+                        <span v-if="creatingFolder" class="tms-spinner" aria-hidden="true"></span>
+                        <i v-else class="fa fa-folder-plus" aria-hidden="true"></i> @{{ creatingFolder ? 'Adding...' : 'Add folder' }}
+                    </button>
                 </div>
                 <button type="reset" class="btn btn-default"  data-dismiss="modal"><i class="fa fa-times"></i> Discard</button>
             </div>

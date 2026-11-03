@@ -1275,6 +1275,7 @@ public function store(StoreTourRequest $request)
         try {
             $invoice_tours_query = \App\InvoicesTours::where("invoices_tours_id", $tour->id)
                 ->join('supplier_invoices as invoices', 'invoices.id', '=', 'invoices_tours.invoices_id')
+                ->whereNull('invoices.deleted_at')
                 ->leftJoin('office_fees as offices', 'offices.id', '=', 'invoices.office_id')
                 ->leftJoin('tour_packages as packages', 'packages.id', '=', 'invoices_tours.package_id')
                 ->select(
@@ -1284,7 +1285,7 @@ public function store(StoreTourRequest $request)
                     'invoices.receivedDate',
                     'invoices.total_amount',
                     'invoices.extra_amount',
-                    'invoices.total_amount as amount_payable',
+                    DB::raw('(COALESCE(invoices.total_amount, 0) + COALESCE(invoices.extra_amount, 0)) as amount_payable'),
                     'offices.office_name',
                     'packages.name as package_name',
                     'invoices_tours.invoices_id'
@@ -1319,7 +1320,7 @@ public function store(StoreTourRequest $request)
         foreach ($invoice_tours as $invoice_tour) {
             // Get transaction sum from pre-loaded array
             $sum_amount = $transactionSums[$invoice_tour->invoices_id] ?? 0;
-            $amount = $invoice_tour->total_amount ?? 0;
+            $amount = $invoice_tour->amount_payable ?? $invoice_tour->total_amount ?? 0;
             $remaining_amount = $amount - $sum_amount;
             
             if ($sum_amount == $amount) {
@@ -1336,7 +1337,7 @@ public function store(StoreTourRequest $request)
                 'invoice_no' => $invoice_tour->invoice_no ?? '',
                 'due_date' => $invoice_tour->dueDate ?? '',
                 'received_date' => $invoice_tour->receivedDate ?? '',
-                'total_amount' => $invoice_tour->total_amount ?? '',
+                'total_amount' => $invoice_tour->amount_payable ?? $invoice_tour->total_amount ?? '',
                 'extra_amount' => $invoice_tour->extra_amount ?? '',
                 'amount_payable' => $invoice_tour->amount_payable ?? '',
                 'tour_name' => $tour->name,

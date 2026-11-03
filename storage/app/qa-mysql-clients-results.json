@@ -1,0 +1,65 @@
+{
+    "date": "2026-10-30T17:57:14+00:00",
+    "results": [
+        {
+            "check": "CL9 accented company creates with validated fields",
+            "status": "passed"
+        },
+        {
+            "check": "CL4 forged primary key\/date fields ignored",
+            "status": "passed"
+        },
+        {
+            "check": "CL8 new password is a verified one-way hash",
+            "status": "passed"
+        },
+        {
+            "check": "CL8 password excluded from serialization",
+            "status": "passed"
+        },
+        {
+            "check": "CL9 duplicate email produces a field error",
+            "status": "passed"
+        },
+        {
+            "check": "Contact helper renders this existing client",
+            "status": "passed"
+        },
+        {
+            "check": "CL2 unknown contact parent is not-found",
+            "status": "passed"
+        },
+        {
+            "check": "CL8 portal login validates the new hash",
+            "status": "passed"
+        },
+        {
+            "check": "CL6 web delete blocked by tours",
+            "status": "passed"
+        },
+        {
+            "check": "CL6 API delete blocked by tours",
+            "status": "passed"
+        },
+        {
+            "check": "CL6 web delete blocked by client_invoices",
+            "status": "passed"
+        },
+        {
+            "check": "CL6 API delete blocked by client_invoices",
+            "status": "passed"
+        },
+        {
+            "check": "Unused client soft-delete preserves contact data",
+            "status": "passed"
+        },
+        {
+            "check": "CL8 all stored nonempty portal passwords are hashes",
+            "status": "passed"
+        },
+        {
+            "check": "All client\/contact\/reference\/file\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

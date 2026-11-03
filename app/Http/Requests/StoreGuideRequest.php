@@ -4,9 +4,17 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Services\ValidationService;
+use App\Http\Requests\Concerns\SupplierFieldRules;
 
 class StoreGuideRequest extends FormRequest
 {
+    use SupplierFieldRules;
+
+    protected function prepareForValidation()
+    {
+        $this->normalizeCriterias();
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -25,7 +33,9 @@ class StoreGuideRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ValidationService::nameRules(true, 191, 2),
+            // A guide can be a person or an agency ("Guide 2", "José Núñez")
+            'name' => ValidationService::businessNameRules(true, 191, 2),
+            'contact_name' => ValidationService::nameRules(false, 191, 2),
             'first_name' => ValidationService::nameRules(false, 191, 2),
             'last_name' => ValidationService::nameRules(false, 191, 2),
             'work_email' => ValidationService::emailRules(false, 'guides,work_email'),
@@ -43,8 +53,7 @@ class StoreGuideRequest extends FormRequest
             'comments' => 'nullable|string|max:1000',
             'int_comments' => 'nullable|string|max:1000',
             'rate' => 'nullable|exists:rates,id',
-            'criterias' => 'nullable|string',
-        ];
+        ] + $this->attachmentAndCriteriaRules('guide');
     }
 
     /**
@@ -54,7 +63,7 @@ class StoreGuideRequest extends FormRequest
      */
     public function messages()
     {
-        return ValidationService::getCommonMessages();
+        return array_merge(ValidationService::getCommonMessages(), $this->attachmentAndCriteriaMessages('guide'));
     }
 
     /**

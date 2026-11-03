@@ -28,6 +28,10 @@ class AccountingPermissionsTest extends TestCase
     {
         $this->assertSame('ok', $this->runRoute('accounting.create', ['transactions.create'])->getContent());
     }
+    public function test_billing_list_uses_existing_read_permission()
+    {
+        $this->assertSame('ok', $this->runRoute('accounting.index', ['transactions.show'])->getContent());
+    }
 
     public function test_read_only_role_cannot_create_office()
     {

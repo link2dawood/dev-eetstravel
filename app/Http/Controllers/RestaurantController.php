@@ -94,28 +94,40 @@ class RestaurantController extends Controller
      * @param    \Illuminate\Http\Request $request
      * @return  \Illuminate\Http\Response
      */
+    /**
+     * The validated form fields that may be saved on a restaurant (never id or timestamps).
+     */
+    private function restaurantData($request)
+    {
+        return $request->only((new Restaurant)->getFillable());
+    }
+
+    /**
+     * Replace the restaurant's criteria with the validated ids from the request.
+     */
+    private function syncCriterias(Restaurant $restaurant, array $criteriaIds)
+    {
+        ServicesHasCriteria::where('service_id', $restaurant->id)
+            ->where('service_type', ServicesHasCriteria::$serviceTypes['restaurant'])
+            ->delete();
+        foreach (array_unique(array_map('intval', $criteriaIds)) as $criteria) {
+            $services_has_criteria = new ServicesHasCriteria();
+            $services_has_criteria->service_id = $restaurant->id;
+            $services_has_criteria->criteria_id = $criteria;
+            $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['restaurant'];
+            $services_has_criteria->save();
+        }
+    }
+
     public function store(StoreRestaurantRequest $request)
     {
-        $lastRestaurant = Restaurant::latest('id')->first();
-        $newId = $lastRestaurant ? $lastRestaurant->id + 1 : 1;
+        // restaurants.id is AUTO_INCREMENT: the database assigns the id. Computing it here
+        // (latest + 1) ignored soft-deleted rows and raced, and saved criteria/files against id 0.
+        $request = CitiesHelper::setCityGeneral($request);
+        $restaurant = $this->restaurants->create($this->restaurantData($request));
 
-        $data = $request->except('attach', 'place_id', 'criterias');
-        $data['id'] = $newId;
-        $data['city'] = CitiesHelper::changeCityNameToID($request['city']);
+        $this->syncCriterias($restaurant, (array) $request->input('criterias', []));
 
-        $restaurant = $this->restaurants->create($data);
-
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $restaurant->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['restaurant'];
-                $services_has_criteria->save();
-            }
-        }
-        
         LaravelFlashSessionHelper::setFlashMessage("Restaurant $restaurant->name created", 'success');
         $this->addFile($request, $restaurant);    
         
@@ -220,23 +232,13 @@ class RestaurantController extends Controller
     public function update($id, UpdateRestaurantRequest $request)
     {
         $request = CitiesHelper::setCityGeneral($request);
-        $this->restaurants->updateById($id, $request->except('attach', 'place_id', 'criterias'));
-        
-        ServicesHasCriteria::where('service_id', $id)
-            ->where('service_type', ServicesHasCriteria::$serviceTypes['restaurant'])
-            ->delete();
-            
+        $this->restaurants->updateById($id, $this->restaurantData($request));
         $restaurant = $this->restaurants->getById($id);
-        
-        if(!empty($request->criterias)){
-            $criterias = explode(',', $request->criterias);
-            foreach ($criterias as $criteria){
-                $services_has_criteria = new ServicesHasCriteria();
-                $services_has_criteria->service_id = $restaurant->id;
-                $services_has_criteria->criteria_id = $criteria;
-                $services_has_criteria->service_type = ServicesHasCriteria::$serviceTypes['restaurant'];
-                $services_has_criteria->save();
-            }
+
+        // The edit form always marks the criteria as sent (also when every box is unticked);
+        // callers that do not send criteria leave them unchanged
+        if ($request->exists('criterias') || $request->boolean('criterias_sent')) {
+            $this->syncCriterias($restaurant, (array) $request->input('criterias', []));
         }
 
         LaravelFlashSessionHelper::setFlashMessage("Restaurant $restaurant->name edited", 'success');

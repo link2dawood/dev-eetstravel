@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Image;
 use DB;
 use App\Attachment;
+use Illuminate\Support\Arr;
 
 class AttachmentController extends Controller {
 
@@ -22,6 +23,10 @@ class AttachmentController extends Controller {
     }
     
     
+/**
+ * Upload the single image of a supplier category (images page) or of a tour (landing page image).
+ * Both show one image, so the new file replaces the previous image(s) of that record.
+ */
 public function saveFile(Request $request)
 {
     // Validate the request (images only: the files are served from the public folder)
@@ -36,84 +41,102 @@ public function saveFile(Request $request)
         'files.*.max' => 'The image must be 10 MB or smaller.',
     ]);
 
+    // The route needs tour.edit (tour landing images); category images are an admin setting
+    if ($request->model === 'Attachmenttype') {
+        abort_unless($request->user()->can('images.index'), 403, 'You do not have permission to change category images.');
+    }
+
+    $files = array_values(array_filter(Arr::wrap($request->file('files')), function ($file) {
+        return $file && $file->isValid();
+    }));
+    // Each record shows one image: several files in one request would replace each other
+    if (count($files) !== 1) {
+        return response()->json(['message' => 'Upload one image at a time.', 'errors' => ['files' => ['Upload one image at a time.']]], 422);
+    }
+    $file = $files[0];
+
+    $modelName = 'App\\' . $request->model;
+    $model = $modelName::find($request->id);
+    if (!$model) {
+        return response()->json(['error' => 'The record to attach the image to was not found.'], 404);
+    }
+
     try {
-        $files = $request->file('files');
-        $id = $request->id;
-        $modelName = 'App\\' . $request->model;
+        $originalName = $file->getClientOriginalName();
+        $extension = $file->guessExtension() ?: 'jpg'; // from the content, never the client's name
+        $uniqueName = time() . '_' . uniqid() . '.' . $extension;
+        $mimeType = $file->getMimeType();
+        $size = $file->getSize();
 
-        // Validate model exists
-        if (!class_exists($modelName)) {
-            return response()->json(['error' => 'Invalid model specified'], 400);
-        }
+        // Store in public/uploads/attachments (served directly, like uploads/avatars;
+        // the public/storage link is not always present)
+        $storedPath = 'uploads/attachments/' . $uniqueName;
+        $file->move(public_path('uploads/attachments'), $uniqueName);
 
-        $model = $modelName::find($id);
-        if (!$model) {
-            return response()->json(['error' => 'Model not found'], 404);
-        }
-
-        $uploadedFiles = [];
-
-        // Ensure files is an array
-        if (!is_array($files)) {
-            $files = [$files];
-        }
-
-        foreach ($files as $file) {
-            if (!$file || !$file->isValid()) {
-                continue;
-            }
-
-            // Generate unique filename
-            $originalName = $file->getClientOriginalName();
-            $extension = $file->guessExtension() ?: 'jpg'; // from the content, never the client's name
-            $uniqueName = time() . '_' . uniqid() . '.' . $extension;
-
-            // Store in public/uploads/attachments (served directly, like uploads/avatars;
-            // the public/storage link is not always present)
-            $mimeType = $file->getMimeType();
-            $size = $file->getSize();
-            $storedPath = 'uploads/attachments/' . $uniqueName;
-            $file->move(public_path('uploads/attachments'), $uniqueName);
-
-            // "Replace image": the pages show the first attachment, so remove the old ones
+        $attachment = DB::transaction(function () use ($model, $storedPath, $originalName, $mimeType, $size) {
+            // Replace only the previous image(s). Older tours may still have other attachments.
+            $oldFiles = [];
             foreach ($model->attachments()->get() as $old) {
-                if (strpos((string) $old->path, 'uploads/attachments/') === 0 && is_file(public_path($old->path))) {
-                    @unlink(public_path($old->path));
+                if (!$this->isImageAttachment($old)) {
+                    continue;
+                }
+                if (strpos((string) $old->path, 'uploads/attachments/') === 0) {
+                    $oldFiles[] = public_path($old->path);
                 }
                 $old->delete();
             }
 
-            // Create attachment record
-            $attachment = new \App\Attachment();
-            $attachment->url = asset($storedPath);
+            $attachment = new Attachment();
+            // Relative: Attachment::url builds the address for the current host and scheme
+            $attachment->url = $storedPath;
             $attachment->path = $storedPath;
             $attachment->original_name = $originalName;
             $attachment->mime_type = $mimeType;
             $attachment->size = $size;
-            $attachment->save();
-
-            // Associate with model
             $model->attachments()->save($attachment);
 
-            $uploadedFiles[] = [
-                'id' => $attachment->id,
-                'url' => $attachment->url,
-                'original_name' => $attachment->original_name,
-                'size' => $attachment->size
-            ];
-        }
+            // Old files go only once the new record is saved
+            DB::afterCommit(function () use ($oldFiles) {
+                foreach ($oldFiles as $path) {
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+            });
+
+            return $attachment;
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'Files uploaded successfully',
-            'files' => $uploadedFiles
+            'message' => 'Image uploaded successfully',
+            'files' => [[
+                'id' => $attachment->id,
+                'url' => $attachment->url,
+                'original_name' => $attachment->original_name,
+                'size' => $attachment->size,
+            ]],
         ]);
 
     } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'File upload failed: ' . $e->getMessage()
-        ], 500);
+        // Details (paths, SQL) go to the log, not to the browser
+        \Log::error('Image upload failed', ['model' => $request->model, 'id' => $request->id, 'error' => $e->getMessage()]);
+        if (isset($storedPath) && is_file(public_path($storedPath)) && empty($attachment)) {
+            @unlink(public_path($storedPath));
+        }
+
+        return response()->json(['error' => 'The image could not be uploaded. Please try again.'], 500);
     }
+}
+
+/** Images by MIME type, or by extension for older rows saved without one */
+private function isImageAttachment(Attachment $attachment)
+{
+    if ($attachment->mime_type) {
+        return strpos($attachment->mime_type, 'image/') === 0;
+    }
+
+    return (bool) preg_match('/\.(jpe?g|png|gif|webp|bmp)$/i', (string) $attachment->path);
 }
 
 }

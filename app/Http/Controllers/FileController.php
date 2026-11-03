@@ -10,6 +10,7 @@ class FileController extends Controller
     public function download(int $id)
     {
         $file = File::findOrFail($id);
+        if ($file->comment_id) app(\App\Services\CommentAccess::class)->comment(\App\Comment::findOrFail($file->comment_id), 'comment.show');
         $disk = \Illuminate\Support\Facades\Storage::disk('public');
         abort_unless($file->attach_file_name && $disk->exists($file->attach_file_name), 404);
 
@@ -22,6 +23,7 @@ class FileController extends Controller
 
     public function delete(int $id){
         $file = File::findOrFail($id);
+        if ($file->comment_id) app(\App\Services\CommentAccess::class)->comment(\App\Comment::findOrFail($file->comment_id), 'comment.edit', true);
         // remove the stored upload as well, not only the database row
         if ($file->attach_file_name) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($file->attach_file_name);

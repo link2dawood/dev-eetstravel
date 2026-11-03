@@ -8,6 +8,7 @@ use App\BusDay;
 use App\BusHasDrivers;
 use App\City;
 use App\Comment;
+use App\Country;
 use App\Driver;
 use App\Helper\BusDayHelper;
 use App\Helper\CitiesHelper;
@@ -124,15 +125,14 @@ class BusController extends Controller
     {
 
         $bus = DB::transaction(function () use ($request) {
-            $bus = $this->busRepository->create($request->only('name', 'bus_number', 'transfer_id'));
+            $bus = $this->busRepository->create($request->only('name', 'bus_number', 'transfer_id', 'capacity', 'comments'));
             $this->addFile($request, $bus);
             return $bus;
         });
 
         $data = ['route' => route('bus.index')];
         LaravelFlashSessionHelper::setFlashMessage("Bus $bus->name created", 'success');
-		//return redirect()->back();
-        return response()->json($data);
+        return $request->expectsJson() ? response()->json($data) : redirect()->route('bus.index');
     }
 
     /**
@@ -186,7 +186,7 @@ class BusController extends Controller
     {
 
         $bus = DB::transaction(function () use ($request, $id) {
-            $this->busRepository->updateById($id, $request->only('name', 'bus_number', 'transfer_id'));
+            $this->busRepository->updateById($id, $request->only('name', 'bus_number', 'transfer_id', 'capacity', 'comments'));
             $bus = $this->busRepository->byId($id);
             $this->addFile($request, $bus);
             return $bus;
@@ -194,7 +194,7 @@ class BusController extends Controller
 
         LaravelFlashSessionHelper::setFlashMessage("Bus $bus->name edited", 'success');
         $data = ['route' => route('bus.index')];
-        return response()->json($data);
+        return $request->expectsJson() ? response()->json($data) : redirect()->route('bus.index');
     }
 
 
@@ -253,6 +253,7 @@ class BusController extends Controller
     }
 
     public function getDriverAndBusTransfer($transfer_id){
+        Transfer::findOrFail($transfer_id);
         $drivers = Driver::query()->where('transfer_id', $transfer_id)->get();
         $buses = Bus::query()->where('transfer_id', $transfer_id)->get();
 
@@ -272,6 +273,7 @@ class BusController extends Controller
     public function getDriverAndBusTransferForTable($transfer_id, Request $request){
         $view = null;
         if($transfer_id != 'null'){
+            Transfer::findOrFail($transfer_id);
             $drivers = Driver::query()->where('transfer_id', $transfer_id)->get();
             $buses = Bus::query()->where('transfer_id', $transfer_id)->get();
 
@@ -319,6 +321,13 @@ class BusController extends Controller
     }
 
     public function updateBusDay(Request $request){
+        // Same rules as creating a trip (an unknown status also crashed the activity log)
+        $this->validate($request, array_merge([
+            'id_bus_day' => 'required|integer',
+            'trip_id' => 'required|integer|min:1',
+            'trip_mode' => 'nullable|in:0,1',
+        ], $this->tripReferenceRules('bus_id_trip', 'drivers_id_trip')), $this->tripReferenceMessages('bus_id_trip', 'drivers_id_trip'));
+
         $request = CitiesHelper::setCityBegin($request);
         $request = CitiesHelper::setCityEnd($request);
 
@@ -354,7 +363,7 @@ class BusController extends Controller
         if(!$res_bus_validate['check']){
             $data = [
                 'bus_busy' => true,
-                'bus_busy_message' => trans('main.TheBusisBusyfrom') . $res_bus_validate['start'] . ' to ' . $res_bus_validate['end']
+                'bus_busy_message' => trans('main.TheBusisBusyfrom') . $res_bus_validate['start'] . trans('main.to') . $res_bus_validate['end']
             ];
 
             return response()->json($data);
@@ -447,6 +456,15 @@ class BusController extends Controller
     }
 
     public function updateBusDayTour(Request $request){
+        $request->validate([
+            'bus_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('buses', 'id')->whereNull('deleted_at')],
+            'drivers_id' => 'nullable|array',
+            'drivers_id.*' => ['integer', 'distinct', \Illuminate\Validation\Rule::exists('drivers', 'id')->whereNull('deleted_at')],
+            'status' => ['required', 'integer', \Illuminate\Validation\Rule::exists('status', 'id')->where('type', 'bus')],
+            'id_bus_day' => 'required|integer',
+            'tour_package_id' => 'required|integer',
+            'tour_mode' => 'required|in:0,1',
+        ]);
         $bus_id = $request->get('bus_id', null);
         $drivers_id = $request->get('drivers_id', null);
         $status = $request->get('status', null);
@@ -480,7 +498,7 @@ class BusController extends Controller
         if(!$res_driver_validate){
             $data = [
                 'bus_busy' => true,
-                'bus_busy_message' => 'The Driver is Busy'
+                'bus_busy_message' => trans('main.TheDriverisBusy')
             ];
 
             return response()->json($data);
@@ -571,385 +589,164 @@ class BusController extends Controller
     }
 
 
+    /**
+     * Calendar data for /bus/calendar: one row per bus with its trip/tour day segments.
+     * Optional from/to (Y-m-d) choose the range; the default is this month plus six months.
+     */
     public function getApiBusDays(Request $request){
+        $this->validate($request, [
+            'from' => 'nullable|date_format:Y-m-d',
+            'to' => 'nullable|date_format:Y-m-d|after_or_equal:from',
+        ]);
 
         $now = new \DateTime();
-        $year = $now->format("Y");
-        $month = $now->format("m");
-        $last = $now->modify('last day of this month');
-        $day = $last->format("d");
-        $from = $year."-". $month."-01";
-        $end = $year."-". $month."-31";
-
-       // $to = $year."-". $month_end."-". $day;
-        $to = date('Y-m-d', strtotime("+6 months", strtotime($end)));
-
-        $bus_days = BusDay::query()
-            ->groupBy('tour_package_id')
-            ->groupBy('bus_id')
-            ->where('date', '>=', $from)
-            ->where('date', '<=', $to)
-            ->get();
+        $from = $request->input('from') ?: $now->format('Y-m') . '-01';
+        $to = $request->input('to') ?: date('Y-m-d', strtotime('+6 months', strtotime($now->format('Y-m') . '-31')));
+        // Keep one request bounded: at most 18 months of bus days
+        if (strtotime($to) > strtotime('+18 months', strtotime($from))) {
+            $to = date('Y-m-d', strtotime('+18 months', strtotime($from)));
+        }
 
         $bus_days_all = BusDay::query()
             ->where('date', '>=', $from)
             ->where('date', '<=', $to)
             ->get();
 
+        // Everything the segments need, loaded once instead of per bus day
+        $dayIds = $bus_days_all->pluck('id');
+        $tripCities = City::query()->whereIn('id', $bus_days_all->pluck('city_trip')->filter()->unique())->pluck('name', 'id');
+        $tripCountries = Country::query()->whereIn('alias', $bus_days_all->pluck('country_trip')->filter()->unique())->pluck('name', 'alias');
+        $tours = Tour::query()->whereIn('id', $bus_days_all->pluck('tour_id')->filter()->unique())->get()->keyBy('id');
+        $buses = Bus::query()->whereIn('id', $bus_days_all->pluck('bus_id')->filter()->unique())->get()->keyBy('id');
+        $tripDrivers = TripToDrivers::query()->whereIn('bus_day_id', $dayIds)->get()->groupBy('bus_day_id');
+        $transferDrivers = TransferToDrivers::query()->whereIn('bus_day_id', $dayIds)->get()->groupBy('bus_day_id');
+        $drivers = Driver::query()->whereIn('id', $tripDrivers->flatten()->pluck('driver_id')
+            ->merge($transferDrivers->flatten()->pluck('driver_id'))->unique())->get()->keyBy('id');
+        $statuses = Status::query()->whereIn('id', $bus_days_all->pluck('status_id')->filter()->unique())->get()->keyBy('id');
+        $defaultStatus = Status::query()->where('type', 'bus')->orderBy('id', 'desc')->first();
+        $commentCounts = Comment::query()
+            ->where('reference_type', Comment::$services['BusDay'])
+            ->whereIn('reference_id', $dayIds)
+            ->selectRaw('reference_id, count(*) as total')
+            ->groupBy('reference_id')
+            ->pluck('total', 'reference_id');
+
+        $driversFor = function ($links) use ($drivers) {
+            $ids = [];
+            $names = [];
+            // Same order as before: drivers by id, as Driver::whereIn()->get() returned them
+            foreach (collect($links)->pluck('driver_id')->unique()->sort()->values() as $driverId) {
+                if ($driver = $drivers->get($driverId)) {
+                    $ids[] = $driver->id;
+                    $names[] = $driver->name;
+                }
+            }
+            return [$ids, $names];
+        };
+
+        // Resolve tour hotel cities in batches, with no per-day hotel or city queries.
+        $tourDates = TourDay::query()->with('packages')->whereIn('tour', $tours->keys())
+            ->orderBy('date')->get(['id', 'date', 'tour']);
+        $hotelPackages = $tourDates->flatMap(function ($day) { return $day->packages; })->where('type', 0);
+        $hotelNames = $hotelPackages->map(function ($package) { return trim(explode('(', (string) $package->name)[0]); })->filter()->unique();
+        $hotels = Hotel::query()->where(function ($query) use ($hotelPackages, $hotelNames) {
+            $query->whereIn('id', $hotelPackages->pluck('reference')->filter()->unique())
+                ->orWhereIn('name', $hotelNames);
+        })->get(['id', 'name', 'city']);
+        $hotelsById = $hotels->keyBy('id');
+        $hotelsByName = $hotels->keyBy('name');
+        $hotelCities = City::query()->whereIn('id', $hotels->pluck('city')->filter()->unique())->pluck('name', 'id');
+        $tourCities = [];
+        foreach ($tourDates as $day) {
+            $city = null;
+            foreach ($day->packages as $package) {
+                if ((int) $package->type !== 0) continue;
+                $hotel = $hotelsById->get($package->reference)
+                    ?: $hotelsByName->get(trim(explode('(', (string) $package->name)[0]));
+                if ($hotel && isset($hotelCities[$hotel->getRawOriginal('city')])) {
+                    $city = $hotelCities[$hotel->getRawOriginal('city')];
+                }
+            }
+            $tourCities[$day->tour][$day->date] = $city;
+        }
+        $citiesForTour = function ($tourId) use ($tourCities) {
+            return $tourCities[$tourId] ?? [];
+        };
+        // One group per (tour package, bus), in the order the days are listed (was a GROUP BY
+        // without aggregates, which fails under ONLY_FULL_GROUP_BY)
+        $groups = $bus_days_all->unique(function ($day) {
+            return $day->tour_package_id . '|' . $day->bus_id;
+        });
 
         $dto = [];
-        foreach ($bus_days as $bus_day){
-        	if(is_object($bus_day->tour) && $bus_day->tour->is_quotation) {
-
-        		continue;
-	        }
-            $bus = Bus::query()->where('id', $bus_day->bus_id)->first();
+        foreach ($groups as $bus_day){
+            $groupTour = $bus_day->tour_id ? $tours->get($bus_day->tour_id) : null;
+            if ($groupTour && $groupTour->is_quotation) {
+                continue;
+            }
+            $bus = $buses->get($bus_day->bus_id);
 
             $segments = [];
             $city_count = 0;
             $city_tour = 0;
-/*
+
             foreach ($bus_days_all as $item){
-                if($item->bus_id != null){
-
-                    if(($item->bus_id == $bus_day->bus_id) && ($bus_day->tour_package_id == $item->tour_package_id)){
-
-                        $start = Carbon::parse($item->date);
-                        $end = Carbon::parse($start)->addDays(1);
-
-                        $drivers_id_dto = [];
-                        $drivers_name_dto = [];
-                        $status = null;
-                        $comments = [];
-                        $tour_name = '';
-                        $isTour = '';
-                        $cities_separated = '';
-                        $cities = [];
-
-                       // trip
-                        if($item->tour_package_id == null){
-                            $trip_drivers = TripToDrivers::query()
-                                ->where('bus_day_id', $item->id)->get();
-
-                            $drivers_id = [];
-                            foreach ($trip_drivers as $trip_driver){
-                                $drivers_id[] = $trip_driver->driver_id;
-                            }
-
-                            $drivers = Driver::query()->whereIn('id', $drivers_id)->get();
-
-                            foreach ($drivers as $driver){
-                                $drivers_id_dto[] = $driver->id;
-                                $drivers_name_dto[] = $driver->name;
-                            }
-
-
-                            $status = $item->status_id != null ?
-                                Status::query()
-                                    ->where('id', $item->status_id)->first() :
-                                Status::query()
-                                    ->where('type', 'bus')
-                                    ->orderBy('id','desc')->first();
-
-                            $comments = Comment::query()
-                                ->where('reference_type', Comment::$services['BusDay'])
-                                ->where('reference_id', $item->id)->get();
-
-
-                            $tour_name = $item->name_trip;
-                            $isTour = 'Trip';
-                            $cities_separated = $item->city_trip() . ' (' . $item->country_trip() . ')';
-                        }
-                        // tour
-                        else{
-                            $drivers_transfer = TransferToDrivers::query()
-                                ->where('tour_package_id', $item->tour_package_id)
-                                ->where('bus_day_id', $item->id)
-                                ->get();
-
-                            $drivers_id = [];
-                            foreach ($drivers_transfer as $item_driver){
-                                $drivers_id[] = $item_driver->driver_id;
-                            }
-
-                            $drivers = Driver::query()->whereIn('id', $drivers_id)->get();
-
-                            foreach ($drivers as $driver){
-                                $drivers_id_dto[] = $driver->id;
-                                $drivers_name_dto[] = $driver->name;
-                            }
-
-                            $status = $item->status_id != null ?
-                                Status::query()
-                                    ->where('id', $item->status_id)->first() :
-                                Status::query()
-                                    ->where('type', 'bus')
-                                    ->orderBy('id','desc')->first();
-
-                            $comments = Comment::query()
-                                ->where('reference_type',Comment::$services['BusDay'])
-                                ->where('reference_id',$item->id)
-                                ->get();
-
-
-                            $tour = Tour::query()->where('id', $item->tour_id)->first();
-
-                            if($tour) {
-                                // Filter in SQL: the old code loaded every tour day of every tour, per bus day
-                                $tourDates = TourDay::query()
-                                    ->where('tour', $item->tour_id)
-                                    ->orderBy('date')
-                                    ->get(['id', 'date', 'tour']);
-
-                                $date_city = 0;
-
-                                foreach ($tourDates as $tourDate) {
-                                    $tourDate->packages = $tourDate->packages->sortBy('time_from');
-
-                                    $cities[$date_city] = null;
-
-                                    foreach ($tourDate->packages as $package) {
-
-                                        if ($package->type == 0) {
-
-                                            $hotels = explode("(", $package->name);
-
-                                            $hotel = Hotel::query()->where('name', $hotels[0])->orWhere('name', 'like', '%' . $hotels[0] . '%')->first();
-                                            if($hotel) {
-                                                $city = Hotel::query()->join('cities', 'hotels.city', '=', 'cities.id')
-                                                    ->select('cities.name')
-                                                    ->where('hotels.id', $hotel['id'])
-                                                    ->first();
-
-                                                // The hotel's city id may not match any city
-                                                if ($city && $city->name) {
-                                                    $cities[$date_city] = $city->name;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                    $date_city ++;
-                                }
-
-                                $tour_name = $tour['name'];
-                                $isTour = 'Tour';
-                            }else{
-                                $tour_name = 'Tour Delete';
-                                $isTour = 'Tour';
-                            }
-
-                            if(count($cities) > 0 ){
-                                $cities_separated = $cities;
-                            }else{
-                                $cities_separated =[];
-                            }
-
-                        }
-
-                        if ($city_tour != $item->tour_id) $city_count = 0;
-
-                        $segments[] = [
-                            'start' => $start->format('Y-m-d'),
-                            'end' => $end->format('Y-m-d'),
-                            'color' => $status->color,
-                            'id' => $item->id,
-                            'tour' => $tour_name,
-                            'tour_package_id' => $item->tour_package_id,
-                            'driver_id' => $drivers_id_dto,
-                            'driver_name' => $drivers_name_dto,
-                            'comments' => count($comments),
-                            'bullet' => '#cccc00',
-                            'transfer_id' => $item->transfer_id,
-                            'tour_id' => $item->tour_id,
-                            'isTour' => $isTour,
-                            'bullet' => '#cccc00',
-                            'cities' => $cities_separated,
-                            'city_num' => $city_count
-                        ];
-
-                        $city_tour= $item->tour_id;
-                        $city_count++;
-                    }
-                }else{
+                if ($item->bus_id == null) {
                     $city_count = 0;
                     continue;
                 }
-            }
-
-            $dto[] = [
-                'category' => $category,
-                'segments' => $segments
-            ];
-        }
-*/        
-
-            foreach ($bus_days_all as $item){
-                if($item->bus_id != null){
-
-                    if(($item->bus_id == $bus_day->bus_id) && ($bus_day->tour_package_id == $item->tour_package_id)){
-
-                        $start = Carbon::parse($item->date);
-                        $end = Carbon::parse($start)->addDays(1);
-
-                        $drivers_id_dto = [];
-                        $drivers_name_dto = [];
-                        $status = null;
-                        $comments = [];
-                        $tour_name = '';
-                        $isTour = '';
-                        $cities_separated = '';
-                        $cities = [];
-
-                       // trip
-                        if($item->tour_package_id == null){
-                            $trip_drivers = TripToDrivers::query()
-                                ->where('bus_day_id', $item->id)->get();
-
-                            $drivers_id = [];
-                            foreach ($trip_drivers as $trip_driver){
-                                $drivers_id[] = $trip_driver->driver_id;
-                            }
-
-                            $drivers = Driver::query()->whereIn('id', $drivers_id)->get();
-
-                            foreach ($drivers as $driver){
-                                $drivers_id_dto[] = $driver->id;
-                                $drivers_name_dto[] = $driver->name;
-                            }
-
-
-                            $status = $item->status_id != null ?
-                                Status::query()
-                                    ->where('id', $item->status_id)->first() :
-                                Status::query()
-                                    ->where('type', 'bus')
-                                    ->orderBy('id','desc')->first();
-
-                            $comments = Comment::query()
-                                ->where('reference_type', Comment::$services['BusDay'])
-                                ->where('reference_id', $item->id)->get();
-
-
-                            $tour_name = $item->name_trip;
-                            $isTour = 'Trip';
-                            $cities_separated = $item->city_trip() . ' (' . $item->country_trip() . ')';
-                        }
-                        // tour
-                        else{
-                            $drivers_transfer = TransferToDrivers::query()
-                                ->where('tour_package_id', $item->tour_package_id)
-                                ->where('bus_day_id', $item->id)
-                                ->get();
-
-                            $drivers_id = [];
-                            foreach ($drivers_transfer as $item_driver){
-                                $drivers_id[] = $item_driver->driver_id;
-                            }
-
-                            $drivers = Driver::query()->whereIn('id', $drivers_id)->get();
-
-                            foreach ($drivers as $driver){
-                                $drivers_id_dto[] = $driver->id;
-                                $drivers_name_dto[] = $driver->name;
-                            }
-
-                            $status = $item->status_id != null ?
-                                Status::query()
-                                    ->where('id', $item->status_id)->first() :
-                                Status::query()
-                                    ->where('type', 'bus')
-                                    ->orderBy('id','desc')->first();
-
-                            $comments = Comment::query()
-                                ->where('reference_type',Comment::$services['BusDay'])
-                                ->where('reference_id',$item->id)
-                                ->get();
-
-
-                            $tour = Tour::query()->where('id', $item->tour_id)->first();
-
-                            if($tour) {
-                                // Filter in SQL: the old code loaded every tour day of every tour, per bus day
-                                $tourDates = TourDay::query()
-                                    ->where('tour', $item->tour_id)
-                                    ->orderBy('date')
-                                    ->get(['id', 'date', 'tour']);
-
-                                $date_city = 0;
-
-                                foreach ($tourDates as $tourDate) {
-                                    $tourDate->packages = $tourDate->packages->sortBy('time_from');
-
-                                    $cities[$date_city] = null;
-
-                                    foreach ($tourDate->packages as $package) {
-
-                                        if ($package->type == 0) {
-
-                                            $hotels = explode("(", $package->name);
-
-                                            $hotel = Hotel::query()->where('name', $hotels[0])->orWhere('name', 'like', '%' . $hotels[0] . '%')->first();
-                                            if($hotel) {
-                                                $city = Hotel::query()->join('cities', 'hotels.city', '=', 'cities.id')
-                                                    ->select('cities.name')
-                                                    ->where('hotels.id', $hotel['id'])
-                                                    ->first();
-
-                                                // The hotel's city id may not match any city
-                                                if ($city && $city->name) {
-                                                    $cities[$date_city] = $city->name;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                    $date_city ++;
-                                }
-
-                                $tour_name = $tour['name'];
-                                $isTour = 'Tour';
-                            }else{
-                                $tour_name = 'Tour Delete';
-                                $isTour = 'Tour';
-                            }
-
-                            if(count($cities) > 0 ){
-                                $cities_separated = $cities;
-                            }else{
-                                $cities_separated =[];
-                            }
-
-                        }
-
-                        if ($city_tour != $item->tour_id) $city_count = 0;
-
-                        $segments[] = [
-                            'start' => $start->format('Y-m-d'),
-                            'end' => $end->format('Y-m-d'),
-                            'color' => $status->color,
-                            'id' => $item->id,
-                            'tour' => $tour_name,
-                            'tour_package_id' => $item->tour_package_id,
-                            'driver_id' => $drivers_id_dto,
-                            'driver_name' => $drivers_name_dto,
-                            'comments' => count($comments),
-                            'bullet' => '#cccc00',
-                            'transfer_id' => $item->transfer_id,
-                            'tour_id' => $item->tour_id,
-                            'isTour' => $isTour,
-                            'bullet' => '#cccc00',
-                            'cities' => $cities_separated,
-                            'city_num' => $city_count
-                        ];
-
-                        $city_tour= $item->tour_id;
-                        $city_count++;
-                    }
-                }else{
-                    $city_count = 0;
+                if ($item->bus_id != $bus_day->bus_id || $bus_day->tour_package_id != $item->tour_package_id) {
                     continue;
                 }
+
+                $start = Carbon::parse($item->date);
+                $end = Carbon::parse($start)->addDays(1);
+                $status = $item->status_id != null ? $statuses->get($item->status_id) : $defaultStatus;
+                $cities_separated = [];
+
+                if ($item->tour_package_id == null) {
+                    // trip
+                    [$drivers_id_dto, $drivers_name_dto] = $driversFor($tripDrivers->get($item->id, []));
+                    $tour_name = $item->name_trip;
+                    $isTour = 'Trip';
+                    $cities_separated = ($tripCities[$item->city_trip] ?? '') . ' (' . ($tripCountries[$item->country_trip] ?? '') . ')';
+                } else {
+                    // tour
+                    $links = collect($transferDrivers->get($item->id, []))->where('tour_package_id', $item->tour_package_id);
+                    [$drivers_id_dto, $drivers_name_dto] = $driversFor($links);
+                    $tour = $item->tour_id ? $tours->get($item->tour_id) : null;
+                    if ($tour) {
+                        $cities_separated = $citiesForTour($tour->id)[$item->date] ?? '';
+                        $tour_name = $tour['name'];
+                    } else {
+                        $tour_name = 'Tour Delete';
+                    }
+                    $isTour = 'Tour';
+                }
+
+                if ($city_tour != $item->tour_id) $city_count = 0;
+
+                $segments[] = [
+                    'start' => $start->format('Y-m-d'),
+                    'end' => $end->format('Y-m-d'),
+                    // A deleted or unknown status must not break the whole calendar
+                    'color' => optional($status)->color ?: '#cccccc',
+                    'id' => $item->id,
+                    'tour' => $tour_name,
+                    'tour_package_id' => $item->tour_package_id,
+                    'driver_id' => $drivers_id_dto,
+                    'driver_name' => $drivers_name_dto,
+                    'comments' => (int) ($commentCounts[$item->id] ?? 0),
+                    'bullet' => '#cccc00',
+                    'transfer_id' => $item->transfer_id,
+                    'tour_id' => $item->tour_id,
+                    'isTour' => $isTour,
+                    'cities' => $cities_separated,
+                    'city_num' => $item->date
+                ];
+
+                $city_tour = $item->tour_id;
+                $city_count++;
             }
 
             if ($bus) {
@@ -997,7 +794,6 @@ class BusController extends Controller
         return response()->json($finishResult);
     }
 
-
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -1022,7 +818,7 @@ class BusController extends Controller
             if(!$res_bus_validate['check']){
                 $data = [
                     'bus_busy' => true,
-                    'bus_busy_message' => 'The Bus is Busy from ' . $res_bus_validate['start'] . ' to ' . $res_bus_validate['end']
+                    'bus_busy_message' => trans('main.TheBusisBusyfrom') . $res_bus_validate['start'] . trans('main.to') . $res_bus_validate['end']
                 ];
 
                 return response()->json($data);
@@ -1033,7 +829,7 @@ class BusController extends Controller
             if(!$res_driver_validate){
                 $data = [
                     'bus_busy' => true,
-                    'bus_busy_message' => 'The Driver is Busy'
+                    'bus_busy_message' => trans('main.TheDriverisBusy')
                 ];
 
                 return response()->json($data);
@@ -1047,13 +843,14 @@ class BusController extends Controller
 
 
             // created trip (all days or none: a failure used to leave a one-day trip behind)
-            DB::transaction(function () use ($name_trip, $dates_interval, $tour_id, $transfer_id, $status, $bus_trip, $city, $country, $drivers_trip) {
+            $created = DB::transaction(function () use ($name_trip, $dates_interval, $tour_id, $transfer_id, $status, $bus_trip, $city, $country, $drivers_trip) {
                 $trip = new Trip();
                 $trip->name = $name_trip;
                 $trip->save();
 
+                $busDayIds = [];
                 foreach ($dates_interval as $item){
-                    $this->busDayHelper->createBusDayTrip(
+                    $busDayIds[] = $this->busDayHelper->createBusDayTrip(
                         $tour_id,
                         $transfer_id,
                         null,
@@ -1065,24 +862,68 @@ class BusController extends Controller
                         $country,
                         $drivers_trip,
                         $trip->id
-                    );
+                    )->id;
                 }
+
+                return ['trip_id' => $trip->id, 'bus_day_ids' => $busDayIds];
             });
+
+            return response()->json(['success' => true] + $created);
         }
 
-        return response()->json($request);
+        // Tours are added to buses from the tour page, not from this endpoint
+        return response()->json(['success' => false, 'message' => 'Only trips can be added here.'], 422);
+    }
 
+    /** Longest trip one request may create (one bus day per date) */
+    const MAX_TRIP_DAYS = 60;
+
+    /**
+     * Rules for a trip's bus, drivers, status and name, shared by create and update
+     * (the two forms name the bus/driver fields differently).
+     */
+    private function tripReferenceRules($busField, $driversField)
+    {
+        return [
+            // Shown in the calendar tooltip: no markup or control characters
+            'name_trip' => ['required', 'string', 'max:191', 'regex:' . \App\Services\ValidationService::SAFE_TEXT_REGEX],
+            // A trip without an existing bus is never drawn but still blocks drivers ("ghost" trip)
+            $busField => ['required', 'integer', \Illuminate\Validation\Rule::exists('buses', 'id')->whereNull('deleted_at')],
+            $driversField => 'nullable|array',
+            $driversField . '.*' => ['integer', 'distinct', \Illuminate\Validation\Rule::exists('drivers', 'id')->whereNull('deleted_at')],
+            'status' => ['required', 'integer', \Illuminate\Validation\Rule::exists('status', 'id')->where('type', 'bus')],
+        ];
+    }
+
+    private function tripReferenceMessages($busField, $driversField)
+    {
+        return [
+            'name_trip.regex' => 'The trip name may not contain < > or control characters.',
+            $busField . '.required' => 'Select a bus.',
+            $busField . '.exists' => 'The selected bus does not exist.',
+            $driversField . '.*.exists' => 'One of the selected drivers does not exist.',
+            'status.required' => 'Select a status.',
+            'status.exists' => 'The selected status is not a bus status.',
+        ];
     }
 
     public function validateDayTrip($request){
+        $maxEnd = $request->filled('start_date') && strtotime((string) $request->start_date)
+            ? date('Y-m-d', strtotime('+' . (self::MAX_TRIP_DAYS - 1) . ' days', strtotime((string) $request->start_date)))
+            : null;
 
-        $this->validate($request, [
-            'name_trip'    => 'required',
+        $this->validate($request, array_merge([
             'country_begin' => 'required',
             'city_begin' => 'required',
             'start_date' => 'required|date_format:Y-m-d',
-            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date'
-        ]);
+            'end_date' => array_values(array_filter([
+                'required', 'date_format:Y-m-d', 'after_or_equal:start_date',
+                // Each day is a row (plus driver links): keep one trip bounded
+                $maxEnd ? 'before_or_equal:' . $maxEnd : null,
+            ])),
+        ], $this->tripReferenceRules('bus_trip', 'drivers_trip')), array_merge($this->tripReferenceMessages('bus_trip', 'drivers_trip'), [
+            'end_date.before_or_equal' => 'A trip can be at most ' . self::MAX_TRIP_DAYS . ' days long.',
+        ]));
     }
 
     public function validateDayTour($request){
@@ -1098,15 +939,38 @@ class BusController extends Controller
     public function calendar()
     {
         $title = 'Buses - Calendar';
-        $buses = Bus::all();
-        $drivers = Driver::all();
-        $tours = Tour::all();
-        $transfers = Transfer::all();
+        // The create-trip modal only lists ids and names (tours also show their dates)
+        $buses = collect();
+        $drivers = collect();
+        // The calendar creates standalone trips; tour assignments use the tour page.
+        $tours = collect();
+        $transfers = collect();
         $bus_statuses = Status::query()->orderBy('sort_order', 'asc')->where('type','bus')->get();
         return view('bus.calendar', compact('buses', 'title','bus_statuses', 'drivers','tours', 'transfers'));
     }
 
 
+
+    public function calendarOptions(Request $request)
+    {
+        $request->validate(['kind' => 'required|in:bus,driver', 'q' => 'nullable|string|max:191', 'page' => 'nullable|integer|min:1|max:10000']);
+        $isBus = $request->input('kind') === 'bus';
+        $query = $isBus ? Bus::query() : Driver::query();
+        $search = trim((string) $request->input('q'));
+        if ($search !== '') {
+            $query->where(function ($query) use ($search, $isBus) {
+                $query->where('name', 'like', '%' . $search . '%');
+                if ($isBus) $query->orWhere('bus_number', 'like', '%' . $search . '%');
+            });
+        }
+        $page = $query->orderBy('name')->orderBy('id')->simplePaginate(25, $isBus ? ['id', 'name', 'bus_number'] : ['id', 'name']);
+        return response()->json([
+            'results' => $page->getCollection()->map(function ($item) use ($isBus) {
+                return ['id' => $item->id, 'text' => $item->name . ($isBus ? ' (' . $item->bus_number . ')' : '')];
+            })->values(),
+            'pagination' => ['more' => $page->hasMorePages()],
+        ]);
+    }
 
     public function getDriversTransfer($id){
         $drivers = Driver::query()->where('transfer_id', $id)->orderBy('name', 'asc')->get();
@@ -1163,7 +1027,11 @@ class BusController extends Controller
     }
 
     public function deleteBusDay(Request $request){
-        $request->validate(['trip_mode' => 'required|in:0,1']);
+        $request->validate([
+            'trip_mode' => 'required|in:0,1',
+            'trip_id' => 'required|integer|min:1',
+            'bus_day_id' => 'required|integer|min:1',
+        ]);
         $bus_day_id = $request->get('bus_day_id');
         $trip_mode = $request->get('trip_mode');
         $trip_id = $request->get('trip_id');

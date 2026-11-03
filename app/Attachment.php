@@ -23,6 +23,23 @@ class Attachment extends Model
      */
     public function getUrlAttribute($value)
     {
+        // Build the URL from where the file is on this server, so it follows the current host/scheme.
+        // Images page uploads live in public/uploads/attachments; tour landing images on the public
+        // storage disk (served under /storage).
+        $relative = ltrim((string) ($this->attributes['path'] ?? ''), '/');
+        if ($relative !== '' && strpos($relative, 'uploads/') === 0) {
+            if (is_file(public_path($relative))) {
+                return asset($relative);
+            }
+            if (is_file(storage_path('app/public/' . $relative))) {
+                return asset('storage/' . $relative);
+            }
+        }
+        // New uploads store a relative url as well: never an absolute host
+        if ($value !== null && $value !== '' && !preg_match('#^[a-z][a-z0-9+.-]*://#i', (string) $value)) {
+            return asset(ltrim((string) $value, '/'));
+        }
+
         $path = parse_url((string) $value, PHP_URL_PATH);
         if ($path && strpos($path, '/uploads/') === 0) {
             $file = rawurldecode(substr($path, strlen('/uploads/')));

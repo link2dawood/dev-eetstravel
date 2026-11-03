@@ -105,6 +105,8 @@ class BusDayHelper
         $bus_day->save();
 
         $this->addDriversToTrip($drivers_trip, $bus_day->id);
+
+        return $bus_day;
     }
 
     public function busDayDeleteId($id){

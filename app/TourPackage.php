@@ -309,6 +309,7 @@ class TourPackage extends Model
 
     public function getDoublePrice() {
     	$doubleRoom = RoomTypes::where(['code' => 'DOU'])->first();
+        if (!$doubleRoom) return 0;
 	    $roomType = false;
 	    if ($this->room_types_hotel) {
 		    $roomType =  $this->room_types_hotel->first(function($item) use ($doubleRoom) {
@@ -323,6 +324,7 @@ class TourPackage extends Model
 
 	public function getSinglePrice() {
 		$doubleRoom = RoomTypes::where(['code' => 'SIN'])->first();
+        if (!$doubleRoom) return $this->getDoublePrice();
 		$roomType = false;
 		if ($this->room_types_hotel) {
 			$roomType =  $this->room_types_hotel->first(function($item) use ($doubleRoom) {

@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="{{asset('css/adminlte-app.css')}}">
     <link rel="stylesheet" href="{{asset('css/style.css')}}">
     <link rel="stylesheet" href="{{asset('css/bootstrap-tables.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/ui-feedback.css') }}?v={{ filemtime(public_path('css/ui-feedback.css')) }}">
 
     @yield('colorpicker-css')
 
@@ -188,6 +189,7 @@
 
 <script type="text/javascript" src="{{asset('js/bootstrap-tables.js')}}"></script>
 <script type="text/javascript" src="{{asset('js/helper.js')}}"></script>
+<script type="text/javascript" src="{{ asset('js/ui-feedback.js') }}?v={{ filemtime(public_path('js/ui-feedback.js')) }}"></script>
 <script type="text/javascript" src="{{asset('js/onclick-events.js')}}"></script>
 <script type="text/javascript" src="{{asset('js/notifications.js')}}"></script>
 <script type="text/javascript" src="{{asset('js/ckeditor/ckeditor.js')}}"></script>

@@ -65,7 +65,7 @@
                                                 <tbody>
                                                 <tr>
                                                     <td><strong>{!!trans('main.Name')!!}</strong></td>
-                                                    <td>{!!$client->name!!}</td>
+                                                    <td>{{ $client->name }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.Country')!!}</strong></td>
@@ -77,11 +77,11 @@
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.Address')!!}</strong></td>
-                                                    <td>{!!$client->address!!}</td>
+                                                    <td>{{ $client->address }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.WorkPhone')!!}</strong></td>
-                                                    <td>{!!$client->work_phone!!}</td>
+                                                    <td>{{ $client->work_phone }}</td>
                                                 </tr>
                                                 </tbody>
                                             </table>
@@ -91,19 +91,19 @@
                                                 <tbody>
                                                 <tr>
                                                     <td><strong>{!!trans('main.ContactPhone')!!}</strong></td>
-                                                    <td>{!!$client->contact_phone!!}</td>
+                                                    <td>{{ $client->contact_phone }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.WorkEmail')!!}</strong></td>
-                                                    <td>{!!$client->work_email!!}</td>
+                                                    <td>{{ $client->work_email }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.ContactEmail')!!}</strong></td>
-                                                    <td>{!!$client->contact_email!!}</td>
+                                                    <td>{{ $client->contact_email }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{!!trans('main.WorkFax')!!}</strong></td>
-                                                    <td>{!!$client->work_fax!!}</td>
+                                                    <td>{{ $client->work_fax }}</td>
                                                 </tr>
                                                 </tbody>
                                             </table>
@@ -167,9 +167,9 @@
                                                 @foreach($contacts as $contact)
                                                     <tr>
                                                         <td>{{ $contact->full_name }}</td>
-                                                        <td>{!!$contact->mobile_phone!!}</td>
-                                                        <td>{!!$contact->work_phone!!}</td>
-                                                        <td>{!!$contact->email!!}</td>
+                                                        <td>{{ $contact->mobile_phone }}</td>
+                                                        <td>{{ $contact->work_phone }}</td>
+                                                        <td>{{ $contact->email }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>

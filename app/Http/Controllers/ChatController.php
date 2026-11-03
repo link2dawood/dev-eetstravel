@@ -14,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class ChatController extends Controller {
@@ -353,52 +354,52 @@ class ChatController extends Controller {
 
     public function getChatNotifications(Request $request)
     {
-        $chatUsers = User::all()->except(\Auth::id());
-        $chatMessages = [];
-        $mainMessages = 0;
-        $sendUser = ($request->user)?$request->user:false;
-//        $logs = Activity::orderBy('created_at', 'desc')->simplePaginate(5);
-        $mydt = date('Y-m-d H:i:s', strtotime('-20 seconds'));
-        $mainChat = ChatMessage::where('chat_id',1)->where('created_at', ">", $mydt)->get();
+        $userId = \Auth::id();
+        $since = now()->subSeconds(20)->toDateTimeString();
+        $chatUserIds = User::query()
+            ->where('id', '!=', $userId)
+            ->orderBy('id')
+            ->pluck('id');
 
-        if($mainChat) {
-            $mainMessages = count($mainChat);
-        }
-        foreach ($chatUsers as $user) {
+        $mainMessages = ChatMessage::query()
+            ->where('chat_id', 1)
+            ->where('created_at', '>', $since)
+            ->count();
 
-            $existedChat = \DB::table('chat_user')
-                ->select('*')
-                ->leftJoin('chats', 'chat_user.chat_id', 'chats.id')
-                ->distinct()
-                ->whereIn('user_id', [$user->id, \Auth::id()])
-                ->where('chats.type', Chat::CHAT_TYPE_DIRECT)
-                ->groupBy('chat_id')
-                ->havingRaw('COUNT(user_id) = 2')->get()->first();
+        $directChatIds = DB::table('chat_user')
+            ->join('chats', 'chats.id', '=', 'chat_user.chat_id')
+            ->where('chats.type', Chat::CHAT_TYPE_DIRECT)
+            ->whereNull('chats.deleted_at')
+            ->groupBy('chat_user.chat_id')
+            ->havingRaw('COUNT(*) = 2')
+            ->havingRaw('SUM(CASE WHEN chat_user.user_id = ? THEN 1 ELSE 0 END) = 1', [$userId])
+            ->select('chat_user.chat_id');
 
-//            dd($existedChat = \DB::table('chat_user')
-//                ->select('*')
-//                ->leftJoin('chats', 'chat_user.chat_id', 'chats.id')
-//                ->distinct()
-//                ->whereIn('user_id', [$user->id, \Auth::id()])
-//                ->where('chats.type', Chat::CHAT_TYPE_DIRECT)
-//                ->groupBy('chat_id')
-//                ->havingRaw('COUNT(user_id) = 2')->get()->first());
-            $chat_by_user = ($existedChat) ? Chat::where('id', $existedChat->chat_id)->first() : null;
+        $directMessageCounts = DB::table('chat_user as recipients')
+            ->joinSub($directChatIds, 'direct_chats', function ($join) {
+                $join->on('direct_chats.chat_id', '=', 'recipients.chat_id');
+            })
+            ->leftJoin('chat_messages as messages', function ($join) use ($userId, $since) {
+                $join->on('messages.chat_id', '=', 'recipients.chat_id')
+                    ->where('messages.user_id', '!=', $userId)
+                    ->where('messages.created_at', '>', $since);
+            })
+            ->where('recipients.user_id', '!=', $userId)
+            ->groupBy('recipients.user_id')
+            ->select('recipients.user_id', DB::raw('COUNT(messages.id) as message_count'))
+            ->pluck('message_count', 'recipients.user_id');
 
+        $chatMessages = $chatUserIds
+            ->map(function ($chatUserId) use ($directMessageCounts) {
+                return (int) $directMessageCounts->get($chatUserId, 0);
+            })
+            ->values()
+            ->all();
 
-
-            if ($chat_by_user) {
-//                dump($chat_by_user->toArray());
-                //$mydt = date('Y-m-d H:i:s', strtotime('10 seconds ago'));
-                $mess = ChatMessage::where('chat_id', $chat_by_user->id)->where('user_id','!=', \Auth::id())->where('created_at', ">", $mydt)->get();
-                $chatMessages[] = count($mess);
-            } else {
-                $chatMessages[] = 0;
-            }
-        }
-//        dd($chatUsers->toArray(), $user->id, \Auth::id(),$chatMessages);
-//        dd($mainMessages);
-
-        return json_encode(['direct_chats' => $chatMessages,'main_chat' => $mainMessages, 'sendUser'=>$sendUser]);
+        return json_encode([
+            'direct_chats' => $chatMessages,
+            'main_chat' => $mainMessages,
+            'sendUser' => $request->input('user', false),
+        ]);
     }
 }

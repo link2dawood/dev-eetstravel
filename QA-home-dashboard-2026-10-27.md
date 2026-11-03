@@ -10,6 +10,381 @@
 
 ## Summary
 
+### Activities fixes and verification — 2026-10-31
+
+All `/activities` findings AT1–AT5 are addressed in code. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| AT1 | Retained the `activities_index` route name used by existing links and explicitly mapped it to existing `activities.index`. The controller applies auth and permission middleware. Existing permission grants are unchanged. |
+| AT2 | Removed both full-log reads and deduplication. A single paginated query plus its count retrieves 50 rows by default, with validated sizes of 10/25/50/100. Stable date/ID ordering preserves individual events. Server filters cover description/user name, user ID, module and inclusive date range; literal search escapes SQL wildcard characters. Pagination retains filters. Client pagination is disabled for this table. CSV/Excel/PDF exports explicitly cover the displayed page. |
+| AT3 | New Trackable links use relative routes. Shared read-time normalization converts existing configured-host and legacy dev.eetstravel.com links to local paths in the list and dashboard. No historical audit rows were rewritten or deleted. Other hosts and unsafe links are omitted. |
+| AT4 | Replaced raw HTML link buttons with an escaped Blade anchor using a validated local path. Description and user text remain escaped. Unsafe schemes, credentials, protocol-relative paths, backslashes and encoded path bypasses are rejected. |
+| AT5 | Applied restricted visibility: admin sees all events; other users see only their own App\\User-caused events. Filters cannot widen that scope. The dashboard widget uses the same rule, safe links and plain-text descriptions, with a missing-user fallback. No roles or grants were modified. |
+
+Validation:
+
+- `php vendor/bin/phpunit --filter 'ActivitiesSafetyTest|ActivityDescriptionTest|ReportingSafetyTest' tests/Unit`: **13 tests / 113 assertions passed** on isolated SQLite. Activities coverage includes two-query pagination, distinct event preservation, filters, inclusive dates, bounded page sizes, scope bypass denial, route permission allow/deny, guest redirect, safe link normalization, escaped Blade rows and dashboard scope/sanitization.
+- PHP syntax checks, JavaScript syntax checks, Blade compilation and targeted diff whitespace checks passed.
+- Updated `tests/Browser/activities-table.cjs` for server filtering/pagination and page-only CSV/Excel/PDF exports. This live browser test was not run: Playwright and its saved authenticated session are absent. Real MySQL and full browser/export walkthroughs remain unverified. No original activity records were changed by tests.
+
+### Reporting fixes — 2026-10-31
+
+- RP1/RP2: All reporting routes explicitly use the existing `reporting.index` permission. ReportingController now applies authentication and permission middleware consistently, including both legacy search endpoints.
+- RP3: Existing reporting access policy is retained: users require `reporting.index`. No roles or grants were changed.
+- RP4: Removed the unused controller helper that queried nonexistent `transactions.account_id`; supplier reports continue to use linked supplier invoices and supplier payments.
+- RP5: Supplier name searches escape `%`, `_` and the explicit `!` escape character using bound SQL parameters.
+- RP6: Unknown or malformed service filters and malformed name searches produce validation errors.
+- Additional correction: report summary and monthly invoice totals include `extra_amount`, matching supplier invoice balance calculations.
+
+Regression coverage: `tests/Unit/ReportingSafetyTest.php` checks all seven route permission mappings, allowed/denied access, invalid filters, literal wildcard searches and supplier type filtering with isolated SQLite fixtures. Original findings below remain historical evidence. A live authenticated browser walkthrough and MySQL verification are not included in this update.
+
+### Supplier invoice fixes and verification — 2026-10-30
+
+All `/invoices` findings IN1–IN9 are addressed. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| IN1 | Supplier payments now use `total_amount + extra_amount`; balance display includes the extra cost. Supplier invoice total and extra-cost columns now preserve cents through targeted migrations. Existing stored values were compared before and after the schema changes. |
+| IN2 | New invoice numbers are unique within the selected office. A transaction locks the office row and repeats the check at write time to prevent concurrent application submissions from creating duplicates. Existing duplicate records were retained; unchanged legacy numbers remain editable. |
+| IN3 | Each selected package must exist, be active and belong to the submitted tour. Duplicate tours/packages are rejected. |
+| IN4 | Package dropdown requires `invoices.create`, escapes tour/package text and returns 404 for an unknown tour. The route is named and permission-mapped. |
+| IN5 | Create and edit forms accept received/due dates, validate date format and `due_date >= received_date`, and persist both values. |
+| IN6 | Invoice list now paginates 25 invoice records, searches server-side, aggregates linked tours/services, eager-loads relations and calculates payment totals with a subquery. Query count stays bounded as the invoice count grows. |
+| IN7 | Show resolves directly by supplier invoice ID with `findOrFail`; missing headers return 404. |
+| IN8 | Applied `2026_10_30_190000_archive_supplier_invoices`. Unpaid supplier invoices and their tour links are soft archived with `deleted_by`; invoices with payments remain protected. Archived invoices disappear from active reads. |
+| IN9 | List, show, edit, delete, supplier-service links and payment redirects now use supplier invoice IDs. One invoice appears once in the invoice list and displays all linked tours/services. Editing invoice metadata no longer replaces or deletes payment rows. |
+
+Validation:
+
+- **238 tests / 1,267 assertions passed** across the focused regression suite.
+- **14 MySQL checks passed:** `php scripts/qa-mysql-invoices.php`; local fixture writes were rolled back and complete invoice/link/payment snapshots matched before and after. Checks include decimal payment limits, paying the full extra-cost balance, duplicate and cross-tour rejection, pagination/query bound, missing show, dropdown permissions/escaping, date edits, paid-delete protection and archive audit metadata.
+- `php scripts/qa-invoice-extra-cost-schema.php` verified existing totals and extra costs before/after the decimal migrations. Migrations `2026_10_30_190000_archive_supplier_invoices`, `2026_10_30_200000_preserve_supplier_invoice_extra_cost_decimals` and `2026_10_30_210000_preserve_supplier_invoice_total_decimals` are applied locally. Auto-increment counters may advance during rolled-back fixture tests.
+- PHP syntax, Blade compilation and diff whitespace checks passed. No actual payments were sent, and no existing invoices were archived or merged. The duplicate historical invoice numbers reported by QA remain unchanged. A full authenticated browser walkthrough was not performed.
+
+See [supplier invoice verification notes](docs/qa/INVOICES_VERIFICATION.md) for scope and limits.
+
+### Accounting fixes and verification — 2026-10-30
+
+All `/accounting` findings AC1–AC5 are addressed. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| AC1 | Applied targeted migration `2026_10_30_180000_archive_client_invoices`. Invoice deletion now archives the header and original item rows rather than removing them. Header metadata records `deleted_at` and `deleted_by`; active model/list/export/item-helper reads exclude archived records. Archive is transactional and still rejects every invoice with client payment rows. Tests verify original item values, staff attribution and rollback when header deletion fails. No restore UI was introduced, and previously hard-deleted financial records were not reconstructed. |
+| AC2 | The service-transaction route explicitly uses existing `transactions.create`. Its handler now treats its argument as a tour ID and opens the existing validated accounting form, preselecting that tour, its client and confirmed quotation. This also fixes the latent invoice-ID lookup/null crash that would have appeared after permission repair. Missing tours return not-found. No permission definitions or role grants were changed. |
+| AC3 | Shared actions submit POST with CSRF. Accounting confirmations explain archival and financial-record preservation. Successful JSON archive responses return a route/message; paid-invoice failures retain HTTP 422 validation handling. Delete confirmation explicitly requires `transactions.destroy` and verifies the invoice exists. |
+| AC4 | The list uses 25-row database pagination, eager client/tour relations, a filtered client-payment sum and stable date/ID ordering. Data retrieval uses at most four queries, independent of the invoice count on the page. Search runs across invoice number, client and tour and persists across pagination. CSV export is labeled Export page CSV. Archived invoices disappear from the active list. |
+| AC5 | Named quotation helper `accounting.quotation` explicitly requires `transactions.create` and verifies the tour exists. The controller now consistently applies auth/permission middleware. Other item/payment helpers also check the relevant existing client/supplier billing permissions and validate that requested invoices remain active. AJAX show returns the correct accounting URL rather than a client URL. |
+
+Additional issues found during verification:
+
+- The live `extra_cost` column was still integer despite the earlier verification note. Applied only existing migration `2026_10_14_000001_preserve_client_invoice_extra_cost_decimals`; a before/after comparison verified existing invoice values unchanged. A real MySQL 5.55 extra-cost round trip now passes. Previously truncated cents cannot be recovered by widening the column.
+- `transactions.index` does not exist locally. The accounting list, index permission helper and active navigation now consistently use existing `transactions.show`. Create/edit/delete retain their existing transaction capabilities. No account permissions were granted or removed.
+
+Validation:
+
+- **238 tests / 1,267 assertions passed:** focused Unit suite including AccountingFollowupTest, AccountingSafetyTest, AccountingPermissionsTest and all previously checked client/contact/comment/email/supplier/base-data modules. The accounting-specific classes contain **25 tests / 72 assertions**, covering paid-invoice protection, calculations/payments, archive metadata and rollback, search/pagination, the four-query bound, service form context, quotation permissions and HTTP denial.
+- **13 MySQL checks passed:** `php scripts/qa-mysql-accounting.php`; results in `storage/app/qa-mysql-accounting-results.json`. Real fixture invoice creation, VAT/extra-cost persistence, payment rows, paid-invoice archive denial, bounded list queries/balances, service form context, item preservation, archive exclusion and existing billing permission names passed. Identity/grants were simulated only in process memory. All fixture writes were rolled back; complete invoice/item/payment/user row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed for all ten covered modules, including accounting POST/CSRF, archive confirmation and failed-delete feedback. It runs production JavaScript in Node without real HTTP deletions.
+- PHP syntax and Blade compilation passed. Only the two named schema migrations remain applied locally; unrelated pending migrations were not run. Existing role capabilities were preserved. No real bank transaction, email or original invoice deletion was performed. A full authenticated browser walkthrough was not performed.
+
+### Client fixes and verification — 2026-10-30
+
+All `/clients` findings CL1–CL9 are addressed. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| CL1 | Legacy POST update explicitly requires `clients.edit`. Existing named PUT update remains protected. Password updates stay within the same protected/validated flow. |
+| CL2 | Named contacts helper `clients.contacts` explicitly requires `clients.show`; input IDs/counts are validated, the client must exist and any record policy is checked. Unknown/deleted clients return not-found instead of exposing contacts. Existing contact-update behavior that preserves contacts after a failed/unloaded lookup remains intact. |
+| CL3 | Escaped all remaining raw client/contact detail fields, including address, phones and emails. Existing escaped contact names and edit fields are retained. Rendering tests cover the ten previously raw client/contact field fragments. |
+| CL4 | Model fields are allowlisted and create saves only those fields; user-submitted IDs, timestamps and departure dates are ignored. Password is assigned separately. Client creation/password persistence and attachment database writes are transactional. |
+| CL5 | Store and update validate the actual `attach[]` field with the supported image/document MIME list and a 5 MB per-file limit. Create limits attachment arrays to ten entries. Both flows prohibit the alternate `attach_bus` upload bypass. Update attachment persistence is inside the existing client/contact transaction. |
+| CL6 | Web and API deletes lock the client and reject references from tours or client invoices, including archived reference rows. Blocked JSON deletes return HTTP 422 with `success: false`; normal web requests show a warning. Unused clients retain soft-delete behavior; contacts and file metadata are preserved and matching comments are archived. |
+| CL7 | Both resource and legacy deletes use the existing `client.destroy` permission. The plural resource route has an explicit alias to that permission; no permission definitions were changed. Existing shared delete buttons submit POST with CSRF and correctly show blocked-delete errors. Delete confirmation also requires the same permission and validates existence. |
+| CL8 | Applied targeted migration `2026_10_30_170000_hash_client_portal_passwords`: **one plaintext and 22 encrypted values** in the current local database became one-way Argon2id hashes, including archived client rows. In-memory checks verified every old password still matches and all other client values were preserved; no credential dump was written. New model password assignments are hashed. Portal login verifies hashes, regenerates the session on success and returns a generic failure instead of dumping decrypt exceptions. The login route is throttled. Sample-client creation also writes hashes. New password limits are 6–128 characters; longer legacy values were hashed without truncation and remain accepted by the login input limit. This migration is intentionally not reversible to plaintext. |
+| CL9 | Create/update share Unicode-safe business-name validation, including accented and combining characters. Create now handles malformed field arrays as validation errors, matches address storage limits and validates optional fields/passwords. Real MySQL creation of a Müller & Söhne company passed. Duplicate work email produces an explicit field error; the existing create form's error summary and old input handling remain in place. No full browser retry was performed. |
+
+Validation:
+
+- **230 tests / 1,228 assertions passed:** focused Unit suite covering ClientSafetyTest, ClientContactUpdateTest, accounting safety/permissions, comments, email, criteria, currencies, exchange rates, rates, room types, statuses, drivers, buses, transfers and resource permissions. Includes **74 contact-update cases / 240 assertions** and **7 new client cases / 69 assertions**. The previous reversible-password storage-boundary assertions now verify hashes and the new input limits.
+- **15 MySQL checks passed:** `php scripts/qa-mysql-clients.php`; results in `storage/app/qa-mysql-clients-results.json`. Validated accented-name create, ignored metadata, hash storage and real portal login, duplicate-email errors, contact lookup, both web/API tour/invoice deletion guards, retained contact data, and all stored nonempty passwords being hashes. Fixture database writes were rolled back; complete client/contact/reference/file/comment row values matched before and after. Auto-increment counters can advance. The password migration remains applied to original records.
+- `node tests/Browser/driver-delete.cjs` passed for all nine covered modules, including client POST/CSRF and blocked-delete feedback. It executes production JavaScript in Node without real HTTP deletions.
+- PHP syntax and Blade compilation passed. No messages/emails were sent, no production clients were deleted, and no existing portal password was reset. A full authenticated browser walkthrough was not performed. Existing duplicate/imported client records were not automatically merged, and previously deleted clients were not restored.
+
+### Comment fixes and verification — 2026-10-30
+
+All `/comment` findings CO1–CO9 are addressed. Original findings below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| CO1 | Comments use the already-installed HTML Purifier with an explicit rich-text allow-list on save and on read. Basic formatting, safe links and selected text styles remain; scripts, event handlers, SVG/images and unsafe schemes are removed, including legacy database content. Root/reply rendering tests verify safe formatting and blocked active content. Reply-author labels are inserted with JavaScript `text()` rather than HTML append. Fixed incorrect author lookups and added a deleted-user fallback. |
+| CO2 | Edit, update, delete and delete confirmation require the corresponding comment permission, referenced-record/module access, and author ownership or admin role. Author IDs are always assigned from authentication on create and cannot be changed on update. UI edit/delete actions follow ownership checks. |
+| CO3 | Thread reads require `comment.show`, a supported existing reference, and the referenced module's read permission. Record policies are checked where available. Focused comment IDs must belong to the requested reference. The comment index filters by allowed modules and existing accessible parent rows. File-controller reads of comment attachments require comment/parent access; file-controller deletes also require edit permission and ownership/admin rights. |
+| CO4 | The model has a field allow-list. Controller create accepts only content/reference/parent fields and supplies the author; update changes only content and validated attachments. Submitted IDs, status, timestamps, author and reference changes are ignored. Trusted application seeders can still supply authors through the model. |
+| CO5 | Reference types use an explicit model map; referenced records must exist before saving. Reply parents must exist and belong to the same record. Invalid references save nothing. Legacy unknown reference types return no service instead of constructing an invalid PHP class; protected detail access returns not-found. |
+| CO6 | Delete uses `findOrFail`; missing or already archived comments return not-found rather than reporting success. |
+| CO7 | Applied targeted migration `2026_10_30_160000_add_soft_deletes_to_comments`. Deletion archives only the selected comment, preserves its row and attachments, and leaves replies active. Threads show a removed-comment placeholder with the preserved replies; archived content/attachments are not rendered there. Archive confirmations explain reply preservation. Existing module cleanup through Comment queries now archives matching comments as well. Existing comments were not purged, and no restore UI was introduced. |
+| CO8 | Create/update validate attachment arrays, count (10), file size (10 MB each) and supported image/document MIME types. SVG/HTML/executable uploads and the alternate `attach_bus` field are rejected. Empty comments require a valid attachment; attachment-only existing comments can be edited. Database writes use transactions. |
+| CO9 | Named helper routes `comment.thread` and `comment.delete_confirmation` carry explicit `comment.show` and `comment.destroy` permissions. The controller also applies permission middleware and direct reference/ownership checks. |
+
+Validation:
+
+- **132 tests / 886 assertions passed:** `php vendor/bin/phpunit --filter 'CommentSafetyTest|EmailSafetyTest|CriteriaSafetyTest|CurrenciesSafetyTest|CurrencyRateSafetyTest|RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Covers author/admin writes, module/thread access, forged metadata, invalid/cross-record references, root/reply sanitization, preservation of other authors' replies, missing deletes, unsafe uploads, attachment-controller authorization and index privacy. Earlier cleanup tests now use archive-aware schemas/assertions.
+- **14 MySQL checks passed:** `php scripts/qa-mysql-comments.php`; results in `storage/app/qa-mysql-comments-results.json`. Real controller create/edit/archive, index filtering, sanitizer output, immutable metadata, missing references and permission failures passed. Identities/grants were simulated only in process memory. All fixture database writes, including activity logs, were rolled back; complete comment/file/activity/user row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed for all eight covered modules, including comment POST/CSRF and archive confirmation. JavaScript syntax, PHP syntax and Blade compilation passed.
+- No schema migrations other than the targeted archive column were applied for this section. A full authenticated browser walkthrough was not performed. Existing invalid/orphaned audit records were retained; old permanently deleted comments cannot be recovered by this change. Physical upload paths retain the application's existing storage arrangement; the new attachment authorization checks apply to FileController routes.
+
+### Email and webmail fixes and verification — 2026-10-30
+
+Implemented the `/email` and `/email/webmail` follow-up for EM1–EM18. The route is `/email/webmail` (not `/email/webemail`). Legacy IMAP functionality and historical credential exposure have the explicit limits below; original findings remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| EM1 | Missing legacy IMAP dependencies no longer cause uncaught class errors on the affected HTTP actions. Deprecated dependent actions return a clear 503 for JSON callers or direct ordinary users to SnappyMail with an explanation. The diagnostic `another()` path and embedded credentials were removed. **The absent ddeboer/imap package and missing ImapService were not installed or recreated; those legacy actions remain unavailable.** Native API IMAP connections now use the requesting user's mailbox credentials instead of shared account credentials. |
+| EM2 | Applied targeted migration `2026_10_30_150000_secure_mailbox_credentials`: **four plaintext mailbox passwords encrypted**, with underlying credential values verified unchanged using in-memory HMAC comparisons. No password dump/snapshot was written. User password assignments now encrypt and set the flag automatically, including profile writes; already encrypted values are not double-encrypted. |
+| EM3 | Both controllers and the raw SnappyMail gateway require authentication and `email.main`, failing closed when permission lookup fails. HTTP tests verify denial on email, configure, webmail, status and direct admin entry. No permissions were granted or changed. |
+| EM4 | Repaired **seven missing encryption flags in total**, including the four plaintext records and the three already encrypted records. Credential reading recognizes valid encryption even with a missing flag and rejects unreadable flagged ciphertext rather than treating it as a password. |
+| EM5 | Removed the server-wide password fallback from webmail and the migration command's automatic assignment of server credentials to users without mailboxes. Missing per-user credentials lead to configuration help. |
+| EM6 | `email.remove` now accepts POST only, retaining Laravel CSRF protection. The existing shared legacy delete-confirmation handler submits POST with a CSRF token. |
+| EM7 | Compose initializes `mail`; move initializes an empty folder list; template supplies empty content and accepts the correct HTTP Request class. All three actual views render in regression tests. |
+| EM8 | Missing mailbox configuration produces an explicit configure redirect with an explanation, or HTTP 422 JSON feedback. HTTP checks cover inbox, folders, search, read-all and webmail. |
+| EM9 | Status requires the admin role as well as authentication/email permission and returns installation state, effective URL and SSO feature state without credentials. |
+| EM10 | Moved the entire SnappyMail data directory, including configuration, cache and salt, to private `storage/app/snappymail-data`. Removed **21 runtime files from Git tracking** and added ignore rules; those removals are staged. The PHP development router and Apache rules deny the old data URLs. Local HTTP checks returned 404 for old configuration/domain URLs. **Previously committed/exposed values remain in Git history and may have been copied; credential rotation and any authorized history cleanup remain operational follow-up.** |
+| EM11 | Direct `public/snappymail/index.php` access enters Laravel. The gateway requires auth/email permission and rejects unauthorized admin requests. It also disables the engine's admin panel at runtime for non-admins, including custom admin keys/hosts and admin AJAX paths. Other direct PHP entry paths are rejected or routed through authentication. Guest direct-admin HTTP probes redirect to login. |
+| EM12 | Missing credentials redirect explicitly to configure, never back to the originating SSO URL. Tests cover the former loop. |
+| EM13 | SSO, direct, admin and status use the same effective installed base URL. The historical `/mail` default falls back to `/snappymail` when `/mail` is absent; the Apache example uses `/snappymail`. |
+| EM14 | Configuration verifies the submitted credentials through IMAP before saving; failures retain existing stored credentials and show a field error. Verification uses a bounded timeout and certificate validation. A successful save returns to configure, where its success message is visible and an Open webmail link is available. Tests mock verification; no real mailbox login or SMTP send was performed. |
+| EM15 | Missing or unreadable credentials redirect to the configure page with actionable help. |
+| EM16 | Configure uses a responsive card, visible errors/success, submitted email preservation, Back on the left and Verify and save on the right. Passwords are never repopulated/flashed or trimmed. |
+| EM17 | SSO/direct/admin/config feature flags and HTTPS requirements are enforced on integration actions. Removed the dead custom SSO payload generator. Installation and data paths are configurable; native one-time SSO remains in use. SSO logs contain only user IDs; request logs omit webmail query tokens/payloads and mailbox credential fields. Tests verify secret redaction. Password encryption is always enforced even if a historical setting suggested disabling it. |
+| EM18 | The old layout's relative `snappymail.eu` link now points to the named SSO route. |
+
+Validation:
+
+- **121 tests / 813 assertions passed:** `php vendor/bin/phpunit --filter 'EmailSafetyTest|CriteriaSafetyTest|CurrenciesSafetyTest|CurrencyRateSafetyTest|RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Email-specific coverage includes encryption, flags, denied permissions, mailboxless HTTP redirects, feature flags, raw admin rejection, verification failure/success, secret redaction, POST-only deletion and three legacy view renders.
+- **2 mailbox/security feature checks / 7 assertions passed:** filtered `AuditSecurityTest`. Existing MySQL-specific restaurant-ID/index migrations were guarded by driver so these SQLite checks can initialize; local MySQL behavior is unchanged.
+- **8 local MySQL/webmail checks passed:** `php scripts/qa-mysql-webmail.php`; results in `storage/app/qa-mysql-webmail-results.json`. Verified encrypted credentials/flags, private runtime storage, configure/direct redirects, actual local one-time SSO token creation with fake credentials, hidden password serialization and missing legacy dependency handling. The check never saved user changes and verified all user rows unchanged. A fake one-time token may remain in the private runtime cache until it expires.
+- **7 local HTTP probes passed:** guest requests to `/snappymail/?admin`, `/snappymail/index.php?admin`, `/email/configure`, `/email/webmail/status` and the engine include path returned login redirects; old config/domain data URLs returned 404. These probes used the PHP development router. Apache rules were updated but not tested against an Apache deployment.
+- PHP syntax and Blade compilation passed. No real email was sent, deleted or moved; live provider authentication and a full authenticated SnappyMail browser walkthrough were not performed. The credential migration and private-data relocation remain applied locally. No Git history rewrite or external credential rotation was performed.
+
+### Criteria fixes and verification — 2026-10-30
+
+All `/criteria` findings CT1–CT9 are addressed. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| CT1 | Escaped the remaining criterion-name output in cruise/flight details and event/guide/hotel/restaurant reports. Restaurant detail output was already escaped. Rendering tests extract the actual active label markup from all seven cited views and verify that legacy stored scripts are escaped. |
+| CT2 | The shared guard already reports criterion usage without deleting records. Criteria deletion now locks the row and runs guard, deletion and comment cleanup in one transaction. Every service-link type protects the criterion. Existing orphan links from the original audit are not deleted automatically. |
+| CT3 | Legacy POST update explicitly requires `criteria.edit`; delete confirmation requires `criteria.destroy`. The edit form uses the named protected PUT route. Middleware regression tests verify legacy permission denial. |
+| CT4 | Criterion name, short name, icon and type label use escaped output. Icon inputs accept only a bounded alphanumeric/hyphen token; legacy icon values remain escaped in the list. |
+| CT5 | Criteria type must be an integer referencing `criteria_types.id`; unknown and malformed nested values fail validation. Names and short names use bounded safe text validation. |
+| CT6 | Type changes are rejected whenever `services_has_criterias` references the criterion. Unused custom criteria can still change type. Update checks run transactionally with a locked criterion row. |
+| CT7 | Names are unique within their criteria type, excluding the current record when editing. Existing duplicate records are retained rather than removed automatically. |
+| CT8 | The list uses database pagination at 25 rows, stable name/ID ordering, and server-side search across name, short name and type. Pagination retains search parameters. Removed the controller's all-row load and per-row pre-rendered icon/action strings. Icons render escaped inline and actions use the shared component. Removed obsolete client-only DataTables paging/filter code and the unused all-criteria query on create. |
+| CT9 | Shared delete buttons submit POST with CSRF. Used criterion deletes return HTTP 422 with `success: false`, so the actual handler shows an error without a success reload. JSON successful deletes return a route; normal deletes redirect. AJAX show/edit and delete confirmation check record existence. |
+
+Validation:
+
+- **107 tests / 757 assertions passed:** `php vendor/bin/phpunit --filter 'CriteriaSafetyTest|CurrenciesSafetyTest|CurrencyRateSafetyTest|RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Includes validation, uniqueness, every service-link type, permissions, seven supplier/report label fragments, detail rendering, pagination/search and deletion rollback after failed comment cleanup.
+- **26 MySQL checks passed:** `php scripts/qa-mysql-criteria.php`; results in `storage/app/qa-mysql-criteria-results.json`. Real create/update/delete, name/type uniqueness, validation, guards for all eight service-type values, and paginated search passed. Fixture database writes were rolled back; complete criteria/link/comment row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed, including criteria POST/CSRF and blocked-delete feedback using the actual shared handler. It executes JavaScript in Node and sends no real HTTP deletes.
+- PHP syntax and Blade compilation passed. No schema migration was needed. A full authenticated browser walkthrough was not performed; supplier/report XSS checks render their actual label fragments rather than entire pages.
+
+### Currency fixes and verification — 2026-10-30
+
+All `/currencies` findings CU1–CU9 are addressed. Original findings below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| CU1 | Currency usage checks package/offer references by ID and client-invoice/exchange-rate references by code. Archived records are included. Used currencies cannot be deleted or have their code changed. Update/deletion checks run transactionally with a locked currency row; deletion and comment cleanup are atomic. The live schema inventory confirmed these are the four tables containing currency-reference columns. |
+| CU2 | Legacy POST update explicitly requires `currencies.edit`; delete confirmation requires `currencies.destroy`. The edit form uses the named protected PUT route. Middleware regression tests verify legacy permission denial. |
+| CU3 | All five detail fields (name, code, symbol, cent and symbol_cent) use escaped output. Tests cover legacy markup in each field. |
+| CU4 | Code uniqueness is case-insensitive and excludes the current row when editing. Existing duplicate records are retained rather than merged or deleted automatically. |
+| CU5 | Codes are trimmed, normalized to uppercase and restricted to exactly three ASCII letters, matching the finding's proposed ISO-code format rule. This checks format, not membership in the full ISO registry. |
+| CU6 | Names use shared safe text rules with a 191-character maximum. Symbol and optional cent text use safe text rules with a 10-character maximum. Optional symbol_cent must be an integer from 1 to 2147483647. Forms reflect the code, text-length and numeric limits; failed edits preserve submitted values. |
+| CU7 | Shared buttons submit POST with CSRF. Used currency deletes return HTTP 422 with `success: false`, producing an error without a success reload. JSON callers receive a route on successful deletion; normal requests redirect. Unused currencies retain their existing permanent-delete behavior. |
+| CU8 | Removed the unused `Currencies::all()` query from create. A regression test verifies that controller action issues no database queries. |
+| CU9 | Renamed the helper's copied `$currency_rate` argument to `$currency`; its already-correct `{currency}` route parameters are retained and tested. AJAX show/edit and delete confirmation also validate existence first. |
+
+Validation:
+
+- **100 tests / 652 assertions passed:** `php vendor/bin/phpunit --filter 'CurrenciesSafetyTest|CurrencyRateSafetyTest|RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Includes all four usage paths, code-change protection, validation, permissions, rendering, missing AJAX records, unused-query removal and rollback after failed comment cleanup.
+- **20 MySQL checks passed:** `php scripts/qa-mysql-currencies.php`; results and reference-column inventory are in `storage/app/qa-mysql-currencies-results.json`. Real controller create/update/delete, all four usage guards, code-change protection, validation and pagination passed. Fixture writes were rolled back; complete currency/reference/comment row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed, including currency POST/CSRF and blocked-delete feedback using the actual production handler. It executes JavaScript in Node without sending real HTTP deletes.
+- PHP syntax and Blade compilation passed. No schema migration or permanent currency-data correction was needed. A full authenticated browser walkthrough was not performed.
+
+### Currency-rate fixes and verification — 2026-10-30
+
+Addressed `/currency_rate` findings CR1–CR9. For CR2, the module is explicitly a reference register; it is not connected to billing or automatic currency conversion. Original findings below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| CR1 | Legacy POST update explicitly requires `currency_rate.edit`; delete confirmation requires `currency_rate.destroy`. The edit form now uses the named protected PUT route. Regression tests verify legacy permission denial through the middleware. |
+| CR2 | Navigation and page title identify Reference exchange rates. All four pages explain that these manually maintained records do not change invoice, offer or tour prices and that users must check the recorded date and verify a rate before using it. Historical rates are preserved. No base currency, conversion direction or billing policy was inferred, and no live rate feed was added. |
+| CR3 | Applied only existing migration `2026_10_13_130000_widen_currency_rates_rate_precision`, changing the local column to `decimal(18,6)`. A pre-change snapshot was saved under `storage/app/currency-rates-before-precision-*.json`; comparison verified existing row values preserved to six places. The model formats decimal strings without floating-point conversion. Input supports at most six decimal places and is bounded above at 999999, preventing silent database rounding/capping. Previously lost precision cannot be reconstructed. |
+| CR4 | Currency, rate and date use escaped detail output; regression tests cover legacy script/markup values. |
+| CR5 | Rates must be strictly positive; the smallest accepted value is 0.000001. Zero, negatives and finer-than-six-place values are rejected. Forms reflect the server limits. |
+| CR6 | Currency is normalized to uppercase and validated as a three-letter code existing in `currencies`; forms retain the currency dropdown. Legacy invalid records remain available for review and correction rather than being reassigned automatically. |
+| CR7 | Currency/date uniqueness is validated case-insensitively, excluding the current row on edit. Existing duplicate records were not deleted automatically. |
+| CR8 | Dates require exact YYYY-MM-DD format and cannot be after today. |
+| CR9 | Existing shared delete buttons submit POST with CSRF. Delete returns a JSON route for JSON callers and redirects normal requests. Deletion and comment cleanup now run atomically with a locked row. AJAX show/edit and delete confirmation verify record existence. |
+
+Validation:
+
+- **91 tests / 564 assertions passed:** `php vendor/bin/phpunit --filter 'CurrencyRateSafetyTest|RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Includes validation boundaries, canonical currencies, uniqueness on create/edit, exact string formatting, rendering, permissions and deletion rollback after comment-cleanup failure.
+- **15 MySQL checks passed:** `php scripts/qa-mysql-currency-rate.php`; results in `storage/app/qa-mysql-currency-rate-results.json`. Verifies the decimal schema, exact six-place persistence, real controller create/edit/delete, duplicate/date/currency/rate rejection and pagination. Fixture database changes were rolled back; all currency-rate/comment row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed, including the actual currency-rate POST/CSRF handler. It executes production JavaScript in Node and sends no actual HTTP deletes.
+- PHP syntax and Blade compilation passed. A full authenticated browser walkthrough was not performed. The precision migration remains applied locally; unrelated pending migrations were not run.
+
+### Rate fixes and verification — 2026-10-30
+
+All `/rate` findings RA1–RA9 are addressed. Original findings below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| RA1 | The existing shared guard no longer deletes records while checking usage. Regression coverage verifies that a hotel reference preserves the rate. Deletion now locks the rate and performs the guard, deletion and comment cleanup within a transaction. |
+| RA2 | Rate usage checks all five supplier tables: hotels, events, restaurants, guides and transfers. Archived suppliers also protect the rate so historical references remain valid. Tests exercise each table independently. |
+| RA3 | Legacy POST update explicitly requires `rate.edit`; delete confirmation requires `rate.destroy`. The edit form uses the named protected PUT route. Regression checks verify legacy permission denial through the actual middleware. |
+| RA4 | Name, mark and sort order use escaped output on the detail page. Tests cover legacy stored script/markup values. |
+| RA5 | Rate type must be an integer referencing `rate_types.id`. Applied only migration `2026_10_30_140000_normalize_invalid_rate_type_references`, normalizing **one** invalid non-null value to SQL NULL. Snapshot: `storage/app/rates-before-type-normalization-*.json`. A before/after comparison verified all other rate values unchanged. Existing NULL rates remain explicitly Unclassified rather than being assigned guessed categories; the edit form requires selecting a valid type before saving. |
+| RA6 | Names are unique, excluding the current rate when editing. Existing duplicate records are retained rather than deleted automatically. |
+| RA7 | Names and marks use safe text validation with a 191-character maximum; stars and plus signs remain valid marks. |
+| RA8 | Existing shared buttons send POST with CSRF. A blocked rate delete returns HTTP 422 with `success: false`; the actual JavaScript handler displays an error without a success reload. Unused rates retain their existing permanent-delete behavior. |
+| RA9 | Sort order is an integer from 0 to 2147483647. Legacy action-button helpers supply the correct `{rate}` parameter. Failed edits preserve submitted fields; AJAX show/edit and delete confirmation validate existence. |
+
+Validation:
+
+- **84 tests / 512 assertions passed:** `php vendor/bin/phpunit --filter 'RateSafetyTest|RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Rate coverage includes active/archived references in every supplier table, validation, rendering, permissions, type normalization and rollback when comment cleanup fails.
+- **16 MySQL checks passed:** `php scripts/qa-mysql-rate.php`; results in `storage/app/qa-mysql-rate-results.json`. Real create/update/delete, all five supplier guards, validation, pagination and valid remaining non-null type references passed. Test fixture writes were rolled back; complete rate/supplier/comment row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed for driver, status, room-type and rate requests, including POST/CSRF and blocked-delete feedback. It executes production JavaScript in Node and sends no real delete HTTP requests.
+- PHP syntax and Blade compilation passed. A full authenticated browser walkthrough was not performed. The targeted type-normalization migration remains applied locally; unrelated pending migrations were not run.
+
+### Room-type fixes and verification — 2026-10-30
+
+All `/room_types` findings RT1–RT10 are addressed. Original observations below remain historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| RT1 | Legacy POST update explicitly requires `room_types.edit`; delete confirmation requires `room_types.destroy`. Regression tests verify permission denial through the middleware. |
+| RT2 | Upload validation accepts PNG/JPEG/GIF/WebP raster images only, with a 2 MB limit and a raster-content check. SVGs, including SVG content disguised as PNG, are rejected. Forms advertise the same formats. The known script-bearing QA SVG `1793195440_6ae1fdb0740c8.svg` was moved from the public folder to `storage/app/quarantine/room-types/`, preserving the evidence privately. A scan found no other SVG with script tags or load/error/click handlers in that asset folder; this is a targeted scan, not a comprehensive SVG sanitizer. |
+| RT3 | Codes SIN, DOU, TRI, DFS, TWN and SUE are protected against changes and deletion; edit controls show system codes read-only. Package single/double pricing now has missing-code fallbacks rather than dereferencing a missing room type. Existing pricing behavior is retained when codes exist. |
+| RT4 | Detail name, code and sort order use escaped output; tests cover legacy stored markup. |
+| RT5 | Codes and names are unique, excluding the current row when editing. Codes are uppercase letters/digits/underscore/hyphen, at most 10 characters. Existing duplicates are not automatically removed. |
+| RT6 | Names use shared safe text validation and a 191-character maximum. |
+| RT7 | Shared delete buttons submit POST with CSRF. System/used room types return HTTP 422 with `success: false`, producing an error instead of a success toast. Existing six-table reference protection remains intact. Deletion and comment cleanup run in one database transaction. |
+| RT8 | Kept existing permanent deletion for unused custom room types, with explicit “Permanently delete this room type? This cannot be undone.” confirmation in both shared and legacy delete flows, as permitted by the finding's suggested fix. Referenced and system room types cannot be deleted. Image assets are retained on replacement/deletion to protect rollback and historical links; this can leave unused raster assets. No soft-delete migration was introduced. |
+| RT9 | Sort order must be an integer from 0 to 2147483647. |
+| RT10 | Legacy action-button helpers use the correct `{room_type}` parameter. Regression tests verify view/edit/confirmation URLs. AJAX show/edit and delete confirmation also check record existence. |
+
+Validation:
+
+- **76 tests / 412 assertions passed:** `php vendor/bin/phpunit --filter 'RoomTypesSafetyTest|StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Room-type coverage includes all six reference tables, image validation, system codes, uniqueness, rendering, pricing fallbacks and rollback after failed comment cleanup.
+- **28 MySQL checks passed; one live fixture not exercised:** `php scripts/qa-mysql-room-types.php`. Results: `storage/app/qa-mysql-room-types-results.json`. Five reference tables had usable fixture rows; `prices_room_type_hotels` was empty and its guard is covered in SQLite. Real create/update/delete and existing-package pricing checks passed. All fixture database writes were rolled back; complete room-type/reference/comment row values matched before and after. Auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed for driver, status and room-type handlers, including permanent-delete confirmation and blocked-delete feedback. It executes production JavaScript in Node without sending actual HTTP deletes.
+- PHP syntax and Blade compilation passed. No schema migration was needed. A full authenticated browser walkthrough was not performed.
+
+### Status fixes and verification — 2026-10-30
+
+All `/status` findings ST1–ST12 are addressed. Original findings below are retained as historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| ST1 | Legacy POST update explicitly requires `status.edit`; delete confirmation requires `status.destroy`. Regression checks exercise denial through the actual permission middleware. |
+| ST2 | Detail fields, including the type label and color text, use escaped output. Legacy markup rendering is covered by tests. |
+| ST3 | Type changes are rejected for used or system statuses. Shared usage detection covers tours, tasks, hotel/service packages, bus days and offer references. Update/deletion checks run transactionally with a locked status row. |
+| ST4 | Create/edit forms expose Completed and Aborted controls. Flags are validated and persisted for task statuses; simultaneous flags and non-task flags are rejected. Older callers omitting flags preserve existing task behavior. |
+| ST5 | Types must exist in `status_types`; unknown types are rejected. |
+| ST6 | `Status::SYSTEM_IDS` protects IDs 1, 2, 4, 6, 7, 8, 9, 10, 17, 23, 34, 39 and 46 from deletion, renaming, retyping and task-behavior changes. Color and sort order remain editable. No existing statuses were renamed or reclassified. |
+| ST7 | Offer usage checks both `hotel_offers.tms_status` by ID and `hotel_offers.status` by name. A used offer status cannot be deleted or renamed. |
+| ST8 | Names must be unique within their type; editing excludes the current record. Existing duplicates are not automatically deleted. |
+| ST9 | Names use shared safe text validation with a 191-character maximum; sort order is an integer from 0 to 2147483647. |
+| ST10 | Color accepts hexadecimal CSS colors only (3, 6 or 8 digits). The model also suppresses unsafe legacy color strings on screens using Status models. Stored legacy text is preserved. Edit type changes no longer clear the color field. |
+| ST11 | Verified existing shared status delete buttons send POST with CSRF. Blocked deletes return HTTP 422 with `success: false`, so the handler shows the error and does not display a success reload. |
+| ST12 | AJAX show returns the status URL and validates existence first; AJAX edit also checks missing records. Legacy action-button helpers now use the correct `{status}` parameter. |
+
+Validation:
+
+- **66 tests / 318 assertions passed:** `php vendor/bin/phpunit --filter 'StatusSafetyTest|DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite). Includes status validation, flags, system protection, every usage type, offer name references, rendering, permission denial and transactional rollback when comment cleanup fails.
+- **17 MySQL checks passed:** `php scripts/qa-mysql-status.php`. Results: `storage/app/qa-mysql-status-results.json`. Real controller create/edit/delete workflows were exercised inside a rolled-back transaction. Complete status/task/offer/comment row values matched before and after; auto-increment counters can advance.
+- `node tests/Browser/driver-delete.cjs` passed for both driver and status requests using the actual shared JavaScript handler in Node. No real delete HTTP requests were sent by this check.
+- PHP syntax and Blade compilation passed. A full authenticated browser walkthrough was not performed. No schema migration was needed; the task flag columns already exist locally.
+
+### Driver fixes and verification — 2026-10-30
+
+All findings DR1–DR11 are addressed. Original findings below remain as historical evidence.
+
+| Finding | Resolution |
+| --- | --- |
+| DR1 | The existing shared guard reports usage without deleting. Driver deletion now checks assignments inside a transaction with a locked driver row. Real MySQL trip and transfer assignments reject deletion with HTTP 422 for JSON callers and preserve the driver. Drivers retain their existing hard-delete behavior when unused. |
+| DR2 | Removed the invalid `Comment::$services['driver']` lookup; drivers have no comment reference type. Attachment database cleanup and deletion are atomic. Unrelated comments remain untouched. Normal deletes redirect and JSON deletes return a route; rollback regression coverage preserves attachments when deletion fails. |
+| DR3 | Name, phone, email and company are escaped on the detail page; a missing company has a fallback. Rendering tests cover legacy stored markup in all four fields. |
+| DR4 | Both lookup routes already require `transfer.show`; tests verify denial and allowance through the permission middleware. Both company-specific handlers now reject missing and soft-deleted companies using `findOrFail`. The existing `null` company mode for standalone trips is retained behind the same permission. |
+| DR5 | Ordinary create/update forms redirect to the driver list. JSON callers retain JSON responses. MySQL controller workflows verify create and update. |
+| DR6 | Company IDs must be integers and reference an active company, producing validation errors before persistence. |
+| DR7 | Shared Unicode-safe name and phone rules, field lengths and email uniqueness are enforced; edits exclude the current driver's email from uniqueness checks. Attachment type/size rules and the prohibited alternate upload field prevent unsafe upload bypasses. Model fields are allowlisted. Optional phone/email remain compatible with the non-null MySQL columns. |
+| DR8 | Deleted companies are rejected and excluded from company choices. Failed edits preserve submitted field values and company selection. An empty company choice is supported. |
+| DR9 | Existing shared buttons use POST with CSRF. Executing their actual JavaScript verifies the request and verifies that a blocked delete shows the error without a success reload. |
+| DR10 | Legacy `getButton()` now supplies the `{driver}` route parameter. Regression tests verify show, edit and confirmation URLs. Delete confirmation explicitly requires `driver.destroy` and checks the driver exists. |
+| DR11 | Applied targeted migration `2026_10_30_130000_convert_driver_audit_finance_tables_to_utf8mb4` to the four named finance tables. Includes table defaults even for tables without text columns. Local snapshots were saved under `storage/app/driver-finance-before-*.json`; before/after comparison confirmed identical stored row values. The conversion preserves existing text; it cannot reconstruct characters lost before this fix. No unrelated pending migrations were applied. |
+
+Validation:
+
+- **55 tests / 145 assertions passed:** `php vendor/bin/phpunit --filter 'DriverSafetyTest|BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit` (isolated SQLite).
+- **17 MySQL checks passed:** `php scripts/qa-mysql-driver.php`; results in `storage/app/qa-mysql-driver-results.json`. Real driver create/update/delete, invalid input, both assignment guards, missing-company lookup handling, finance collations and rollback row counts are covered. Fixture writes were rolled back; auto-increment counters can advance.
+- **16 MySQL fleet checks passed:** `php scripts/qa-mysql-fleet.php`, confirming calendar/list behavior remains intact.
+- `node tests/Browser/driver-delete.cjs` and `node tests/Browser/audit-delete-methods.cjs` passed. These execute production JavaScript in an isolated Node environment and send no HTTP requests.
+- PHP syntax and Blade compilation passed. These checks cover controllers, validators, rendered detail fields, middleware and JavaScript separately; a full authenticated browser walkthrough was not performed.
+
+### MySQL follow-up verification — 2026-10-30
+
+- Completed the previously blocked MySQL checks for bus calendar, buses and transfer companies. Applied only `2026_10_30_120000_add_capacity_and_comments_to_buses`; unrelated historical migrations were not run.
+- `php scripts/qa-mysql-fleet.php`: **16 checks passed** against the configured local MySQL database. Covers capacity/comments persistence, Unicode names, active bus-number uniqueness, invalid capacity/company rejection, soft-deleted company rejection, company deletion protection, calendar queries for current/past/future ranges under `ONLY_FULL_GROUP_BY`, paginated fleet options, and bus/company list joins and pagination.
+- Fixture writes ran inside a transaction and were rolled back. Checked InnoDB support before creating fixtures and verified unchanged bus/company/day/driver/activity row counts afterward. The schema migration remains applied. MySQL may advance auto-increment counters despite rollback.
+- Evidence: `storage/app/qa-mysql-fleet-results.json`. Repeat using `php scripts/qa-mysql-fleet.php`.
+- Related regression suite: **46 tests / 94 assertions passed** using `php vendor/bin/phpunit --filter 'BusSafetyTest|BusValidationTest|TransferSafetyTest|ResourcePermissionTest' tests/Unit`. This PHPUnit suite uses SQLite; the separate integration script above uses MySQL.
+- Browser interactions and full HTTP create/edit/delete workflows remain outstanding. These checks call application controllers, validators and models directly and do not establish browser or middleware coverage.
+
+### Bus calendar fixes — 2026-10-30
+
+- BC1/BC6: missing statuses have calendar/logging fallbacks; create and edit validate bus statuses.
+- BC2: write endpoints explicitly require create/edit/delete permissions; added route regression coverage.
+- BC3/BC4: tooltip values are escaped; trip bus, drivers and status are validated, including deleted fleet records. Trip update/delete require explicit trip/day IDs.
+- BC5: trips are limited to 60 inclusive days, with boundary tests.
+- BC7: month selection supports past/future schedules and sends the selected date range to the API.
+- BC8: creation returns success and created IDs; conflict messages use translations, including tour-driver conflicts.
+- BC9: fleet/status/comment/trip-city data is batched; tour days eager-load packages, hotels/cities are fetched in batches, and city labels use actual tour dates. No wildcard hotel lookup or non-aggregate SQL GROUP BY remains.
+- BC10: create modal bus/driver choices use paginated AJAX search; tours and transfers are not preloaded.
+- Verification: 35 focused bus and permission tests passed (55 assertions), plus PHP/JavaScript syntax and diff checks. Live database/browser verification remains outstanding because the configured MySQL server is unavailable.
+
+### Bus fixes — 2026-10-30
+
+- Follow-up: bus create/update prohibit the alternate `attach_bus` field handled by FileTrait, closing an upload-validation bypass. Controller regression tests verify ordinary redirects, JSON responses, capacity/comments forwarding and exclusion of submitted IDs/timestamps. Persistence coverage now runs the actual capacity/comments migration in SQLite.
+- BU1: verified legacy update route explicitly requires `bus.edit`.
+- BU2: normal create/update submissions redirect to the bus list; JSON callers retain the route response.
+- BU3: company validation requires a non-deleted transfer.
+- BU4: bus number uniqueness considers active buses and excludes the current bus on edit.
+- BU5: verified existing action buttons submit POST deletion.
+- BU6: bus numbers reject markup/control characters; calendar tooltip escaping remains in place.
+- BU7: capacity/comments now save on create/update and appear in forms/details. Migration `2026_10_30_120000_add_capacity_and_comments_to_buses.php` adds the nullable columns.
+- BU8: Unicode-safe name validation accepts umlauts and apostrophes.
+- Verification: 37 bus/resource-permission tests passed (71 assertions); PHP syntax checks passed. Migration application was attempted but MySQL refused the connection; apply the migration when the database is available. Live browser verification remains outstanding.
+
+### Transfer fixes — 2026-10-30
+
+- Additional failure handling: malformed nested criteria now fail integer validation instead of throwing during normalization. Company create/update, criterion changes and attachment database records use a transaction so database failures cannot leave partially saved company data. A regression test verifies company creation rolls back when criterion persistence fails.
+- Follow-up verification: fixed actual form checkbox names to `criterias[]` so multiple selections reach the server; validation failures preserve submitted selections, including clearing all selections on edit.
+- Blocked JSON deletes now return HTTP 422 with `success: false` and the guard message, preventing a false success toast. AJAX show/edit lookups also return 404 for missing records.
+- Transfer requests prohibit the alternate `attach_bus` upload field consumed by FileTrait; it cannot bypass the attachment rules. Create returns JSON for JSON callers and redirects ordinary form submissions.
+- TR1/TR7: deletion guards preserve companies referenced by tour services and block deletion while active buses or drivers belong to them.
+- TR2: the legacy POST update route explicitly requires `transfer.edit`; delete confirmation requires `transfer.destroy`.
+- TR3: check missing companies before accessing their criteria.
+- TR4: company fields are allowlisted in the model and controller; IDs and timestamps cannot be submitted.
+- TR5: create/edit forms display all validation errors.
+- TR6/TR9: shared supplier validation checks attachment types/sizes and transfer-specific criteria; checkbox arrays and legacy comma-separated criteria are supported.
+- TR8: existing Unicode-safe business-name validation accepts accented names and apostrophes.
+- TR10: existing action buttons submit POST deletion; normal delete requests now redirect back to the list and JSON callers receive a route response.
+- Verification: 29 transfer, bus-safety and resource-permission tests passed (53 assertions); PHP syntax checks passed. Live database/browser verification remains outstanding; the configured MySQL server refused connections during the preceding bus work.
+
 | ID | Severity | Issue | Where it shows up | Request that failed |
 |----|----------|-------|-------------------|---------------------|
 | H1 | Critical | Opening `/home` logs the user out | `/home` | `GET /api/v1/dashboard/tours` (and every `/api/v1/*`) |

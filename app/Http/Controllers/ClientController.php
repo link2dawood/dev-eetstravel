@@ -16,8 +16,6 @@ use App\Repository\Contracts\ClientRepository;
 use Illuminate\Http\Request;
 use URL;
 use Illuminate\Support\Facades\View;
-use Hash;
-use Illuminate\Support\Facades\Crypt;
 
 
 class ClientController extends Controller
@@ -108,18 +106,17 @@ class ClientController extends Controller
      */
     public function store(StoreClientRequest $request)
     {
-        $request = CitiesHelper::setCityGeneral($request);
-
-        // the password is stored encrypted only (it used to be saved in plain text first)
-        $client = $this->clients->create($request->except(['attach', 'password', 'files']));
-        if ($request->filled('password')) {
-            $client->password = Crypt::encryptString($request->input('password'));
-            $client->save();
-        }
-
+        $client = \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $request = CitiesHelper::setCityGeneral($request);
+            $client = $this->clients->create($request->only((new Client)->getFillable()));
+            if ($request->filled('password')) {
+                $client->password = $request->input('password');
+                $client->save();
+            }
+            $this->addFile($request, $client);
+            return $client;
+        });
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name created", 'success');
-
-        $this->addFile($request, $client);
 
         // the form saves over AJAX: a redirect reply left the user on the form
         $route = route('clients.show', $client->id);
@@ -136,6 +133,7 @@ class ClientController extends Controller
     public function show($id, Request $request)
     {
         $title = 'Show - client';
+        $this->clients->getById($id);
 
         if ($request->ajax()) {
             return URL::to('clients/' . $id);
@@ -161,6 +159,7 @@ class ClientController extends Controller
     public function edit($id, Request $request)
     {
         $title = 'Edit - client';
+        $this->clients->getById($id);
         if ($request->ajax()) {
             return URL::to('clients/' . $id . '/edit');
         }
@@ -189,7 +188,7 @@ class ClientController extends Controller
             ]));
             $client = Client::findOrFail($id);
             if ($request->filled('password')) {
-                $client->password = Crypt::encryptString($request->input('password'));
+                $client->password = $request->input('password');
                 $client->save();
             }
 
@@ -206,12 +205,11 @@ class ClientController extends Controller
                     $clientContact->save();
                 }
             }
+            $this->addFile($request, $client);
             return $client;
         });
 
         LaravelFlashSessionHelper::setFlashMessage("Client $client->name edited", 'success');
-
-        $this->addFile($request, $client);
 
         $route = route('clients.show', $id);
         return $request->ajax() || $request->wantsJson() ? response()->json(['route' => $route]) : redirect($route);
@@ -226,6 +224,7 @@ class ClientController extends Controller
      */
     public function DeleteMsg($id, Request $request)
     {
+        $this->clients->getById($id);
         $msg = Ajaxis::BtDeleting('Warning!!', 'Would you like to remove This?', '/clients/' . $id . '/delete');
 
         if ($request->ajax()) {
@@ -241,18 +240,27 @@ class ClientController extends Controller
      */
     public function destroy($id)
     {
-        $client = $this->clients->getById($id);
-        $this->removeFile($client);
-        $this->clients->deleteById($id);
-        Comment::query()->where('reference_type', Comment::$services['client'])->where('reference_id', $id)->delete();
-        LaravelFlashSessionHelper::setFlashMessage("Client $client->name deleted", 'success');
-
-        return request()->ajax() ? URL::to('clients') : redirect('clients');
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $client = Client::query()->lockForUpdate()->findOrFail($id);
+            if ($client->isInUse()) {
+                $message = 'This client is used by tours or invoices and cannot be deleted.';
+                if (request()->expectsJson()) return response()->json(['success' => false, 'message' => $message], 422);
+                LaravelFlashSessionHelper::setFlashMessage($message, 'warning');
+                return redirect()->route('clients.index');
+            }
+            $client->delete();
+            Comment::query()->where('reference_type', Comment::$services['client'])->where('reference_id', $id)->delete();
+            LaravelFlashSessionHelper::setFlashMessage("Client $client->name deleted", 'success');
+            return request()->expectsJson() ? response()->json(['route' => route('clients.index')]) : redirect()->route('clients.index');
+        });
     }
 
 	
 	
 public function getClientContacts(Request $request){
+        $request->validate(['clientId' => 'required|integer|min:1', 'itemCount' => 'nullable|integer|min:0|max:1000']);
+        $client = Client::findOrFail($request->input('clientId'));
+        if (\Illuminate\Support\Facades\Gate::getPolicyFor($client)) abort_unless($request->user()->can('view', $client), 403);
         $count = $request->get('itemCount');
         $clientId = $request->get('clientId');
 

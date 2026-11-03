@@ -20,7 +20,8 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!! url("currencies")!!}/{!!$currencies->id!!}/update'>
+                <form method="POST" action="{{ route('currencies.update', ['currency' => $currencies->id]) }}">
+                    @method('PUT')
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -36,23 +37,23 @@
                             <div class="col-lg-6 mt-3">
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Name')!!}</label>
-                                    <input type="text" name="name" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->name}}{{ old('name') }}" class="form-control" required>
+                                    <input type="text" name="name" value="{{ old('name', $currencies->name) }}" class="form-control" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Code')!!}</label>
-                                    <input type="text" name="code" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->code}}{{ old('code') }}" class="form-control" required>
+                                    <input type="text" name="code" value="{{ old('code', $currencies->code) }}" class="form-control" maxlength="3" pattern="[A-Za-z]{3}" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Symbol')!!}</label>
-                                    <input type="text" name="symbol" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->symbol}}{{ old('symbol') }}" class="form-control" required>
+                                    <input type="text" name="symbol" value="{{ old('symbol', $currencies->symbol) }}" class="form-control" maxlength="10" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Cent')!!}</label>
-                                    <input type="text" name="cent" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->cent}}{{ old('cent') }}" class="form-control">
+                                    <input type="text" name="cent" value="{{ old('cent', $currencies->cent) }}" class="form-control" maxlength="10">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.SymbolCent')!!}</label>
-                                    <input type="text" name="symbol_cent" value="{{ $errors != null && count($errors) > 0 ? '' : $currencies->symbol_cent}}{{ old('symbol_cent') }}" class="form-control">
+                                    <input type="number" name="symbol_cent" value="{{ old('symbol_cent', $currencies->symbol_cent) }}" class="form-control" min="1" max="2147483647" step="1">
                                 </div>
                             </div>
                             <div class="col-md-8">

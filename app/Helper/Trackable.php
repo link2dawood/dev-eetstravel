@@ -227,7 +227,8 @@ trait Trackable{
 	public function statusName($statusId)
 	{
 		if ($statusId) {
-			return Status::find($statusId)->name;
+			// A deleted/unknown status must not break the activity log (and the save behind it)
+			return optional(Status::find($statusId))->name ?? "#{$statusId}";
 		}
 		return false;
 	}
@@ -299,12 +300,12 @@ trait Trackable{
 
 		if ($data['log_name'] == 'TourPackage' && $action == 'deleted'){
 			$nameText = $model->descriptionPackage() ? $model->description : $model->name;
-			if($model->attributes['tour_id']){
-		        $tourName = Tour::find($model->attributes['tour_id'])->name;
-		        $data['text'] = "{$data['log_name']}: {$nameText} $action at Tour: {$tourName}";
+			// tour_id is missing on models created in the same request, and the tour may be deleted
+			$tour = !empty($model->tour_id) ? Tour::withTrashed()->find($model->tour_id) : $model->getParrentTour();
+			if (!empty($model->tour_id)) {
+		        $data['text'] = "{$data['log_name']}: {$nameText} $action at Tour: " . ($tour->name ?? "#{$model->tour_id}");
             }else{
-                $tour = $model->getParrentTour();
-                $data['text'] = "{$className}: {$nameText} $action at Tour: '{$tour->name}'";
+                $data['text'] = "{$className}: {$nameText} $action at Tour: '" . ($tour->name ?? '-') . "'";
             }
 		}
 
@@ -323,7 +324,7 @@ trait Trackable{
 	public function findLink(string $className, $model){
 		$linkName = array_search($className, $this->links);
 		try {
-		    $link = route( $linkName ? $linkName : strtolower("$className.show"), ['id' => $model->id]);
+		    $link = route( $linkName ? $linkName : strtolower("$className.show"), ['id' => $model->id], false);
 		}
 		catch (\Exception $e) {
 			$link ='';

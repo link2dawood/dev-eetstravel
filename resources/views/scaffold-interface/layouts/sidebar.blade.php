@@ -149,7 +149,7 @@
                 <li class="{!! \App\Helper\DashboardHelper::isMenuActive('rate.index', $route) !!}"><a href="{{ route('rate.index') }}"><i class='fa fa-map-signs'></i> <span>{{ trans('main.Rates') }}</span></a></li>
                 @endif
                 @if(Auth::user()->can('currency_rate.index'))
-                    <li class="{!! \App\Helper\DashboardHelper::isMenuActive('currency_rate.index', $route) !!}"><a href="{{ route('currency_rate.index') }}"><i class='fa fa-map-signs'></i> <span>{{ trans('main.CurrencyRate') }}</span></a></li>
+                    <li class="{!! \App\Helper\DashboardHelper::isMenuActive('currency_rate.index', $route) !!}"><a href="{{ route('currency_rate.index') }}"><i class='fa fa-map-signs'></i> <span>Reference exchange rates</span></a></li>
                 @endif
                 @if(Auth::user()->can('currencies.index'))
                 <li class="{!! \App\Helper\DashboardHelper::isMenuActive('currencies.index', $route) !!}"><a href="{{ route('currencies.index') }}"><i class='fa fa-map-signs'></i> <span>{{ trans('main.Currencies') }}</span></a></li>

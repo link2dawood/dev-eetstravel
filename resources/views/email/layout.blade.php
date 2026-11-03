@@ -61,8 +61,10 @@
                         <div class="input-group email-search">
                             <span class="input-group-text"><i class="ti ti-search"></i></span>
                             <input aria-label="Search" type="text" id="search" name="search" class="form-control" v-model="search" placeholder="Search emails..." @keyup.enter="getListEmailsByUser">
-                            <button type="button" class="btn btn-primary" @click="getListEmailsByUser">Search</button>
-                            <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null">Clear</button>
+                            <button type="button" class="btn btn-primary" @click="getListEmailsByUser" :disabled="loading">
+                                <span v-if="loading" class="tms-spinner" aria-hidden="true"></span>Search
+                            </button>
+                            <button type="button" class="btn btn-danger" @click="ClearSearchForm()" v-if="search!=null" :disabled="loading">Clear</button>
                         </div>
                         {{--</form>--}}
                         <!-- /.box-tools -->
@@ -72,15 +74,30 @@
 
                         </div>
                     @yield('main-content')
-                    <div v-if="loading">
-                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted" style="height: 300px;">
-                            <div class="spinner-border spinner-border-sm" role="status"></div>
-                            <span>Loading emails...</span>
+                    <div v-if="loading && !mailError" class="p-3" role="status" aria-live="polite" aria-busy="true">
+                        <span class="visually-hidden">Loading emails...</span>
+                        <div class="tms-skeleton-row" aria-hidden="true">
+                            <span class="tms-skeleton" style="height: 2rem; width: 2rem;"></span>
+                            <span class="tms-skeleton" style="width: 85%;"></span>
+                            <span class="tms-skeleton" style="width: 4rem;"></span>
+                        </div>
+                        <div class="tms-skeleton-row" aria-hidden="true">
+                            <span class="tms-skeleton" style="height: 2rem; width: 2rem;"></span>
+                            <span class="tms-skeleton" style="width: 70%;"></span>
+                            <span class="tms-skeleton" style="width: 5rem;"></span>
+                        </div>
+                        <div class="tms-skeleton-row" aria-hidden="true">
+                            <span class="tms-skeleton" style="height: 2rem; width: 2rem;"></span>
+                            <span class="tms-skeleton" style="width: 90%;"></span>
+                            <span class="tms-skeleton" style="width: 3rem;"></span>
                         </div>
                     </div>
-                    <div v-if="!loading && mailError" class="alert alert-warning m-3" role="alert">
-                        <div class="fw-bold mb-1"><i class="ti ti-mail-off me-1"></i>Emails could not be loaded</div>
-                        <div>@{{ mailError }}</div>
+                    <div v-if="!loading && (mailError || folderError)" class="alert alert-warning m-3" role="alert">
+                        <div class="fw-bold mb-1"><i class="ti ti-mail-off me-1"></i>Mailbox content could not be loaded</div>
+                        <div>@{{ mailError || folderError }}</div>
+                        <button type="button" class="btn btn-sm btn-outline-warning mt-2" @click="retryMailbox" :disabled="loading || loadingFolders">
+                            Retry
+                        </button>
                     </div>
 
                    
@@ -207,7 +224,15 @@
                         reply:false,
                         loading: false,
                         loadingFolders: false,
+                        sendingEmail: false,
+                        uploadProgress: null,
+                        creatingFolder: false,
+                        movingEmail: false,
                         mailError: '',
+                        folderError: '',
+                        emailRequestVersion: 0,
+                        folderRequestVersion: 0,
+                        tourRequestVersion: 0,
                         userId:$('meta[name="user-id"]').attr('content'),
                         reg: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
 
@@ -234,6 +259,15 @@
                     },
                 },
                 methods:{
+                    mailboxRequestMessage(error, fallback) {
+                        if (error && error.code === 'ECONNABORTED') {
+                            return 'The mailbox request timed out. Check the connection and try again.';
+                        }
+                        if (error && !error.response) {
+                            return 'The mailbox could not be reached. Check the connection and try again.';
+                        }
+                        return (error && error.response && error.response.data && error.response.data.message) || fallback;
+                    },
                     // "Name <a@b.com>" for the row: recipient in Sent, sender everywhere else
                     mailParty(email) {
                         let value = this.currentFolder == 'INBOX.Sent' ? email.header.to : email.header.from;
@@ -270,6 +304,7 @@
                         return (this.newEmail.to == "")? "" : (this.reg.test(this.newEmail.to)) ? true : false;
                     },
                     sendEmail(){
+                        if (this.sendingEmail) return false;
                         this.newEmail.content = CKEDITOR.instances['editor1'].getData();
                         // return false;
                         if(this.newEmail.to.length ==0 || !this.isEmailValid()){
@@ -317,16 +352,25 @@
 // return false;
                         // keep the draft until the server confirms (a failed send used to lose it)
                         const draftContent = this.newEmail.content;
-                        $("#NewEmail").modal('hide');
+                        this.sendingEmail = true;
+                        this.uploadProgress = null;
                         axios.post( `/api/v1/users/${this.userId}/emails/send`,
                             formData,
                             {
                                 headers: {
                                     'Content-Type': 'multipart/form-data'
+                                },
+                                timeout: 120000,
+                                onUploadProgress: (event) => {
+                                    if (event.total) {
+                                        this.uploadProgress = Math.min(100, Math.round((event.loaded / event.total) * 100));
+                                    }
                                 }
                             }
                         ).then((result)=>{
                             // this.getListEmailsByUser(true,"Sent");
+                            this.sendingEmail = false;
+                            this.uploadProgress = null;
                             this.CloseNewEmailModal();
                             localStorage.setItem(`emails[Sent]`,JSON.stringify(result.data));
 
@@ -345,6 +389,8 @@
                             });
                             return false;
                         }).catch((e)=>{
+                            this.sendingEmail = false;
+                            this.uploadProgress = null;
                             const message = (e.response && e.response.data && e.response.data.message) || 'The email could not be sent. Please try again.';
                             if (typeof window.appToast === 'function') {
                                 window.appToast(message, 'error');
@@ -354,7 +400,6 @@
                             // reopen the draft so nothing is lost
                             this.newEmail.content = draftContent;
                             if (CKEDITOR.instances['editor1']) CKEDITOR.instances['editor1'].setData(draftContent || '');
-                            $("#NewEmail").modal('show');
                         });
                         return false;
                     },
@@ -402,6 +447,8 @@
                     },
 
                     createFolder(){
+                        if (this.creatingFolder) return;
+                        this.creatingFolder = true;
                         let userId = $('meta[name="user-id"]').attr('content');
 
                         axios.post(`/api/v1/users/${userId}/emails/createFolder`,{
@@ -409,6 +456,7 @@
 
                         }).
                         then((result)=>{
+                           this.creatingFolder = false;
                            jSuites.notification({
 								name: 'Success',
 								message: 'Folder created Successfully',
@@ -418,10 +466,11 @@
                             $("#modalAddFolder").modal('hide');
                             this.getListFolderByUser(true);
                         }).catch((err)=>{
+                            this.creatingFolder = false;
 							jSuites.notification({
 								error: 1,
 								name: 'Error message',
-								message: 'Folder is not created'+ err,
+								message: (err.response && err.response.data && err.response.data.message) || 'Folder could not be created. Please try again.',
 							});
 
                         });
@@ -433,46 +482,37 @@
                         this.getListEmailsByUser(true, 'INBOX');
                     },
 					getTours(name){
-                        let userId = $('meta[name="user-id"]').attr('content');
-                        this.toursArray = [];
-                        this.loading = true;
+					    const requestVersion = ++this.tourRequestVersion;
+					    let userId = $('meta[name="user-id"]').attr('content');
+					    this.toursArray = [];
+					    this.loading = true;
 
                         // let emails = this.$store.state.emails[this.currentFolder];
-                       if(name == 'active'){
-						   url = `/api/v1/getTours`;
-					   }else{
-						    url = `/api/v1/getArchiveTours`;
-					   }
-                            axios.post(url,{
+                        let url = name == 'active' ? `/api/v1/getTours` : `/api/v1/getArchiveTours`;
+                        axios.post(url,{
                                
                                 page: this.page,
                                 search: this.search
-                            })
+                            }, { timeout: 30000 })
                                 .then((result)=>{
-									this.toursArray = result.data.tour;
-								   console.log(this.toursArray);
-									
+                                    if (requestVersion !== this.tourRequestVersion) return;
+                                    this.toursArray = result.data.tour;
+                                    this.loading = false;
 
                                     // this.$store.commit('setEmails',{'folder':this.currentFolder, data:result.data})
 
 
                                 }).catch((err)=>{
-                                $.toast({
-                                    heading: 'Error',
-                                    text: err,
-                                    icon: 'danger',
-                                    loader: true,        // Change it to false to disable loader
-                                    hideAfter : 1500,
-                                    position: 'top-right',
+                                    if (requestVersion !== this.tourRequestVersion) return;
+                                    this.loading = false;
+                                    this.mailError = this.mailboxRequestMessage(err, 'Tours could not be loaded. Please try again.');
                                 });
-                                this.loading = false;
-                            });
                         
 
 
                     },
 					 getListEmailsUser( get = false, folder=false){
-						console.log(this.search);
+					     const requestVersion = ++this.emailRequestVersion;
                         let userId = $('meta[name="user-id"]').attr('content');
                         this.emailsArray = [];
                         this.loading = true;
@@ -485,8 +525,9 @@
                                 folder: (folder)?folder:this.currentFolder,
                                 page: this.page,
                                 search: this.search,
-                            })
+                            }, { timeout: 30000 })
                                 .then((result)=>{
+                                    if (requestVersion !== this.emailRequestVersion) return;
                                     this.loading = false;
                                     this.mailError = '';
                                     this.emailsArray = result.data.emails;
@@ -507,14 +548,8 @@
 
 
                                 }).catch((err)=>{
-                                $.toast({
-                                    heading: 'Error',
-                                    text: err,
-                                    icon: 'danger',
-                                    loader: true,        // Change it to false to disable loader
-                                    hideAfter : 1500,
-                                    position: 'top-right',
-                                });
+                                if (requestVersion !== this.emailRequestVersion) return;
+                                this.mailError = this.mailboxRequestMessage(err, 'The mailbox search could not be completed.');
                                 this.loading = false;
                             });
                         
@@ -523,7 +558,7 @@
                     },
 
                     getListEmailsByUser( get = false, folder=false){
-					
+                        const requestVersion = ++this.emailRequestVersion;
                         let userId = $('meta[name="user-id"]').attr('content');
                         this.emailsArray = [];
                         this.loading = true;
@@ -532,6 +567,7 @@
                         let emails = JSON.parse(localStorage.getItem(`emails[${this.currentFolder}]`));
                         // let emails = this.$store.state.emails[this.currentFolder];
                         if(emails && !get && (this.page == 0)){
+                            this.mailError = '';
                             this.emailsArray = emails.emails;
                             this.loading = false;
                             this.page = emails.page;
@@ -543,8 +579,9 @@
                                 folder: (folder)?folder:this.currentFolder,
                                 page: this.page,
                                 search: this.search,
-                            })
+                            }, { timeout: 30000 })
                                 .then((result)=>{
+                                    if (requestVersion !== this.emailRequestVersion) return;
                                     this.loading = false;
                                     this.mailError = '';
                                     this.emailsArray = result.data.emails;
@@ -558,11 +595,9 @@
 
 
                                 }).catch((err)=>{
+                                if (requestVersion !== this.emailRequestVersion) return;
                                 // the server explains why (e.g. mailbox unreachable); keep it on screen
-                                this.mailError = (err.response && err.response.data && err.response.data.message) || 'An error occurred while loading the emails.';
-                                if (typeof window.appToast === 'function') {
-                                    window.appToast(this.mailError, 'error');
-                                }
+                                this.mailError = this.mailboxRequestMessage(err, 'An error occurred while loading the emails.');
                                 this.loading = false;
                             });
                         }
@@ -576,11 +611,16 @@
                     },
 
                     infoEmail(email){
+                        const requestVersion = ++this.emailRequestVersion;
                         let userId = $('meta[name="user-id"]').attr('content');
-                        email.header.seen = 1;
                         this.loading = true;
 
                         let emails = JSON.parse(localStorage.getItem(`emails[${this.currentFolder}]`));
+                        if (!emails || !Array.isArray(emails.emails)) {
+                            this.loading = false;
+                            this.mailError = 'The cached message list is unavailable. Reload the mailbox and try again.';
+                            return;
+                        }
 
                         // let emls = _.replace(emails.emails, { 'header.uid': email.header.uid }, email);
                         let emls = emails.emails.findIndex(obj=>{
@@ -595,25 +635,33 @@
 						
                         axios.post(`/api/v1/users/${userId}/email/${email.header.uid}/get`,{
                             folder:this.currentFolder
-                        })
+                        }, { timeout: 30000 })
                             .then((res)=>{
-							console.log(res);
+                                if (requestVersion !== this.emailRequestVersion) return;
+                                email.header.seen = 1;
+                                emails.emails[emls] = email;
+                                localStorage.setItem(`emails[${this.currentFolder}]`,JSON.stringify(emails));
                                 this.view = true;
                                 this.email = res.data.message;
                                 this.loading = false;
                             })
-						.catch(function (error) {
-							console.log(error);
-						  });
+                        .catch((error) => {
+                            if (requestVersion !== this.emailRequestVersion) return;
+                            const message = this.mailboxRequestMessage(error, 'The email could not be opened. Please try again.');
+                            this.mailError = message;
+                            this.loading = false;
+                        });
 					
 
                     },
 
                     CloseMoveToModal(){
+                        if (this.movingEmail) return;
                         $("#modalCreate").modal('hide') ;
                     },
 
                     CloseNewEmailModal(){
+                        if (this.sendingEmail) return;
                         this.newEmail.content = '';
                         CKEDITOR.instances['editor1'].setData('')
                         $("#NewEmail").modal('hide') ;
@@ -652,12 +700,15 @@
                     },
 
                     moveToFolder(email){
+                        if (this.movingEmail) return;
+                        this.movingEmail = true;
                         let userId = $('meta[name="user-id"]').attr('content');
                         axios.post(`/api/v1/users/${userId}/email/${this.currentMail.header.uid}/move`,{
                             folder:this.currentFolder,
                             moveFolder:this.folderSend,
 							message_id:this.currentMail.header.message_id,
                         }).then((result)=>{
+                            this.movingEmail = false;
 							jSuites.notification({
 								name: 'Success',
 								message: 'Folder is change Successfully',
@@ -667,10 +718,11 @@
                             this.getListEmailsByUser(true,this.folderSend);
                             $("#modalCreate").modal('hide') ;
                         }).catch((err)=>{
+                            this.movingEmail = false;
 							jSuites.notification({
 								error: 1,
 								name: 'Error message',
-								message: 'Email not moved',
+								message: (err.response && err.response.data && err.response.data.message) || 'Email not moved. Please try again.',
 							});
                             
 
@@ -718,6 +770,7 @@
                     },
 
                     getListFolderByUser(get= false){
+                        const requestVersion = ++this.folderRequestVersion;
                         let userId = $('meta[name="user-id"]').attr('content');
 
                         this.loadingFolders = true;
@@ -727,18 +780,29 @@
                         let folders = JSON.parse(localStorage.getItem('folders'));
                         if(folders && !get){
                             this.folders = folders;
+                            this.folderError = '';
                             this.loadingFolders = false;
                         } else {
-                            axios.post(`/api/v1/users/${userId}/emailfolders`)
+                            axios.post(`/api/v1/users/${userId}/emailfolders`, {}, { timeout: 30000 })
                                 .then((res)=>{
+                                    if (requestVersion !== this.folderRequestVersion) return;
                                     this.loadingFolders = false;
+                                    this.folderError = '';
                                     this.folders = res.data.folders;
                                     localStorage.setItem('folders',JSON.stringify(res.data.folders));
                                 }).catch((err)=>{
+                                    if (requestVersion !== this.folderRequestVersion) return;
                                     this.loadingFolders = false;
-                                    this.mailError = this.mailError || (err.response && err.response.data && err.response.data.message) || 'The mail folders could not be loaded.';
+                                    this.folderError = this.mailboxRequestMessage(err, 'The mail folders could not be loaded.');
                                 });
                         }
+                    },
+
+                    retryMailbox(){
+                        this.mailError = '';
+                        this.folderError = '';
+                        this.getListFolderByUser(true);
+                        this.getListEmailsByUser(true);
                     },
 
                     downloadAttachment(attach){

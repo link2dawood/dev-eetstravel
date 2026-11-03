@@ -11,7 +11,10 @@ return [
     | Apache/Nginx configuration.
     |
     */
-    'url' => env('SNAPPYMAIL_URL', '/mail'),
+    'url' => env('SNAPPYMAIL_URL', '/snappymail'),
+    'path' => public_path('snappymail/index.php'),
+    'version' => '2.37.3',
+    'data_path' => storage_path('app/snappymail-data'),
 
     /*
     |--------------------------------------------------------------------------
@@ -21,7 +24,7 @@ return [
     | The URL path for accessing SnappyMail admin panel
     |
     */
-    'admin_url' => env('SNAPPYMAIL_ADMIN_URL', '/mail/?admin'),
+    'admin_url' => env('SNAPPYMAIL_ADMIN_URL', '/snappymail/?admin'),
 
     /*
     |--------------------------------------------------------------------------

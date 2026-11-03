@@ -1015,7 +1015,7 @@
                                     <div class="monday-actions" style="display: flex !important; gap: 8px; justify-content: center; opacity: 1;">
                                         <button class="monday-action-btn view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
                                         <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete" onclick="deleteTask(this, {{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -1133,7 +1133,7 @@
                                     <div class="monday-actions" style="display: flex !important; gap: 8px; justify-content: center; opacity: 1;">
                                         <button class="monday-action-btn view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
                                         <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete" onclick="deleteTask(this, {{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                                 </tr>
@@ -1221,7 +1221,7 @@
                                     <div class="monday-actions" style="display: flex !important; gap: 8px; justify-content: center; opacity: 1;">
                                         <button class="monday-action-btn view" onclick="viewTask({{ $task->id }})" title="Preview"><i class="ti ti-eye" aria-hidden="true"></i></button>
                                         <button class="monday-action-btn edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="ti ti-pencil" aria-hidden="true"></i></button>
-                                        <button class="monday-action-btn delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                        <button class="monday-action-btn delete" onclick="deleteTask(this, {{ $task->id }})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
                                     </div>
                                 </td>
                                 </tr>
@@ -1364,13 +1364,20 @@ function updateTaskField(taskId, field, value) {
         },
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Field updated successfully');
-    })
+    .then(response => response.json().catch(() => ({})).then(data => {
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || data.error || 'Error updating task.');
+        }
+        return data;
+    }))
+    .then(data => data)
     .catch(error => {
         console.error('Error updating field:', error);
-        alert('Error updating task. Please refresh the page.');
+        // The cell was already changed on screen; reload so it shows the saved value again
+        if (typeof window.appToast === 'function') {
+            window.appToast(error.message, 'error', 'Not saved');
+        }
+        setTimeout(() => window.location.reload(), 1500);
     });
 }
 
@@ -1498,7 +1505,12 @@ function viewTask(taskId) {
     window.location.href = `/task/${taskId}/edit`;
 }
 
-function deleteTask(taskId) {
+function deleteTask(button, taskId) {
+    if (button.getAttribute('data-confirming') === 'true') {
+        return;
+    }
+    button.setAttribute('data-confirming', 'true');
+
     var confirmDeleteTask = typeof window.appConfirm === 'function'
         ? window.appConfirm('Are you sure you want to delete this task?', {
             title: 'Confirm delete',
@@ -1508,7 +1520,12 @@ function deleteTask(taskId) {
         : Promise.resolve(true);
 
     confirmDeleteTask.then(function(confirmed) {
+        button.removeAttribute('data-confirming');
         if (!confirmed) {
+            return;
+        }
+
+        if (!window.jQuery || !window.jQuery.tmsLoading || !window.jQuery.tmsLoading.start(button, 'Deleting...')) {
             return;
         }
 
@@ -1519,10 +1536,18 @@ function deleteTask(taskId) {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Task deletion request failed.');
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data.success) {
+                throw new Error('Task deletion was not successful.');
+            }
             if (typeof window.appToast === 'function') {
-                window.appToast('Task deleted successfully', 'success', 'Success');
+                window.appToast(data.message || 'Task deleted successfully', 'success', 'Success');
             }
 
             const row = document.querySelector(`tr[data-task-id="${taskId}"]`);
@@ -1532,9 +1557,12 @@ function deleteTask(taskId) {
                 setTimeout(() => {
                     location.reload(); // Reload to update list and counts
                 }, 700);
+            } else {
+                window.jQuery.tmsLoading.stop(button);
             }
         })
         .catch(error => {
+            window.jQuery.tmsLoading.stop(button);
             console.error('Error:', error);
             if (typeof window.appToast === 'function') {
                 window.appToast('Error deleting task', 'error', 'Error');

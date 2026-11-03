@@ -35,9 +35,20 @@
             <div class="box-footer">
                 <div class="pull-right">
                     <!--<button type="button" class="btn btn-primary " @click="sendEmail()"><i class="fa fa-envelope-o"></i> Send</button>-->
-					<button type="button" class="btn btn-primary " @click="sendEmail()"><i class="fa fa-envelope-o"></i> Send</button>
+					<button type="button" class="btn btn-primary" @click="sendEmail()" :disabled="sendingEmail">
+                        <span v-if="sendingEmail" class="tms-spinner" aria-hidden="true"></span>
+                        <i v-else class="fa fa-envelope-o" aria-hidden="true"></i> @{{ sendingEmail ? 'Sending...' : 'Send' }}
+                    </button>
                 </div>
-                <button type="reset" class="btn btn-default"  data-dismiss="modal" @click="CloseNewEmailModal"><i class="fa fa-times"></i> Discard</button>
+                <button type="reset" class="btn btn-default" data-dismiss="modal" @click="CloseNewEmailModal" :disabled="sendingEmail"><i class="fa fa-times"></i> Discard</button>
+            </div>
+            <div v-if="sendingEmail" class="mt-2" role="status" aria-live="polite">
+                <div v-if="uploadProgress !== null" class="progress mb-1" role="progressbar" :aria-valuenow="uploadProgress" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+                </div>
+                <small class="text-muted">
+                    @{{ uploadProgress === null ? 'Preparing message...' : uploadProgress < 100 ? 'Uploading message... ' + uploadProgress + '%' : 'Upload complete; waiting for mail server...' }}
+                </small>
             </div>
             <!-- /.box-footer -->
         </div>
@@ -127,77 +138,4 @@
 
         });
     });
-	
-	
-	$('form').submit(function(e){
-       alert("Check");
-        e.preventDefault();
-        $('#myProgress').show();
-        $('#subject').attr('disabled',true);
-        $('#message').attr('disabled',true);
-        $('.Import').attr('disabled',true);
-        var property = document.getElementById('fileUploader').files[0];
-        var subject = $('#subject').val();
-        
-  
-      
-            var message = "check";
-         
- 
-    
-        var totalfiles = document.getElementById('attachfiles').files.length;
-        var welcome_message=$('#welcome_message').val();
-        var put_attributes=$('.put-attributes').val();
-        console.log(property);
-        $("#last_file").html(property);
-        var form_data = new FormData();
-        form_data.append("file",property);
-        form_data.append("subject",subject);
-        form_data.append("message",message);
-        form_data.append("welcome_message",welcome_message);
-        form_data.append("put_attributes",put_attributes);
-        for (var index = 0; index < totalfiles; index++) {
-          form_data.append("attachfiles[]", document.getElementById('attachfiles').files[index]);
-        }
-        $.ajax({
-         url:'functions.php',
-          method:'POST',
-          data:form_data,
-          contentType:false,
-          cache:false,
-          processData:false,
-          beforeSend:function(){
-            $('#msg').html('Loading......');
-          },
-          success:function(data){
-            move();
-            console.log(data);
-            $('#success').modal('show');
-            $('.countEmail').html(data+" Emails Sent Successfully");
-            if (i == 0) {
-                i = 1;
-                var elem = document.getElementById("progress-bar");
-                var width = 1;
-                var id = setInterval(frame, 10);
-                function frame() {
-                  if (width >= 100) {
-                    clearInterval(id);
-                    i = 0;
-                  } else {
-                    width++;
-                    elem.style.width = width + "%";
-                  }
-                }
-              }
-            $('.progress').hide();
-            $('#msg').html(data);
-            $('form').submit();
-            window.location.href="{{ url('email-composer') }}";        
-            }
-        });
-    })
-function sendEmail(){
-		alert("warning");
-	}
-
 </script>

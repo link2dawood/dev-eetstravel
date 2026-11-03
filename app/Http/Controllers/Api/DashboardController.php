@@ -126,7 +126,15 @@ class DashboardController
 
     public function getActivities()
     {
-        return Activity::orderBy('created_at', 'desc')->with('causer')->simplePaginate(5);
+        $activities = \App\Services\ActivityAccess::query(Auth::user())
+            ->orderByDesc('created_at')->orderByDesc('id')->with('causer')->simplePaginate(5);
+        $activities->getCollection()->each(function ($activity) {
+            $properties = $activity->properties;
+            $properties['link'] = \App\Services\ActivityAccess::link($activity->getExtraProperty('link'));
+            $activity->properties = $properties;
+            $activity->description = \App\Helper\ActivityDescription::plainText($activity->description);
+        });
+        return $activities;
     }
 
     public function getTasks(Request $request)

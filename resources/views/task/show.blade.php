@@ -30,19 +30,19 @@
                         <td>
                             <b><i>{!!trans('main.Content')!!} : </i></b>
                         </td>
-                        <td>{!!$task->content!!}</td>
+                        <td>{{ $task->content }}</td>
                     </tr>
                     <tr>
                         <td>
                             <b><i>{!!trans('main.Deadline')!!} : </i></b>
                         </td>
-                        <td>{!!$task->dead_line!!}</td>
+                        <td>{{ $task->dead_line ?: '-' }}</td>
                     </tr>
                     <tr>
                         <td>
                             <b><i>{!!trans('main.Tour')!!} : </i></b>
                         </td>
-                        <td>{!!$task->tourModel ? $task->tourModel->name : 'Without Tour'!!}</td>
+                        <td>{{ $task->tourModel ? $task->tourModel->name : 'Without Tour' }}</td>
                     </tr>
                     <tr>
                         <td><b><i>{!!trans('main.Assignto')!!}: </i></b></td>
@@ -57,11 +57,11 @@
                         <td>
                             <b><i>{!!trans('main.TaskType')!!} : </i></b>
                         </td>
-                        <td>{!!\App\Task::$taskTypes[$task->task_type]!!}</td>
+                        <td>{{ \App\Task::$taskTypes[$task->task_type] ?? 'Unknown' }}</td>
                     </tr>
                     <tr>
                         <td><b><i>{!!trans('main.Status')!!} : </i></b></td>
-                        <td>{{ $status->name }}</td>
+                        <td>{{ $status->name ?? 'Unknown' }}</td>
                     </tr>
                     <tr>
                         <td><b><i>{!!trans('main.Priority')!!} : </i></b></td>

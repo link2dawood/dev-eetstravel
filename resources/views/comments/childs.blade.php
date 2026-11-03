@@ -12,7 +12,7 @@
             </div>
             <div class="chat-details">
                 <span class="chat-author">by
-                    <b>{{\App\User::find($child->author)->first()->name}}</b>
+                    <b>{{ $child->author->name ?? 'Deleted user' }}</b>
                 </span>
                 <span class="chat-date pull-right">
                     <i class="fa fa-clock-o" style="margin-right: 5px"></i>
@@ -20,14 +20,14 @@
                 </span>
             </div>
             <div class="chat-content">
-                {!! $child->content !!}
+                @if($child->trashed())<em>Comment removed. Replies are preserved.</em>@else{!! $child->content !!}@endif
             </div>
             <div class="chat-attachments">
                 <table class="table">
                     <tbody>
 
 
-                    @foreach($child->files as $attach)
+                    @foreach($child->trashed() ? [] : $child->files as $attach)
                         <tr class="del-container">
                             <td class="td_link_attach">
                                 <div class="td_link_attach__name">
@@ -45,9 +45,11 @@
                 </table>
             </div>
             <div class="announcement-actions">
-                <a href="#content" data-comment-id="{{ $child->id }}" data-parent-name="{{ \App\User::find($child->author)->first()->name }}" class="link-black text-sm reply_comment" style="margin-top: 10px"><i class="fa fa-reply margin-r-5"></i> Reply</a>
+                @if(!$child->trashed() && app(\App\Services\CommentAccess::class)->allowed('comment.create'))
+                <a href="#content" data-comment-id="{{ $child->id }}" data-parent-name="{{ $child->author->name ?? 'Deleted user' }}" class="link-black text-sm reply_comment" style="margin-top: 10px"><i class="fa fa-reply margin-r-5"></i> Reply</a>
+                @endif
             </div>
-            @if(count($child->childs))
+            @if($nesting < 50 && count($child->childs))
                 @include('comments.childs',['childs' => $child->childs, 'nesting' => $nesting+1])
             @endif
         </div>

@@ -62,38 +62,56 @@ class LoginController extends Controller
 public function Supplierauth(Request $request)
 {
 
-    try {
-        $contact_email = $request->input('contact_email');
-        $password = Crypt::encryptString($request->input('password'));
+    $this->validate($request, [
+        'contact_email' => 'required|email',
+        'password' => 'required|string',
+    ]);
 
-        $password = Crypt::decryptString($password );
-		
-		$hotel = Hotel::where("contact_email", $contact_email)->first();
-	
-		$hotel_password = "";
-		
-		if($hotel){
-			$hotel_password = Crypt::decryptString($hotel->password );
-		}
+    $hotel = Hotel::where("contact_email", $request->input('contact_email'))->first();
 
-       // $client = DB::select("SELECT * FROM clients WHERE contact_email = ? AND password = ?`", [$contact_email, $password]);
-     	
-        if ($hotel and $password == $hotel_password) {
-		
-            $request->session()->put('SUPPLIER_LOGIN', true);
-            $request->session()->put('SUPPLIER_ID', $hotel->id);
-            $request->session()->put('package_name', $hotel->name);
-			
-            return redirect()->route('TMS-Supplier.home')->with([
-                'message' => 'You are logged in successfully',
-                'alert-type' => 'success'
-            ]);
-        } else {
-            return redirect('TMS-Supplier/login')->with('error', 'Invalid email or password.');
-        }
-    } catch (\Exception $e) {
-        dd($e->getMessage());
+    if ($hotel && $this->supplierPasswordMatches($hotel, (string) $request->input('password'))) {
+        $request->session()->regenerate();
+        $request->session()->put('SUPPLIER_LOGIN', true);
+        $request->session()->put('SUPPLIER_ID', $hotel->id);
+        $request->session()->put('package_name', $hotel->name);
+
+        return redirect()->route('TMS-Supplier.home')->with([
+            'message' => 'You are logged in successfully',
+            'alert-type' => 'success'
+        ]);
     }
+
+    return redirect('TMS-Supplier/login')->with('error', 'Invalid email or password.');
+}
+
+/**
+ * Supplier portal passwords are bcrypt hashes. Older ones were stored with Crypt (reversible);
+ * those still work once and are re-hashed on that login. An empty stored password never matches.
+ */
+private function supplierPasswordMatches(Hotel $hotel, string $password)
+{
+    $stored = (string) $hotel->password;
+    if ($stored === '' || $password === '') {
+        return false;
+    }
+
+    if (password_get_info($stored)['algo']) {
+        return \Illuminate\Support\Facades\Hash::check($password, $stored);
+    }
+
+    try {
+        $legacy = Crypt::decryptString($stored);
+    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+        return false;
+    }
+    if ($legacy === '' || !hash_equals($legacy, $password)) {
+        return false;
+    }
+
+    $hotel->password = \Illuminate\Support\Facades\Hash::make($password);
+    $hotel->save();
+
+    return true;
 }
 
 

@@ -1,0 +1,65 @@
+{
+    "date": "2026-10-30T16:46:58+00:00",
+    "results": [
+        {
+            "check": "CR3 schema stores decimal(18,6)",
+            "status": "passed"
+        },
+        {
+            "check": "Create redirects normally",
+            "status": "passed"
+        },
+        {
+            "check": "CR3 six-decimal rate round-trips exactly",
+            "status": "passed"
+        },
+        {
+            "check": "CR6 currency stored in canonical uppercase",
+            "status": "passed"
+        },
+        {
+            "check": "CR7 duplicate currency\/date rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Edit excludes own currency\/date pair",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid rate 0 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid rate -5 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid rate 1000000000 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid rate 1.1234567 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid currency ZZZ rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid date 2099-01-01 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "List pagination executes",
+            "status": "passed"
+        },
+        {
+            "check": "CR9 unused rate deletes with JSON success",
+            "status": "passed"
+        },
+        {
+            "check": "All currency-rate\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

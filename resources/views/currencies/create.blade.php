@@ -40,19 +40,19 @@
                             </div>
                             <div class="form-group mb-3">
                                 <label >{!!trans('main.Code')!!}</label>
-                                <input type="text" name="code" value="{{ old('code') }}" class="form-control" required>
+                                <input type="text" name="code" value="{{ old('code') }}" class="form-control" maxlength="3" pattern="[A-Za-z]{3}" required>
                             </div>
                             <div class="form-group mb-3">
                                 <label >{!!trans('main.Symbol')!!}</label>
-                                <input type="text" name="symbol" value="{{ old('symbol') }}" class="form-control" required>
+                                <input type="text" name="symbol" value="{{ old('symbol') }}" class="form-control" maxlength="10" required>
                             </div>
                             <div class="form-group mb-3">
                                 <label >{!!trans('main.Cent')!!}</label>
-                                <input type="text" name="cent" value="{{ old('cent') }}" class="form-control">
+                                <input type="text" name="cent" value="{{ old('cent') }}" class="form-control" maxlength="10">
                             </div>
                             <div class="form-group mb-3">
                                 <label >{!!trans('main.SymbolCent')!!}</label>
-                                <input type="text" name="symbol_cent" value="{{ old('symbol_cent') }}" class="form-control">
+                                <input type="number" name="symbol_cent" value="{{ old('symbol_cent') }}" class="form-control" min="1" max="2147483647" step="1">
                             </div>
                         </div>
                     </div>

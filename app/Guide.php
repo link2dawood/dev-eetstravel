@@ -97,7 +97,14 @@ class Guide extends Model
 
     protected $table = 'guides';
 
-    protected $guarded = [];
+    /** Only the form's columns; id, timestamps and the legacy data_* fields are never mass-assigned */
+    protected $fillable = [
+        'name', 'first_name', 'last_name', 'name_prefix', 'company', 'code',
+        'address_first', 'address_second', 'city', 'country',
+        'home_phone', 'cell_phone', 'work_phone', 'work_fax', 'work_email', 'work_contact',
+        'contact_name', 'contact_phone', 'contact_email',
+        'comments', 'int_comments', 'website', 'rate',
+    ];
 
     /**
      * tour.

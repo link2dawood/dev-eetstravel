@@ -30,11 +30,13 @@ class AccountingSafetyTest extends TestCase
             foreach (['invoice_no','date','currency'] as $name) $t->string($name);
             foreach (['office_id','client_id','tour_id'] as $name) $t->integer($name);
             $t->decimal('amount_receiveable', 15, 2);
-            $t->string('note')->nullable(); $t->integer('extra_cost')->nullable();
+            $t->string('note')->nullable(); $t->decimal('extra_cost', 15, 2)->nullable();
+            $t->softDeletes(); $t->unsignedInteger('deleted_by')->nullable();
         });
         Schema::create('invoice_items', function (Blueprint $t) {
             $t->increments('id'); $t->integer('invoice_id'); $t->string('item_name');
             foreach (['quantity','amount','vat','total_amount'] as $name) $t->decimal($name, 15, 2);
+            $t->softDeletes();
         });
         Schema::create('transactions', function (Blueprint $t) {
             $t->increments('id'); $t->integer('invoice_id'); $t->string('date');
@@ -200,16 +202,16 @@ class AccountingSafetyTest extends TestCase
         $this->assertSame('Hotel 54', $filtered->first()->name);
     }
 
-    public function test_supplier_invoice_links_use_link_id_and_only_selected_supplier_type()
+    public function test_supplier_invoice_links_use_invoice_id_and_only_selected_supplier_type()
     {
         Schema::create('supplier_invoices', function (Blueprint $t) {
-            $t->increments('id'); $t->string('invoice_no'); $t->string('dueDate'); $t->string('receivedDate'); $t->decimal('total_amount'); $t->integer('office_id');
+            $t->increments('id'); $t->string('invoice_no'); $t->string('dueDate'); $t->string('receivedDate'); $t->decimal('total_amount'); $t->decimal('extra_amount')->default(0); $t->integer('office_id'); $t->softDeletes();
         });
         Schema::create('tour_packages', function (Blueprint $t) {
             $t->increments('id'); $t->integer('type'); $t->integer('reference'); $t->string('name'); $t->softDeletes();
         });
         Schema::create('invoices_tours', function (Blueprint $t) {
-            $t->increments('id'); $t->integer('invoices_id'); $t->integer('invoices_tours_id'); $t->integer('package_id');
+            $t->increments('id'); $t->integer('invoices_id'); $t->integer('invoices_tours_id'); $t->integer('package_id'); $t->softDeletes();
         });
         Schema::table('tours', function (Blueprint $t) { $t->string('name')->nullable(); });
         Schema::table('office_fees', function (Blueprint $t) { $t->string('office_name')->nullable(); });
@@ -217,7 +219,7 @@ class AccountingSafetyTest extends TestCase
         DB::table('tour_packages')->insert(['id'=>7,'type'=>0,'reference'=>9,'name'=>'Same name']);
         DB::table('invoices_tours')->insert(['id'=>42,'invoices_id'=>3,'invoices_tours_id'=>1,'package_id'=>7]);
         $rows = \App\Helper\SupplierInvoices::forService(0, 9);
-        $this->assertSame(42, $rows->first()->link_id);
+        $this->assertSame(3, $rows->first()->link_id);
         $this->assertCount(0, \App\Helper\SupplierInvoices::forService(1, 9));
     }
 }

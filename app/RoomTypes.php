@@ -24,4 +24,9 @@ use Illuminate\Database\Eloquent\Model;
 class RoomTypes extends Model
 {
     protected $table = 'room_types';
+
+    public function isSystem(): bool
+    {
+        return array_key_exists(strtoupper((string) $this->code), TourPackage::$roomsPeopleCount);
+    }
 }

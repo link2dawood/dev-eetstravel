@@ -36,15 +36,30 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Comment extends Model
 {
     use Trackable;
+    use SoftDeletes;
 
 
     protected $table = 'comments';
-    protected $guarded = [];
+    protected $fillable = ['content', 'reference_type', 'reference_id', 'parent', 'author_id'];
+
+    const REFERENCE_MODELS = [
+        1 => Tour::class, 2 => Task::class, 3 => Event::class, 4 => Restaurant::class,
+        5 => Hotel::class, 6 => Guide::class, 7 => Transfer::class, 8 => Flight::class,
+        9 => Cruises::class, 10 => TourPackage::class, 11 => Status::class, 12 => RoomTypes::class,
+        13 => Rate::class, 14 => CurrencyRate::class, 15 => Currencies::class, 16 => Criteria::class,
+        17 => Client::class, 18 => Bus::class, 19 => BusDay::class, 20 => Templates::class,
+        21 => Comparison::class, 22 => ClientInvoices::class, 23 => Invoices::class,
+    ];
 
     /** Comments are printed as HTML: never store scripts or event handlers. */
     public function setContentAttribute($value)
     {
-        $this->attributes['content'] = \App\Helper\HtmlSanitizer::clean($value);
+        $this->attributes['content'] = \App\Helper\CommentHtml::clean($value);
+    }
+
+    public function getContentAttribute($value)
+    {
+        return \App\Helper\CommentHtml::clean($value);
     }
 
     public static $services = [
@@ -118,28 +133,17 @@ class Comment extends Model
         return $this->belongsTo('App\User');
     }
 
-    public function delete()
-    {
-        $this->childs()->delete();
-
-        return parent::delete();
-    }
     public function findServiceType()
     {
-        $serviceType = array_search($this->reference_type, self::$services);
-        $service_explode = explode('_', $serviceType);
-        $serviceType = '';
-        foreach ($service_explode as $item){
-            $serviceType .= ucfirst($item);
-        }
-        $namespace = 'App\\' . ucfirst($serviceType);
-        $this->service_type = ucfirst($serviceType);
+        $namespace = self::REFERENCE_MODELS[(int)$this->reference_type] ?? null;
+        $this->service_type = $namespace ? class_basename($namespace) : '';
         return $namespace;
     }
 
     public function service()
     {
         $namespace = $this->findServiceType();
+        if (!$namespace || !class_exists($namespace)) return null;
         $model = $namespace::find($this->reference_id);
         return $model ?? '';
     }

@@ -235,7 +235,24 @@ $results = $this->server->getMessagesByCriteria('SUBJECT "Request #' . (int) $pa
 	 * Offers already given for a package, for the DataTables grid on the supplier
 	 * booking page (route offers_data; its old endpoint had been removed).
 	 */
-	public function offersData(Request $request, $id, $supplier = 1){
+	/**
+	 * Decrypt the package token carried by the supplier booking link; anything else is a 404.
+	 * The booking page is public (suppliers are not logged in), so a plain id must not work.
+	 */
+	public static function packageIdFromToken($token)
+	{
+		try {
+			$id = \Illuminate\Support\Facades\Crypt::decryptString($token);
+		} catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+			abort(404);
+		}
+		abort_unless(ctype_digit((string) $id), 404);
+
+		return (int) $id;
+	}
+
+	public function offersData(Request $request, $token, $supplier = 1){
+		$id = self::packageIdFromToken($token);
 		$roomTypes = RoomTypes::query()->orderBy('sort_order', 'ASC')->get();
 		$rows = HotelOffers::where('package_id', $id)->orderByDesc('id')->get()->map(function ($offer) use ($roomTypes, $supplier) {
 			$row = [

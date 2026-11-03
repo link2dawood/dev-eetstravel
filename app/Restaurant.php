@@ -81,7 +81,12 @@ class Restaurant extends Model
    // use Trackable;
     
     protected $dates = ['deleted_at'];
-    protected $guarded = [];
+    /** Only the form's columns; id (AUTO_INCREMENT), timestamps and data_* are never mass-assigned */
+    protected $fillable = [
+        'name', 'code', 'address_first', 'address_second', 'city', 'country',
+        'work_phone', 'work_fax', 'work_email', 'contact_name', 'contact_phone', 'contact_email',
+        'comments', 'int_comments', 'website', 'rate',
+    ];
     protected $table = 'restaurants';
 
     /**

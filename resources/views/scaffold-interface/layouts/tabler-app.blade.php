@@ -30,6 +30,7 @@
     <!-- Modern UI Enhancements -->
     <link href="{{asset('css/modern-forms.css')}}" rel="stylesheet" type="text/css"/>
     <link href="{{asset('css/modern-tables.css')}}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('css/ui-feedback.css') }}?v={{ filemtime(public_path('css/ui-feedback.css')) }}" rel="stylesheet" type="text/css"/>
 
     <style>
         @import url('https://rsms.me/inter/inter.css');
@@ -1502,6 +1503,7 @@
     <script type="text/javascript" src="{{asset('js/jquery.repeater.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/bootstrap-tables.js')}}"></script>
     <script type="text/javascript" src="{{asset('js/helper.js')}}"></script>
+    <script type="text/javascript" src="{{ asset('js/ui-feedback.js') }}?v={{ filemtime(public_path('js/ui-feedback.js')) }}"></script>
     <script type="text/javascript" src="{{asset('js/onclick-events.js')}}"></script>
     @php
         $pusherClientConfig = [
@@ -1763,6 +1765,5 @@
     </script>
 </body>
 </html>
-
 
 

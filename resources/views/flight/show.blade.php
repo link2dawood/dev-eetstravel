@@ -112,7 +112,7 @@
                                 @forelse($criterias as $criteria)
                                     @forelse($flight->criterias as $item)
                                         @if($criteria->id == $item->criteria_id)
-                                            <td class="info_td_show criteria_block" style="display: block">{!!$criteria->name!!}</td>
+                                            <td class="info_td_show criteria_block" style="display: block">{{ $criteria->name }}</td>
                                         @endif
                                     @empty
                                         <td class="info_td_show"></td>

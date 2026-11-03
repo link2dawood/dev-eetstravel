@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Model;
 class Driver extends Model
 {
     use Trackable;
-    protected $guarded = [];
+    protected $fillable = ['name', 'phone', 'email', 'transfer_id'];
 
 	/**
 	 * The table associated with the model.

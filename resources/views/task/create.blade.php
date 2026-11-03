@@ -50,7 +50,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('task.store') }}" id="task-form">
+                    <form method="POST" action="{{ route('task.store') }}" id="task-form" data-loading-form>
                         @csrf
                         <input type='hidden' name='modal_create' value="0">
 
@@ -258,7 +258,7 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-body text-end">
-                                        <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-primary" data-loading-text="Saving task...">
                                             <i class="ti ti-device-floppy me-2"></i>
                                             {!! trans('main.Save') !!}
                                         </button>
@@ -293,7 +293,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const checkedUsers = document.querySelectorAll('.user_checkboxes:checked');
             if (checkedUsers.length === 0) {
                 e.preventDefault();
-                alert('Please assign at least one user to this task.');
+                if (typeof window.appToast === 'function') {
+                    window.appToast('Please assign at least one user to this task.', 'warning', 'Task assignment required');
+                }
                 return false;
             }
         });

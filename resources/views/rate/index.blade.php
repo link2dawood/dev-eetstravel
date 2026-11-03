@@ -42,7 +42,7 @@
                                 <td>{{ $rate->id }}</td>
                                 <td>{{ $rate->name ?? '' }}</td>
                                 <td>{{ $rate->mark ?? '' }}</td>
-                                <td>{{ $rate->rate_type ?? '' }}</td>
+                                <td>{{ $rate->rate_type ?? 'Unclassified' }}</td>
                                 <td>{{ $rate->sort_order ?? '' }}</td>
                                 <td>
                                     {!! \App\Http\Controllers\DatatablesHelperController::getActionButton([

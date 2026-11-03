@@ -28,8 +28,11 @@ class UpdateBusRequest extends FormRequest
 
         return [
             'name' => ValidationService::businessNameRules(true, 191, 2),
-            'bus_number' => $busId ? "required|string|max:50|unique:buses,bus_number,{$busId}" : 'required|string|max:50|unique:buses,bus_number',
-            'transfer_id' => 'nullable|exists:transfers,id',
+            'bus_number' => ['required', 'string', 'max:50', 'regex:' . ValidationService::SAFE_TEXT_REGEX, \Illuminate\Validation\Rule::unique('buses', 'bus_number')->ignore($busId)->whereNull('deleted_at')],
+            'transfer_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('transfers', 'id')->whereNull('deleted_at')],
+            'attach' => 'nullable|array',
+            'attach_bus' => 'prohibited',
+            'attach.*' => 'file|max:10240|mimes:jpeg,jpg,png,gif,pdf,doc,docx,xls,xlsx',
             'capacity' => 'nullable|integer|min:1|max:500',
             'comments' => 'nullable|string|max:1000',
         ];

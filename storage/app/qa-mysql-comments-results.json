@@ -1,0 +1,61 @@
+{
+    "date": "2026-10-30T17:31:31+00:00",
+    "results": [
+        {
+            "check": "Comment index filters by permitted existing parent records",
+            "status": "passed"
+        },
+        {
+            "check": "Create returns a sanitized thread",
+            "status": "passed"
+        },
+        {
+            "check": "CO4 forged ID\/status\/author\/timestamps ignored",
+            "status": "passed"
+        },
+        {
+            "check": "CO1 stored rich text is allow-list sanitized",
+            "status": "passed"
+        },
+        {
+            "check": "CO2 another author cannot edit",
+            "status": "passed"
+        },
+        {
+            "check": "CO2 another author cannot delete",
+            "status": "passed"
+        },
+        {
+            "check": "CO3 missing parent-module permission blocks thread",
+            "status": "passed"
+        },
+        {
+            "check": "CO4 owner edit preserves metadata",
+            "status": "passed"
+        },
+        {
+            "check": "CO5 unknown reference saves nothing",
+            "status": "passed"
+        },
+        {
+            "check": "CO5 missing reference saves nothing",
+            "status": "passed"
+        },
+        {
+            "check": "CO7 archive preserves the parent row and active reply",
+            "status": "passed"
+        },
+        {
+            "check": "CO7 archived parent renders placeholder with reply",
+            "status": "passed"
+        },
+        {
+            "check": "CO6 missing delete gives not-found",
+            "status": "passed"
+        },
+        {
+            "check": "All comment\/file\/activity\/user values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

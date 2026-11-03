@@ -85,7 +85,7 @@ class Transfer extends Model
 
     protected $table = 'transfers';
 
-    protected $guarded = [];
+    protected $fillable = ['name', 'address_first', 'address_second', 'city', 'country', 'code', 'work_phone', 'work_fax', 'work_email', 'contact_name', 'contact_phone', 'contact_email', 'website', 'comments', 'int_comments', 'rate'];
 
     public function files()
     {

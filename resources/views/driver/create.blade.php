@@ -55,7 +55,7 @@
                             </div>
                             <div class="form-group mb-3">
                                 <label for="transfer_id">{!!trans('main.BusCompany')!!}</label>
-                                {!! Form::select('transfer_id', $transfers, 0,['class' => 'form-control', 'id' => 'transfer_id']) !!}
+                                {!! Form::select('transfer_id', $transfers, old('transfer_id'),['class' => 'form-control', 'id' => 'transfer_id', 'placeholder' => 'No bus company']) !!}
                             </div>
 
                             <div class="form-group mb-3">

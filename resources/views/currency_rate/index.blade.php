@@ -1,5 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
-@section('title', 'Exchange Rates')
+@section('title', 'Reference Exchange Rates')
 @section('content')
     @include('layouts.title',
            ['title' => 'Currency Rates', 'sub_title' => 'Currency Rates List',
@@ -7,6 +7,7 @@
            ['title' => 'Home', 'icon' => 'dashboard', 'route' => url('/home')],
            ['title' => 'Currency Rates', 'icon' => null, 'route' => null]]])
     <section class="content">
+        @include('currency_rate.reference_notice')
         <div class="box box-primary">
             <div class="box-body">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">

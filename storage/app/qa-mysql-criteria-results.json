@@ -1,0 +1,109 @@
+{
+    "date": "2026-10-30T17:01:46+00:00",
+    "results": [
+        {
+            "check": "Create redirects normally",
+            "status": "passed"
+        },
+        {
+            "check": "Edit excludes own unique name\/type",
+            "status": "passed"
+        },
+        {
+            "check": "CT7 duplicate name\/type rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid criteria_type rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid short_name rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Invalid icon rejected",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for hotel link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for hotel link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for event link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for event link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for guide link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for guide link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for transfer link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for transfer link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for restaurant link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for restaurant link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for tourPackage link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for tourPackage link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for cruise link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for cruise link",
+            "status": "passed"
+        },
+        {
+            "check": "CT2 deletion blocked for flight link",
+            "status": "passed"
+        },
+        {
+            "check": "CT6 used type change blocked for flight link",
+            "status": "passed"
+        },
+        {
+            "check": "CT8 server pagination and search execute",
+            "status": "passed"
+        },
+        {
+            "check": "Unused custom criterion deletes with JSON success",
+            "status": "passed"
+        },
+        {
+            "check": "All criteria\/link\/comment values preserved after rollback",
+            "status": "passed"
+        }
+    ]
+}

@@ -4,6 +4,31 @@ let notifications = {
         notifications.bindEvents();
         notifications.generateNotificationsTasks();
     },
+    feedback: (message, type) => {
+        if (typeof window.appToast === 'function') {
+            window.appToast(message, type);
+        } else if ($.toast) {
+            $.toast({
+                heading: type === 'success' ? 'Success' : 'Error',
+                text: message,
+                icon: type,
+                hideAfter: 5000,
+                position: 'top-right'
+            });
+        }
+    },
+    requestError: (xhr, fallback) => {
+        if (xhr && xhr.status === 419) {
+            return 'Your session expired. Refresh the page and try again.';
+        }
+        if (xhr && xhr.status === 429) {
+            return 'Too many requests. Please wait a moment and try again.';
+        }
+        if (xhr && (xhr.status === 401 || xhr.status === 403)) {
+            return 'You are not authorized to perform this action. Refresh the page to continue.';
+        }
+        return fallback;
+    },
     bindEvents: () => {
         $(document).on('click', '.delete-notification-task', function (e) {
             e.preventDefault();
@@ -23,32 +48,44 @@ let notifications = {
 
         $(document).on('click', '#read_all_notification', function (e) {
             e.preventDefault();
-            notifications.readAllNotification();
+            notifications.readAllNotification($(this));
         });
 
         $(document).on('click', '#delete_all_notification', function (e) {
             e.preventDefault();
-            notifications.deleteAllNotification();
+            notifications.deleteAllNotification($(this));
         })
     },
-    readAllNotification : () => {
-        $.ajax({
+    readAllNotification : (button) => {
+        let request = $.tmsLoading.ajax(button, {
             method: 'GET',
             url: '/read_all_notifications',
             data: {}
-        }).done((res) => {
+        }, 'Marking read...');
+        if (!request) return;
+
+        request.done((res) => {
+            notifications.feedback('Notifications marked as read.', 'success');
             notifications.refreshNotifications();
-        })
+        }).fail((xhr) => {
+            notifications.feedback(notifications.requestError(xhr, 'Unable to mark notifications as read. Please try again.'), 'error');
+        });
     },
 
-    deleteAllNotification : () => {
-        $.ajax({
+    deleteAllNotification : (button) => {
+        let request = $.tmsLoading.ajax(button, {
             method: 'POST',
             url: '/delete_all_notifications',
             data: {}
-        }).done((res) => {
+        }, 'Deleting...');
+        if (!request) return;
+
+        request.done((res) => {
+            notifications.feedback('Notifications deleted.', 'success');
             notifications.refreshNotifications();
-        })
+        }).fail((xhr) => {
+            notifications.feedback(notifications.requestError(xhr, 'Unable to delete notifications. Please try again.'), 'error');
+        });
     },
 
     deleteNotificationTask: (_this) => {
@@ -56,9 +93,7 @@ let notifications = {
             return;
         }
         let id_notification = $(_this).attr('data-notif-id');
-        _this.prop('disabled', true);
-
-        $.ajax({
+        let request = $.tmsLoading.ajax(_this, {
             method: 'POST',
             url: '/delete_notifications',
             timeout: 8000,
@@ -66,12 +101,17 @@ let notifications = {
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 id: id_notification
             }
-        }).done((res) => {
+        }, 'Deleting...');
+        if (!request) return;
+
+        request.done((res) => {
             if (res === true) {
                 notifications.generateNotificationsTasks();
+            } else {
+                notifications.feedback('Unable to delete this notification. Please try again.', 'error');
             }
-        }).always(() => {
-            _this.prop('disabled', false);
+        }).fail((xhr) => {
+            notifications.feedback(notifications.requestError(xhr, 'Unable to delete this notification. Please try again.'), 'error');
         });
     },
 
@@ -129,12 +169,31 @@ let notifications = {
             let container = $(this);
             let requestVersion = (container.data('notifications-request-version') || 0) + 1;
             container.data('notifications-request-version', requestVersion);
-            $.ajax({
+            let previousRequest = container.data('notifications-request');
+            if (previousRequest && previousRequest.readyState !== 4) {
+                previousRequest.abort();
+            }
+
+            let request = $.ajax({
                 method: 'GET',
                 url: '/getNotifications',
                 cache: false,
                 data: { layout: container.attr('data-notifications-layout') || 'legacy' }
-            }).done((res) => {
+            });
+            container.data('notifications-request', request);
+
+            let notificationList = container.find('[data-notifications-list]');
+            if (notificationList.length && container.attr('data-notifications-layout') === 'tabler') {
+                notificationList.attr('aria-busy', 'true').html(
+                    '<div class="tms-skeleton-row" aria-hidden="true">' +
+                        '<span class="tms-skeleton" style="width: 2rem; height: 2rem;"></span>' +
+                        '<span class="tms-skeleton" style="width: 85%;"></span>' +
+                        '<span class="tms-skeleton" style="width: 3rem;"></span>' +
+                    '</div>'.repeat(3)
+                );
+            }
+
+            request.done((res) => {
                 if (container.data('notifications-request-version') !== requestVersion) {
                     return;
                 }
@@ -151,11 +210,18 @@ let notifications = {
                 } else {
                     container.html(res);
                 }
-            }).fail(() => {
+            }).fail((xhr, status) => {
                 if (container.data('notifications-request-version') !== requestVersion) {
                     return;
                 }
+                if (status === 'abort') {
+                    return;
+                }
                 container.find('[data-notifications-list]').text('Unable to load notifications. Please refresh to try again.');
+            }).always(() => {
+                if (container.data('notifications-request-version') === requestVersion) {
+                    container.find('[data-notifications-list]').removeAttr('aria-busy');
+                }
             });
         });
     }
@@ -179,23 +245,50 @@ window.deleteTablerNotification = function (event, element) {
 let chatnotifi  = {
 
     init: () => {
-        chatnotifi.startTimer();
-        chatnotifi.getChatNotifi();
+        window.clearTimeout(chatnotifi.timer);
+        chatnotifi.timer = null;
+        if (!document.hidden) {
+            chatnotifi.getChatNotifi();
+        }
     },
 
     getChatNotifi:  () => {
+        if (chatnotifi.request) {
+            return;
+        }
 
-        $.ajax({
+        let request = $.ajax({
             method: 'GET',
             url: '/chat/getChatNotifications',
-        }).done((res) => {
-            chatnotifi.setBells(res);
-        })
+            timeout: 8000
+        });
+        chatnotifi.request = request;
 
+        request.done((res) => {
+            chatnotifi.setBells(res);
+        }).fail((xhr, status) => {
+            if (status !== 'abort') {
+                console.warn('Chat notification polling failed.', status);
+            }
+        }).always(() => {
+            if (chatnotifi.request !== request) {
+                return;
+            }
+
+            chatnotifi.request = null;
+            if (!document.hidden) {
+                chatnotifi.timer = window.setTimeout(chatnotifi.getChatNotifi, 10000);
+            }
+        });
     },
 
-    startTimer: () => {
-       setInterval(chatnotifi.getChatNotifi, 10000);
+    stop: () => {
+        window.clearTimeout(chatnotifi.timer);
+        if (chatnotifi.request) {
+            let request = chatnotifi.request;
+            chatnotifi.request = null;
+            request.abort();
+        }
     },
 
     setBells: (res) => {
@@ -236,7 +329,16 @@ let chatnotifi  = {
 
 };
 
-$(document).ready(chatnotifi.init());
+$(document).ready(chatnotifi.init);
+window.addEventListener('pagehide', chatnotifi.stop);
+window.addEventListener('pageshow', chatnotifi.init);
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        chatnotifi.stop();
+    } else {
+        chatnotifi.init();
+    }
+});
 
 var notificationEmail = {
      init : function () {

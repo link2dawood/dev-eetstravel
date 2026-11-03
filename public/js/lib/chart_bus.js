@@ -1,3 +1,11 @@
+/** Text for HTML strings (tooltips): arrays are joined like String(array) did before */
+function busEscapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/[&<>"']/g, function (c) {
+        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+}
+
 var config = {
     tour_id: null,
     transfer_id : null,
@@ -122,7 +130,7 @@ var commentbus = {
         const parent_name = link.attr('data-parent-name');
 
         $(modal_id).find('#author_name').css({'display': 'flex'});
-        $(modal_id).find('#name').append('@'+parent_name);
+        $(modal_id).find('#name').text('@' + parent_name); // a user name is text, not markup
         $(modal_id).find('#parent_comment').attr('value', id_comment);
         $(modal_id).find('#content').focus();
     },
@@ -240,7 +248,7 @@ function createGraph() {
         "endDateField": "end",
         "dataProvider": [],
         "dataLoader": {
-            "url": "/api/bus_days",
+            "url": "/api/bus_days?from=" + busCalendarDate(mind) + "&to=" + busCalendarDate(maxd),
             "load": function(loader, chart) { renderBusFilters(chart.dataProvider); }
         },
         "valueScrollbar": {
@@ -323,7 +331,15 @@ function createGraph() {
                      city = graph.customData.cities;
                 }
 
-                var result = "<i class='fa fa-bus' aria-hidden='true'></i>&nbsp;<span style='font-size:12px; color:#000;'>"+graph.customData.isTour+":"+graph.customData.tour+"</b><br>Bus: "+item.category+"<br>Cities:"+city+"<br><br>Driver:"+graph.customData.driver_name+"<br> Date: "+graph.customData.start+"<br>Comments:"+graph.customData.comments+"</span>";
+                // amCharts renders the balloon as HTML: every value is escaped (trip, bus, city and
+                // driver names are user data)
+                var result = "<i class='fa fa-bus' aria-hidden='true'></i>&nbsp;<span style='font-size:12px; color:#000;'>"
+                    + busEscapeHtml(graph.customData.isTour) + ":" + busEscapeHtml(graph.customData.tour)
+                    + "<br>Bus: " + busEscapeHtml(item.category)
+                    + "<br>Cities:" + busEscapeHtml(city)
+                    + "<br><br>Driver:" + busEscapeHtml(graph.customData.driver_name)
+                    + "<br> Date: " + busEscapeHtml(graph.customData.start)
+                    + "<br>Comments:" + busEscapeHtml(graph.customData.comments) + "</span>";
 
                 return result;
             }
@@ -536,7 +552,12 @@ function myFF(event) {
             $('#modalCreateBusAdd').find('#end_date').datepicker('update', clicked);
         }
         var busId = chart2.cursorDataContext.bus_id;
-        if (busId && $('#bus_trip option[value="' + busId + '"]').length) $('#bus_trip').val(String(busId)).trigger('change');
+        if (busId) {
+            if (!$('#bus_trip option[value="' + busId + '"]').length) {
+                $('#bus_trip').append(new Option(chart2.cursorDataContext.category, busId, true, true));
+            }
+            $('#bus_trip').val(String(busId)).trigger('change');
+        }
 
         //value Y
         // console.log(chart.cursorDataContext.category);
@@ -713,6 +734,21 @@ function reloadBusChart() {
     chart2 = null;
     createGraph();
 }
+
+function busCalendarDate(value) {
+    return value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0') + '-' + String(value.getDate()).padStart(2, '0');
+}
+
+$(document).on('change', '#bus-calendar-month', function () {
+    if (!/^\d{4}-\d{2}$/.test(this.value)) return;
+    var parts = this.value.split('-').map(Number);
+    mind = new Date(parts[0], parts[1] - 1, 1);
+    lastd = new Date(parts[0], parts[1], 0);
+    maxd = new Date(parts[0], parts[1] + 5, 0);
+    if (chart2) chart2.clear();
+    chart2 = null;
+    createGraph();
+});
 
 function initDateModal() {
     $('.block-error-driver').text('');

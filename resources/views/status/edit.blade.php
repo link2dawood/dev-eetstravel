@@ -41,7 +41,7 @@
                                 </div>
 
                                 <div class="form-group mb-3">
-                                    <label for="type">{!!trans('main.Ratetype')!!}</label>
+                                    <label for="type_status">{!!trans('main.Type')!!}</label>
                                     <select name="type" id="type_status" class="form-control" onchange="colorView($(this))">
                                         @foreach($status_types as $status_type)
                                             <option value="{{ $status_type->type }}" {{ old('type', $status->type) == $status_type->type ? 'selected' : '' }}>{{ $status_type->name }}</option>
@@ -54,6 +54,10 @@
                                     <input type="text" value="{{ old('sort_order', $status->sort_order) }}" name="sort_order" class="form-control">
                                 </div>
 
+                                @include('status.task_flags')
+                                @if($status->isSystem())
+                                    <p class="text-muted">System status: its name, type and task behavior are protected.</p>
+                                @endif
                                 <div class="form-group mb-3 color_view" style="display: none">
                                     <label>{!!trans('main.Color')!!}</label>
                                     <div id="cp2" class="input-group colorpicker-component">
@@ -88,13 +92,8 @@
     <script>
         function colorView(_this) {
             if($(_this).val() === 'tour' || $(_this).val() === 'bus'){
-                var color = $('#color_status').attr('data-attr');
-                $('#color_field').val('');
-                $('#block_color_field_bg').css({'background-color' : 'transparent'});
                 $('.color_view').css({'display': 'block'});
             }else{
-                $('#color_field').val('');
-                $('#block_color_field_bg').css({'background-color' : 'transparent'});
                 $('.color_view').css({'display': 'none'});
             }
         }

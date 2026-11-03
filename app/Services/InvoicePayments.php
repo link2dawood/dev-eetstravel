@@ -31,10 +31,10 @@ class InvoicePayments
         return $rows;
     }
 
-    public static function ensureWithinBalance(array $rows, $total, $alreadyPaid = 0): void
+    public static function ensureWithinBalance(array $rows, $total, $alreadyPaid = 0, $extra = 0): void
     {
         $cents = array_sum(array_map(fn ($row) => (int) round($row['amount'] * 100), $rows));
-        if ($cents + (int) round($alreadyPaid * 100) > (int) round($total * 100)) {
+        if ($cents + (int) round($alreadyPaid * 100) > (int) round(((float) $total + (float) $extra) * 100)) {
             throw ValidationException::withMessages(['paid_amount' => 'Payments cannot exceed the invoice balance.']);
         }
     }

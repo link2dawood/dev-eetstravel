@@ -1,0 +1,71 @@
+{
+    "date": "2026-10-30T15:19:29+00:00",
+    "driver": "mysql",
+    "fixture_writes": "rolled back",
+    "results": [
+        {
+            "check": "All fixture tables support transactions",
+            "status": "passed"
+        },
+        {
+            "check": "Bus capacity\/comments persist in MySQL",
+            "status": "passed"
+        },
+        {
+            "check": "Unicode bus name and active company validate",
+            "status": "passed"
+        },
+        {
+            "check": "Duplicate active bus number rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Capacity over 500 rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Missing company rejected",
+            "status": "passed"
+        },
+        {
+            "check": "Company with active bus cannot be deleted",
+            "status": "passed"
+        },
+        {
+            "check": "Deleted company rejected by bus validation",
+            "status": "passed"
+        },
+        {
+            "check": "Calendar query 2026-10-01 to 2026-12-31 with ONLY_FULL_GROUP_BY",
+            "status": "passed"
+        },
+        {
+            "check": "Calendar query 2020-01-01 to 2020-01-31 with ONLY_FULL_GROUP_BY",
+            "status": "passed"
+        },
+        {
+            "check": "Calendar query 2030-01-01 to 2030-02-01 with ONLY_FULL_GROUP_BY",
+            "status": "passed"
+        },
+        {
+            "check": "Calendar bus options query",
+            "status": "passed"
+        },
+        {
+            "check": "Calendar driver options query",
+            "status": "passed"
+        },
+        {
+            "check": "Bus list MySQL joins and pagination",
+            "status": "passed"
+        },
+        {
+            "check": "Transfer list MySQL joins and pagination",
+            "status": "passed"
+        },
+        {
+            "check": "Fixture table row counts unchanged after rollback",
+            "status": "passed"
+        }
+    ]
+}

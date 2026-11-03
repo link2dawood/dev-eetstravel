@@ -28,31 +28,31 @@
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Name')!!} : </i></b>
                         </td>
-                        <td>{!!$currencies->name!!}</td>
+                        <td>{{ $currencies->name }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Code')!!} : </i></b>
                         </td>
-                        <td>{!!$currencies->code!!}</td>
+                        <td>{{ $currencies->code }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Symbol')!!} : </i></b>
                         </td>
-                        <td>{!!$currencies->symbol!!}</td>
+                        <td>{{ $currencies->symbol }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Cent')!!} : </i></b>
                         </td>
-                        <td>{!!$currencies->cent!!}</td>
+                        <td>{{ $currencies->cent }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.SymbolCent')!!}: </i></b>
                         </td>
-                        <td>{!!$currencies->symbol_cent!!}</td>
+                        <td>{{ $currencies->symbol_cent }}</td>
                     </tr>
                     </tbody>
                 </table>

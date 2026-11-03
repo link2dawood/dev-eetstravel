@@ -36,6 +36,8 @@ class AdminHelper
     }
 
     public function validateEmailCorrect($email_login, $email_password, $email_server){
+        if ($email_server == Email::TYPE_EETS) return app(\App\Services\MailboxVerifier::class)->verify((string)$email_login, (string)$email_password);
+        if (!class_exists(Server::class)) return false;
         $client = null;
 
         try {

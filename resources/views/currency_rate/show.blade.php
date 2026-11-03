@@ -8,6 +8,7 @@
        ['title' => 'Currency Rates', 'icon' => null, 'route' => route('currency_rate.index')],
        ['title' => 'Show', 'route' => null]]])
     <section class="content">
+        @include('currency_rate.reference_notice')
         <div class="box box-primary">
             <div class="box-body">
                 <div class="row">
@@ -28,19 +29,19 @@
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Currency')!!} : </i></b>
                         </td>
-                        <td>{!!$currency_rate->currency!!}</td>
+                        <td>{{ $currency_rate->currency }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Rate')!!} : </i></b>
                         </td>
-                        <td>{!!$currency_rate->rate!!}</td>
+                        <td>{{ $currency_rate->rate }}</td>
                     </tr>
                     <tr>
                         <td class="show_width_td">
                             <b><i>{!!trans('main.Date')!!}: </i></b>
                         </td>
-                        <td>{!!$currency_rate->date!!}</td>
+                        <td>{{ $currency_rate->date }}</td>
                     </tr>
                     </tbody>
                 </table>

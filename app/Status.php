@@ -37,6 +37,34 @@ class Status extends Model
 
     protected $fillable = ['name', 'type', 'color', 'sort_order', 'status', 'is_completed', 'is_aborted'];
 
+    // These identifiers are used by existing tour, task, hotel and bus workflows.
+    const SYSTEM_IDS = [1, 2, 4, 6, 7, 8, 9, 10, 17, 23, 34, 39, 46];
+
+    public function isSystem(): bool
+    {
+        return in_array((int) $this->id, self::SYSTEM_IDS, true);
+    }
+
+    public function isInUse(): bool
+    {
+        $usage = [
+            'tour' => [['tours', 'status']], 'task' => [['tasks', 'status']],
+            'hotel' => [['tour_packages', 'status']], 'service_in_tour' => [['tour_packages', 'status']],
+            'bus' => [['bus_days', 'status_id'], ['tour_packages', 'status']],
+            'offer' => [['hotel_offers', 'tms_status']],
+        ];
+        foreach ($usage[$this->type] ?? [] as [$table, $column]) {
+            if (\Illuminate\Support\Facades\DB::table($table)->where($column, $this->id)->exists()) return true;
+        }
+        return $this->type === 'offer' && \Illuminate\Support\Facades\DB::table('hotel_offers')->where('status', $this->name)->exists();
+    }
+
+    public function getColorAttribute($value)
+    {
+        // Existing invalid values must not become CSS declarations on other screens.
+        return is_string($value) && preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $value) ? $value : null;
+    }
+
     // Sorting By default
 	protected static function boot()
 	{

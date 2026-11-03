@@ -22,6 +22,16 @@
 
     <form method="POST" action="{{ route('restaurant.store') }}" enctype="multipart/form-data">
         @csrf
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-title">The restaurant was not saved</h4>
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="row">
             <div class="col-lg-8">
                 <div class="card">
@@ -103,7 +113,7 @@
                                     @foreach($criterias as $criteria)
                                         <div class="col-md-6 mb-2">
                                             <label class="form-check">
-                                                <input type="checkbox" class="form-check-input" value="{{ $criteria->id }}" name="criterias">
+                                                <input type="checkbox" class="form-check-input" value="{{ $criteria->id }}" name="criterias[]" {{ in_array($criteria->id, (array) old('criterias', [])) ? 'checked' : '' }}>
                                                 <span class="form-check-label">{{ $criteria->name }}</span>
                                             </label>
                                         </div>

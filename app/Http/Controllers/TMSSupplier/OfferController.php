@@ -84,22 +84,27 @@ class OfferController extends Controller
 
 	}
 	
-	public function  addComment(Request $req, $id){
-	
-	  $package = TourPackage::find($id);
+	/**
+	 * Comment from the public supplier booking page. The page is opened from the emailed link,
+	 * so the package is identified by that link's encrypted token, never by a plain id.
+	 */
+	public function  addComment(Request $req, $token){
+		$id = \App\Http\Controllers\BookingRequestController::packageIdFromToken($token);
+		$package = TourPackage::findOrFail($id);
 
-		DB::table("supplier_comments")->insert([
-			"supplier_name" =>$package->name,
+		$this->validate($req, ['comment' => 'required|string|max:2000']);
+
+		// Return the row just inserted, not the newest row of the whole table
+		$commentId = DB::table("supplier_comments")->insertGetId([
+			"supplier_name" => $package->name,
 			"content" => $req->comment,
-				
-			]);
-		$lastRecord = DB::table('supplier_comments')->orderBy('id', 'desc')->first();
-       
-		$data = "<li>
-									<strong>".$lastRecord->supplier_name."</strong> said:
-									<p>".$lastRecord->content."</p>
+		]);
+		$comment = DB::table('supplier_comments')->find($commentId);
+
+		return "<li>
+									<strong>" . e($comment->supplier_name) . "</strong> said:
+									<p>" . e($comment->content) . "</p>
 								</li>";
-		return $data;
 	}
 	/*
 	public function data(Request $request)

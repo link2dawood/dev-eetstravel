@@ -8,6 +8,7 @@
        ['title' => 'Currency Rates', 'icon' => null, 'route' => route('currency_rate.index')],
        ['title' => 'Edit', 'route' => null]]])
     <section class="content">
+        @include('currency_rate.reference_notice')
         <div class="box box-primary">
             <div class="box box-body border_top_none">
                 @if (count($errors) > 0)
@@ -20,7 +21,8 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!! url("currency_rate")!!}/{!!$currency_rate->id!!}/update'>
+                <form method="POST" action="{{ route('currency_rate.update', ['currency_rate' => $currency_rate->id]) }}">
+                    @method('PUT')
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -49,7 +51,7 @@
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{!!trans('main.Rate')!!}</label>
-                                    <input type="number" step="0.000001" min="0" value="{{ old('rate', $currency_rate->rate) }}" name="rate" class="form-control" required>
+                                    <input type="number" step="0.000001" min="0.000001" max="999999" value="{{ old('rate', $currency_rate->rate) }}" name="rate" class="form-control" required>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="date">{!!trans('main.Date')!!}</label>

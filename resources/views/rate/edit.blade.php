@@ -20,7 +20,8 @@
                         </ul>
                     </div>
                 @endif
-                <form method='POST' action='{!! url("rate")!!}/{!!$rate->id!!}/update'>
+                <form method="POST" action="{{ route('rate.update', ['rate' => $rate->id]) }}">
+                    @method('PUT')
                     <div class="row">
                         <div class="col-md-12">
                             <div class="margin_button">
@@ -36,15 +37,16 @@
                             <div class="col-lg-6 mt-3">
                                 <div class="form-group mb-3">
                                     <label >{{trans('main.Name')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->name}}{{ old('name') }}" name="name" class="form-control">
+                                    <input type="text" value="{{ old('name', $rate->name) }}" name="name" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label >{{trans('main.Mark')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->mark}}{{ old('mark') }}" name="mark" class="form-control">
+                                    <input type="text" value="{{ old('mark', $rate->mark) }}" name="mark" class="form-control">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="rate_type">{{trans('main.Ratetype')}}</label>
                                     <select name="rate_type" id="rate_type" class="form-control">
+                                        <option value="">Choose a rate type</option>
                                         @foreach($rate_types as $rate_type)
                                             <option value="{{ $rate_type->id }}" {{ old('rate_type', $rate->rate_type) == $rate_type->id ? 'selected' : '' }}>{{ $rate_type->name }}</option>
                                         @endforeach
@@ -52,7 +54,7 @@
                                 </div>
                                 <div class="form-group mb-3">
                                     <label>{{trans('main.Sortorder')}}</label>
-                                    <input type="text" value="{{ $errors != null && count($errors) > 0 ? '' : $rate->sort_order}}{{ old('sort_order') }}" name="sort_order" class="form-control">
+                                    <input type="text" value="{{ old('sort_order', $rate->sort_order) }}" name="sort_order" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-8">

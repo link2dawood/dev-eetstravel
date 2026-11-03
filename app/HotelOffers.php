@@ -15,6 +15,10 @@ protected $fillable = [
 	'currency','city_tax','halfboard','foc_after_every_pax','halfboardMax','children_cost','portrage_perperson','other_coditions','hotel_file','hotel_note','cancellationNote'
     ];
 	
+	public function package()
+		{
+			return $this->belongsTo(TourPackage::class, 'package_id');
+		}
 	public function offer_room_prices()
 		{
 			return $this->hasMany(OfferRoomPrices::class, 'offer_id','id');

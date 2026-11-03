@@ -19,6 +19,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use URL;
 use View;
 
@@ -53,6 +55,23 @@ class TaskController extends Controller
     }
 
     /**
+     * Load a task the current user may see; personal tasks of other users answer 404.
+     */
+    private function findVisibleTask($id)
+    {
+        $task = Task::findOrFail($id);
+        abort_unless($task->isVisibleTo(Auth::user()), 404);
+
+        return $task;
+    }
+
+    /** A status id that belongs to tasks */
+    private function taskStatusRule()
+    {
+        return Rule::exists('status', 'id')->where('type', 'task');
+    }
+
+    /**
      * ✅ UPDATED INDEX METHOD - SYNCS ALL TASKS
      * Displays all tasks grouped by status
      * - To-Do (pending tasks)
@@ -62,20 +81,23 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $title = 'Index - task';
+        $user = Auth::user();
 
-        // ✅ SYNC: Fetch ALL tasks from database with proper relationships
-        
         // Todo Tasks (default page param) - All non-completed, non-aborted tasks
+        // Soonest deadline first; tasks without a deadline last
         $todoTasks = Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->visibleTo($user)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', false)
                     ->where('is_aborted', false);
             })
-            ->orderBy('created_at', 'desc') 
+            ->orderByRaw('dead_line IS NULL')
+            ->orderBy('dead_line', 'asc')
             ->paginate(10, ['*'], 'todo_page');
 
         // Completed Tasks (custom page param)
         $completedTasks = Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->visibleTo($user)
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', true);
             })
@@ -84,6 +106,7 @@ class TaskController extends Controller
 
         // Aborted Tasks (custom page param)
         $abortedTasks = Task::with(['status', 'assignedTo', 'tour', 'epic', 'assigned_users'])
+            ->visibleTo($user)
             ->whereHas('status', function ($query) {
                 $query->where('is_aborted', true);
             })
@@ -91,7 +114,7 @@ class TaskController extends Controller
             ->paginate(10, ['*'], 'aborted_page');
 
         $task_types = json_encode(array_flip(Task::$taskTypes));
-        
+
         // Get all statuses for the dropdown
         $statuses = Status::query()
             ->orderBy('sort_order', 'asc')
@@ -132,6 +155,15 @@ class TaskController extends Controller
             ->values()
             ->all();
     }
+
+    /**
+     * The create form posts low/medium/high, the list toggles 0/1; the column is a 0/1 flag.
+     */
+    private function normalizePriority($value)
+    {
+        return in_array(strtolower((string) $value), ['1', 'high'], true) ? 1 : 0;
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -139,8 +171,9 @@ class TaskController extends Controller
     {
         $tour_default = $request->get('tour');
         $title = 'Create - task';
-        $tours = $this->tourRepository->all();
-        $users = User::orderBy('name')->get();
+        // The dropdowns only need ids and names
+        $tours = Tour::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
         $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
 
         return view('task.create', compact('title', 'tours', 'users', 'tour_default', 'statuses'));
@@ -153,43 +186,47 @@ class TaskController extends Controller
     {
         $assigned_user = $this->normalizeAssignedUsers($request->get('assigned_user'));
 
-        $this->validateTask($request);
-        $task = new Task();
-        $task->content = $request->get('content');
-        $task->start_time = $request->get('end_date') . ' ' . $request->get('end_time');
-        $task->dead_line = $request->get('end_date') . ' ' . $request->get('end_time');
-        $task->tour = $request->get('tour', null);
-        $task->assign = Auth::user()->id;
-        $task->task_type = $request->get('task_type');
-        $task->status = $request->get('status');
-        $task->priority = $request->get('priority') ?? 0;
-        $task->epic_id = $request->get('epic_id') ?? null; // ✅ Added epic support
-        $task->story_points = $request->get('story_points') ?? null; // ✅ Added story points
-        $task->estimated_sp = $request->get('estimated_sp') ?? null; // ✅ Added estimated SP
-        $task->save();
+        // Assignees are checked before anything is saved, so a bad id cannot leave a half-created task
+        $this->validateTask($request, $assigned_user);
 
-        if ($assigned_user) {
-            $assigned_user = array_unique($assigned_user);
-            $task->assigned_users()->sync($assigned_user);
-            foreach ($assigned_user as $user_id) {
-                $notification = Notification::query()
-                    ->create(['content' => "New task {$task->content}", 'link' => '/task/' . $task->id]);
-                $user = User::findOrFail($user_id);
-                $user->notifications()->attach($notification);
+        $task = DB::transaction(function () use ($request, $assigned_user) {
+            $task = new Task();
+            $task->content = $request->get('content');
+            $task->start_time = $request->get('end_date') . ' ' . $request->get('end_time');
+            $task->dead_line = $request->get('end_date') . ' ' . $request->get('end_time');
+            $task->tour = $request->get('tour') ?: null;
+            $task->assign = Auth::user()->id;
+            $task->task_type = $request->get('task_type');
+            $task->status = $request->get('status');
+            $task->priority = $this->normalizePriority($request->get('priority'));
+            $task->epic_id = $request->get('epic_id') ?? null; // ✅ Added epic support
+            $task->story_points = $request->get('story_points') ?? null; // ✅ Added story points
+            $task->estimated_sp = $request->get('estimated_sp') ?? null; // ✅ Added estimated SP
+            $task->save();
+
+            if ($assigned_user) {
+                $task->assigned_users()->sync($assigned_user);
+                foreach (User::whereIn('id', $assigned_user)->get() as $user) {
+                    $notification = Notification::query()
+                        ->create(['content' => "New task {$task->content}", 'link' => '/task/' . $task->id]);
+                    $user->notifications()->attach($notification);
+                }
             }
-        }
+
+            return $task;
+        });
 
         $this->addFile($request, $task);
         LaravelFlashSessionHelper::setFlashMessage("Task $task->content created", 'success');
 
         if ($request->get('modal_create') == 1) {
             return redirect(route('dashboard_main'));
-        } 
-        
+        }
+
         if ($request->get('redirect_tour') != null) {
             $data = ['route' => route('tour.show', ['tour' => $request->get('redirect_tour')])];
             return response()->json($data);
-        } 
+        }
 
         // ✅ Always redirect back to task list
         return redirect(route('task.index'));
@@ -201,9 +238,13 @@ class TaskController extends Controller
     public function show($id, Request $request)
     {
         if ($request->notification_click) {
-            $notification = Notification::find($request->notification_click);
-            $notification->click = true;
-            $notification->save();
+            // Only the current user's own notification may be marked as read
+            $notification = Auth::user()->notifications()
+                ->where('notifications.id', $request->notification_click)->first();
+            if ($notification) {
+                $notification->click = true;
+                $notification->save();
+            }
         }
 
         $title = 'Show - task';
@@ -211,13 +252,10 @@ class TaskController extends Controller
             return URL::to('task/' . $id);
         }
 
-        $task = Task::query()->find($id);
-        if ($task == null) {
-            return abort(404);
-        }
+        $task = $this->findVisibleTask($id);
 
         $status = Status::where('id', $task->status)->first();
-        $task->dead_line = (new Carbon($task->dead_line))->format('Y-m-d H:i');
+        $task->dead_line = $task->dead_line ? (new Carbon($task->dead_line))->format('Y-m-d H:i') : null;
         $files = $this->parseAttach($task);
 
         return view('task.show', compact('title', 'task', 'status', 'files'));
@@ -233,6 +271,8 @@ class TaskController extends Controller
             return route('task.edit', ['id' => $id]);
         }
 
+        $this->findVisibleTask($id);
+
         $task = Task::leftJoin('tours', 'tours.id', '=', 'tasks.tour')
             ->select('tasks.*', 'tours.name as tour_name', 'tours.id as tour_id')
             ->where('tasks.id', $id)->first();
@@ -241,17 +281,14 @@ class TaskController extends Controller
             return abort(404);
         }
 
-        $task['end_date'] = (new Carbon($task->dead_line ?? ""))->toDateString();
-        $task['end_time'] = (new Carbon($task->dead_line ?? ""))->toTimeString();
+        $task['end_date'] = $task->dead_line ? (new Carbon($task->dead_line))->toDateString() : null;
+        $task['end_time'] = $task->dead_line ? (new Carbon($task->dead_line))->format('H:i') : null;
 
-        $tours = Tour::orderBy('name')->get();
-        $users = User::orderBy('name')->get();
+        $tours = Tour::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
+        $assignedIds = $task->assigned_users->pluck('id')->all();
         foreach ($users as $user) {
-            if (!empty($task->assigned_users)) {
-                foreach ($task->assigned_users as $t_user) {
-                    if ($user->id == $t_user->id) $user->selected = true;
-                }
-            }
+            if (in_array($user->id, $assignedIds)) $user->selected = true;
         }
         $statuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
         $calendar_edit = $request->get('calendar_edit') ?? null;
@@ -266,23 +303,23 @@ class TaskController extends Controller
     public function update(Request $request, $id)
     {
         $assigned_user = $this->normalizeAssignedUsers($request->get('assigned_user'));
+        $task = $this->findVisibleTask($id);
 
-        if ($request->ajax() && $request->newStatus) {
-            $task = Task::findOrFail($id);
+        if ($request->ajax() && $request->has('newStatus')) {
+            $this->validate($request, ['newStatus' => ['required', 'integer', $this->taskStatusRule()]]);
             $task->status = $request->newStatus;
             $task->save();
             return response('done');
         }
 
-        $this->validateTask($request);
-        $task = Task::findOrFail($id);
+        $this->validateTask($request, $assigned_user);
         $task->content = $request->get('content');
         $task->start_time = $request->get('end_date') . ' ' . $request->get('end_time');
         $task->dead_line = $request->get('end_date') . ' ' . $request->get('end_time');
-        $task->tour = $request->get('tour', null);
+        $task->tour = $request->get('tour') ?: null;
         $task->task_type = $request->get('task_type');
         $task->status = $request->get('status');
-        $task->priority = $request->get('priority') ?? 0;
+        $task->priority = $this->normalizePriority($request->get('priority'));
         $task->epic_id = $request->get('epic_id') ?? null; // ✅ Added epic support
         $task->story_points = $request->get('story_points') ?? null; // ✅ Added story points
         $task->estimated_sp = $request->get('estimated_sp') ?? null; // ✅ Added estimated SP
@@ -305,12 +342,16 @@ class TaskController extends Controller
 
     public function updateCalendarTask(Request $request, $id)
     {
-        $date = $request->get('date');
-        $date_time = $request->get('date_time');
+        $this->validate($request, [
+            'date' => 'required|date_format:Y-m-d',
+            'date_time' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/'],
+        ]);
 
-        Task::find($id)->update([
-            'start_time' => $date . ' ' . $date_time,
-            'dead_line' => $date . ' ' . $date_time,
+        $task = $this->findVisibleTask($id);
+        $value = Carbon::parse($request->get('date') . ' ' . $request->get('date_time'))->format('Y-m-d H:i:s');
+        $task->update([
+            'start_time' => $value,
+            'dead_line' => $value,
         ]);
 
         return response()->json(true);
@@ -318,11 +359,14 @@ class TaskController extends Controller
 
     public function DeleteMsg($id, Request $request, $tab = null)
     {
+        $this->findVisibleTask($id);
         $tab_url = ($tab) ? '/' . $tab : '';
         $msg = Ajaxis::BtDeleting(trans('main.Warning') . '!!', trans('main.WouldyouliketoremoveThis') . '?', '/task/' . $id . '/delete' . $tab_url);
         if ($request->ajax()) {
             return $msg;
         }
+
+        return redirect()->route('task.show', ['id' => $id]);
     }
 
     /**
@@ -330,7 +374,7 @@ class TaskController extends Controller
      */
     public function destroy($id, $tab = null)
     {
-        $task = Task::findOrFail($id);
+        $task = $this->findVisibleTask($id);
         $task->delete();
         Comment::query()->where('reference_type', Comment::$services['task'])->where('reference_id', $id)->delete();
 
@@ -346,25 +390,39 @@ class TaskController extends Controller
         ]);
     }
 
-    public function validateTask(Request $request)
+    /**
+     * Rules shared by create and the full edit form.
+     */
+    public function validateTask(Request $request, array $assignedUsers = [])
     {
         $messages = [
             'end_date.required' => 'The Date field is required.',
-            'end_time.required' => 'The Time field is required.'
+            'end_time.required' => 'The Time field is required.',
+            'end_time.regex' => 'The Time must be a valid time (HH:MM).',
+            'assigned_users_checked.*.exists' => 'One of the selected users does not exist.',
         ];
 
+        // Validate the normalised assignee ids (the form may post a comma list or an array)
+        $request->merge(['assigned_users_checked' => $assignedUsers]);
+
         $this->validate($request, [
-            'content' => 'required',
-            'end_date' => 'required',
-            'end_time' => 'required',
-            'task_type' => 'required',
-            'status' => 'required'
-        ], $messages);
+            'content' => 'required|string|max:191',
+            'description' => 'nullable|string|max:10000',
+            'end_date' => 'required|date_format:Y-m-d',
+            'end_time' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/'],
+            'task_type' => ['required', Rule::in(array_keys(Task::$taskTypes))],
+            'status' => ['required', 'integer', $this->taskStatusRule()],
+            'tour' => 'nullable|integer|exists:tours,id',
+            'priority' => 'nullable|in:0,1,low,medium,high',
+            'story_points' => 'nullable|integer|min:0|max:1000',
+            'estimated_sp' => 'nullable|integer|min:0|max:1000',
+            'assigned_users_checked.*' => 'integer|exists:users,id',
+        ], $messages, ['task_type' => 'task type']);
     }
 
     public function statusesList(Request $request)
     {
-        $task = Task::find($request->taskId);
+        $task = $this->findVisibleTask($request->taskId);
         $taskStatuses = Status::query()->orderBy('sort_order', 'asc')->where('type', 'task')->get();
         return view('component.task_datatables_status_update', ['taskStatuses' => $taskStatuses, 'task' => $task]);
     }
@@ -374,16 +432,30 @@ class TaskController extends Controller
      */
     public function updateField(Request $request, $id)
     {
-        $task = Task::findOrFail($id);
+        $task = $this->findVisibleTask($id);
         $field = $request->input('field');
-        $value = $request->input('value');
 
-        $allowedFields = ['content', 'description', 'story_points', 'estimated_sp', 'priority', 'sort_order', 'status'];
+        // Same rules as the full form, per inline-editable field
+        $rules = [
+            'content' => ['required', 'string', 'max:191'],
+            'description' => ['nullable', 'string', 'max:10000'],
+            'story_points' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'estimated_sp' => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'priority' => ['required', 'in:0,1'],
+            'sort_order' => ['required', 'integer', 'min:0'],
+            'status' => ['required', 'integer', $this->taskStatusRule()],
+        ];
 
-        if (!in_array($field, $allowedFields)) {
+        if (!array_key_exists($field, $rules)) {
             return response()->json(['error' => 'Invalid field'], 400);
         }
 
+        $validator = \Validator::make($request->all(), ['value' => $rules[$field]], [], ['value' => str_replace('_', ' ', $field)]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first('value')], 422);
+        }
+
+        $value = $request->input('value');
         $task->$field = $value;
         $task->save();
 

@@ -52,7 +52,19 @@ class Client extends Model
     protected $table = 'clients';
     protected $hidden = ['password'];
     protected $dates = ['deleted_at'];
-    protected $guarded = [];
+    protected $fillable = ['name', 'country', 'city', 'address', 'account_no', 'company_address', 'invoice_address', 'work_phone', 'contact_phone', 'work_email', 'contact_email', 'work_fax'];
+
+    public function setPasswordAttribute($value)
+    {
+        if ($value === null || $value === '') { $this->attributes['password'] = null; return; }
+        $this->attributes['password'] = password_get_info((string)$value)['algo'] ? $value : \App\Services\ClientPortalPassword::hash($value);
+    }
+
+    public function isInUse(): bool
+    {
+        return \Illuminate\Support\Facades\DB::table('tours')->where('client_id', $this->id)->exists()
+            || \Illuminate\Support\Facades\DB::table('client_invoices')->where('client_id', $this->id)->exists();
+    }
 
 
     public function tours()

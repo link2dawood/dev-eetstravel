@@ -2,6 +2,8 @@ $(document).ready(function() {
     const table = document.getElementById('activity-table');
     if (!table) return;
     // Reuse the layout's sorting, filtering and pagination instead of DataTables.
+    const serverPaginated = table.dataset.serverPaginated === 'true';
+    if (!serverPaginated) {
     table.querySelectorAll('.table-empty').forEach(row => row.remove());
     if (!table._tablePagination) paginateTable($(table.tBodies[0]), $(table.tBodies[0].rows), 50);
     const state = table._tablePagination;
@@ -22,13 +24,15 @@ $(document).ready(function() {
     document.getElementById('activity-page-size').addEventListener('change', event => {
         state.size = Number(event.target.value); state.page = 1; renderTablePage(table);
     });
+    }
+    const exportState = serverPaginated ? {query: '', columnQueries: []} : table._tablePagination;
     document.querySelectorAll('[data-activity-export]').forEach(button => button.addEventListener('click', () => {
         const error = document.getElementById('activity-export-error');
         error.hidden = true;
         const headers = [...table.tHead.rows[0].cells].slice(0, 3).map(cell => cell.textContent.trim());
-        const rows = [...table.tBodies[0].rows].filter(row => !row.classList.contains('table-search-empty') &&
-            row.textContent.toLowerCase().includes(state.query) &&
-            state.columnQueries.every((query, index) => row.cells[index].textContent.toLowerCase().includes(query))
+        const rows = [...table.tBodies[0].rows].filter(row => !row.classList.contains('table-search-empty') && !row.classList.contains('table-empty') &&
+            row.textContent.toLowerCase().includes(exportState.query) &&
+            exportState.columnQueries.every((query, index) => row.cells[index].textContent.toLowerCase().includes(query))
         ).map(row => [...row.cells].slice(0, 3).map(cell => cell.textContent.trim()));
         try {
             const type = button.dataset.activityExport;
@@ -59,5 +63,5 @@ $(document).ready(function() {
             error.hidden = false;
         }
     }));
-    renderTablePage(table);
+    if (!serverPaginated) renderTablePage(table);
 });

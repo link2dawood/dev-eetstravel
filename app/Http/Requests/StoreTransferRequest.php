@@ -7,6 +7,12 @@ use App\Services\ValidationService;
 
 class StoreTransferRequest extends FormRequest
 {
+    use \App\Http\Requests\Concerns\SupplierFieldRules;
+
+    protected function prepareForValidation()
+    {
+        $this->normalizeCriterias();
+    }
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -39,8 +45,8 @@ class StoreTransferRequest extends FormRequest
             'comments' => 'nullable|string|max:1000',
             'int_comments' => 'nullable|string|max:1000',
             'rate' => 'nullable|exists:rates,id',
-            'criterias' => 'nullable|string',
-        ];
+            'attach_bus' => 'prohibited',
+        ] + $this->attachmentAndCriteriaRules('transfer');
     }
 
     /**
@@ -50,7 +56,7 @@ class StoreTransferRequest extends FormRequest
      */
     public function messages()
     {
-        return ValidationService::getCommonMessages();
+        return array_merge(ValidationService::getCommonMessages(), $this->attachmentAndCriteriaMessages('transfer'));
     }
 
     /**

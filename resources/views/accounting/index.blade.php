@@ -1,4 +1,5 @@
 @extends('scaffold-interface.layouts.tabler-app')
+@section('title', 'Client Invoices')
 @section('content')
 @include('layouts.title',
 ['title' => 'Client Invoices', 'sub_title' => 'Invoices according to tours',
@@ -26,11 +27,15 @@
             <div class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
-                        <input aria-label="Search client invoices..." type="text" id="accounting-search" class="form-control" placeholder="Search client invoices..." onkeyup="filterTable('transactions-table', this.value)">
+                        <form method="GET" action="{{ route('accounting.index') }}" class="d-flex gap-2">
+                            <input aria-label="Search client invoices" type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Invoice, client or tour">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            @if(request('search'))<a class="btn btn-outline-secondary" href="{{ route('accounting.index') }}">Clear</a>@endif
+                        </form>
                     </div>
                     <div class="col-md-6 text-right">
                         <button class="btn btn-success btn-sm" onclick="exportTableToCSV('transactions-table', 'client_invoices_export.csv')">
-                            <i class="fa fa-download"></i> Export CSV
+                            <i class="fa fa-download"></i> Export page CSV
                         </button>
                     </div>
                 </div>
@@ -77,6 +82,7 @@
                     </tbody>
                 </table>
             </div>
+            {{ $accountingData->links() }}
         </div>
     </div>
 </section>

@@ -7,6 +7,7 @@ use App\Http\Controllers\ReportingController;
 use App\Http\Controllers\SupplierSearchController;
 use App\Http\Controllers\TourPackageController;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -37,8 +38,8 @@ class FollowUpContextTest extends TestCase
         try {
             (new ReportingController())->show(Request::create('/reporting_supplier_show'));
             $this->fail('Missing reporting service was accepted');
-        } catch (HttpException $exception) {
-            $this->assertSame(422, $exception->getStatusCode());
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('service', $exception->errors());
         }
     }
 }
